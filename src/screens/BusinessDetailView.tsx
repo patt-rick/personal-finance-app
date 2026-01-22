@@ -10,12 +10,17 @@ import {
     ShieldCheck,
     ShoppingBag,
     Smartphone,
-    X
+    X,
+    Calendar,
+    Tag,
+    Info,
+    Trash2,
+    MessageSquare
 } from 'lucide-react-native';
 import React, { useState, useMemo } from 'react';
 import { Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { createStyles } from "./DashboardScreen";
+import { createDashboardStyles } from "../styles/dashboardStyles";
 
 export default function BusinessDetailView({ business, transactions, allTransactions, onBack, saveTransactions }: { 
   business: Business, 
@@ -26,9 +31,11 @@ export default function BusinessDetailView({ business, transactions, allTransact
 }) {
   const insets = useSafeAreaInsets();
   const theme = useTheme();
-  const styles = useMemo(() => createStyles(theme), [theme]);
+  const styles = useMemo(() => createDashboardStyles(theme), [theme]);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const [detailModalVisible, setDetailModalVisible] = useState(false);
+  const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
   const [entryType, setEntryType] = useState<'income' | 'expense'>('income');
   const [amount, setAmount] = useState('');
   const [remark, setRemark] = useState('');
@@ -57,19 +64,39 @@ export default function BusinessDetailView({ business, transactions, allTransact
 
     const newTransaction: Transaction = {
       id: Date.now().toString(),
-      description: remark || (entryType === 'income' ? 'Cash In' : 'Cash Out'),
+      description: entryType === 'income' ? 'Cash In' : 'Cash Out',
       amount: parseFloat(amount),
       date: new Date().toISOString(),
       type: entryType,
       businessId: business.id,
       category: selectedCategory,
-      paymentMode: 'Cash'
+      paymentMode: 'Cash',
+      remark: remark
     };
 
     saveTransactions([...allTransactions, newTransaction]);
     setAmount('');
     setRemark('');
     setModalVisible(false);
+  };
+
+  const handleDeleteTx = (id: string) => {
+    Alert.alert(
+      'Delete Transaction',
+      'Are you sure you want to delete this transaction?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Delete', 
+          style: 'destructive', 
+          onPress: () => {
+            const updated = allTransactions.filter(t => t.id !== id);
+            saveTransactions(updated);
+            setDetailModalVisible(false);
+          }
+        }
+      ]
+    );
   };
 
   return (
@@ -140,7 +167,14 @@ export default function BusinessDetailView({ business, transactions, allTransact
           <View style={styles.detailList}>
               <Text style={styles.listLabel}>Recent Transactions</Text>
               {displayTransactions.map((t) => (
-              <View key={t.id} style={styles.modernTxItem}>
+              <TouchableOpacity 
+                key={t.id} 
+                style={styles.modernTxItem}
+                onPress={() => {
+                  setSelectedTx(t);
+                  setDetailModalVisible(true);
+                }}
+              >
                   <View style={[styles.txIconContainer, { backgroundColor: t.type === 'income' ? theme.colors.incomeBg : theme.colors.expenseBg }]}>
                   {getCategoryIcon(t.category, t.type === 'income' ? theme.colors.income : theme.colors.expense)}
                   </View>
@@ -153,7 +187,7 @@ export default function BusinessDetailView({ business, transactions, allTransact
                       {t.type === 'income' ? '+' : '-'}{symbol}{t.amount.toLocaleString()}
                   </Text>
                   </View>
-              </View>
+              </TouchableOpacity>
               ))}
               {displayTransactions.length === 0 && (
               <View style={styles.emptyState}>
@@ -180,7 +214,7 @@ export default function BusinessDetailView({ business, transactions, allTransact
           </TouchableOpacity>
         </View>
 
-        {/* Entry Modal handled separately with its own KeyboardAvoidingView */}
+        {/* Entry Modal */}
         <Modal visible={modalVisible} animationType="slide" transparent>
           <KeyboardAvoidingView 
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
@@ -237,6 +271,96 @@ export default function BusinessDetailView({ business, transactions, allTransact
               </View>
             </TouchableWithoutFeedback>
           </KeyboardAvoidingView>
+        </Modal>
+
+        {/* Transaction Detail Modal */}
+        <Modal visible={detailModalVisible} animationType="slide" transparent>
+          <View style={styles.modalOverlay}>
+            <View style={styles.txDetailCard}>
+              <TouchableOpacity 
+                style={{ alignSelf: 'flex-end', padding: 10, marginTop: -10 }}
+                onPress={() => setDetailModalVisible(false)}
+              >
+                <X size={24} color={theme.colors.textSecondary} />
+              </TouchableOpacity>
+
+              {selectedTx && (
+                <>
+                  <View style={styles.txDetailHeader}>
+                    <View style={[
+                      styles.txDetailTypeBadge, 
+                      { backgroundColor: selectedTx.type === 'income' ? theme.colors.success + '20' : theme.colors.error + '20' }
+                    ]}>
+                      <Text style={{ 
+                        color: selectedTx.type === 'income' ? theme.colors.success : theme.colors.error, 
+                        fontWeight: 'bold',
+                        fontSize: 12
+                      }}>
+                        {selectedTx.type.toUpperCase()}
+                      </Text>
+                    </View>
+                    <Text style={styles.txDetailAmount}>
+                      {selectedTx.type === 'income' ? '+' : '-'}{symbol}{selectedTx.amount.toLocaleString()}
+                    </Text>
+                    <Text style={styles.txDetailDescription}>{selectedTx.description}</Text>
+                  </View>
+
+                  <View style={styles.txDetailInfoSection}>
+                    <View style={styles.txDetailRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Tag size={18} color={theme.colors.textSecondary} />
+                        <Text style={styles.txDetailLabel}>Category</Text>
+                      </View>
+                      <Text style={styles.txDetailValue}>{selectedTx.category}</Text>
+                    </View>
+
+                    <View style={styles.txDetailRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Calendar size={18} color={theme.colors.textSecondary} />
+                        <Text style={styles.txDetailLabel}>Date & Time</Text>
+                      </View>
+                      <Text style={styles.txDetailValue}>
+                        {new Date(selectedTx.date).toLocaleDateString()} {new Date(selectedTx.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                      </Text>
+                    </View>
+
+                    <View style={styles.txDetailRow}>
+                      <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                        <Info size={18} color={theme.colors.textSecondary} />
+                        <Text style={styles.txDetailLabel}>Mode</Text>
+                      </View>
+                      <Text style={styles.txDetailValue}>{selectedTx.paymentMode || 'Cash'}</Text>
+                    </View>
+
+                    {selectedTx.remark ? (
+                      <View style={[styles.txDetailRow, { alignItems: 'flex-start' }]}>
+                        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10 }}>
+                          <MessageSquare size={18} color={theme.colors.textSecondary} />
+                          <Text style={styles.txDetailLabel}>Remark</Text>
+                        </View>
+                        <Text style={[styles.txDetailValue, { flex: 1, textAlign: 'right', marginLeft: 20 }]}>{selectedTx.remark}</Text>
+                      </View>
+                    ) : null}
+                  </View>
+
+                  <View style={styles.txDetailActions}>
+                    <TouchableOpacity 
+                      style={styles.txDetailDeleteBtn}
+                      onPress={() => handleDeleteTx(selectedTx.id)}
+                    >
+                      <Text style={{ color: theme.colors.error, fontWeight: 'bold' }}>Delete</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity 
+                      style={styles.txDetailCloseBtn}
+                      onPress={() => setDetailModalVisible(false)}
+                    >
+                      <Text style={{ color: 'white', fontWeight: 'bold' }}>Done</Text>
+                    </TouchableOpacity>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
         </Modal>
       </View>
     </KeyboardAvoidingView>

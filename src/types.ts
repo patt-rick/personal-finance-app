@@ -24,4 +24,5 @@ export interface Transaction {
   category?: string;
   subCategory?: string;
   paymentMode?: string;
+  remark?: string;
 }
