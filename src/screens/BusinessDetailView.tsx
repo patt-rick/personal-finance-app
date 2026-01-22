@@ -15,7 +15,8 @@ import {
     Tag,
     Info,
     Trash2,
-    MessageSquare
+    MessageSquare,
+    ArrowLeft
 } from 'lucide-react-native';
 import React, { useState, useMemo } from 'react';
 import { Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
@@ -108,12 +109,9 @@ export default function BusinessDetailView({ business, transactions, allTransact
         {/* Detail Header */}
         <View style={[styles.detailHeader, { paddingTop: Math.max(insets.top, 40) }]}>
           <TouchableOpacity onPress={onBack} style={styles.detailBackBtn}>
-             <X size={24} color={theme.colors.text} />
+             <ArrowLeft size={24} color={theme.colors.text} />
           </TouchableOpacity>
           <Text style={styles.detailTitle}>{business.name}</Text>
-          <TouchableOpacity style={styles.detailHeaderBtn}>
-              <Search size={20} color={theme.colors.text} />
-          </TouchableOpacity>
         </View>
 
         <ScrollView style={{ flex: 1 }} showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">

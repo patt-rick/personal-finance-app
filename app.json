@@ -4,6 +4,7 @@
     "slug": "finance-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./src/icon.png",
     "userInterfaceStyle": "automatic",
     "assetBundlePatterns": [
       "**/*"
@@ -16,9 +17,14 @@
       }
     },
     "android": {
-      "package": "com.yourcompany.financetracker"
+      "package": "com.yourcompany.financetracker",
+      "adaptiveIcon": {
+        "foregroundImage": "./src/icon.png",
+        "backgroundColor": "#6366F1"
+      }
     },
     "splash": {
+      "image": "./src/icon.png",
       "backgroundColor": "#6366F1",
       "resizeMode": "contain"
     },

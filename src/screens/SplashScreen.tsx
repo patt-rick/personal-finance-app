@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from 'react';
-import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, Animated, Dimensions, Image } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
-import { Landmark } from 'lucide-react-native';
-import { theme } from '../theme/theme';
+import { useTheme } from '../theme/theme';
 
 const { height } = Dimensions.get('window');
 
 export default function SplashScreen() {
+  const theme = useTheme();
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const scaleAnim = useRef(new Animated.Value(0.9)).current;
   const slideAnim = useRef(new Animated.Value(20)).current;
@@ -33,8 +33,8 @@ export default function SplashScreen() {
   }, [fadeAnim, scaleAnim, slideAnim]);
 
   return (
-    <View style={styles.container}>
-      <StatusBar style="dark" backgroundColor={theme.colors.primary} />
+    <View style={[styles.container, { backgroundColor: theme.colors.primary }]}>
+      <StatusBar style="light" backgroundColor={theme.colors.primary} />
       
       <Animated.View 
         style={[
@@ -49,7 +49,11 @@ export default function SplashScreen() {
         ]}
       >
         <View style={styles.logoContainer}>
-          <Landmark size={60} color="white" />
+          <Image 
+            source={require('../icon.png')} 
+            style={styles.logoImage}
+            resizeMode="contain"
+          />
         </View>
         <Text style={styles.title}>Finance Tracker</Text>
         <Text style={styles.subtitle}>Your Premium Cashbook</Text>
@@ -65,7 +69,6 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: theme.colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -76,12 +79,19 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: 40,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    backgroundColor: 'rgba(255, 255, 255, 1)',
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    elevation: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 10,
+  },
+  logoImage: {
+    width: 80,
+    height: 80,
   },
   title: {
     fontSize: 32,

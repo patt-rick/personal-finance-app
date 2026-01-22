@@ -51,9 +51,9 @@ export const createDashboardStyles = (theme: any) => StyleSheet.create({
   balanceContainerModern: { alignItems: 'flex-end', justifyContent: 'center' },
 
   // Detail View
-  detailHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 15 },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 20, paddingTop: 50, paddingBottom: 15, gap: 10 },
   detailBackBtn: { padding: 4 },
-  detailTitle: { fontSize: 18, fontWeight: 'bold', color: theme.colors.text },
+  detailTitle: { fontSize: 20, fontWeight: 'bold', color: theme.colors.text },
   detailHeaderBtn: { padding: 4 },
   detailSearchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.card, marginHorizontal: 20, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, marginTop: 20 },
   detailSearchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: theme.colors.text },

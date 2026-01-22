@@ -123,6 +123,9 @@ function MainApp() {
               options={{
                 tabBarIcon: ({ color }) => <LayoutGrid size={24} color={color} />,
               }}
+              listeners={{
+                tabPress: () => setCurrentBusiness(null),
+              }}
             >
               {() => (
                 <DashboardScreen 
@@ -140,6 +143,9 @@ function MainApp() {
               options={{
                 tabBarIcon: ({ color }) => <Landmark size={24} color={color} />,
               }}
+              listeners={{
+                tabPress: () => setCurrentBusiness(null),
+              }}
             >
               {() => (
                 <BusinessesScreen 
@@ -154,6 +160,9 @@ function MainApp() {
               name="Settings" 
               options={{
                 tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
+              }}
+              listeners={{
+                tabPress: () => setCurrentBusiness(null),
               }}
             >
               {() => (
