@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
 import { TrendingUp, TrendingDown } from 'lucide-react-native';
-import { styles } from '../styles/globalStyles';
-import { theme } from '../theme/theme';
+import { createGlobalStyles } from '../styles/globalStyles';
+import { useTheme } from '../theme/theme';
 
 interface StatCardProps {
   type: 'income' | 'expense';
@@ -10,6 +10,8 @@ interface StatCardProps {
 }
 
 export default function StatCard({ type, amount }: StatCardProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createGlobalStyles(theme), [theme]);
   const isIncome = type === 'income';
   
   return (

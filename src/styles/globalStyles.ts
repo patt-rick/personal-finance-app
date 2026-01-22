@@ -1,7 +1,6 @@
 import { StyleSheet } from 'react-native';
-import { theme } from '../theme/theme';
 
-export const styles = StyleSheet.create({
+export const createGlobalStyles = (theme: any) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.colors.background,
@@ -173,7 +172,7 @@ export const styles = StyleSheet.create({
     bottom: 20,
     width: 56,
     height: 56,
-    borderRadius: theme.borderRadius.round,
+    borderRadius: 28,
     backgroundColor: theme.colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
@@ -238,6 +237,7 @@ export const styles = StyleSheet.create({
     marginBottom: theme.spacing.l,
     fontSize: 15,
     backgroundColor: theme.colors.card,
+    color: theme.colors.text,
   },
   
   // Picker
@@ -320,3 +320,7 @@ export const styles = StyleSheet.create({
     padding: theme.spacing.l,
   },
 });
+
+// For backward compatibility
+import { lightTheme } from '../theme/theme';
+export const styles = createGlobalStyles(lightTheme);

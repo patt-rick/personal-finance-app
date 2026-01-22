@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform, KeyboardAvoidingView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { User, Save, ChevronRight } from 'lucide-react-native';
-import { theme } from '../theme/theme';
+import { User, Save, Moon, Sun, Monitor } from 'lucide-react-native';
+import { useTheme } from '../theme/theme';
+import { useThemeContext } from '../theme/ThemeContext';
 import { UserProfile } from '../types';
 
 interface SettingsScreenProps {
@@ -12,6 +13,9 @@ interface SettingsScreenProps {
 
 export default function SettingsScreen({ userProfile, saveUserProfile }: SettingsScreenProps) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const { themeMode, setThemeMode } = useThemeContext();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [name, setName] = useState(userProfile?.name || '');
   const [email, setEmail] = useState(userProfile?.email || '');
 
@@ -23,6 +27,12 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
     saveUserProfile({ name, email });
     Alert.alert('Success', 'Profile updated successfully');
   };
+
+  const themeOptions = [
+    { mode: 'light', label: 'Light', icon: Sun },
+    { mode: 'dark', label: 'Dark', icon: Moon },
+    { mode: 'system', label: 'System', icon: Monitor },
+  ] as const;
 
   return (
     <KeyboardAvoidingView 
@@ -37,79 +47,105 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
           <Text style={styles.headerTitle}>Settings</Text>
         </View>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Profile Information</Text>
-        <View style={styles.card}>
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
-            <View style={styles.inputWrapper}>
-              <User size={20} color={theme.colors.textSecondary} />
-              <TextInput
-                style={styles.input}
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
-                placeholderTextColor={theme.colors.placeholder}
-              />
-            </View>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Theme Customization</Text>
+          <View style={styles.themeRow}>
+            {themeOptions.map((option) => {
+              const Icon = option.icon;
+              const isActive = themeMode === option.mode;
+              return (
+                <TouchableOpacity
+                  key={option.mode}
+                  style={[
+                    styles.themeOption,
+                    isActive && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }
+                  ]}
+                  onPress={() => setThemeMode(option.mode)}
+                >
+                  <Icon size={20} color={isActive ? 'white' : theme.colors.textSecondary} />
+                  <Text style={[styles.themeOptionLabel, isActive && { color: 'white' }]}>
+                    {option.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
+        </View>
 
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-            <View style={styles.inputWrapper}>
-              <Text style={{ fontSize: 16, color: theme.colors.textSecondary }}>@</Text>
-              <TextInput
-                style={styles.input}
-                value={email}
-                onChangeText={setEmail}
-                placeholder="Enter your email"
-                keyboardType="email-address"
-                placeholderTextColor={theme.colors.placeholder}
-              />
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>Profile Information</Text>
+          <View style={styles.card}>
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Full Name</Text>
+              <View style={styles.inputWrapper}>
+                <User size={20} color={theme.colors.textSecondary} />
+                <TextInput
+                  style={styles.input}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your name"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
+            </View>
+
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Email Address</Text>
+              <View style={styles.inputWrapper}>
+                <Text style={{ fontSize: 16, color: theme.colors.textSecondary }}>@</Text>
+                <TextInput
+                  style={styles.input}
+                  value={email}
+                  onChangeText={setEmail}
+                  placeholder="Enter your email"
+                  keyboardType="email-address"
+                  placeholderTextColor={theme.colors.placeholder}
+                />
+              </View>
             </View>
           </View>
         </View>
-      </View>
 
-      <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-        <Save size={20} color="white" />
-        <Text style={styles.saveButtonText}>Save Changes</Text>
-      </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+          <Save size={20} color="white" />
+          <Text style={styles.saveButtonText}>Save Changes</Text>
+        </TouchableOpacity>
 
-      <View style={styles.section}>
-        <Text style={styles.sectionLabel}>Preferences</Text>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Theme Settings</Text>
-          <ChevronRight size={20} color={theme.colors.textSecondary} />
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Language</Text>
-          <Text style={styles.menuItemSubText}>English</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.menuItem}>
-          <Text style={styles.menuItemText}>Default Currency</Text>
-          <Text style={styles.menuItemSubText}>USD ($)</Text>
-        </TouchableOpacity>
+        <View style={styles.section}>
+          <Text style={styles.sectionLabel}>App Info</Text>
+          <View style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Version</Text>
+            <Text style={styles.menuItemSubText}>1.0.0 (Premium)</Text>
+          </View>
+          <View style={styles.menuItem}>
+            <Text style={styles.menuItemText}>Secure Encryption</Text>
+            <Text style={styles.menuItemSubText}>AES-256 Enabled</Text>
+          </View>
         </View>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 }
 
-const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background,  },
+const createStyles = (theme: any) => StyleSheet.create({
+  container: { flex: 1, backgroundColor: theme.colors.background },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: theme.colors.text },
-  section: { paddingHorizontal: 20, marginTop: 20 },
-  sectionLabel: { fontSize: 13, color: theme.colors.textSecondary, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4 },
-  card: { backgroundColor: 'white', borderRadius: 16, padding: 16, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
+  section: { paddingHorizontal: 20, marginTop: 24 },
+  sectionLabel: { fontSize: 13, color: theme.colors.textSecondary, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4, fontWeight: '600', letterSpacing: 0.5 },
+  card: { backgroundColor: theme.colors.card, borderRadius: 16, padding: 16, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
   inputGroup: { marginBottom: 16 },
   label: { fontSize: 14, fontWeight: '500', color: theme.colors.text, marginBottom: 8 },
   inputWrapper: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.surface, borderRadius: 12, paddingHorizontal: 12, height: 50 },
   input: { flex: 1, marginLeft: 10, fontSize: 16, color: theme.colors.text },
-  saveButton: { backgroundColor: theme.colors.primary, marginHorizontal: 20, marginTop: 30, height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, elevation: 4, shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
+  saveButton: { backgroundColor: theme.colors.primary, marginHorizontal: 20, marginTop: 30, height: 56, borderRadius: 16, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 10, elevation: 4, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 },
   saveButtonText: { color: 'white', fontSize: 16, fontWeight: 'bold' },
-  menuItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: 'white', padding: 16, borderRadius: 16, marginBottom: 8 },
+  menuItem: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: theme.colors.card, padding: 16, borderRadius: 16, marginBottom: 8 },
   menuItemText: { fontSize: 16, color: theme.colors.text, fontWeight: '500' },
   menuItemSubText: { fontSize: 14, color: theme.colors.textSecondary },
+  
+  // Theme Toggle Row
+  themeRow: { flexDirection: 'row', gap: 12 },
+  themeOption: { flex: 1, height: 80, backgroundColor: theme.colors.card, borderRadius: 16, alignItems: 'center', justifyContent: 'center', gap: 8, borderWidth: 1, borderColor: theme.colors.borderLight },
+  themeOptionLabel: { fontSize: 12, fontWeight: '600', color: theme.colors.textSecondary },
 });

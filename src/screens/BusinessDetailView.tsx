@@ -1,6 +1,6 @@
-import { theme } from "@/theme/theme";
-import { Business, Transaction } from "@/types";
-import { getCurrencySymbol } from "@/utils/_helpers";
+import { useTheme } from "../theme/theme";
+import { Business, Transaction } from "../types";
+import { getCurrencySymbol } from "../utils/_helpers";
 import {
     Car,
     Coffee,
@@ -12,10 +12,10 @@ import {
     Smartphone,
     X
 } from 'lucide-react-native';
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Alert, Modal, ScrollView, Text, TextInput, TouchableOpacity, View, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { styles } from "./DashboardScreen";
+import { createStyles } from "./DashboardScreen";
 
 export default function BusinessDetailView({ business, transactions, allTransactions, onBack, saveTransactions }: { 
   business: Business, 
@@ -25,6 +25,8 @@ export default function BusinessDetailView({ business, transactions, allTransact
   saveTransactions: (t: Transaction[]) => void 
 }) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [searchQuery, setSearchQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
   const [entryType, setEntryType] = useState<'income' | 'expense'>('income');
@@ -77,7 +79,7 @@ export default function BusinessDetailView({ business, transactions, allTransact
     >
       <View style={styles.container}>
         {/* Detail Header */}
-        <View style={[styles.detailHeader, { paddingTop: Math.max(insets.top, 20) }]}>
+        <View style={[styles.detailHeader, { paddingTop: Math.max(insets.top, 40) }]}>
           <TouchableOpacity onPress={onBack} style={styles.detailBackBtn}>
              <X size={24} color={theme.colors.text} />
           </TouchableOpacity>
@@ -128,6 +130,7 @@ export default function BusinessDetailView({ business, transactions, allTransact
               <TextInput 
                   style={styles.detailSearchInput}
                   placeholder="Search transactions..."
+                  placeholderTextColor={theme.colors.placeholder}
                   value={searchQuery}
                   onChangeText={setSearchQuery}
               />
@@ -195,6 +198,7 @@ export default function BusinessDetailView({ business, transactions, allTransact
                   <TextInput 
                     style={styles.modalInputLargeModern}
                     placeholder="0.00"
+                    placeholderTextColor={theme.colors.placeholder}
                     keyboardType="decimal-pad"
                     value={amount}
                     onChangeText={setAmount}
@@ -218,6 +222,7 @@ export default function BusinessDetailView({ business, transactions, allTransact
                   <TextInput 
                     style={styles.modalInputModern}
                     placeholder="What was this for?"
+                    placeholderTextColor={theme.colors.placeholder}
                     value={remark}
                     onChangeText={setRemark}
                   />

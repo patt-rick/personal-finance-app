@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, StyleSheet, useColorScheme } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme, DarkTheme } from '@react-navigation/native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LayoutGrid, Landmark, Settings } from 'lucide-react-native';
 import DashboardScreen from './src/screens/DashboardScreen';
@@ -10,7 +10,8 @@ import BusinessesScreen from './src/screens/BusinessesScreen';
 import SettingsScreen from './src/screens/SettingsScreen';
 import SplashScreen from './src/screens/SplashScreen';
 import { Business, Transaction, UserProfile } from './src/types';
-import { theme } from './src/theme/theme';
+import { useTheme } from './src/theme/theme';
+import { ThemeProvider, useThemeContext } from './src/theme/ThemeContext';
 import { 
   loadBusinesses, 
   saveBusinesses, 
@@ -23,11 +24,23 @@ import {
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+  return (
+    <ThemeProvider>
+      <MainApp />
+    </ThemeProvider>
+  );
+}
+
+function MainApp() {
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
+  const { themeMode, theme } = useThemeContext();
+  const systemColorScheme = useColorScheme();
+
+  const isDark = themeMode === 'system' ? systemColorScheme === 'dark' : themeMode === 'dark';
 
   useEffect(() => {
     async function loadData() {
@@ -70,14 +83,36 @@ export default function App() {
     return <SplashScreen />;
   }
 
+  const MyDefaultTheme = {
+    ...DefaultTheme,
+    colors: {
+      ...DefaultTheme.colors,
+      background: theme.colors.background,
+      card: theme.colors.card,
+      text: theme.colors.text,
+      border: theme.colors.border,
+    },
+  };
+
+  const MyDarkTheme = {
+    ...DarkTheme,
+    colors: {
+      ...DarkTheme.colors,
+      background: theme.colors.background,
+      card: theme.colors.card,
+      text: theme.colors.text,
+      border: theme.colors.border,
+    },
+  };
+
   return (
     <SafeAreaProvider>
-      <View style={{ flex: 1 }}>
-        <StatusBar style="dark" backgroundColor={theme.colors.primary} translucent={false} />
-        <NavigationContainer>
+      <View style={{ flex: 1, backgroundColor: theme.colors.background }}>
+        <StatusBar style={isDark ? 'light' : 'dark'} backgroundColor={theme.colors.background} translucent={false} />
+        <NavigationContainer theme={isDark ? MyDarkTheme : MyDefaultTheme}>
           <Tab.Navigator
             screenOptions={{
-              tabBarStyle: styles.tabBar,
+              tabBarStyle: [styles.tabBar, { backgroundColor: theme.colors.card, borderTopColor: theme.colors.border }],
               tabBarActiveTintColor: theme.colors.primary,
               tabBarInactiveTintColor: theme.colors.textSecondary,
               headerShown: false,
@@ -137,9 +172,7 @@ export default function App() {
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    borderTopColor: '#f0f0f0',
     paddingTop: 8,
   },
 });

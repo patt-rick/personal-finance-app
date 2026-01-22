@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text } from 'react-native';
-import { styles } from '../styles/globalStyles';
+import { createGlobalStyles } from '../styles/globalStyles';
 import { Transaction, Business } from '../types';
+import { useTheme } from '../theme/theme';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -9,6 +10,9 @@ interface TransactionItemProps {
 }
 
 export default function TransactionItem({ transaction, business }: TransactionItemProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createGlobalStyles(theme), [theme]);
+
   return (
     <View style={styles.transactionItem}>
       <View style={styles.transactionLeft}>

@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, X } from 'lucide-react-native';
 import BusinessItem from '../components/BusinessItem';
 import { Business } from '../types';
-import { theme } from '../theme/theme';
+import { useTheme } from '../theme/theme';
 
 interface BusinessesScreenProps {
   businesses: Business[];
@@ -22,6 +22,8 @@ const CURRENCIES = [
 
 export default function BusinessesScreen({ businesses, saveBusinesses, currentBusiness, setCurrentBusiness }: BusinessesScreenProps) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   const [modalVisible, setModalVisible] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
@@ -125,11 +127,11 @@ export default function BusinessesScreen({ businesses, saveBusinesses, currentBu
                   {CURRENCIES.map((curr) => (
                     <TouchableOpacity 
                       key={curr.value}
-                      style={[styles.currencyCard, selectedCurrency === curr.value && styles.currencyCardActive]}
+                      style={[styles.currencyCard, selectedCurrency === curr.value && { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary }]}
                       onPress={() => setSelectedCurrency(curr.value)}
                     >
-                      <Text style={[styles.currencySymbol, selectedCurrency === curr.value && styles.textWhite]}>{curr.symbol}</Text>
-                      <Text style={[styles.currencyCode, selectedCurrency === curr.value && styles.textWhite]}>{curr.value}</Text>
+                      <Text style={[styles.currencySymbol, { color: theme.colors.text }, selectedCurrency === curr.value && { color: 'white' }]}>{curr.symbol}</Text>
+                      <Text style={[styles.currencyCode, { color: theme.colors.textSecondary }, selectedCurrency === curr.value && { color: 'white' }]}>{curr.value}</Text>
                     </TouchableOpacity>
                   ))}
                 </View>
@@ -146,26 +148,24 @@ export default function BusinessesScreen({ businesses, saveBusinesses, currentBu
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   header: { paddingHorizontal: 20, paddingBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: theme.colors.text },
   businessList: { flex: 1, paddingHorizontal: 16 },
   emptyContainer: { padding: 40, alignItems: 'center' },
-  emptyText: { color: theme.colors.textSecondary, textAlign: 'center' },
-  fab: { position: 'absolute', right: 20, bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowColor: theme.colors.primary, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
+  emptyText: { textAlign: 'center', color: theme.colors.textSecondary },
+  fab: { position: 'absolute', right: 20, bottom: 20, width: 56, height: 56, borderRadius: 28, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center', elevation: 6, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.3, shadowRadius: 8 },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
-  modalContent: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalContent: { backgroundColor: theme.colors.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
   modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
-  modalTitle: { fontSize: 20, fontWeight: 'bold' },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: theme.colors.text },
   inputLabel: { fontSize: 13, color: theme.colors.textSecondary, marginBottom: 8, marginTop: 16 },
-  input: { height: 50, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, paddingHorizontal: 16, fontSize: 16, marginBottom: 16 },
+  input: { height: 50, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, color: theme.colors.text, paddingHorizontal: 16, fontSize: 16, marginBottom: 16 },
   currencyGrid: { flexDirection: 'row', gap: 10, flexWrap: 'wrap', marginBottom: 32 },
-  currencyCard: { width: '22%', height: 70, backgroundColor: theme.colors.surface, borderRadius: 12, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' },
-  currencyCardActive: { backgroundColor: theme.colors.primary, borderColor: theme.colors.primary },
+  currencyCard: { width: '22%', height: 70, borderRadius: 12, backgroundColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: 'transparent' },
   currencySymbol: { fontSize: 20, fontWeight: 'bold' },
   currencyCode: { fontSize: 10, fontWeight: '600', marginTop: 4 },
   submitButton: { height: 56, borderRadius: 16, backgroundColor: theme.colors.primary, alignItems: 'center', justifyContent: 'center' },
   submitButtonText: { color: 'white', fontWeight: 'bold', fontSize: 16 },
-  textWhite: { color: 'white' },
 });

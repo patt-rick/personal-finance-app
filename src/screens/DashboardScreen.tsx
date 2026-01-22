@@ -1,25 +1,23 @@
-import { getCurrencySymbol } from '@/utils/_helpers';
+import { getCurrencySymbol } from '../utils/_helpers';
 import {
   Bell,
   Users
 } from 'lucide-react-native';
-import React from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import React, { useMemo } from 'react';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { theme } from '../theme/theme';
+import { useTheme } from '../theme/theme';
 import { Business, Transaction, UserProfile } from '../types';
 import BusinessDetailView from './BusinessDetailView';
 
 const { width } = Dimensions.get('window');
 
-
-
-
-
 // --- Sub-components ---
 
 function DashboardHome({ businesses, transactions, setCurrentBusiness, userProfile }: { businesses: Business[], transactions: Transaction[], setCurrentBusiness: (b: Business) => void, userProfile: UserProfile | null }) {
   const insets = useSafeAreaInsets();
+  const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
   
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
@@ -68,7 +66,7 @@ function DashboardHome({ businesses, transactions, setCurrentBusiness, userProfi
               style={styles.modernCashbookItem}
               onPress={() => setCurrentBusiness(business)}
             >
-              <View style={[styles.cashbookIconModern, { backgroundColor: theme.colors.incomeBg }]}>
+              <View style={styles.cashbookIconModern}>
                 <Users size={22} color={theme.colors.primary} />
               </View>
               <View style={styles.cashbookInfoModern}>
@@ -95,7 +93,6 @@ function DashboardHome({ businesses, transactions, setCurrentBusiness, userProfi
     </ScrollView>
   );
 }
-
 
 // --- Main Export ---
 
@@ -131,15 +128,15 @@ export default function DashboardScreen({ businesses, transactions, currentBusin
   );
 }
 
-export const styles = StyleSheet.create({
+export const createStyles = (theme: any) => StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
   headerDecoration: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: theme.colors.incomeBg, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, opacity: 0.6 },
   
   // Modern Header
   modernHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 20 },
-  greetingText: { fontSize: 13, color: theme.colors.primary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
+  greetingText: { fontSize: 13, fontWeight: '600', color: theme.colors.primary, textTransform: 'uppercase', letterSpacing: 0.5 },
   userNameText: { fontSize: 26, fontWeight: 'bold', color: theme.colors.text, marginTop: 2 },
-  notificationBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
+  notificationBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: theme.colors.card, alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },
 
   // Hero Section
   heroSection: { paddingHorizontal: 20, marginTop: 10, marginBottom: 10 },
@@ -173,7 +170,7 @@ export const styles = StyleSheet.create({
 
   // Cashbooks List
   cashbooksListModern: { paddingHorizontal: 20, paddingBottom: 40 },
-  modernCashbookItem: { backgroundColor: 'white', padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
+  modernCashbookItem: { backgroundColor: theme.colors.card, padding: 16, borderRadius: 16, flexDirection: 'row', alignItems: 'center', marginBottom: 12, elevation: 1, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 2 },
   cashbookIconModern: { width: 44, height: 44, borderRadius: 12, backgroundColor: theme.colors.surface, alignItems: 'center', justifyContent: 'center' },
   cashbookInfoModern: { flex: 1, marginLeft: 16 },
   cashbookNameModern: { fontSize: 16, fontWeight: '600', color: theme.colors.text },
@@ -186,8 +183,8 @@ export const styles = StyleSheet.create({
   detailBackBtn: { padding: 4 },
   detailTitle: { fontSize: 18, fontWeight: 'bold', color: theme.colors.text },
   detailHeaderBtn: { padding: 4 },
-  detailSearchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'white', marginHorizontal: 20, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, marginTop: 20 },
-  detailSearchInput: { flex: 1, marginLeft: 8, fontSize: 14 },
+  detailSearchContainer: { flexDirection: 'row', alignItems: 'center', backgroundColor: theme.colors.card, marginHorizontal: 20, paddingHorizontal: 12, height: 44, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, marginTop: 20 },
+  detailSearchInput: { flex: 1, marginLeft: 8, fontSize: 14, color: theme.colors.text },
   detailList: { paddingHorizontal: 20, marginTop: 24 },
   listLabel: { fontSize: 16, fontWeight: 'bold', color: theme.colors.text, marginBottom: 16 },
   modernTxItem: { flexDirection: 'row', alignItems: 'center', marginBottom: 20 },
@@ -199,13 +196,13 @@ export const styles = StyleSheet.create({
   txAmountModern: { fontSize: 16, fontWeight: 'bold' },
 
   // Bottom Actions
-  modernBottomActions: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 20, gap: 12, backgroundColor: 'white', borderTopLeftRadius: 24, borderTopRightRadius: 24, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 8 },
+  modernBottomActions: { position: 'absolute', bottom: 0, left: 0, right: 0, flexDirection: 'row', padding: 20, gap: 12, backgroundColor: theme.colors.card, borderTopLeftRadius: 24, borderTopRightRadius: 24, elevation: 10, shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 8 },
   bigActionBtnModern: { flex: 1, height: 50, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
   bigActionBtnTextModern: { fontSize: 15, fontWeight: 'bold' },
 
   // Modal Modern
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  modalContentModern: { backgroundColor: 'white', borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
+  modalContentModern: { backgroundColor: theme.colors.card, borderTopLeftRadius: 32, borderTopRightRadius: 32, padding: 24, paddingBottom: 40 },
   modalHeaderModern: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 },
   modalTitleModern: { fontSize: 20, fontWeight: 'bold', color: theme.colors.text },
   inputLabelModern: { fontSize: 13, color: theme.colors.textSecondary, marginBottom: 8 },
@@ -215,7 +212,7 @@ export const styles = StyleSheet.create({
   categoryChipActive: { backgroundColor: theme.colors.primary },
   categoryChipText: { fontSize: 14, color: theme.colors.textSecondary },
   categoryChipTextActive: { color: 'white', fontWeight: '500' },
-  modalInputModern: { height: 50, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, paddingHorizontal: 16, fontSize: 15, marginBottom: 24 },
+  modalInputModern: { height: 50, borderRadius: 12, borderWidth: 1, borderColor: theme.colors.borderLight, paddingHorizontal: 16, fontSize: 15, color: theme.colors.text, marginBottom: 24 },
   submitBtnModern: { height: 56, borderRadius: 16, alignItems: 'center', justifyContent: 'center', elevation: 4, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 },
   submitBtnTextModern: { color: 'white', fontSize: 16, fontWeight: 'bold' },
   emptyContainer: { padding: 40, alignItems: 'center' },

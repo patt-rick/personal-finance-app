@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { TouchableOpacity, Text } from 'react-native';
-import { styles } from '../styles/globalStyles';
+import { createGlobalStyles } from '../styles/globalStyles';
 import { Business } from '../types';
+import { useTheme } from '../theme/theme';
 
 interface BusinessChipProps {
   business?: Business | null;
@@ -10,6 +11,9 @@ interface BusinessChipProps {
 }
 
 export default function BusinessChip({ business, isActive, onPress }: BusinessChipProps) {
+  const theme = useTheme();
+  const styles = useMemo(() => createGlobalStyles(theme), [theme]);
+
   return (
     <TouchableOpacity
       style={[styles.businessChip, isActive && styles.businessChipActive]}
