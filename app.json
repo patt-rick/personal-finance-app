@@ -4,13 +4,7 @@
     "slug": "finance-tracker",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
     "userInterfaceStyle": "light",
-    "splash": {
-      "image": "./assets/splash.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
-    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -19,14 +13,11 @@
       "bundleIdentifier": "com.yourcompany.financetracker"
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#ffffff"
-      },
       "package": "com.yourcompany.financetracker"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
+    "splash": {
+      "backgroundColor": "#6366F1",
+      "resizeMode": "contain"
     }
   }
 }

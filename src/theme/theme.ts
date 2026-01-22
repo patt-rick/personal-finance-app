@@ -1,17 +1,24 @@
 export const theme = {
   colors: {
-    primary: '#000000',
-    background: '#ffffff',
-    card: '#fafafa',
-    surface: '#f5f5f5',
-    text: '#000000',
-    textSecondary: '#666666',
+    primary: '#6366F1', // Purple from the new design
+    secondary: '#F59E0B', // Amber for expenses
+    background: '#F9FAFB',
+    card: '#ffffff',
+    darkCard: '#1F2937',
+    surface: '#f3f4f6',
+    text: '#111827',
+    textSecondary: '#6B7280',
     textInverse: '#ffffff',
-    border: '#e0e0e0',
-    borderLight: '#f0f0f0',
-    error: '#dc2626',
-    placeholder: '#999999',
-    success: '#000000', // Using black for positive as seen in styles
+    border: '#E5E7EB',
+    borderLight: '#F3F4F6',
+    error: '#EF4444',
+    placeholder: '#9CA3AF',
+    success: '#10B981',
+    income: '#6366F1',
+    expense: '#F59E0B',
+    accent: '#6366F1',
+    incomeBg: '#EEF2FF',
+    expenseBg: '#FFF7ED',
   },
   spacing: {
     xs: 4,

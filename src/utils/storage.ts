@@ -1,9 +1,10 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { Business, Transaction } from '../types';
+import { Business, Transaction, UserProfile } from '../types';
 
 const STORAGE_KEYS = {
   BUSINESSES: '@businesses',
   TRANSACTIONS: '@transactions',
+  USER_PROFILE: '@user_profile',
 };
 
 export const loadBusinesses = async (): Promise<Business[]> => {
@@ -42,6 +43,26 @@ export const saveTransactions = async (transactions: Transaction[]): Promise<boo
     return true;
   } catch (error) {
     console.error('Error saving transactions:', error);
+    return false;
+  }
+};
+
+export const loadUserProfile = async (): Promise<UserProfile | null> => {
+  try {
+    const data = await AsyncStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+    return data ? JSON.parse(data) : { name: 'New User' };
+  } catch (error) {
+    console.error('Error loading user profile:', error);
+    return null;
+  }
+};
+
+export const saveUserProfile = async (profile: UserProfile): Promise<boolean> => {
+  try {
+    await AsyncStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify(profile));
+    return true;
+  } catch (error) {
+    console.error('Error saving user profile:', error);
     return false;
   }
 };

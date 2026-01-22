@@ -2,6 +2,16 @@ export interface Business {
   id: string;
   name: string;
   createdAt: string;
+  memberCount?: number;
+  hasNewActivity?: boolean;
+  lastUpdated?: string;
+  currency?: string; // e.g., 'USD', 'GHS', 'EUR'
+}
+
+export interface UserProfile {
+  name: string;
+  email?: string;
+  profileImage?: string;
 }
 
 export interface Transaction {
@@ -11,4 +21,7 @@ export interface Transaction {
   date: string;
   type: 'income' | 'expense';
   businessId: string;
+  category?: string;
+  subCategory?: string;
+  paymentMode?: string;
 }
