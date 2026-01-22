@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, StyleSheet } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, Modal, Alert, StyleSheet, KeyboardAvoidingView, Platform, TouchableWithoutFeedback, Keyboard } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Plus, X } from 'lucide-react-native';
 import BusinessItem from '../components/BusinessItem';
 import { Business } from '../types';
@@ -20,6 +21,7 @@ const CURRENCIES = [
 ];
 
 export default function BusinessesScreen({ businesses, saveBusinesses, currentBusiness, setCurrentBusiness }: BusinessesScreenProps) {
+  const insets = useSafeAreaInsets();
   const [modalVisible, setModalVisible] = useState(false);
   const [businessName, setBusinessName] = useState('');
   const [selectedCurrency, setSelectedCurrency] = useState('USD');
@@ -67,7 +69,7 @@ export default function BusinessesScreen({ businesses, saveBusinesses, currentBu
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
         <Text style={styles.headerTitle}>My Cashbooks</Text>
       </View>
       <ScrollView style={styles.businessList} contentContainerStyle={{ paddingBottom: 100 }}>
@@ -97,41 +99,48 @@ export default function BusinessesScreen({ businesses, saveBusinesses, currentBu
 
       {/* Add Business Modal */}
       <Modal visible={modalVisible} animationType="slide" transparent>
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>New Cashbook</Text>
-                <TouchableOpacity onPress={() => setModalVisible(false)}><X size={24} color={theme.colors.text} /></TouchableOpacity>
-            </View>
+        <KeyboardAvoidingView 
+          behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+          style={{ flex: 1 }}
+        >
+          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+            <View style={styles.modalOverlay}>
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                    <Text style={styles.modalTitle}>New Cashbook</Text>
+                    <TouchableOpacity onPress={() => setModalVisible(false)}><X size={24} color={theme.colors.text} /></TouchableOpacity>
+                </View>
 
-            <Text style={styles.inputLabel}>Cashbook Name</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="e.g. My Shop, Personal Expenses"
-              value={businessName}
-              onChangeText={setBusinessName}
-              placeholderTextColor={theme.colors.placeholder}
-            />
+                <Text style={styles.inputLabel}>Cashbook Name</Text>
+                <TextInput
+                  style={styles.input}
+                  placeholder="e.g. My Shop, Personal Expenses"
+                  value={businessName}
+                  onChangeText={setBusinessName}
+                  placeholderTextColor={theme.colors.placeholder}
+                />
 
-            <Text style={styles.inputLabel}>Currency</Text>
-            <View style={styles.currencyGrid}>
-              {CURRENCIES.map((curr) => (
-                <TouchableOpacity 
-                  key={curr.value}
-                  style={[styles.currencyCard, selectedCurrency === curr.value && styles.currencyCardActive]}
-                  onPress={() => setSelectedCurrency(curr.value)}
-                >
-                  <Text style={[styles.currencySymbol, selectedCurrency === curr.value && styles.textWhite]}>{curr.symbol}</Text>
-                  <Text style={[styles.currencyCode, selectedCurrency === curr.value && styles.textWhite]}>{curr.value}</Text>
+                <Text style={styles.inputLabel}>Currency</Text>
+                <View style={styles.currencyGrid}>
+                  {CURRENCIES.map((curr) => (
+                    <TouchableOpacity 
+                      key={curr.value}
+                      style={[styles.currencyCard, selectedCurrency === curr.value && styles.currencyCardActive]}
+                      onPress={() => setSelectedCurrency(curr.value)}
+                    >
+                      <Text style={[styles.currencySymbol, selectedCurrency === curr.value && styles.textWhite]}>{curr.symbol}</Text>
+                      <Text style={[styles.currencyCode, selectedCurrency === curr.value && styles.textWhite]}>{curr.value}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                <TouchableOpacity style={styles.submitButton} onPress={addBusiness}>
+                  <Text style={styles.submitButtonText}>Create Cashbook</Text>
                 </TouchableOpacity>
-              ))}
+              </View>
             </View>
-
-            <TouchableOpacity style={styles.submitButton} onPress={addBusiness}>
-              <Text style={styles.submitButtonText}>Create Cashbook</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+          </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
       </Modal>
     </View>
   );
@@ -139,7 +148,7 @@ export default function BusinessesScreen({ businesses, saveBusinesses, currentBu
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
+  header: { paddingHorizontal: 20, paddingBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: theme.colors.text },
   businessList: { flex: 1, paddingHorizontal: 16 },
   emptyContainer: { padding: 40, alignItems: 'center' },

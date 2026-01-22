@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Platform, KeyboardAvoidingView } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { User, Save, ChevronRight } from 'lucide-react-native';
 import { theme } from '../theme/theme';
 import { UserProfile } from '../types';
@@ -10,6 +11,7 @@ interface SettingsScreenProps {
 }
 
 export default function SettingsScreen({ userProfile, saveUserProfile }: SettingsScreenProps) {
+  const insets = useSafeAreaInsets();
   const [name, setName] = useState(userProfile?.name || '');
   const [email, setEmail] = useState(userProfile?.email || '');
 
@@ -23,10 +25,17 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
   };
 
   return (
-    <ScrollView style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Settings</Text>
-      </View>
+    <KeyboardAvoidingView 
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      style={{ flex: 1 }}
+    >
+      <ScrollView 
+        style={styles.container}
+        contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
+      >
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
+          <Text style={styles.headerTitle}>Settings</Text>
+        </View>
 
       <View style={styles.section}>
         <Text style={styles.sectionLabel}>Profile Information</Text>
@@ -81,14 +90,15 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
           <Text style={styles.menuItemText}>Default Currency</Text>
           <Text style={styles.menuItemSubText}>USD ($)</Text>
         </TouchableOpacity>
-      </View>
-    </ScrollView>
+        </View>
+      </ScrollView>
+    </KeyboardAvoidingView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: theme.colors.background },
-  header: { paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
+  container: { flex: 1, backgroundColor: theme.colors.background,  },
+  header: { paddingHorizontal: 20, paddingBottom: 20 },
   headerTitle: { fontSize: 24, fontWeight: 'bold', color: theme.colors.text },
   section: { paddingHorizontal: 20, marginTop: 20 },
   sectionLabel: { fontSize: 13, color: theme.colors.textSecondary, textTransform: 'uppercase', marginBottom: 12, marginLeft: 4 },

@@ -3,6 +3,7 @@ import { View, StyleSheet, ActivityIndicator } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { NavigationContainer } from '@react-navigation/native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { LayoutGrid, Landmark, Settings } from 'lucide-react-native';
 import DashboardScreen from './src/screens/DashboardScreen';
 import BusinessesScreen from './src/screens/BusinessesScreen';
@@ -30,13 +31,22 @@ export default function App() {
 
   useEffect(() => {
     async function loadData() {
+      const startTime = Date.now();
+      
       const loadedBusinesses = await loadBusinesses();
       const loadedTransactions = await loadTransactions();
       const loadedProfile = await loadUserProfile();
+      
       setBusinesses(loadedBusinesses);
       setTransactions(loadedTransactions);
       setUserProfile(loadedProfile);
-      setIsLoading(false);
+
+      const elapsedTime = Date.now() - startTime;
+      const remainingTime = Math.max(0, 3000 - elapsedTime);
+      
+      setTimeout(() => {
+        setIsLoading(false);
+      }, remainingTime);
     }
     loadData();
   }, []);
@@ -61,75 +71,75 @@ export default function App() {
   }
 
   return (
-    <View style={{ flex: 1 }}>
-      <StatusBar style="dark" backgroundColor={theme.colors.primary} translucent={false} />
-      <NavigationContainer>
-        <Tab.Navigator
-          screenOptions={{
-            tabBarStyle: styles.tabBar,
-            tabBarActiveTintColor: theme.colors.primary,
-            tabBarInactiveTintColor: theme.colors.textSecondary,
-            headerShown: false,
-          }}
-        >
-          <Tab.Screen 
-            name="Dashboard" 
-            options={{
-              tabBarIcon: ({ color }) => <LayoutGrid size={24} color={color} />,
+    <SafeAreaProvider>
+      <View style={{ flex: 1 }}>
+        <StatusBar style="dark" backgroundColor={theme.colors.primary} translucent={false} />
+        <NavigationContainer>
+          <Tab.Navigator
+            screenOptions={{
+              tabBarStyle: styles.tabBar,
+              tabBarActiveTintColor: theme.colors.primary,
+              tabBarInactiveTintColor: theme.colors.textSecondary,
+              headerShown: false,
             }}
           >
-            {() => (
-              <DashboardScreen 
-                businesses={businesses} 
-                transactions={transactions}
-                currentBusiness={currentBusiness}
-                setCurrentBusiness={setCurrentBusiness}
-                saveTransactions={handleSaveTransactions}
-                userProfile={userProfile}
-              />
-            )}
-          </Tab.Screen>
-          <Tab.Screen 
-            name="Cashbooks" 
-            options={{
-              tabBarIcon: ({ color }) => <Landmark size={24} color={color} />,
-            }}
-          >
-            {() => (
-              <BusinessesScreen 
-                businesses={businesses} 
-                saveBusinesses={handleSaveBusinesses} 
-                currentBusiness={currentBusiness}
-                setCurrentBusiness={setCurrentBusiness}
-              />
-            )}
-          </Tab.Screen>
-          <Tab.Screen 
-            name="Settings" 
-            options={{
-              tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
-            }}
-          >
-            {() => (
-              <SettingsScreen 
-                userProfile={userProfile}
-                saveUserProfile={handleSaveUserProfile}
-              />
-            )}
-          </Tab.Screen>
-        </Tab.Navigator>
-      </NavigationContainer>
-    </View>
+            <Tab.Screen 
+              name="Dashboard" 
+              options={{
+                tabBarIcon: ({ color }) => <LayoutGrid size={24} color={color} />,
+              }}
+            >
+              {() => (
+                <DashboardScreen 
+                  businesses={businesses} 
+                  transactions={transactions}
+                  currentBusiness={currentBusiness}
+                  setCurrentBusiness={setCurrentBusiness}
+                  saveTransactions={handleSaveTransactions}
+                  userProfile={userProfile}
+                />
+              )}
+            </Tab.Screen>
+            <Tab.Screen 
+              name="Cashbooks" 
+              options={{
+                tabBarIcon: ({ color }) => <Landmark size={24} color={color} />,
+              }}
+            >
+              {() => (
+                <BusinessesScreen 
+                  businesses={businesses} 
+                  saveBusinesses={handleSaveBusinesses} 
+                  currentBusiness={currentBusiness}
+                  setCurrentBusiness={setCurrentBusiness}
+                />
+              )}
+            </Tab.Screen>
+            <Tab.Screen 
+              name="Settings" 
+              options={{
+                tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
+              }}
+            >
+              {() => (
+                <SettingsScreen 
+                  userProfile={userProfile}
+                  saveUserProfile={handleSaveUserProfile}
+                />
+              )}
+            </Tab.Screen>
+          </Tab.Navigator>
+        </NavigationContainer>
+      </View>
+    </SafeAreaProvider>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    height: 70,
     backgroundColor: '#ffffff',
     borderTopWidth: 1,
-    paddingBottom: 12,
-    paddingTop: 8,
     borderTopColor: '#f0f0f0',
+    paddingTop: 8,
   },
 });

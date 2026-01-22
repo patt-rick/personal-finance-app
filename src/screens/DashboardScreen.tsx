@@ -4,7 +4,8 @@ import {
   Users
 } from 'lucide-react-native';
 import React from 'react';
-import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, ScrollView, StyleSheet, Text, TouchableOpacity, View, Platform } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { theme } from '../theme/theme';
 import { Business, Transaction, UserProfile } from '../types';
 import BusinessDetailView from './BusinessDetailView';
@@ -18,13 +19,15 @@ const { width } = Dimensions.get('window');
 // --- Sub-components ---
 
 function DashboardHome({ businesses, transactions, setCurrentBusiness, userProfile }: { businesses: Business[], transactions: Transaction[], setCurrentBusiness: (b: Business) => void, userProfile: UserProfile | null }) {
+  const insets = useSafeAreaInsets();
+  
   return (
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
       {/* Decorative Header Background */}
-      <View style={styles.headerDecoration} />
+      <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
       
       {/* Header */}
-      <View style={styles.modernHeader}>
+      <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
         <View>
           <Text style={styles.greetingText}>Welcome back,</Text>
           <Text style={styles.userNameText}>{userProfile?.name || 'John Doe'}</Text>
@@ -130,10 +133,10 @@ export default function DashboardScreen({ businesses, transactions, currentBusin
 
 export const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: theme.colors.background },
-  headerDecoration: { position: 'absolute', top: 0, left: 0, right: 0, height: 300, backgroundColor: theme.colors.incomeBg, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, opacity: 0.6 },
+  headerDecoration: { position: 'absolute', top: 0, left: 0, right: 0, backgroundColor: theme.colors.incomeBg, borderBottomLeftRadius: 40, borderBottomRightRadius: 40, opacity: 0.6 },
   
   // Modern Header
-  modernHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 60, paddingBottom: 20 },
+  modernHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingBottom: 20 },
   greetingText: { fontSize: 13, color: theme.colors.primary, fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5 },
   userNameText: { fontSize: 26, fontWeight: 'bold', color: theme.colors.text, marginTop: 2 },
   notificationBtn: { width: 48, height: 48, borderRadius: 24, backgroundColor: 'white', alignItems: 'center', justifyContent: 'center', elevation: 3, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.08, shadowRadius: 4 },

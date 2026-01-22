@@ -10,7 +10,10 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.financetracker"
+      "bundleIdentifier": "com.yourcompany.financetracker",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.yourcompany.financetracker"
@@ -18,6 +21,11 @@
     "splash": {
       "backgroundColor": "#6366F1",
       "resizeMode": "contain"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5f343e27-5b81-42fc-8220-302ce8233661"
+      }
     }
   }
 }
