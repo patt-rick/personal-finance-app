@@ -22,6 +22,7 @@ import {
     Pencil,
     Download,
     Filter,
+    Trash,
 } from "lucide-react-native";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
@@ -59,8 +60,7 @@ export default function BusinessDetailView({
     const theme = useTheme();
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [modalVisible, setModalVisible] = useState(false);
-    const [detailModalVisible, setDetailModalVisible] = useState(false);
+    const [activeModal, setActiveModal] = useState<"none" | "entry" | "detail">("none");
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
     const [editingTxId, setEditingTxId] = useState<string | null>(null);
     const [entryType, setEntryType] = useState<"income" | "expense">("income");
@@ -181,7 +181,7 @@ export default function BusinessDetailView({
 
         setAmount("");
         setRemark("");
-        setModalVisible(false);
+        setActiveModal("none");
     };
 
     const handleStartEdit = () => {
@@ -191,12 +191,11 @@ export default function BusinessDetailView({
         setSelectedCategory(selectedTx.category || "Others");
         setRemark(selectedTx.remark || "");
         setEditingTxId(selectedTx.id);
-        setDetailModalVisible(false);
-        setModalVisible(true);
+        setActiveModal("entry");
     };
 
     const handeCloseModal = () => {
-        setModalVisible(false);
+        setActiveModal("none");
         setEditingTxId(null);
         setAmount("");
         setRemark("");
@@ -211,7 +210,7 @@ export default function BusinessDetailView({
                 onPress: () => {
                     const updated = allTransactions.filter((t) => t.id !== id);
                     saveTransactions(updated);
-                    setDetailModalVisible(false);
+                    setActiveModal("none");
                 },
             },
         ]);
@@ -425,7 +424,7 @@ export default function BusinessDetailView({
                                         style={styles.modernTxItem}
                                         onPress={() => {
                                             setSelectedTx(t);
-                                            setDetailModalVisible(true);
+                                            setActiveModal("detail");
                                         }}
                                     >
                                         <View
@@ -501,7 +500,7 @@ export default function BusinessDetailView({
                             setEditingTxId(null);
                             setAmount("");
                             setRemark("");
-                            setModalVisible(true);
+                            setActiveModal("entry");
                         }}
                     >
                         <Text style={[styles.bigActionBtnTextModern, { color: "white" }]}>
@@ -518,7 +517,7 @@ export default function BusinessDetailView({
                             setEditingTxId(null);
                             setAmount("");
                             setRemark("");
-                            setModalVisible(true);
+                            setActiveModal("entry");
                         }}
                     >
                         <Text style={[styles.bigActionBtnTextModern, { color: "white" }]}>
@@ -528,7 +527,7 @@ export default function BusinessDetailView({
                 </View>
 
                 {/* Entry Modal */}
-                <Modal visible={modalVisible} animationType="slide" transparent>
+                <Modal visible={activeModal === "entry"} animationType="slide" transparent>
                     <KeyboardAvoidingView
                         behavior={Platform.OS === "ios" ? "padding" : "height"}
                         style={{ flex: 1 }}
@@ -619,12 +618,12 @@ export default function BusinessDetailView({
                 </Modal>
 
                 {/* Transaction Detail Modal */}
-                <Modal visible={detailModalVisible} animationType="slide" transparent>
+                <Modal visible={activeModal === "detail"} animationType="slide" transparent>
                     <View style={styles.modalOverlay}>
                         <View style={styles.txDetailCard}>
                             <TouchableOpacity
                                 style={{ alignSelf: "flex-end", padding: 10, marginTop: -10 }}
-                                onPress={() => setDetailModalVisible(false)}
+                                onPress={() => setActiveModal("none")}
                             >
                                 <X size={24} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
@@ -774,7 +773,7 @@ export default function BusinessDetailView({
                                                     fontWeight: "bold",
                                                 }}
                                             >
-                                                Delete
+                                                <Trash size={20} color={theme.colors.error} />
                                             </Text>
                                         </TouchableOpacity>
 
@@ -791,13 +790,13 @@ export default function BusinessDetailView({
                                                     fontWeight: "bold",
                                                 }}
                                             >
-                                                Edit
+                                                <Pencil size={20} color={theme.colors.primary} />
                                             </Text>
                                         </TouchableOpacity>
 
                                         <TouchableOpacity
                                             style={styles.txDetailCloseBtn}
-                                            onPress={() => setDetailModalVisible(false)}
+                                            onPress={() => setActiveModal("none")}
                                         >
                                             <Text style={{ color: "white", fontWeight: "bold" }}>
                                                 Done
