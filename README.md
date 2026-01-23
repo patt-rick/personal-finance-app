@@ -8,6 +8,12 @@ A React Native finance tracking application built with Expo, allowing users to m
 - 💼 **Multiple Businesses**: Track finances for multiple businesses separately
 - 💰 **Transactions**: Add and view income and expense transactions
 - 🎨 **Customizable Theme**: Easily change the primary color through the theme system
+- 🔔 **Smart Notifications**: Random fun and corny reminders sent twice daily to help keep your records up to date
+
+## TODO
+
+- [ ] 📈 **Visuals & Analytics**: Implement simple graphs (bar charts/pie charts) for better spending insights
+- [ ] 💰 **Budgeting Feature**: Allow users to set monthly budgets and track performance against them
 
 ## Tech Stack
 
@@ -55,17 +61,20 @@ finance-tracker/
 ### Installation
 
 1. Clone the repository:
+
 ```bash
 git clone <repository-url>
 cd finance-tracker
 ```
 
 2. Install dependencies:
+
 ```bash
 npm install
 ```
 
 3. Start the development server:
+
 ```bash
 npm start
 ```
@@ -81,11 +90,11 @@ The app uses a centralized theme system that makes it easy to customize colors. 
 
 ```typescript
 export const theme = {
-  colors: {
-    primary: '#000000', // Change this to your desired color
-    // ... other colors
-  },
-  // ... spacing and borderRadius
+    colors: {
+        primary: "#000000", // Change this to your desired color
+        // ... other colors
+    },
+    // ... spacing and borderRadius
 };
 ```
 
@@ -123,6 +132,7 @@ This project has been fully converted to TypeScript for better type safety and d
 ## Data Storage
 
 The app uses AsyncStorage to persist data locally on the device. Data includes:
+
 - List of businesses
 - Transaction history
 
