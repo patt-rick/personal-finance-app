@@ -11,10 +11,11 @@ import {
     KeyboardAvoidingView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { User, Save, Moon, Sun, Monitor } from "lucide-react-native";
+import { User, Save, Moon, Sun, Monitor, Bell } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
 import { UserProfile } from "../types";
+import { sendTestNotification } from "../utils/notifications";
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
@@ -145,6 +146,22 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
                         <Text style={styles.menuItemSubText}>AES-256 Enabled</Text>
                     </View>
                 </View>
+
+                {/* <View style={[styles.section, { marginBottom: 20 }]}>
+                    <Text style={styles.sectionLabel}>Testing & Debug</Text>
+                    <TouchableOpacity
+                        style={[styles.menuItem, { backgroundColor: theme.colors.card }]}
+                        onPress={sendTestNotification}
+                    >
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                            <Bell size={20} color={theme.colors.primary} />
+                            <Text style={styles.menuItemText}>Send Test Notification</Text>
+                        </View>
+                        <Text style={[styles.menuItemSubText, { color: theme.colors.primary }]}>
+                            Trigger Now
+                        </Text>
+                    </TouchableOpacity>
+                </View> */}
             </ScrollView>
         </KeyboardAvoidingView>
     );

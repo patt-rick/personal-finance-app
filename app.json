@@ -31,6 +31,10 @@
                 "projectId": "5f343e27-5b81-42fc-8220-302ce8233661"
             }
         },
-        "plugins": ["@react-native-community/datetimepicker", "expo-notifications"]
+        "plugins": ["@react-native-community/datetimepicker", "expo-notifications"],
+        "notification": {
+            "icon": "./src/icon.png",
+            "color": "#6366F1"
+        }
     }
 }
