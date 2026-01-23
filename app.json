@@ -1,40 +1,36 @@
 {
-  "expo": {
-    "name": "Finance Tracker",
-    "slug": "finance-tracker",
-    "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./src/icon.png",
-    "userInterfaceStyle": "automatic",
-    "assetBundlePatterns": [
-      "**/*"
-    ],
-    "ios": {
-      "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.financetracker",
-      "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
-      }
-    },
-    "android": {
-      "package": "com.yourcompany.financetracker",
-      "adaptiveIcon": {
-        "foregroundImage": "./src/icon.png",
-        "backgroundColor": "#6366F1"
-      }
-    },
-    "splash": {
-      "image": "./src/icon.png",
-      "backgroundColor": "#6366F1",
-      "resizeMode": "contain"
-    },
-    "extra": {
-      "eas": {
-        "projectId": "5f343e27-5b81-42fc-8220-302ce8233661"
-      }
-    },
-    "plugins": [
-      "@react-native-community/datetimepicker"
-    ]
-  }
+    "expo": {
+        "name": "Finance Tracker",
+        "slug": "finance-tracker",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./src/icon.png",
+        "userInterfaceStyle": "automatic",
+        "assetBundlePatterns": ["**/*"],
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.yourcompany.financetracker",
+            "infoPlist": {
+                "ITSAppUsesNonExemptEncryption": false
+            }
+        },
+        "android": {
+            "package": "com.yourcompany.financetracker",
+            "adaptiveIcon": {
+                "foregroundImage": "./src/icon.png",
+                "backgroundColor": "#6366F1"
+            }
+        },
+        "splash": {
+            "image": "./src/icon.png",
+            "backgroundColor": "#6366F1",
+            "resizeMode": "contain"
+        },
+        "extra": {
+            "eas": {
+                "projectId": "5f343e27-5b81-42fc-8220-302ce8233661"
+            }
+        },
+        "plugins": ["@react-native-community/datetimepicker", "expo-notifications"]
+    }
 }
