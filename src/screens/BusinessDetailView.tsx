@@ -20,7 +20,11 @@ import {
     MessageSquare,
     ArrowLeft,
     Pencil,
+    Download,
+    Filter,
 } from "lucide-react-native";
+import * as Sharing from "expo-sharing";
+import * as FileSystem from "expo-file-system/legacy";
 import React, { useState, useMemo } from "react";
 import {
     Alert,
@@ -63,10 +67,33 @@ export default function BusinessDetailView({
     const [amount, setAmount] = useState("");
     const [remark, setRemark] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("Others");
+    const [filterRange, setFilterRange] = useState<"all" | "today" | "week" | "month">("all");
 
     const categories = ["Shopping", "Insurance", "Food", "Transport", "Bills", "Salary", "Others"];
 
-    const filteredTransactions = transactions.filter(
+    const filteredTransactionsByRange = useMemo(() => {
+        let filtered = [...transactions];
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        if (filterRange === "today") {
+            filtered = filtered.filter((t) => {
+                const d = new Date(t.date);
+                return d >= today;
+            });
+        } else if (filterRange === "week") {
+            const weekAgo = new Date(today);
+            weekAgo.setDate(today.getDate() - 7);
+            filtered = filtered.filter((t) => new Date(t.date) >= weekAgo);
+        } else if (filterRange === "month") {
+            const monthAgo = new Date(today);
+            monthAgo.setMonth(today.getMonth() - 1);
+            filtered = filtered.filter((t) => new Date(t.date) >= monthAgo);
+        }
+        return filtered;
+    }, [transactions, filterRange]);
+
+    const filteredTransactions = filteredTransactionsByRange.filter(
         (t) =>
             t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
             t.amount.toString().includes(searchQuery) ||
@@ -190,6 +217,44 @@ export default function BusinessDetailView({
         ]);
     };
 
+    const exportToCSV = async () => {
+        if (filteredTransactions.length === 0) {
+            Alert.alert("No transactions", "There are no transactions to export.");
+            return;
+        }
+
+        try {
+            const header = "Date,Type,Amount,Description,Category,Remark\n";
+            const rows = filteredTransactions
+                .map((t) => {
+                    const date = new Date(t.date).toLocaleDateString();
+                    return `${date},${t.type},${t.amount},"${(t.description || "").replace(/"/g, '""')}",${t.category || ""},"${(t.remark || "").replace(/"/g, '""')}"`;
+                })
+                .join("\n");
+
+            const csvContent = header + rows;
+            const fileName = `transactions_${business.name.replace(/\s+/g, "_")}_${filterRange}_${Date.now()}.csv`;
+            const fileUri = FileSystem.cacheDirectory + fileName;
+
+            await FileSystem.writeAsStringAsync(fileUri, csvContent, {
+                encoding: FileSystem.EncodingType.UTF8,
+            });
+
+            if (await Sharing.isAvailableAsync()) {
+                await Sharing.shareAsync(fileUri, {
+                    mimeType: "text/csv",
+                    dialogTitle: "Export Transactions",
+                    UTI: "public.comma-separated-values-text",
+                });
+            } else {
+                Alert.alert("Error", "Sharing is not available on this device");
+            }
+        } catch (error) {
+            console.error(error);
+            Alert.alert("Error", "Failed to export CSV");
+        }
+    };
+
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -287,6 +352,53 @@ export default function BusinessDetailView({
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                         />
+                    </View>
+
+                    {/* Filter & Export Bar */}
+                    <View style={styles.filterBar}>
+                        <ScrollView
+                            horizontal
+                            showsHorizontalScrollIndicator={false}
+                            style={styles.filterRangeScroll}
+                        >
+                            {(["all", "today", "week", "month"] as const).map((range) => (
+                                <TouchableOpacity
+                                    key={range}
+                                    onPress={() => setFilterRange(range)}
+                                    style={[
+                                        styles.filterChip,
+                                        {
+                                            backgroundColor:
+                                                filterRange === range
+                                                    ? theme.colors.primary
+                                                    : theme.colors.card,
+                                            borderColor:
+                                                filterRange === range
+                                                    ? theme.colors.primary
+                                                    : theme.colors.borderLight,
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.filterChipText,
+                                            {
+                                                color:
+                                                    filterRange === range
+                                                        ? "white"
+                                                        : theme.colors.textSecondary,
+                                            },
+                                        ]}
+                                    >
+                                        {range}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </ScrollView>
+
+                        <TouchableOpacity onPress={exportToCSV} style={styles.exportBtn}>
+                            <Download size={20} color={theme.colors.primary} />
+                        </TouchableOpacity>
                     </View>
 
                     {/* Transaction List */}
