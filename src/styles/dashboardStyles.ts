@@ -231,7 +231,7 @@ export const createDashboardStyles = (theme: any) =>
             justifyContent: "center",
         },
         txInfo: { flex: 1, marginLeft: 16 },
-        txTitle: { fontSize: 16, fontWeight: "600", color: theme.colors.text },
+        txTitle: { fontSize: 15, fontWeight: "500", color: theme.colors.text },
         txSubTitle: { fontSize: 12, color: theme.colors.textSecondary },
         txRight: { alignItems: "flex-end" },
         txAmountModern: { fontSize: 16, fontWeight: "bold" },

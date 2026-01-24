@@ -446,7 +446,7 @@ export default function BusinessDetailView({
                                             )}
                                         </View>
                                         <View style={styles.txInfo}>
-                                            <Text style={styles.txTitle}>{t.description}</Text>
+                                            <Text style={styles.txTitle}>{t.remark}</Text>
                                             <Text style={styles.txSubTitle}>
                                                 {t.category || "General"} ·{" "}
                                                 {new Date(t.date).toLocaleTimeString([], {
