@@ -7,6 +7,7 @@ import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import { createDashboardStyles } from "../styles/dashboardStyles";
+import { LinearGradient } from "expo-linear-gradient";
 
 const { width } = Dimensions.get("window");
 
@@ -43,16 +44,30 @@ function DashboardHome({
             <ScrollView showsVerticalScrollIndicator={false}>
                 {/* Hero Section */}
                 <View style={styles.heroSection}>
-                    <View style={styles.heroCard}>
+                    <LinearGradient
+                        colors={[
+                            "#3A5CFF", // bright brand
+                            "#2F3FD4", // mid
+                            "#1E2A8A", // deep anchor
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.heroCard}
+                    >
+                        {/* Light flare */}
+                        <View style={styles.heroGlow} />
+
                         <Text style={styles.heroTitle}>Manage{"\n"}your Cash Flow</Text>
+
                         <Text style={styles.heroSubtitle}>
                             Select a cashbook to track your daily business transactions
                             effortlessly.
                         </Text>
+
                         <View style={styles.heroBadge}>
                             <Text style={styles.heroBadgeText}>Personal Assistant</Text>
                         </View>
-                    </View>
+                    </LinearGradient>
                 </View>
 
                 {/* Businesses / Cashbooks List */}

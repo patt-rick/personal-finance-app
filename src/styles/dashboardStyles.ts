@@ -47,42 +47,58 @@ export const createDashboardStyles = (theme: any) =>
         // Hero Section
         heroSection: { paddingHorizontal: 20, marginTop: 10, marginBottom: 10 },
         heroCard: {
-            backgroundColor: theme.colors.primary,
             borderRadius: 24,
             padding: 24,
-            elevation: 8,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 10 },
-            shadowOpacity: 0.2,
-            shadowRadius: 10,
+            elevation: 10,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 12 },
+            shadowOpacity: 0.25,
+            shadowRadius: 14,
+            overflow: "hidden", // VERY important
+        },
+
+        heroGlow: {
+            position: "absolute",
+            top: -80,
+            left: -60,
+            width: 220,
+            height: 220,
+            borderRadius: 110,
+            backgroundColor: "rgba(255,255,255,0.15)",
         },
         heroTitle: {
-            fontSize: 30,
-            fontWeight: "bold",
+            fontSize: 32,
+            fontWeight: "800",
             color: "white",
-            lineHeight: 38,
-            marginBottom: 12,
+            lineHeight: 40,
+            marginBottom: 14,
         },
+
         heroSubtitle: {
             fontSize: 14,
-            color: "rgba(255,255,255,0.8)",
+            color: "rgba(255,255,255,0.85)",
             lineHeight: 22,
-            maxWidth: "85%",
+            maxWidth: "88%",
         },
         heroBadge: {
             position: "absolute",
             right: 20,
             top: 20,
-            paddingHorizontal: 10,
-            paddingVertical: 4,
-            borderRadius: 20,
-            backgroundColor: "rgba(255,255,255,0.2)",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+            backgroundColor: "rgba(255,255,255,0.25)",
         },
-        heroBadgeText: { fontSize: 10, color: "white", fontWeight: "bold" },
+
+        heroBadgeText: {
+            fontSize: 10,
+            color: "white",
+            fontWeight: "700",
+            letterSpacing: 0.4,
+        },
 
         // Balance Card
         modernBalanceCard: {
-            backgroundColor: theme.colors.darkCard,
             marginHorizontal: 20,
             borderRadius: 24,
             padding: 24,
@@ -94,6 +110,17 @@ export const createDashboardStyles = (theme: any) =>
             shadowOpacity: 0.3,
             shadowRadius: 10,
             marginTop: 10,
+            overflow: "hidden",
+        },
+
+        cardGlow: {
+            position: "absolute",
+            top: -60,
+            right: -80,
+            width: 220,
+            height: 220,
+            borderRadius: 110,
+            backgroundColor: "rgba(255,255,255,0.06)",
         },
         balanceHeader: {
             flexDirection: "row",

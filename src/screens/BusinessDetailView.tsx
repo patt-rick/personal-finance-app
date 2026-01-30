@@ -27,6 +27,7 @@ import {
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import React, { useState, useMemo, useEffect } from "react";
+import { LinearGradient } from "expo-linear-gradient";
 import {
     Alert,
     Modal,
@@ -383,7 +384,19 @@ export default function BusinessDetailView({
                     keyboardShouldPersistTaps="handled"
                 >
                     {/* Balance Card */}
-                    <View style={styles.modernBalanceCard}>
+                    <LinearGradient
+                        colors={[
+                            "#1B1E2F", // deep navy
+                            "#2A2F4F", // soft mid
+                            "#1A1D2B", // dark edge
+                        ]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={styles.modernBalanceCard}
+                    >
+                        {/* Soft highlight */}
+                        <View style={styles.cardGlow} />
+
                         <View style={styles.balanceHeader}>
                             <Text style={styles.balanceTitle}>
                                 {symbol}
@@ -391,9 +404,12 @@ export default function BusinessDetailView({
                             </Text>
                             <MoreHorizontal color="white" size={24} />
                         </View>
+
                         <Text style={styles.balanceSubtitle}>Current Balance</Text>
+
                         <View style={styles.cardFooter}>
                             <Text style={styles.cardNumber}>{business.currency} Cashbook</Text>
+
                             <View style={styles.mastercardLogo}>
                                 <View style={[styles.circle, { backgroundColor: "#EB001B" }]} />
                                 <View
@@ -404,7 +420,7 @@ export default function BusinessDetailView({
                                 />
                             </View>
                         </View>
-                    </View>
+                    </LinearGradient>
 
                     {/* Income/Expense Cards */}
                     <View style={styles.statsContainer}>
