@@ -8,9 +8,12 @@ import {
     TouchableOpacity,
     Alert,
     ActivityIndicator,
+    KeyboardAvoidingView,
+    Platform,
+    Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, Save, Wallet } from "lucide-react-native";
+import { ArrowLeft, Save, Wallet, Plus, X, Trash } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { Business, Budget, Category } from "../types";
 import { loadCategories } from "../utils/storage";
@@ -27,11 +30,13 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
     const theme = useTheme();
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
-    const [categories, setCategories] = useState<Category[]>([]);
+    const [allCategories, setAllCategories] = useState<Category[]>([]);
+    const [selectedCategoryIds, setSelectedCategoryIds] = useState<string[]>([]);
     const [period, setPeriod] = useState<"weekly" | "monthly" | "yearly">("monthly");
     const [totalLimit, setTotalLimit] = useState("");
     const [categoryLimits, setCategoryLimits] = useState<{ [key: string]: string }>({});
     const [existingBudget, setExistingBudget] = useState<Budget | null>(null);
+    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
 
     useEffect(() => {
         loadData();
@@ -41,7 +46,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         setLoading(true);
         const cats = await loadCategories();
         const expenseCats = cats.filter((c) => c.type === "expense");
-        setCategories(expenseCats);
+        setAllCategories(expenseCats);
 
         // Load existing budget if any
         const budget = await getBudgetByBusinessId(business.id);
@@ -51,10 +56,15 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
             setTotalLimit(budget.totalLimit.toString());
 
             const limits: { [key: string]: string } = {};
+            const selectedIds: string[] = [];
+
             Object.keys(budget.categoryBudgets).forEach((catId) => {
                 limits[catId] = budget.categoryBudgets[catId].limit.toString();
+                selectedIds.push(catId);
             });
+
             setCategoryLimits(limits);
+            setSelectedCategoryIds(selectedIds);
         }
 
         setLoading(false);
@@ -71,6 +81,21 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         if (value === "" || /^\d*\.?\d*$/.test(value)) {
             setTotalLimit(value);
         }
+    };
+
+    const addCategory = (categoryId: string) => {
+        if (!selectedCategoryIds.includes(categoryId)) {
+            setSelectedCategoryIds([...selectedCategoryIds, categoryId]);
+            setCategoryLimits((prev) => ({ ...prev, [categoryId]: "" }));
+        }
+        setShowCategoryPicker(false);
+    };
+
+    const removeCategory = (categoryId: string) => {
+        setSelectedCategoryIds(selectedCategoryIds.filter((id) => id !== categoryId));
+        const newLimits = { ...categoryLimits };
+        delete newLimits[categoryId];
+        setCategoryLimits(newLimits);
     };
 
     const calculateCategorySum = (): number => {
@@ -90,9 +115,11 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         // Build category budgets object
         const categoryBudgets: { [key: string]: { limit: number } } = {};
         Object.keys(categoryLimits).forEach((catId) => {
-            const limit = parseFloat(categoryLimits[catId]);
-            if (!isNaN(limit) && limit > 0) {
-                categoryBudgets[catId] = { limit };
+            if (selectedCategoryIds.includes(catId)) {
+                const limit = parseFloat(categoryLimits[catId]);
+                if (!isNaN(limit) && limit > 0) {
+                    categoryBudgets[catId] = { limit };
+                }
             }
         });
 
@@ -142,6 +169,9 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
     const totalLimitNum = parseFloat(totalLimit) || 0;
     const isOverBudget = categorySum > totalLimitNum;
 
+    // Get available categories (not yet selected)
+    const availableCategories = allCategories.filter((c) => !selectedCategoryIds.includes(c.id));
+
     if (loading) {
         return (
             <SafeAreaView style={[styles.container, { backgroundColor: theme.colors.background }]}>
@@ -165,189 +195,353 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                 <View style={{ width: 24 }} />
             </View>
 
-            <ScrollView style={styles.content} showsVerticalScrollIndicator={false}>
-                {/* Business Info */}
-                <View style={[styles.businessCard, { backgroundColor: theme.colors.card }]}>
-                    <View style={styles.businessIconContainer}>
-                        <Wallet size={24} color={theme.colors.primary} />
-                    </View>
-                    <View style={styles.businessInfo}>
-                        <Text style={[styles.businessName, { color: theme.colors.text }]}>
-                            {business.name}
-                        </Text>
-                        <Text
-                            style={[styles.businessSubtext, { color: theme.colors.textSecondary }]}
-                        >
-                            Budget Configuration
-                        </Text>
-                    </View>
-                </View>
-
-                {/* Period Selection */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                        Budget Period
-                    </Text>
-                    <View style={styles.periodContainer}>
-                        {(["weekly", "monthly", "yearly"] as const).map((p) => (
-                            <TouchableOpacity
-                                key={p}
-                                onPress={() => setPeriod(p)}
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+                style={{ flex: 1 }}
+                keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
+            >
+                <ScrollView
+                    style={styles.content}
+                    showsVerticalScrollIndicator={false}
+                    contentContainerStyle={{ paddingBottom: 100 }}
+                    keyboardShouldPersistTaps="handled"
+                >
+                    {/* Business Info */}
+                    <View style={[styles.businessCard, { backgroundColor: theme.colors.card }]}>
+                        <View style={styles.businessIconContainer}>
+                            <Wallet size={24} color={theme.colors.primary} />
+                        </View>
+                        <View style={styles.businessInfo}>
+                            <Text style={[styles.businessName, { color: theme.colors.text }]}>
+                                {business.name}
+                            </Text>
+                            <Text
                                 style={[
-                                    styles.periodButton,
-                                    {
-                                        backgroundColor:
-                                            period === p ? theme.colors.primary : theme.colors.card,
-                                        borderColor: theme.colors.border,
-                                    },
+                                    styles.businessSubtext,
+                                    { color: theme.colors.textSecondary },
+                                ]}
+                            >
+                                Budget Configuration
+                            </Text>
+                        </View>
+                    </View>
+
+                    {/* Period Selection */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                            Budget Period
+                        </Text>
+                        <View style={styles.periodContainer}>
+                            {(["weekly", "monthly", "yearly"] as const).map((p) => (
+                                <TouchableOpacity
+                                    key={p}
+                                    onPress={() => setPeriod(p)}
+                                    style={[
+                                        styles.periodButton,
+                                        {
+                                            backgroundColor:
+                                                period === p
+                                                    ? theme.colors.primary
+                                                    : theme.colors.card,
+                                            borderColor: theme.colors.border,
+                                        },
+                                    ]}
+                                >
+                                    <Text
+                                        style={[
+                                            styles.periodButtonText,
+                                            {
+                                                color: period === p ? "#fff" : theme.colors.text,
+                                            },
+                                        ]}
+                                    >
+                                        {p.charAt(0).toUpperCase() + p.slice(1)}
+                                    </Text>
+                                </TouchableOpacity>
+                            ))}
+                        </View>
+                    </View>
+
+                    {/* Total Budget */}
+                    <View style={styles.section}>
+                        <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                            Total Budget Limit
+                        </Text>
+                        <TextInput
+                            style={[
+                                styles.input,
+                                {
+                                    backgroundColor: theme.colors.card,
+                                    color: theme.colors.text,
+                                    borderColor: theme.colors.border,
+                                },
+                            ]}
+                            placeholder="Enter total budget"
+                            placeholderTextColor={theme.colors.placeholder}
+                            value={totalLimit}
+                            onChangeText={handleTotalLimitChange}
+                            keyboardType="decimal-pad"
+                        />
+                    </View>
+
+                    {/* Category Budgets */}
+                    <View style={styles.section}>
+                        <View
+                            style={{
+                                flexDirection: "row",
+                                justifyContent: "space-between",
+                                alignItems: "center",
+                                marginBottom: 16,
+                            }}
+                        >
+                            <View>
+                                <Text
+                                    style={[
+                                        styles.sectionTitle,
+                                        { color: theme.colors.text, marginBottom: 4 },
+                                    ]}
+                                >
+                                    Category Budgets
+                                </Text>
+                                <Text
+                                    style={[
+                                        styles.sectionSubtitle,
+                                        { color: theme.colors.textSecondary, marginBottom: 0 },
+                                    ]}
+                                >
+                                    Allocate budget to categories
+                                </Text>
+                            </View>
+                            <TouchableOpacity
+                                onPress={() => setShowCategoryPicker(true)}
+                                style={[
+                                    styles.addCategoryBtn,
+                                    { backgroundColor: theme.colors.primary + "20" },
+                                ]}
+                            >
+                                <Plus size={16} color={theme.colors.primary} />
+                                <Text
+                                    style={[
+                                        styles.addCategoryBtnText,
+                                        { color: theme.colors.primary },
+                                    ]}
+                                >
+                                    Add
+                                </Text>
+                            </TouchableOpacity>
+                        </View>
+
+                        {selectedCategoryIds.length === 0 ? (
+                            <View
+                                style={[
+                                    styles.emptyStateContainer,
+                                    { borderColor: theme.colors.border },
                                 ]}
                             >
                                 <Text
                                     style={[
-                                        styles.periodButtonText,
-                                        {
-                                            color: period === p ? "#fff" : theme.colors.text,
-                                        },
+                                        styles.emptyStateText,
+                                        { color: theme.colors.textSecondary },
                                     ]}
                                 >
-                                    {p.charAt(0).toUpperCase() + p.slice(1)}
+                                    No categories added yet. Tap "Add" to start budgeting for
+                                    specific categories.
                                 </Text>
-                            </TouchableOpacity>
-                        ))}
-                    </View>
-                </View>
+                            </View>
+                        ) : (
+                            selectedCategoryIds.map((catId) => {
+                                const category = allCategories.find((c) => c.id === catId);
+                                if (!category) return null;
 
-                {/* Total Budget */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                        Total Budget Limit
-                    </Text>
-                    <TextInput
+                                return (
+                                    <View key={catId} style={styles.categoryRow}>
+                                        <Text
+                                            style={[
+                                                styles.categoryName,
+                                                { color: theme.colors.text },
+                                            ]}
+                                        >
+                                            {category.name}
+                                        </Text>
+                                        <View
+                                            style={{
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                gap: 12,
+                                            }}
+                                        >
+                                            <TextInput
+                                                style={[
+                                                    styles.categoryInput,
+                                                    {
+                                                        backgroundColor: theme.colors.card,
+                                                        color: theme.colors.text,
+                                                        borderColor: theme.colors.border,
+                                                    },
+                                                ]}
+                                                placeholder="0"
+                                                placeholderTextColor={theme.colors.placeholder}
+                                                value={categoryLimits[catId] || ""}
+                                                onChangeText={(val) =>
+                                                    handleCategoryLimitChange(catId, val)
+                                                }
+                                                keyboardType="decimal-pad"
+                                            />
+                                            <TouchableOpacity
+                                                onPress={() => removeCategory(catId)}
+                                                style={styles.removeBtn}
+                                            >
+                                                <Trash size={18} color={theme.colors.error} />
+                                            </TouchableOpacity>
+                                        </View>
+                                    </View>
+                                );
+                            })
+                        )}
+                    </View>
+
+                    {/* Summary */}
+                    <View
                         style={[
-                            styles.input,
+                            styles.summaryCard,
                             {
-                                backgroundColor: theme.colors.card,
-                                color: theme.colors.text,
-                                borderColor: theme.colors.border,
+                                backgroundColor: isOverBudget
+                                    ? theme.colors.expenseBg
+                                    : theme.colors.incomeBg,
                             },
                         ]}
-                        placeholder="Enter total budget"
-                        placeholderTextColor={theme.colors.placeholder}
-                        value={totalLimit}
-                        onChangeText={handleTotalLimitChange}
-                        keyboardType="decimal-pad"
-                    />
-                </View>
-
-                {/* Category Budgets */}
-                <View style={styles.section}>
-                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
-                        Category Budgets
-                    </Text>
-                    <Text style={[styles.sectionSubtitle, { color: theme.colors.textSecondary }]}>
-                        Allocate budget to each expense category
-                    </Text>
-
-                    {categories.map((category) => (
-                        <View key={category.id} style={styles.categoryRow}>
-                            <Text style={[styles.categoryName, { color: theme.colors.text }]}>
-                                {category.name}
+                    >
+                        <View style={styles.summaryRow}>
+                            <Text
+                                style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}
+                            >
+                                Total Budget:
                             </Text>
-                            <TextInput
+                            <Text style={[styles.summaryValue, { color: theme.colors.text }]}>
+                                {business.currency || "₦"}
+                                {totalLimitNum.toFixed(2)}
+                            </Text>
+                        </View>
+                        <View style={styles.summaryRow}>
+                            <Text
+                                style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}
+                            >
+                                Allocated:
+                            </Text>
+                            <Text
                                 style={[
-                                    styles.categoryInput,
+                                    styles.summaryValue,
                                     {
-                                        backgroundColor: theme.colors.card,
-                                        color: theme.colors.text,
-                                        borderColor: theme.colors.border,
+                                        color: isOverBudget
+                                            ? theme.colors.error
+                                            : theme.colors.text,
                                     },
                                 ]}
-                                placeholder="0"
-                                placeholderTextColor={theme.colors.placeholder}
-                                value={categoryLimits[category.id] || ""}
-                                onChangeText={(val) => handleCategoryLimitChange(category.id, val)}
-                                keyboardType="decimal-pad"
-                            />
+                            >
+                                {business.currency || "₦"}
+                                {categorySum.toFixed(2)}
+                            </Text>
                         </View>
-                    ))}
-                </View>
-
-                {/* Summary */}
-                <View
-                    style={[
-                        styles.summaryCard,
-                        {
-                            backgroundColor: isOverBudget
-                                ? theme.colors.expenseBg
-                                : theme.colors.incomeBg,
-                        },
-                    ]}
-                >
-                    <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>
-                            Total Budget:
-                        </Text>
-                        <Text style={[styles.summaryValue, { color: theme.colors.text }]}>
-                            {business.currency || "₦"}
-                            {totalLimitNum.toFixed(2)}
-                        </Text>
+                        <View style={styles.summaryRow}>
+                            <Text
+                                style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}
+                            >
+                                Unallocated:
+                            </Text>
+                            <Text style={[styles.summaryValue, { color: theme.colors.text }]}>
+                                {business.currency || "₦"}
+                                {Math.max(0, totalLimitNum - categorySum).toFixed(2)}
+                            </Text>
+                        </View>
+                        {isOverBudget && (
+                            <Text style={[styles.errorText, { color: theme.colors.error }]}>
+                                ⚠️ Category budgets exceed total budget
+                            </Text>
+                        )}
                     </View>
-                    <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>
-                            Allocated:
-                        </Text>
-                        <Text
-                            style={[
-                                styles.summaryValue,
-                                {
-                                    color: isOverBudget ? theme.colors.error : theme.colors.text,
-                                },
-                            ]}
+
+                    {/* Save Button */}
+                    <TouchableOpacity
+                        onPress={handleSave}
+                        disabled={saving || isOverBudget}
+                        style={[
+                            styles.saveButton,
+                            {
+                                backgroundColor:
+                                    saving || isOverBudget
+                                        ? theme.colors.border
+                                        : theme.colors.primary,
+                            },
+                        ]}
+                    >
+                        {saving ? (
+                            <ActivityIndicator color="#fff" />
+                        ) : (
+                            <>
+                                <Save size={20} color="#fff" />
+                                <Text style={styles.saveButtonText}>Save Budget</Text>
+                            </>
+                        )}
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
+
+            {/* Category Picker Modal */}
+            <Modal
+                visible={showCategoryPicker}
+                transparent={true}
+                animationType="slide"
+                onRequestClose={() => setShowCategoryPicker(false)}
+            >
+                <View style={styles.modalOverlay}>
+                    <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
+                        <View
+                            style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}
                         >
-                            {business.currency || "₦"}
-                            {categorySum.toFixed(2)}
-                        </Text>
+                            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
+                                Add Category
+                            </Text>
+                            <TouchableOpacity onPress={() => setShowCategoryPicker(false)}>
+                                <X size={24} color={theme.colors.text} />
+                            </TouchableOpacity>
+                        </View>
+
+                        <ScrollView style={styles.modalList}>
+                            {availableCategories.length === 0 ? (
+                                <Text
+                                    style={[
+                                        styles.noCategoriesText,
+                                        { color: theme.colors.textSecondary },
+                                    ]}
+                                >
+                                    All categories selected
+                                </Text>
+                            ) : (
+                                availableCategories.map((cat) => (
+                                    <TouchableOpacity
+                                        key={cat.id}
+                                        style={[
+                                            styles.modalItem,
+                                            { borderBottomColor: theme.colors.borderLight },
+                                        ]}
+                                        onPress={() => addCategory(cat.id)}
+                                    >
+                                        <Text
+                                            style={[
+                                                styles.modalItemText,
+                                                { color: theme.colors.text },
+                                            ]}
+                                        >
+                                            {cat.name}
+                                        </Text>
+                                        <Plus size={20} color={theme.colors.primary} />
+                                    </TouchableOpacity>
+                                ))
+                            )}
+                        </ScrollView>
                     </View>
-                    <View style={styles.summaryRow}>
-                        <Text style={[styles.summaryLabel, { color: theme.colors.textSecondary }]}>
-                            Unallocated:
-                        </Text>
-                        <Text style={[styles.summaryValue, { color: theme.colors.text }]}>
-                            {business.currency || "₦"}
-                            {Math.max(0, totalLimitNum - categorySum).toFixed(2)}
-                        </Text>
-                    </View>
-                    {isOverBudget && (
-                        <Text style={[styles.errorText, { color: theme.colors.error }]}>
-                            ⚠️ Category budgets exceed total budget
-                        </Text>
-                    )}
                 </View>
-
-                {/* Save Button */}
-                <TouchableOpacity
-                    onPress={handleSave}
-                    disabled={saving || isOverBudget}
-                    style={[
-                        styles.saveButton,
-                        {
-                            backgroundColor:
-                                saving || isOverBudget ? theme.colors.border : theme.colors.primary,
-                        },
-                    ]}
-                >
-                    {saving ? (
-                        <ActivityIndicator color="#fff" />
-                    ) : (
-                        <>
-                            <Save size={20} color="#fff" />
-                            <Text style={styles.saveButtonText}>Save Budget</Text>
-                        </>
-                    )}
-                </TouchableOpacity>
-
-                <View style={{ height: 40 }} />
-            </ScrollView>
+            </Modal>
         </SafeAreaView>
     );
 }
@@ -469,6 +663,35 @@ const styles = StyleSheet.create({
         width: 120,
         textAlign: "right",
     },
+    removeBtn: {
+        padding: 8,
+    },
+    addCategoryBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 16,
+        gap: 4,
+    },
+    addCategoryBtnText: {
+        fontSize: 12,
+        fontWeight: "600",
+        fontFamily: "Inter",
+    },
+    emptyStateContainer: {
+        borderWidth: 1,
+        borderStyle: "dashed",
+        borderRadius: 12,
+        padding: 24,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    emptyStateText: {
+        fontSize: 14,
+        fontFamily: "Inter",
+        textAlign: "center",
+    },
     summaryCard: {
         padding: 16,
         borderRadius: 12,
@@ -506,6 +729,48 @@ const styles = StyleSheet.create({
         color: "#fff",
         fontSize: 16,
         fontWeight: "600",
+        fontFamily: "Inter",
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: "rgba(0,0,0,0.5)",
+        justifyContent: "flex-end",
+    },
+    modalContent: {
+        borderTopLeftRadius: 20,
+        borderTopRightRadius: 20,
+        maxHeight: "80%",
+        paddingBottom: 40,
+    },
+    modalHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: 20,
+        borderBottomWidth: 1,
+    },
+    modalTitle: {
+        fontSize: 18,
+        fontWeight: "600",
+        fontFamily: "Inter",
+    },
+    modalList: {
+        padding: 20,
+    },
+    modalItem: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingVertical: 16,
+        borderBottomWidth: 1,
+    },
+    modalItemText: {
+        fontSize: 16,
+        fontFamily: "Inter",
+    },
+    noCategoriesText: {
+        textAlign: "center",
+        padding: 20,
         fontFamily: "Inter",
     },
 });

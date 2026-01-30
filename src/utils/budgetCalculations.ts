@@ -37,7 +37,7 @@ export const getDateRangeForPeriod = (
  */
 export const calculateCategorySpent = (
     transactions: Transaction[],
-    categoryId: string,
+    categoryName: string,
     startDate: Date,
     endDate: Date,
 ): number => {
@@ -46,7 +46,7 @@ export const calculateCategorySpent = (
             const txDate = new Date(t.date);
             return (
                 t.type === "expense" &&
-                t.category === categoryId &&
+                t.category === categoryName &&
                 txDate >= startDate &&
                 txDate <= endDate
             );
@@ -76,7 +76,7 @@ export const calculateBudgetData = (
             continue;
         }
 
-        const spent = calculateCategorySpent(transactions, category.id, startDate, endDate);
+        const spent = calculateCategorySpent(transactions, category.name, startDate, endDate);
         const remaining = Math.max(0, categoryBudget.limit - spent);
         const percentage = categoryBudget.limit > 0 ? (spent / categoryBudget.limit) * 100 : 0;
 
