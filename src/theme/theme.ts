@@ -25,7 +25,7 @@ export const lightTheme = {
         income: "#6366F1",
         expense: "#F59E0B",
         accent: "#6366F1",
-        incomeBg: "#EEF2FF",
+        incomeBg: "#dae2ffff",
         expenseBg: "#FFF7ED",
     },
     spacing: {

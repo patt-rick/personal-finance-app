@@ -173,6 +173,49 @@ export default function BusinessDetailView({
                 return t;
             });
             saveTransactions(updatedTransactions);
+
+            // Check budget and show notification for expenses
+            if (entryType === "expense") {
+                try {
+                    const budget = await getBudgetByBusinessId(business.id);
+                    if (budget) {
+                        const budgetData = calculateBudgetData(
+                            budget,
+                            updatedTransactions,
+                            categories,
+                        );
+
+                        // Find the category budget
+                        const categoryId = categories.find((c) => c.name === selectedCategory)?.id;
+
+                        if (categoryId) {
+                            const categoryBudget = budgetData.find(
+                                (b) => b.categoryId === categoryId,
+                            );
+
+                            if (categoryBudget) {
+                                const message = getBudgetWarningMessage(
+                                    categoryBudget.categoryName,
+                                    categoryBudget.remaining,
+                                    categoryBudget.percentage,
+                                    symbol,
+                                );
+
+                                if (message) {
+                                    if (Platform.OS === "android") {
+                                        ToastAndroid.show(message, ToastAndroid.LONG);
+                                    } else {
+                                        Alert.alert("Budget Update", message);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking budget:", error);
+                }
+            }
+
             setEditingTxId(null);
         } else {
             // Create new transaction

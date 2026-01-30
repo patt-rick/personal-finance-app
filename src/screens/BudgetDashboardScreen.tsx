@@ -72,7 +72,7 @@ export default function BudgetDashboardScreen({
         if (selectedBusiness) {
             loadBudgetData();
         }
-    }, [selectedBusiness]);
+    }, [selectedBusiness, transactions]);
 
     const loadBudgetData = async () => {
         if (!selectedBusiness) return;
