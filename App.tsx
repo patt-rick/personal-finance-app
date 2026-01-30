@@ -4,9 +4,10 @@ import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { LayoutGrid, Landmark, Settings } from "lucide-react-native";
+import { LayoutGrid, Landmark, Settings, PiggyBank } from "lucide-react-native";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import BusinessesScreen from "./src/screens/BusinessesScreen";
+import BudgetDashboardScreen from "./src/screens/BudgetDashboardScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 import { Business, Transaction, UserProfile } from "./src/types";
@@ -163,6 +164,24 @@ function MainApp() {
                                 <BusinessesScreen
                                     businesses={businesses}
                                     saveBusinesses={handleSaveBusinesses}
+                                    currentBusiness={currentBusiness}
+                                    setCurrentBusiness={setCurrentBusiness}
+                                />
+                            )}
+                        </Tab.Screen>
+                        <Tab.Screen
+                            name="Budget"
+                            options={{
+                                tabBarIcon: ({ color }) => <PiggyBank size={24} color={color} />,
+                            }}
+                            listeners={{
+                                tabPress: () => setCurrentBusiness(null),
+                            }}
+                        >
+                            {() => (
+                                <BudgetDashboardScreen
+                                    businesses={businesses}
+                                    transactions={transactions}
                                     currentBusiness={currentBusiness}
                                     setCurrentBusiness={setCurrentBusiness}
                                 />

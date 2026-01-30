@@ -1,5 +1,5 @@
 import { useTheme } from "../theme/theme";
-import { Business, Transaction, Category } from "../types";
+import { Business, Transaction, Category, Budget } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import {
     Car,
@@ -39,10 +39,12 @@ import {
     Platform,
     TouchableWithoutFeedback,
     Keyboard,
+    ToastAndroid,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
-import { loadCategories } from "../utils/storage";
+import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
+import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
 
 export default function BusinessDetailView({
     business,
@@ -149,7 +151,7 @@ export default function BusinessDetailView({
         return groups;
     }, [filteredTransactions]);
 
-    const handleAddEntry = () => {
+    const handleAddEntry = async () => {
         if (!amount || isNaN(parseFloat(amount))) {
             Alert.alert("Error", "Please enter a valid amount");
             return;
@@ -162,7 +164,7 @@ export default function BusinessDetailView({
                     return {
                         ...t,
                         amount: parseFloat(amount),
-                        description: entryType === "income" ? "Cash In" : "Cash Out", // Preserve original description if needed, tailored logic here
+                        description: entryType === "income" ? "Cash In" : "Cash Out",
                         type: entryType,
                         category: selectedCategory,
                         remark: remark,
@@ -186,6 +188,48 @@ export default function BusinessDetailView({
                 remark: remark,
             };
             saveTransactions([...allTransactions, newTransaction]);
+
+            // Check budget and show notification for expenses
+            if (entryType === "expense") {
+                try {
+                    const budget = await getBudgetByBusinessId(business.id);
+                    if (budget) {
+                        const budgetData = calculateBudgetData(
+                            budget,
+                            [...allTransactions, newTransaction],
+                            categories,
+                        );
+
+                        // Find the category budget
+                        const categoryId = categories.find((c) => c.name === selectedCategory)?.id;
+
+                        if (categoryId) {
+                            const categoryBudget = budgetData.find(
+                                (b) => b.categoryId === categoryId,
+                            );
+
+                            if (categoryBudget) {
+                                const message = getBudgetWarningMessage(
+                                    categoryBudget.categoryName,
+                                    categoryBudget.remaining,
+                                    categoryBudget.percentage,
+                                    symbol,
+                                );
+
+                                if (message) {
+                                    if (Platform.OS === "android") {
+                                        ToastAndroid.show(message, ToastAndroid.LONG);
+                                    } else {
+                                        Alert.alert("Budget Update", message);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error("Error checking budget:", error);
+                }
+            }
         }
 
         setAmount("");

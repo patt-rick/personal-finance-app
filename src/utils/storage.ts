@@ -1,11 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Business, Transaction, UserProfile, Category } from "../types";
+import { Business, Transaction, UserProfile, Category, Budget } from "../types";
 
 const STORAGE_KEYS = {
     BUSINESSES: "@businesses",
     TRANSACTIONS: "@transactions",
     USER_PROFILE: "@user_profile",
     CATEGORIES: "@categories",
+    BUDGETS: "@budgets",
 };
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -105,6 +106,66 @@ export const saveCategories = async (categories: Category[]): Promise<boolean> =
         return true;
     } catch (error) {
         console.error("Error saving categories:", error);
+        return false;
+    }
+};
+
+// Budget Storage Functions
+export const loadBudgets = async (): Promise<Budget[]> => {
+    try {
+        const data = await AsyncStorage.getItem(STORAGE_KEYS.BUDGETS);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error("Error loading budgets:", error);
+        return [];
+    }
+};
+
+export const saveBudgets = async (budgets: Budget[]): Promise<boolean> => {
+    try {
+        await AsyncStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(budgets));
+        return true;
+    } catch (error) {
+        console.error("Error saving budgets:", error);
+        return false;
+    }
+};
+
+export const getBudgetByBusinessId = async (businessId: string): Promise<Budget | null> => {
+    try {
+        const budgets = await loadBudgets();
+        return budgets.find((b) => b.businessId === businessId) || null;
+    } catch (error) {
+        console.error("Error getting budget:", error);
+        return null;
+    }
+};
+
+export const saveBudget = async (budget: Budget): Promise<boolean> => {
+    try {
+        const budgets = await loadBudgets();
+        const index = budgets.findIndex((b) => b.id === budget.id);
+
+        if (index >= 0) {
+            budgets[index] = budget;
+        } else {
+            budgets.push(budget);
+        }
+
+        return await saveBudgets(budgets);
+    } catch (error) {
+        console.error("Error saving budget:", error);
+        return false;
+    }
+};
+
+export const deleteBudget = async (budgetId: string): Promise<boolean> => {
+    try {
+        const budgets = await loadBudgets();
+        const filtered = budgets.filter((b) => b.id !== budgetId);
+        return await saveBudgets(filtered);
+    } catch (error) {
+        console.error("Error deleting budget:", error);
         return false;
     }
 };

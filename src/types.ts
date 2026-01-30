@@ -35,3 +35,26 @@ export interface Category {
     color?: string;
     isDefault?: boolean;
 }
+
+export interface Budget {
+    id: string;
+    businessId: string;
+    period: "weekly" | "monthly" | "yearly";
+    totalLimit: number;
+    categoryBudgets: {
+        [categoryId: string]: {
+            limit: number;
+        };
+    };
+    createdAt: string;
+    updatedAt: string;
+}
+
+export interface CategoryBudgetSpent {
+    categoryId: string;
+    categoryName: string;
+    limit: number;
+    spent: number;
+    remaining: number;
+    percentage: number;
+}
