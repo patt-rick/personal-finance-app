@@ -48,13 +48,13 @@ export const createDashboardStyles = (theme: any) =>
         heroSection: { paddingHorizontal: 20, marginTop: 10, marginBottom: 10 },
         heroCard: {
             backgroundColor: theme.colors.primary,
-            borderRadius: 32,
+            borderRadius: 24,
             padding: 24,
             elevation: 8,
             shadowColor: theme.colors.primary,
             shadowOffset: { width: 0, height: 10 },
             shadowOpacity: 0.2,
-            shadowRadius: 15,
+            shadowRadius: 10,
         },
         heroTitle: {
             fontSize: 30,

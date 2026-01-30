@@ -1,5 +1,5 @@
 import { useTheme } from "../theme/theme";
-import { Business, Transaction } from "../types";
+import { Business, Transaction, Category } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import {
     Car,
@@ -26,7 +26,7 @@ import {
 } from "lucide-react-native";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
 import {
     Alert,
     Modal,
@@ -42,6 +42,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
+import { loadCategories } from "../utils/storage";
 
 export default function BusinessDetailView({
     business,
@@ -68,8 +69,16 @@ export default function BusinessDetailView({
     const [remark, setRemark] = useState("");
     const [selectedCategory, setSelectedCategory] = useState("Others");
     const [filterRange, setFilterRange] = useState<"all" | "today" | "week" | "month">("all");
+    const [categories, setCategories] = useState<Category[]>([]);
 
-    const categories = ["Shopping", "Insurance", "Food", "Transport", "Bills", "Salary", "Others"];
+    useEffect(() => {
+        loadData();
+    }, []);
+
+    const loadData = async () => {
+        const data = await loadCategories();
+        setCategories(data);
+    };
 
     const filteredTransactionsByRange = useMemo(() => {
         let filtered = [...transactions];
@@ -252,6 +261,19 @@ export default function BusinessDetailView({
             console.error(error);
             Alert.alert("Error", "Failed to export CSV");
         }
+    };
+
+    // Helper to get icon based on category name
+    const getCategoryIcon = (categoryName: string | undefined, color: string) => {
+        if (!categoryName) return <Tag size={20} color={color} />;
+
+        // Simple mapping based on name
+        const name = categoryName.toLowerCase();
+        if (name.includes("shop")) return <ShoppingBag size={20} color={color} />;
+        if (name.includes("food")) return <Coffee size={20} color={color} />;
+        if (name.includes("trans")) return <Car size={20} color={color} />;
+
+        return <Tag size={20} color={color} />;
     };
 
     return (
@@ -446,7 +468,9 @@ export default function BusinessDetailView({
                                             )}
                                         </View>
                                         <View style={styles.txInfo}>
-                                            <Text style={styles.txTitle}>{t.remark}</Text>
+                                            <Text style={styles.txTitle}>
+                                                {t.remark || t.description}
+                                            </Text>
                                             <Text style={styles.txSubTitle}>
                                                 {t.category || "General"} ·{" "}
                                                 {new Date(t.date).toLocaleTimeString([], {
@@ -565,27 +589,29 @@ export default function BusinessDetailView({
                                         showsHorizontalScrollIndicator={false}
                                         style={styles.categoryPicker}
                                     >
-                                        {categories.map((cat) => (
-                                            <TouchableOpacity
-                                                key={cat}
-                                                style={[
-                                                    styles.categoryChip,
-                                                    selectedCategory === cat &&
-                                                        styles.categoryChipActive,
-                                                ]}
-                                                onPress={() => setSelectedCategory(cat)}
-                                            >
-                                                <Text
+                                        {categories
+                                            .filter((c) => c.type === entryType)
+                                            .map((cat) => (
+                                                <TouchableOpacity
+                                                    key={cat.id}
                                                     style={[
-                                                        styles.categoryChipText,
-                                                        selectedCategory === cat &&
-                                                            styles.categoryChipTextActive,
+                                                        styles.categoryChip,
+                                                        selectedCategory === cat.name &&
+                                                            styles.categoryChipActive,
                                                     ]}
+                                                    onPress={() => setSelectedCategory(cat.name)}
                                                 >
-                                                    {cat}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
+                                                    <Text
+                                                        style={[
+                                                            styles.categoryChipText,
+                                                            selectedCategory === cat.name &&
+                                                                styles.categoryChipTextActive,
+                                                        ]}
+                                                    >
+                                                        {cat.name}
+                                                    </Text>
+                                                </TouchableOpacity>
+                                            ))}
                                     </ScrollView>
 
                                     <Text style={styles.inputLabelModern}>Remark</Text>

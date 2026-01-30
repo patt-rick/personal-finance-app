@@ -11,11 +11,23 @@ import {
     KeyboardAvoidingView,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { User, Save, Moon, Sun, Monitor, Bell } from "lucide-react-native";
+import {
+    User,
+    Save,
+    Moon,
+    Sun,
+    Monitor,
+    Bell,
+    Menu,
+    Tags,
+    ChevronRight,
+} from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
 import { UserProfile } from "../types";
 import { sendTestNotification } from "../utils/notifications";
+import { useNavigation, DrawerActions } from "@react-navigation/native";
+import CategoryManagementScreen from "./CategoryManagementScreen";
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
@@ -25,10 +37,12 @@ interface SettingsScreenProps {
 export default function SettingsScreen({ userProfile, saveUserProfile }: SettingsScreenProps) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
+    const navigation = useNavigation();
     const { themeMode, setThemeMode } = useThemeContext();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [name, setName] = useState(userProfile?.name || "");
     const [email, setEmail] = useState(userProfile?.email || "");
+    const [showCategories, setShowCategories] = useState(false);
 
     const handleSave = () => {
         if (!name.trim()) {
@@ -38,6 +52,10 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
         saveUserProfile({ name, email });
         Alert.alert("Success", "Profile updated successfully");
     };
+
+    if (showCategories) {
+        return <CategoryManagementScreen onBack={() => setShowCategories(false)} />;
+    }
 
     const themeOptions = [
         { mode: "light", label: "Light", icon: Sun },
@@ -54,8 +72,72 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
                 style={styles.container}
                 contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
             >
-                <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
+                <View
+                    style={[
+                        styles.header,
+                        {
+                            paddingTop: Math.max(insets.top, 40),
+                            flexDirection: "row",
+                            alignItems: "center",
+                            gap: 12,
+                        },
+                    ]}
+                >
                     <Text style={styles.headerTitle}>Settings</Text>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>General</Text>
+                    <TouchableOpacity
+                        style={styles.menuItem}
+                        onPress={() => setShowCategories(true)}
+                    >
+                        <View style={{ flexDirection: "row", alignItems: "center", gap: 12 }}>
+                            <Tags size={20} color={theme.colors.text} />
+                            <Text style={styles.menuItemText}>Categories</Text>
+                        </View>
+                        <ChevronRight size={20} color={theme.colors.textSecondary} />
+                    </TouchableOpacity>
+                </View>
+
+                <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>Profile Information</Text>
+                    <View style={styles.card}>
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Full Name</Text>
+                            <View style={styles.inputWrapper}>
+                                <User size={20} color={theme.colors.textSecondary} />
+                                <TextInput
+                                    style={[styles.input]}
+                                    value={name}
+                                    onChangeText={setName}
+                                    placeholder="Enter your name"
+                                    placeholderTextColor={theme.colors.placeholder}
+                                />
+                            </View>
+                        </View>
+
+                        <View style={styles.inputGroup}>
+                            <Text style={styles.label}>Email Address</Text>
+                            <View style={styles.inputWrapper}>
+                                <Text style={{ fontSize: 16, color: theme.colors.textSecondary }}>
+                                    @
+                                </Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    placeholder="Enter your email"
+                                    keyboardType="email-address"
+                                    placeholderTextColor={theme.colors.placeholder}
+                                />
+                            </View>
+                        </View>
+                        <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
+                            <Save size={20} color="white" />
+                            <Text style={styles.saveButtonText}>Save Changes</Text>
+                        </TouchableOpacity>
+                    </View>
                 </View>
 
                 <View style={styles.section}>
@@ -93,47 +175,6 @@ export default function SettingsScreen({ userProfile, saveUserProfile }: Setting
                         })}
                     </View>
                 </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>Profile Information</Text>
-                    <View style={styles.card}>
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Full Name</Text>
-                            <View style={styles.inputWrapper}>
-                                <User size={20} color={theme.colors.textSecondary} />
-                                <TextInput
-                                    style={[styles.input]}
-                                    value={name}
-                                    onChangeText={setName}
-                                    placeholder="Enter your name"
-                                    placeholderTextColor={theme.colors.placeholder}
-                                />
-                            </View>
-                        </View>
-
-                        <View style={styles.inputGroup}>
-                            <Text style={styles.label}>Email Address</Text>
-                            <View style={styles.inputWrapper}>
-                                <Text style={{ fontSize: 16, color: theme.colors.textSecondary }}>
-                                    @
-                                </Text>
-                                <TextInput
-                                    style={styles.input}
-                                    value={email}
-                                    onChangeText={setEmail}
-                                    placeholder="Enter your email"
-                                    keyboardType="email-address"
-                                    placeholderTextColor={theme.colors.placeholder}
-                                />
-                            </View>
-                        </View>
-                    </View>
-                </View>
-
-                <TouchableOpacity style={styles.saveButton} onPress={handleSave}>
-                    <Save size={20} color="white" />
-                    <Text style={styles.saveButtonText}>Save Changes</Text>
-                </TouchableOpacity>
 
                 <View style={styles.section}>
                     <Text style={styles.sectionLabel}>App Info</Text>
@@ -211,7 +252,6 @@ const createStyles = (theme: any) =>
         },
         saveButton: {
             backgroundColor: theme.colors.primary,
-            marginHorizontal: 20,
             marginTop: 30,
             height: 56,
             borderRadius: 16,
