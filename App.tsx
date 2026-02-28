@@ -163,6 +163,7 @@ function MainApp() {
                             {() => (
                                 <BusinessesScreen
                                     businesses={businesses}
+                                    transactions={transactions}
                                     saveBusinesses={handleSaveBusinesses}
                                     currentBusiness={currentBusiness}
                                     setCurrentBusiness={setCurrentBusiness}

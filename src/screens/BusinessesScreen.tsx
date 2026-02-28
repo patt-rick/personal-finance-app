@@ -1,41 +1,33 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useNavigation } from "@react-navigation/native";
 import {
     View,
     Text,
-    TextInput,
     TouchableOpacity,
     ScrollView,
-    Modal,
     Alert,
     StyleSheet,
-    KeyboardAvoidingView,
-    Platform,
-    TouchableWithoutFeedback,
-    Keyboard,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus, X, Bell } from "lucide-react-native";
-import BusinessItem from "../components/BusinessItem";
-import { Business } from "../types";
+import { Plus, Bell, ChevronRight, Wallet } from "lucide-react-native";
+import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
+import { getCurrencySymbol } from "../utils/_helpers";
+import CashbookDetailSheet from "../components/CashbookDetailSheet";
+import CreateCashbookModal from "../components/CreateCashbookModal";
 
 interface BusinessesScreenProps {
     businesses: Business[];
+    transactions: Transaction[];
     saveBusinesses: (businesses: Business[]) => void;
     currentBusiness: Business | null;
     setCurrentBusiness: (business: Business | null) => void;
 }
 
-const CURRENCIES = [
-    { label: "US Dollar", value: "USD", symbol: "$" },
-    { label: "Ghana Cedi", value: "GHS", symbol: "₵" },
-    { label: "Euro", value: "EUR", symbol: "€" },
-    { label: "British Pound", value: "GBP", symbol: "£" },
-];
-
 export default function BusinessesScreen({
     businesses,
+    transactions,
     saveBusinesses,
     currentBusiness,
     setCurrentBusiness,
@@ -43,58 +35,71 @@ export default function BusinessesScreen({
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
-    const businessStyles = useMemo(() => createBusinessStyles(theme), [theme]);
-    const [modalVisible, setModalVisible] = useState(false);
-    const [businessName, setBusinessName] = useState("");
-    const [selectedCurrency, setSelectedCurrency] = useState("USD");
+    const s = useMemo(() => createLocalStyles(theme), [theme]);
 
-    const addBusiness = () => {
-        if (!businessName.trim()) {
-            Alert.alert("Error", "Please enter a business name");
-            return;
+    const [createModalVisible, setCreateModalVisible] = useState(false);
+    const [sheetBusiness, setSheetBusiness] = useState<Business | null>(null);
+
+    const navigation = useNavigation();
+
+    useEffect(() => {
+        if (sheetBusiness || createModalVisible) {
+            navigation.setOptions({ tabBarStyle: { display: "none" } });
+        } else {
+            navigation.setOptions({
+                tabBarStyle: {
+                    borderTopWidth: 1,
+                    paddingTop: 8,
+                    backgroundColor: theme.colors.card,
+                    borderTopColor: theme.colors.border,
+                },
+            });
         }
+    }, [sheetBusiness, createModalVisible, navigation, theme]);
 
+    const handleCreateCashbook = (name: string, currency: string) => {
         const newBusiness: Business = {
             id: Date.now().toString(),
-            name: businessName.trim(),
+            name,
             createdAt: new Date().toISOString(),
-            currency: selectedCurrency,
+            currency,
             memberCount: 1,
         };
-
         saveBusinesses([...businesses, newBusiness]);
-        setBusinessName("");
-        setSelectedCurrency("USD");
-        setModalVisible(false);
+        setCreateModalVisible(false);
     };
 
     const deleteBusiness = (businessId: string) => {
         Alert.alert(
-            "Delete Business",
-            "Are you sure you want to delete this business? All associated transactions will remain but will need to be reassigned.",
+            "Delete Cashbook",
+            "This will permanently delete this cashbook. Associated transactions will remain unassigned.",
             [
                 { text: "Cancel", style: "cancel" },
                 {
                     text: "Delete",
                     style: "destructive",
                     onPress: () => {
-                        const updatedBusinesses = businesses.filter((b) => b.id !== businessId);
-                        saveBusinesses(updatedBusinesses);
-                        if (currentBusiness?.id === businessId) {
-                            setCurrentBusiness(null);
-                        }
+                        saveBusinesses(businesses.filter((b) => b.id !== businessId));
+                        if (currentBusiness?.id === businessId) setCurrentBusiness(null);
+                        setSheetBusiness(null);
                     },
                 },
             ],
         );
     };
 
+    const handleRename = (businessId: string, newName: string) => {
+        const updated = businesses.map((b) =>
+            b.id === businessId ? { ...b, name: newName } : b,
+        );
+        saveBusinesses(updated);
+        setSheetBusiness((prev) => (prev ? { ...prev, name: newName } : null));
+    };
+
     return (
         <View style={styles.container}>
-            {/* Decorative Header Background */}
             <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
 
-            {/* Header */}
             <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
                 <View>
                     <Text style={styles.greetingText}>Manage businesses,</Text>
@@ -105,194 +110,153 @@ export default function BusinessesScreen({
                 </TouchableOpacity>
             </View>
 
-            <ScrollView
-                style={businessStyles.businessList}
-                contentContainerStyle={{ paddingBottom: 100 }}
-            >
-                {businesses.map((business) => (
-                    <BusinessItem
-                        key={business.id}
-                        business={business}
-                        isActive={currentBusiness?.id === business.id}
-                        onPress={() => setCurrentBusiness(business)}
-                        onDelete={() => deleteBusiness(business.id)}
-                    />
-                ))}
+            <ScrollView style={s.list} contentContainerStyle={{ paddingBottom: 100 }}>
+                {businesses.map((biz) => {
+                    const bizTx = transactions.filter((t) => t.businessId === biz.id);
+                    const balance = bizTx.reduce(
+                        (a, t) => (t.type === "income" ? a + t.amount : a - t.amount),
+                        0,
+                    );
+                    const symbol = getCurrencySymbol(biz.currency);
+                    const isActive = currentBusiness?.id === biz.id;
+
+                    return (
+                        <TouchableOpacity
+                            key={biz.id}
+                            style={[s.card, { backgroundColor: theme.colors.card }]}
+                            onPress={() => setSheetBusiness(biz)}
+                            activeOpacity={0.7}
+                        >
+                            <View
+                                style={[
+                                    s.cardIcon,
+                                    {
+                                        backgroundColor: isActive
+                                            ? theme.colors.primary
+                                            : theme.colors.surface,
+                                    },
+                                ]}
+                            >
+                                <Wallet
+                                    size={20}
+                                    color={isActive ? "#fff" : theme.colors.primary}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[s.cardName, { color: theme.colors.text }]}>
+                                    {biz.name}
+                                </Text>
+                                <Text style={[s.cardMeta, { color: theme.colors.textSecondary }]}>
+                                    {bizTx.length} transaction{bizTx.length !== 1 ? "s" : ""} ·{" "}
+                                    {biz.currency || "USD"}
+                                </Text>
+                            </View>
+                            <View style={{ alignItems: "flex-end" }}>
+                                <Text
+                                    style={[
+                                        s.cardBalance,
+                                        {
+                                            color:
+                                                balance >= 0
+                                                    ? theme.colors.success
+                                                    : theme.colors.error,
+                                        },
+                                    ]}
+                                >
+                                    {balance >= 0 ? "+" : ""}
+                                    {symbol}
+                                    {Math.abs(balance).toLocaleString()}
+                                </Text>
+                                <ChevronRight
+                                    size={16}
+                                    color={theme.colors.textSecondary}
+                                    style={{ marginTop: 2 }}
+                                />
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
                 {businesses.length === 0 && (
-                    <View style={businessStyles.emptyContainer}>
-                        <Text style={businessStyles.emptyText}>
-                            No businesses yet. Create one to get started!
+                    <View style={s.empty}>
+                        <Wallet size={48} color={theme.colors.placeholder} />
+                        <Text style={[s.emptyTitle, { color: theme.colors.text }]}>
+                            No cashbooks yet
+                        </Text>
+                        <Text style={[s.emptyText, { color: theme.colors.textSecondary }]}>
+                            Tap the + button to create your first cashbook
                         </Text>
                     </View>
                 )}
             </ScrollView>
 
-            {/* Floating Action Button */}
-            <TouchableOpacity style={businessStyles.fab} onPress={() => setModalVisible(true)}>
+            <TouchableOpacity style={s.fab} onPress={() => setCreateModalVisible(true)}>
                 <Plus size={24} color="white" />
             </TouchableOpacity>
 
-            {/* Add Business Modal */}
-            <Modal visible={modalVisible} animationType="slide" transparent>
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={{ flex: 1 }}
-                >
-                    <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                        <View style={businessStyles.modalOverlay}>
-                            <View style={businessStyles.modalContent}>
-                                <View style={businessStyles.modalHeader}>
-                                    <Text style={businessStyles.modalTitle}>New Cashbook</Text>
-                                    <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                        <X size={24} color={theme.colors.text} />
-                                    </TouchableOpacity>
-                                </View>
+            <CashbookDetailSheet
+                business={sheetBusiness}
+                transactions={transactions}
+                onClose={() => setSheetBusiness(null)}
+                onOpenCashbook={setCurrentBusiness}
+                onDelete={deleteBusiness}
+                onRename={handleRename}
+            />
 
-                                <Text style={businessStyles.inputLabel}>Cashbook Name</Text>
-                                <TextInput
-                                    style={businessStyles.input}
-                                    placeholder="e.g. My Shop, Personal Expenses"
-                                    value={businessName}
-                                    onChangeText={setBusinessName}
-                                    placeholderTextColor={theme.colors.placeholder}
-                                />
-
-                                <Text style={businessStyles.inputLabel}>Currency</Text>
-                                <View style={businessStyles.currencyGrid}>
-                                    {CURRENCIES.map((curr) => (
-                                        <TouchableOpacity
-                                            key={curr.value}
-                                            style={[
-                                                businessStyles.currencyCard,
-                                                selectedCurrency === curr.value && {
-                                                    backgroundColor: theme.colors.primary,
-                                                    borderColor: theme.colors.primary,
-                                                },
-                                            ]}
-                                            onPress={() => setSelectedCurrency(curr.value)}
-                                        >
-                                            <Text
-                                                style={[
-                                                    businessStyles.currencySymbol,
-                                                    { color: theme.colors.text },
-                                                    selectedCurrency === curr.value && {
-                                                        color: "white",
-                                                    },
-                                                ]}
-                                            >
-                                                {curr.symbol}
-                                            </Text>
-                                            <Text
-                                                style={[
-                                                    businessStyles.currencyCode,
-                                                    { color: theme.colors.textSecondary },
-                                                    selectedCurrency === curr.value && {
-                                                        color: "white",
-                                                    },
-                                                ]}
-                                            >
-                                                {curr.value}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </View>
-
-                                <TouchableOpacity
-                                    style={businessStyles.submitButton}
-                                    onPress={addBusiness}
-                                >
-                                    <Text style={businessStyles.submitButtonText}>
-                                        Create Cashbook
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </KeyboardAvoidingView>
-            </Modal>
-
-            {/* Floating Action Button */}
-            <TouchableOpacity style={businessStyles.fab} onPress={() => setModalVisible(true)}>
-                <Plus size={24} color="white" />
-            </TouchableOpacity>
+            <CreateCashbookModal
+                visible={createModalVisible}
+                onClose={() => setCreateModalVisible(false)}
+                onSubmit={handleCreateCashbook}
+            />
         </View>
     );
 }
 
-const createBusinessStyles = (theme: any) =>
+const createLocalStyles = (theme: any) =>
     StyleSheet.create({
-        container: { flex: 1, backgroundColor: theme.colors.background },
-        header: { paddingHorizontal: 20, paddingBottom: 20 },
-        headerTitle: { fontSize: 24, fontWeight: "bold", color: theme.colors.text },
-        businessList: { flex: 1, paddingHorizontal: 16 },
-        emptyContainer: { padding: 40, alignItems: "center" },
-        emptyText: { textAlign: "center", color: theme.colors.textSecondary },
-        modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)", justifyContent: "flex-end" },
-        modalContent: {
-            backgroundColor: theme.colors.card,
-            borderTopLeftRadius: 32,
-            borderTopRightRadius: 32,
-            padding: 24,
-            paddingBottom: 40,
-        },
-        modalHeader: {
+        list: { flex: 1, paddingHorizontal: 20 },
+
+        card: {
             flexDirection: "row",
-            justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 24,
+            padding: 14,
+            borderRadius: 14,
+            marginBottom: 10,
+            elevation: 1,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.04,
+            shadowRadius: 3,
         },
-        modalTitle: { fontSize: 20, fontWeight: "bold", color: theme.colors.text },
-        inputLabel: {
-            fontSize: 13,
-            color: theme.colors.textSecondary,
-            marginBottom: 8,
-            marginTop: 16,
-        },
-        input: {
-            height: 50,
+        cardIcon: {
+            width: 42,
+            height: 42,
             borderRadius: 12,
-            borderWidth: 1,
-            borderColor: theme.colors.borderLight,
-            color: theme.colors.text,
-            paddingHorizontal: 16,
-            fontSize: 16,
-            marginBottom: 16,
-        },
-        currencyGrid: { flexDirection: "row", gap: 10, flexWrap: "wrap", marginBottom: 32 },
-        currencyCard: {
-            width: "22%",
-            height: 70,
-            borderRadius: 12,
-            backgroundColor: theme.colors.surface,
             alignItems: "center",
             justifyContent: "center",
-            borderWidth: 1,
-            borderColor: "transparent",
+            marginRight: 14,
         },
-        currencySymbol: { fontSize: 20, fontWeight: "bold" },
-        currencyCode: { fontSize: 10, fontWeight: "600", marginTop: 4 },
-        submitButton: {
-            height: 56,
+        cardName: { fontSize: 15, fontWeight: "600", letterSpacing: -0.1 },
+        cardMeta: { fontSize: 11, marginTop: 2 },
+        cardBalance: { fontSize: 14, fontWeight: "700", letterSpacing: -0.2 },
+
+        empty: { padding: 48, alignItems: "center", gap: 8 },
+        emptyTitle: { fontSize: 18, fontWeight: "700", marginTop: 8 },
+        emptyText: { fontSize: 13, textAlign: "center" },
+
+        fab: {
+            position: "absolute",
+            right: 20,
+            bottom: 24,
+            width: 54,
+            height: 54,
             borderRadius: 16,
             backgroundColor: theme.colors.primary,
             alignItems: "center",
             justifyContent: "center",
-        },
-        submitButtonText: { color: "white", fontWeight: "bold", fontSize: 16 },
-        fab: {
-            position: "absolute",
-            right: 20,
-            bottom: 20,
-            width: 56,
-            height: 56,
-            borderRadius: 28,
-            backgroundColor: theme.colors.primary,
-            alignItems: "center",
-            justifyContent: "center",
             elevation: 6,
-            shadowColor: "#000",
+            shadowColor: theme.colors.primary,
             shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
+            shadowOpacity: 0.35,
             shadowRadius: 8,
         },
     });

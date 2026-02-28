@@ -30,8 +30,10 @@ import React, { useState, useMemo, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
     Alert,
+    Dimensions,
     Modal,
     ScrollView,
+    StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
@@ -46,6 +48,15 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
 import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
+import { BarChart, PieChart } from "react-native-gifted-charts";
+import ChartCarousel from "../components/ChartCarousel";
+
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
+
+const CHART_COLORS = [
+    "#6366F1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6",
+    "#EC4899", "#14B8A6", "#F97316", "#06B6D4", "#84CC16",
+];
 
 export default function BusinessDetailView({
     business,
@@ -120,6 +131,59 @@ export default function BusinessDetailView({
         .reduce((acc, t) => acc + t.amount, 0);
     const totalBalance = totalIncome - totalExpense;
     const symbol = getCurrencySymbol(business.currency);
+
+    // --- Chart data: Daily bar chart for last 7 days ---
+    const dailyBarData = useMemo(() => {
+        const days = [];
+        const now = new Date();
+        for (let i = 6; i >= 0; i--) {
+            const date = new Date(now);
+            date.setDate(now.getDate() - i);
+            const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const dayEnd = new Date(dayStart);
+            dayEnd.setDate(dayEnd.getDate() + 1);
+
+            const dayIncome = transactions
+                .filter((t) => {
+                    const td = new Date(t.date);
+                    return t.type === "income" && td >= dayStart && td < dayEnd;
+                })
+                .reduce((acc, t) => acc + t.amount, 0);
+
+            const dayExpense = transactions
+                .filter((t) => {
+                    const td = new Date(t.date);
+                    return t.type === "expense" && td >= dayStart && td < dayEnd;
+                })
+                .reduce((acc, t) => acc + t.amount, 0);
+
+            const dayLabel = date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3);
+            days.push(
+                { value: dayIncome, label: dayLabel, spacing: 4, labelWidth: 32, labelTextStyle: { color: theme.colors.textSecondary, fontSize: 10 }, frontColor: "#6366F1" },
+                { value: dayExpense, frontColor: "#F59E0B" },
+            );
+        }
+        return days;
+    }, [transactions, theme]);
+
+    // --- Chart data: Category donut ---
+    const categoryPieData = useMemo(() => {
+        const catMap: Record<string, number> = {};
+        transactions
+            .filter((t) => t.type === "expense")
+            .forEach((t) => {
+                const cat = t.category || "Other";
+                catMap[cat] = (catMap[cat] || 0) + t.amount;
+            });
+        return Object.entries(catMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6)
+            .map(([name, value], i) => ({
+                value,
+                color: CHART_COLORS[i % CHART_COLORS.length],
+                text: name,
+            }));
+    }, [transactions]);
 
     /* Group transactions by date */
     const groupedTransactions = useMemo(() => {
@@ -465,6 +529,77 @@ export default function BusinessDetailView({
                             </Text>
                         </View>
                     </View>
+
+                    {/* Analytics Charts Carousel */}
+                    {transactions.length > 0 && (
+                        <ChartCarousel
+                            pages={[
+                                {
+                                    title: "Daily Cash Flow",
+                                    legend: [
+                                        { label: "In", color: "#6366F1" },
+                                        { label: "Out", color: "#F59E0B" },
+                                    ],
+                                    content: (
+                                        <BarChart
+                                            data={dailyBarData}
+                                            barWidth={10}
+                                            spacing={14}
+                                            roundedTop
+                                            roundedBottom
+                                            xAxisThickness={0}
+                                            yAxisThickness={0}
+                                            yAxisTextStyle={{ color: theme.colors.textSecondary, fontSize: 9 }}
+                                            noOfSections={4}
+                                            height={120}
+                                            width={SCREEN_WIDTH - 100}
+                                            hideRules
+                                            isAnimated
+                                        />
+                                    ),
+                                },
+                                ...(categoryPieData.length > 0
+                                    ? [
+                                          {
+                                              title: "Expense Categories",
+                                              content: (
+                                                  <View style={bdvStyles.pieRow}>
+                                                      <PieChart
+                                                          data={categoryPieData}
+                                                          donut
+                                                          radius={55}
+                                                          innerRadius={35}
+                                                          innerCircleColor={theme.colors.card}
+                                                          centerLabelComponent={() => (
+                                                              <View style={{ alignItems: "center" }}>
+                                                                  <Text style={{ fontSize: 13, fontWeight: "700", color: theme.colors.text }}>
+                                                                      {symbol}{totalExpense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                                  </Text>
+                                                                  <Text style={{ fontSize: 9, color: theme.colors.textSecondary }}>Total</Text>
+                                                              </View>
+                                                          )}
+                                                      />
+                                                      <View style={bdvStyles.pieLegend}>
+                                                          {categoryPieData.map((item, index) => (
+                                                              <View key={index} style={bdvStyles.pieLegendRow}>
+                                                                  <View style={[bdvStyles.legendDot, { backgroundColor: item.color }]} />
+                                                                  <Text style={[bdvStyles.pieLegendText, { color: theme.colors.text }]} numberOfLines={1}>
+                                                                      {item.text}
+                                                                  </Text>
+                                                                  <Text style={[bdvStyles.pieLegendAmt, { color: theme.colors.textSecondary }]}>
+                                                                      {symbol}{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                                  </Text>
+                                                              </View>
+                                                          ))}
+                                                      </View>
+                                                  </View>
+                                              ),
+                                          },
+                                      ]
+                                    : []),
+                            ]}
+                        />
+                    )}
 
                     {/* Search Input */}
                     <View style={styles.detailSearchContainer}>
@@ -941,6 +1076,36 @@ export default function BusinessDetailView({
         </KeyboardAvoidingView>
     );
 }
+
+const bdvStyles = StyleSheet.create({
+    legendDot: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+    pieRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    pieLegend: {
+        flex: 1,
+        marginLeft: 16,
+        gap: 6,
+    },
+    pieLegendRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 6,
+    },
+    pieLegendText: {
+        fontSize: 12,
+        fontWeight: "600",
+        flex: 1,
+    },
+    pieLegendAmt: {
+        fontSize: 11,
+    },
+});
 
 export const getCategoryIcon = (category: string | undefined, color: string) => {
     switch (category?.toLowerCase()) {
