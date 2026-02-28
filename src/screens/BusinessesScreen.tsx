@@ -1,13 +1,5 @@
-import React, { useState, useMemo, useEffect } from "react";
-import { useNavigation } from "@react-navigation/native";
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    ScrollView,
-    Alert,
-    StyleSheet,
-} from "react-native";
+import React, { useState, useMemo } from "react";
+import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Plus, Bell, ChevronRight, Wallet } from "lucide-react-native";
 import { Business, Transaction } from "../types";
@@ -39,23 +31,6 @@ export default function BusinessesScreen({
 
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [sheetBusiness, setSheetBusiness] = useState<Business | null>(null);
-
-    const navigation = useNavigation();
-
-    useEffect(() => {
-        if (sheetBusiness || createModalVisible) {
-            navigation.setOptions({ tabBarStyle: { display: "none" } });
-        } else {
-            navigation.setOptions({
-                tabBarStyle: {
-                    borderTopWidth: 1,
-                    paddingTop: 8,
-                    backgroundColor: theme.colors.card,
-                    borderTopColor: theme.colors.border,
-                },
-            });
-        }
-    }, [sheetBusiness, createModalVisible, navigation, theme]);
 
     const handleCreateCashbook = (name: string, currency: string) => {
         const newBusiness: Business = {
@@ -89,9 +64,7 @@ export default function BusinessesScreen({
     };
 
     const handleRename = (businessId: string, newName: string) => {
-        const updated = businesses.map((b) =>
-            b.id === businessId ? { ...b, name: newName } : b,
-        );
+        const updated = businesses.map((b) => (b.id === businessId ? { ...b, name: newName } : b));
         saveBusinesses(updated);
         setSheetBusiness((prev) => (prev ? { ...prev, name: newName } : null));
     };

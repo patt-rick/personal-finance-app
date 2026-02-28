@@ -1,7 +1,8 @@
 import { useTheme } from "../theme/theme";
-import { Business, Transaction, Category, Budget } from "../types";
+import { Business, Transaction, Category } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import {
+    Calendar,
     Car,
     Coffee,
     CreditCard,
@@ -12,17 +13,9 @@ import {
     ShieldCheck,
     ShoppingBag,
     Smartphone,
-    X,
-    Calendar,
-    Tag,
-    Info,
-    Trash2,
-    MessageSquare,
     ArrowLeft,
-    Pencil,
     Download,
-    Filter,
-    Trash,
+    Tag,
 } from "lucide-react-native";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
@@ -31,7 +24,6 @@ import { LinearGradient } from "expo-linear-gradient";
 import {
     Alert,
     Dimensions,
-    Modal,
     ScrollView,
     StyleSheet,
     Text,
@@ -40,8 +32,6 @@ import {
     View,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
-    Keyboard,
     ToastAndroid,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -50,6 +40,9 @@ import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
 import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
 import { BarChart, PieChart } from "react-native-gifted-charts";
 import ChartCarousel from "../components/ChartCarousel";
+import TransactionEntryModal from "../components/TransactionEntryModal";
+import TransactionDetailModal from "../components/TransactionDetailModal";
+import DateRangePickerModal from "../components/DateRangePickerModal";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -77,22 +70,21 @@ export default function BusinessDetailView({
     const [searchQuery, setSearchQuery] = useState("");
     const [activeModal, setActiveModal] = useState<"none" | "entry" | "detail">("none");
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
-    const [editingTxId, setEditingTxId] = useState<string | null>(null);
     const [entryType, setEntryType] = useState<"income" | "expense">("income");
-    const [amount, setAmount] = useState("");
-    const [remark, setRemark] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("Others");
-    const [filterRange, setFilterRange] = useState<"all" | "today" | "week" | "month">("all");
+    const [editingTx, setEditingTx] = useState<Transaction | null>(null);
+    const [filterRange, setFilterRange] = useState<"all" | "today" | "week" | "month" | "custom">("all");
     const [categories, setCategories] = useState<Category[]>([]);
+    const [customStartDate, setCustomStartDate] = useState(() => {
+        const d = new Date();
+        d.setMonth(d.getMonth() - 1);
+        return d;
+    });
+    const [customEndDate, setCustomEndDate] = useState(new Date());
+    const [showDateRangePicker, setShowDateRangePicker] = useState(false);
 
     useEffect(() => {
-        loadData();
+        loadCategories().then(setCategories);
     }, []);
-
-    const loadData = async () => {
-        const data = await loadCategories();
-        setCategories(data);
-    };
 
     const filteredTransactionsByRange = useMemo(() => {
         let filtered = [...transactions];
@@ -100,10 +92,7 @@ export default function BusinessDetailView({
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
         if (filterRange === "today") {
-            filtered = filtered.filter((t) => {
-                const d = new Date(t.date);
-                return d >= today;
-            });
+            filtered = filtered.filter((t) => new Date(t.date) >= today);
         } else if (filterRange === "week") {
             const weekAgo = new Date(today);
             weekAgo.setDate(today.getDate() - 7);
@@ -112,9 +101,14 @@ export default function BusinessDetailView({
             const monthAgo = new Date(today);
             monthAgo.setMonth(today.getMonth() - 1);
             filtered = filtered.filter((t) => new Date(t.date) >= monthAgo);
+        } else if (filterRange === "custom") {
+            filtered = filtered.filter((t) => {
+                const td = new Date(t.date);
+                return td >= customStartDate && td <= customEndDate;
+            });
         }
         return filtered;
-    }, [transactions, filterRange]);
+    }, [transactions, filterRange, customStartDate, customEndDate]);
 
     const filteredTransactions = filteredTransactionsByRange.filter(
         (t) =>
@@ -132,7 +126,6 @@ export default function BusinessDetailView({
     const totalBalance = totalIncome - totalExpense;
     const symbol = getCurrencySymbol(business.currency);
 
-    // --- Chart data: Daily bar chart for last 7 days ---
     const dailyBarData = useMemo(() => {
         const days = [];
         const now = new Date();
@@ -166,7 +159,6 @@ export default function BusinessDetailView({
         return days;
     }, [transactions, theme]);
 
-    // --- Chart data: Category donut ---
     const categoryPieData = useMemo(() => {
         const catMap: Record<string, number> = {};
         transactions
@@ -185,7 +177,6 @@ export default function BusinessDetailView({
             }));
     }, [transactions]);
 
-    /* Group transactions by date */
     const groupedTransactions = useMemo(() => {
         const sorted = [...filteredTransactions].sort(
             (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
@@ -216,150 +207,93 @@ export default function BusinessDetailView({
         return groups;
     }, [filteredTransactions]);
 
-    const handleAddEntry = async () => {
-        if (!amount || isNaN(parseFloat(amount))) {
-            Alert.alert("Error", "Please enter a valid amount");
-            return;
-        }
+    const checkBudgetWarning = async (
+        categoryName: string,
+        updatedTransactions: Transaction[],
+    ) => {
+        try {
+            const budget = await getBudgetByBusinessId(business.id);
+            if (!budget) return;
 
-        if (editingTxId) {
-            // Update existing transaction
-            const updatedTransactions = allTransactions.map((t) => {
-                if (t.id === editingTxId) {
+            const budgetData = calculateBudgetData(budget, updatedTransactions, categories);
+            const categoryId = categories.find((c) => c.name === categoryName)?.id;
+            if (!categoryId) return;
+
+            const categoryBudget = budgetData.find((b) => b.categoryId === categoryId);
+            if (!categoryBudget) return;
+
+            const message = getBudgetWarningMessage(
+                categoryBudget.categoryName,
+                categoryBudget.remaining,
+                categoryBudget.percentage,
+                symbol,
+            );
+
+            if (message) {
+                if (Platform.OS === "android") {
+                    ToastAndroid.show(message, ToastAndroid.LONG);
+                } else {
+                    Alert.alert("Budget Update", message);
+                }
+            }
+        } catch (error) {
+            console.error("Error checking budget:", error);
+        }
+    };
+
+    const handleEntrySubmit = async (data: {
+        amount: number;
+        category: string;
+        remark: string;
+        entryType: "income" | "expense";
+        editingTxId: string | null;
+    }) => {
+        let updatedTransactions: Transaction[];
+
+        if (data.editingTxId) {
+            updatedTransactions = allTransactions.map((t) => {
+                if (t.id === data.editingTxId) {
                     return {
                         ...t,
-                        amount: parseFloat(amount),
-                        description: entryType === "income" ? "Cash In" : "Cash Out",
-                        type: entryType,
-                        category: selectedCategory,
-                        remark: remark,
+                        amount: data.amount,
+                        description: data.entryType === "income" ? "Cash In" : "Cash Out",
+                        type: data.entryType,
+                        category: data.category,
+                        remark: data.remark,
                     };
                 }
                 return t;
             });
-            saveTransactions(updatedTransactions);
-
-            // Check budget and show notification for expenses
-            if (entryType === "expense") {
-                try {
-                    const budget = await getBudgetByBusinessId(business.id);
-                    if (budget) {
-                        const budgetData = calculateBudgetData(
-                            budget,
-                            updatedTransactions,
-                            categories,
-                        );
-
-                        // Find the category budget
-                        const categoryId = categories.find((c) => c.name === selectedCategory)?.id;
-
-                        if (categoryId) {
-                            const categoryBudget = budgetData.find(
-                                (b) => b.categoryId === categoryId,
-                            );
-
-                            if (categoryBudget) {
-                                const message = getBudgetWarningMessage(
-                                    categoryBudget.categoryName,
-                                    categoryBudget.remaining,
-                                    categoryBudget.percentage,
-                                    symbol,
-                                );
-
-                                if (message) {
-                                    if (Platform.OS === "android") {
-                                        ToastAndroid.show(message, ToastAndroid.LONG);
-                                    } else {
-                                        Alert.alert("Budget Update", message);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error checking budget:", error);
-                }
-            }
-
-            setEditingTxId(null);
         } else {
-            // Create new transaction
             const newTransaction: Transaction = {
                 id: Date.now().toString(),
-                description: entryType === "income" ? "Cash In" : "Cash Out",
-                amount: parseFloat(amount),
+                description: data.entryType === "income" ? "Cash In" : "Cash Out",
+                amount: data.amount,
                 date: new Date().toISOString(),
-                type: entryType,
+                type: data.entryType,
                 businessId: business.id,
-                category: selectedCategory,
+                category: data.category,
                 paymentMode: "Cash",
-                remark: remark,
+                remark: data.remark,
             };
-            saveTransactions([...allTransactions, newTransaction]);
-
-            // Check budget and show notification for expenses
-            if (entryType === "expense") {
-                try {
-                    const budget = await getBudgetByBusinessId(business.id);
-                    if (budget) {
-                        const budgetData = calculateBudgetData(
-                            budget,
-                            [...allTransactions, newTransaction],
-                            categories,
-                        );
-
-                        // Find the category budget
-                        const categoryId = categories.find((c) => c.name === selectedCategory)?.id;
-
-                        if (categoryId) {
-                            const categoryBudget = budgetData.find(
-                                (b) => b.categoryId === categoryId,
-                            );
-
-                            if (categoryBudget) {
-                                const message = getBudgetWarningMessage(
-                                    categoryBudget.categoryName,
-                                    categoryBudget.remaining,
-                                    categoryBudget.percentage,
-                                    symbol,
-                                );
-
-                                if (message) {
-                                    if (Platform.OS === "android") {
-                                        ToastAndroid.show(message, ToastAndroid.LONG);
-                                    } else {
-                                        Alert.alert("Budget Update", message);
-                                    }
-                                }
-                            }
-                        }
-                    }
-                } catch (error) {
-                    console.error("Error checking budget:", error);
-                }
-            }
+            updatedTransactions = [...allTransactions, newTransaction];
         }
 
-        setAmount("");
-        setRemark("");
+        saveTransactions(updatedTransactions);
+
+        if (data.entryType === "expense") {
+            await checkBudgetWarning(data.category, updatedTransactions);
+        }
+
+        setEditingTx(null);
         setActiveModal("none");
     };
 
     const handleStartEdit = () => {
         if (!selectedTx) return;
         setEntryType(selectedTx.type);
-        setAmount(selectedTx.amount.toString());
-        setSelectedCategory(selectedTx.category || "Others");
-        setRemark(selectedTx.remark || "");
-        setEditingTxId(selectedTx.id);
+        setEditingTx(selectedTx);
         setActiveModal("entry");
-    };
-
-    const handeCloseModal = () => {
-        setActiveModal("none");
-        setEditingTxId(null);
-        setAmount("");
-        setRemark("");
     };
 
     const handleDeleteTx = (id: string) => {
@@ -369,8 +303,7 @@ export default function BusinessDetailView({
                 text: "Delete",
                 style: "destructive",
                 onPress: () => {
-                    const updated = allTransactions.filter((t) => t.id !== id);
-                    saveTransactions(updated);
+                    saveTransactions(allTransactions.filter((t) => t.id !== id));
                     setActiveModal("none");
                 },
             },
@@ -415,16 +348,12 @@ export default function BusinessDetailView({
         }
     };
 
-    // Helper to get icon based on category name
-    const getCategoryIcon = (categoryName: string | undefined, color: string) => {
+    const localGetCategoryIcon = (categoryName: string | undefined, color: string) => {
         if (!categoryName) return <Tag size={20} color={color} />;
-
-        // Simple mapping based on name
         const name = categoryName.toLowerCase();
         if (name.includes("shop")) return <ShoppingBag size={20} color={color} />;
         if (name.includes("food")) return <Coffee size={20} color={color} />;
         if (name.includes("trans")) return <Car size={20} color={color} />;
-
         return <Tag size={20} color={color} />;
     };
 
@@ -434,7 +363,6 @@ export default function BusinessDetailView({
             style={{ flex: 1 }}
         >
             <View style={styles.container}>
-                {/* Detail Header */}
                 <View style={[styles.detailHeader, { paddingTop: Math.max(insets.top, 40) }]}>
                     <TouchableOpacity onPress={onBack} style={styles.detailBackBtn}>
                         <ArrowLeft size={24} color={theme.colors.text} />
@@ -447,90 +375,21 @@ export default function BusinessDetailView({
                     showsVerticalScrollIndicator={false}
                     keyboardShouldPersistTaps="handled"
                 >
-                    {/* Balance Card */}
-                    <LinearGradient
-                        colors={[
-                            "#1B1E2F", // deep navy
-                            "#2A2F4F", // soft mid
-                            "#1A1D2B", // dark edge
-                        ]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.modernBalanceCard}
-                    >
-                        {/* Soft highlight */}
-                        <View style={styles.cardGlow} />
+                    <BalanceCard
+                        symbol={symbol}
+                        totalBalance={totalBalance}
+                        currency={business.currency}
+                        styles={styles}
+                    />
 
-                        <View style={styles.balanceHeader}>
-                            <Text style={styles.balanceTitle}>
-                                {symbol}
-                                {totalBalance.toLocaleString()}
-                            </Text>
-                            <MoreHorizontal color="white" size={24} />
-                        </View>
+                    <IncomeExpenseCards
+                        symbol={symbol}
+                        totalIncome={totalIncome}
+                        totalExpense={totalExpense}
+                        theme={theme}
+                        styles={styles}
+                    />
 
-                        <Text style={styles.balanceSubtitle}>Current Balance</Text>
-
-                        <View style={styles.cardFooter}>
-                            <Text style={styles.cardNumber}>{business.currency} Cashbook</Text>
-
-                            <View style={styles.mastercardLogo}>
-                                <View style={[styles.circle, { backgroundColor: "#EB001B" }]} />
-                                <View
-                                    style={[
-                                        styles.circle,
-                                        { backgroundColor: "#F79E1B", marginLeft: -10 },
-                                    ]}
-                                />
-                            </View>
-                        </View>
-                    </LinearGradient>
-
-                    {/* Income/Expense Cards */}
-                    <View style={styles.statsContainer}>
-                        <View
-                            style={[
-                                styles.statCardFixed,
-                                { backgroundColor: theme.colors.incomeBg },
-                            ]}
-                        >
-                            <View
-                                style={[
-                                    styles.statIconContainer,
-                                    { backgroundColor: theme.colors.income },
-                                ]}
-                            >
-                                <Plus size={20} color="white" />
-                            </View>
-                            <Text style={styles.statLabel}>Total In</Text>
-                            <Text style={styles.statValue}>
-                                {symbol}
-                                {totalIncome.toLocaleString()}
-                            </Text>
-                        </View>
-                        <View
-                            style={[
-                                styles.statCardFixed,
-                                { backgroundColor: theme.colors.expenseBg },
-                            ]}
-                        >
-                            <View
-                                style={[
-                                    styles.statIconContainer,
-                                    { backgroundColor: theme.colors.expense },
-                                ]}
-                            >
-                                <MinusIcon size={20} color="white" />
-                            </View>
-                            <Text style={styles.statLabel}>Total Out</Text>
-                            <Text style={styles.statValue}>
-                                {symbol}
-                                {totalExpense.toLocaleString()}
-                            </Text>
-                        </View>
-                    </View>
-
-                    {/* Analytics Charts Carousel */}
                     {transactions.length > 0 && (
                         <ChartCarousel
                             pages={[
@@ -601,7 +460,6 @@ export default function BusinessDetailView({
                         />
                     )}
 
-                    {/* Search Input */}
                     <View style={styles.detailSearchContainer}>
                         <Search size={18} color={theme.colors.textSecondary} />
                         <TextInput
@@ -613,7 +471,6 @@ export default function BusinessDetailView({
                         />
                     </View>
 
-                    {/* Filter & Export Bar */}
                     <View style={styles.filterBar}>
                         <ScrollView
                             horizontal
@@ -653,6 +510,49 @@ export default function BusinessDetailView({
                                     </Text>
                                 </TouchableOpacity>
                             ))}
+                            <TouchableOpacity
+                                onPress={() => setShowDateRangePicker(true)}
+                                style={[
+                                    styles.filterChip,
+                                    {
+                                        backgroundColor:
+                                            filterRange === "custom"
+                                                ? theme.colors.primary
+                                                : theme.colors.card,
+                                        borderColor:
+                                            filterRange === "custom"
+                                                ? theme.colors.primary
+                                                : theme.colors.borderLight,
+                                        flexDirection: "row",
+                                        alignItems: "center",
+                                        gap: 4,
+                                    },
+                                ]}
+                            >
+                                <Calendar
+                                    size={12}
+                                    color={
+                                        filterRange === "custom"
+                                            ? "white"
+                                            : theme.colors.textSecondary
+                                    }
+                                />
+                                <Text
+                                    style={[
+                                        styles.filterChipText,
+                                        {
+                                            color:
+                                                filterRange === "custom"
+                                                    ? "white"
+                                                    : theme.colors.textSecondary,
+                                        },
+                                    ]}
+                                >
+                                    {filterRange === "custom"
+                                        ? `${customStartDate.toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${customEndDate.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`
+                                        : "custom"}
+                                </Text>
+                            </TouchableOpacity>
                         </ScrollView>
 
                         <TouchableOpacity onPress={exportToCSV} style={styles.exportBtn}>
@@ -660,7 +560,6 @@ export default function BusinessDetailView({
                         </TouchableOpacity>
                     </View>
 
-                    {/* Transaction List */}
                     <View style={styles.detailList}>
                         <Text style={styles.listLabel}>Recent Transactions</Text>
 
@@ -698,7 +597,7 @@ export default function BusinessDetailView({
                                                 },
                                             ]}
                                         >
-                                            {getCategoryIcon(
+                                            {localGetCategoryIcon(
                                                 t.category,
                                                 t.type === "income"
                                                     ? theme.colors.income
@@ -745,7 +644,6 @@ export default function BusinessDetailView({
                     </View>
                 </ScrollView>
 
-                {/* Bottom Actions */}
                 <View
                     style={[
                         styles.modernBottomActions,
@@ -753,15 +651,10 @@ export default function BusinessDetailView({
                     ]}
                 >
                     <TouchableOpacity
-                        style={[
-                            styles.bigActionBtnModern,
-                            { backgroundColor: theme.colors.income },
-                        ]}
+                        style={[styles.bigActionBtnModern, { backgroundColor: theme.colors.income }]}
                         onPress={() => {
                             setEntryType("income");
-                            setEditingTxId(null);
-                            setAmount("");
-                            setRemark("");
+                            setEditingTx(null);
                             setActiveModal("entry");
                         }}
                     >
@@ -770,15 +663,10 @@ export default function BusinessDetailView({
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[
-                            styles.bigActionBtnModern,
-                            { backgroundColor: theme.colors.expense },
-                        ]}
+                        style={[styles.bigActionBtnModern, { backgroundColor: theme.colors.expense }]}
                         onPress={() => {
                             setEntryType("expense");
-                            setEditingTxId(null);
-                            setAmount("");
-                            setRemark("");
+                            setEditingTx(null);
                             setActiveModal("entry");
                         }}
                     >
@@ -788,323 +676,129 @@ export default function BusinessDetailView({
                     </TouchableOpacity>
                 </View>
 
-                {/* Entry Modal */}
-                <Modal visible={activeModal === "entry"} animationType="slide" transparent>
-                    <KeyboardAvoidingView
-                        behavior={Platform.OS === "ios" ? "padding" : "height"}
-                        style={{ flex: 1 }}
-                    >
-                        <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                            <View style={styles.modalOverlay}>
-                                <View style={styles.modalContentModern}>
-                                    <View style={styles.modalHeaderModern}>
-                                        <Text style={styles.modalTitleModern}>
-                                            {editingTxId
-                                                ? "Edit Transaction"
-                                                : entryType === "income"
-                                                  ? "New Income"
-                                                  : "New Expense"}
-                                        </Text>
-                                        <TouchableOpacity onPress={handeCloseModal}>
-                                            <X size={24} color={theme.colors.text} />
-                                        </TouchableOpacity>
-                                    </View>
+                <TransactionEntryModal
+                    visible={activeModal === "entry"}
+                    entryType={entryType}
+                    editingTx={editingTx}
+                    categories={categories}
+                    symbol={symbol}
+                    onClose={() => {
+                        setActiveModal("none");
+                        setEditingTx(null);
+                    }}
+                    onSubmit={handleEntrySubmit}
+                />
 
-                                    <Text style={styles.inputLabelModern}>Amount ({symbol})</Text>
-                                    <TextInput
-                                        style={styles.modalInputLargeModern}
-                                        placeholder="0.00"
-                                        placeholderTextColor={theme.colors.placeholder}
-                                        keyboardType="decimal-pad"
-                                        value={amount}
-                                        onChangeText={setAmount}
-                                        autoFocus
-                                    />
+                <TransactionDetailModal
+                    visible={activeModal === "detail"}
+                    transaction={selectedTx}
+                    symbol={symbol}
+                    onClose={() => setActiveModal("none")}
+                    onEdit={handleStartEdit}
+                    onDelete={handleDeleteTx}
+                />
 
-                                    <Text style={styles.inputLabelModern}>Category</Text>
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        style={styles.categoryPicker}
-                                    >
-                                        {categories
-                                            .filter((c) => c.type === entryType)
-                                            .map((cat) => (
-                                                <TouchableOpacity
-                                                    key={cat.id}
-                                                    style={[
-                                                        styles.categoryChip,
-                                                        selectedCategory === cat.name &&
-                                                            styles.categoryChipActive,
-                                                    ]}
-                                                    onPress={() => setSelectedCategory(cat.name)}
-                                                >
-                                                    <Text
-                                                        style={[
-                                                            styles.categoryChipText,
-                                                            selectedCategory === cat.name &&
-                                                                styles.categoryChipTextActive,
-                                                        ]}
-                                                    >
-                                                        {cat.name}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                    </ScrollView>
-
-                                    <Text style={styles.inputLabelModern}>Remark</Text>
-                                    <TextInput
-                                        style={styles.modalInputModern}
-                                        placeholder="What was this for?"
-                                        placeholderTextColor={theme.colors.placeholder}
-                                        value={remark}
-                                        onChangeText={setRemark}
-                                    />
-
-                                    <TouchableOpacity
-                                        style={[
-                                            styles.submitBtnModern,
-                                            {
-                                                backgroundColor:
-                                                    entryType === "income"
-                                                        ? theme.colors.income
-                                                        : theme.colors.expense,
-                                            },
-                                        ]}
-                                        onPress={handleAddEntry}
-                                    >
-                                        <Text style={styles.submitBtnTextModern}>Save Entry</Text>
-                                    </TouchableOpacity>
-                                </View>
-                            </View>
-                        </TouchableWithoutFeedback>
-                    </KeyboardAvoidingView>
-                </Modal>
-
-                {/* Transaction Detail Modal */}
-                <Modal visible={activeModal === "detail"} animationType="slide" transparent>
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.txDetailCard}>
-                            <TouchableOpacity
-                                style={{ alignSelf: "flex-end", padding: 10, marginTop: -10 }}
-                                onPress={() => setActiveModal("none")}
-                            >
-                                <X size={24} color={theme.colors.textSecondary} />
-                            </TouchableOpacity>
-
-                            {selectedTx && (
-                                <>
-                                    <View style={styles.txDetailHeader}>
-                                        <View
-                                            style={[
-                                                styles.txDetailTypeBadge,
-                                                {
-                                                    backgroundColor:
-                                                        selectedTx.type === "income"
-                                                            ? theme.colors.success + "20"
-                                                            : theme.colors.error + "20",
-                                                },
-                                            ]}
-                                        >
-                                            <Text
-                                                style={{
-                                                    color:
-                                                        selectedTx.type === "income"
-                                                            ? theme.colors.success
-                                                            : theme.colors.error,
-                                                    fontWeight: "bold",
-                                                    fontSize: 12,
-                                                }}
-                                            >
-                                                {selectedTx.type.toUpperCase()}
-                                            </Text>
-                                        </View>
-                                        <Text style={styles.txDetailAmount}>
-                                            {selectedTx.type === "income" ? "+" : "-"}
-                                            {symbol}
-                                            {selectedTx.amount.toLocaleString()}
-                                        </Text>
-                                        <Text style={styles.txDetailDescription}>
-                                            {selectedTx.description}
-                                        </Text>
-                                    </View>
-
-                                    <View style={styles.txDetailInfoSection}>
-                                        <View style={styles.txDetailRow}>
-                                            <View
-                                                style={{
-                                                    flexDirection: "row",
-                                                    alignItems: "center",
-                                                    gap: 10,
-                                                }}
-                                            >
-                                                <Tag size={18} color={theme.colors.textSecondary} />
-                                                <Text style={styles.txDetailLabel}>Category</Text>
-                                            </View>
-                                            <Text style={styles.txDetailValue}>
-                                                {selectedTx.category}
-                                            </Text>
-                                        </View>
-
-                                        <View style={styles.txDetailRow}>
-                                            <View
-                                                style={{
-                                                    flexDirection: "row",
-                                                    alignItems: "center",
-                                                    gap: 10,
-                                                }}
-                                            >
-                                                <Calendar
-                                                    size={18}
-                                                    color={theme.colors.textSecondary}
-                                                />
-                                                <Text style={styles.txDetailLabel}>
-                                                    Date & Time
-                                                </Text>
-                                            </View>
-                                            <Text style={styles.txDetailValue}>
-                                                {new Date(selectedTx.date).toLocaleDateString()}{" "}
-                                                {new Date(selectedTx.date).toLocaleTimeString([], {
-                                                    hour: "2-digit",
-                                                    minute: "2-digit",
-                                                })}
-                                            </Text>
-                                        </View>
-
-                                        <View style={styles.txDetailRow}>
-                                            <View
-                                                style={{
-                                                    flexDirection: "row",
-                                                    alignItems: "center",
-                                                    gap: 10,
-                                                }}
-                                            >
-                                                <Info
-                                                    size={18}
-                                                    color={theme.colors.textSecondary}
-                                                />
-                                                <Text style={styles.txDetailLabel}>Mode</Text>
-                                            </View>
-                                            <Text style={styles.txDetailValue}>
-                                                {selectedTx.paymentMode || "Cash"}
-                                            </Text>
-                                        </View>
-
-                                        {selectedTx.remark ? (
-                                            <View
-                                                style={[
-                                                    styles.txDetailRow,
-                                                    { alignItems: "flex-start" },
-                                                ]}
-                                            >
-                                                <View
-                                                    style={{
-                                                        flexDirection: "row",
-                                                        alignItems: "center",
-                                                        gap: 10,
-                                                    }}
-                                                >
-                                                    <MessageSquare
-                                                        size={18}
-                                                        color={theme.colors.textSecondary}
-                                                    />
-                                                    <Text style={styles.txDetailLabel}>Remark</Text>
-                                                </View>
-                                                <Text
-                                                    style={[
-                                                        styles.txDetailValue,
-                                                        {
-                                                            flex: 1,
-                                                            textAlign: "right",
-                                                            marginLeft: 20,
-                                                        },
-                                                    ]}
-                                                >
-                                                    {selectedTx.remark}
-                                                </Text>
-                                            </View>
-                                        ) : null}
-                                    </View>
-
-                                    <View style={styles.txDetailActions}>
-                                        <TouchableOpacity
-                                            style={styles.txDetailDeleteBtn}
-                                            onPress={() => handleDeleteTx(selectedTx.id)}
-                                        >
-                                            <Text
-                                                style={{
-                                                    color: theme.colors.error,
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                <Trash size={20} color={theme.colors.error} />
-                                            </Text>
-                                        </TouchableOpacity>
-
-                                        <TouchableOpacity
-                                            style={[
-                                                styles.txDetailDeleteBtn,
-                                                { borderColor: theme.colors.primary },
-                                            ]}
-                                            onPress={handleStartEdit}
-                                        >
-                                            <Text
-                                                style={{
-                                                    color: theme.colors.primary,
-                                                    fontWeight: "bold",
-                                                }}
-                                            >
-                                                <Pencil size={20} color={theme.colors.primary} />
-                                            </Text>
-                                        </TouchableOpacity>
-
-                                        <TouchableOpacity
-                                            style={styles.txDetailCloseBtn}
-                                            onPress={() => setActiveModal("none")}
-                                        >
-                                            <Text style={{ color: "white", fontWeight: "bold" }}>
-                                                Done
-                                            </Text>
-                                        </TouchableOpacity>
-                                    </View>
-                                </>
-                            )}
-                        </View>
-                    </View>
-                </Modal>
+                <DateRangePickerModal
+                    visible={showDateRangePicker}
+                    startDate={customStartDate}
+                    endDate={customEndDate}
+                    onApply={(start, end) => {
+                        setCustomStartDate(start);
+                        setCustomEndDate(end);
+                        setFilterRange("custom");
+                        setShowDateRangePicker(false);
+                    }}
+                    onClose={() => setShowDateRangePicker(false)}
+                />
             </View>
         </KeyboardAvoidingView>
     );
 }
 
+function BalanceCard({
+    symbol,
+    totalBalance,
+    currency,
+    styles,
+}: {
+    symbol: string;
+    totalBalance: number;
+    currency?: string;
+    styles: any;
+}) {
+    return (
+        <LinearGradient
+            colors={["#1B1E2F", "#2A2F4F", "#1A1D2B"]}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
+            style={styles.modernBalanceCard}
+        >
+            <View style={styles.cardGlow} />
+            <View style={styles.balanceHeader}>
+                <Text style={styles.balanceTitle}>
+                    {symbol}
+                    {totalBalance.toLocaleString()}
+                </Text>
+                <MoreHorizontal color="white" size={24} />
+            </View>
+            <Text style={styles.balanceSubtitle}>Current Balance</Text>
+            <View style={styles.cardFooter}>
+                <Text style={styles.cardNumber}>{currency} Cashbook</Text>
+                <View style={styles.mastercardLogo}>
+                    <View style={[styles.circle, { backgroundColor: "#EB001B" }]} />
+                    <View style={[styles.circle, { backgroundColor: "#F79E1B", marginLeft: -10 }]} />
+                </View>
+            </View>
+        </LinearGradient>
+    );
+}
+
+function IncomeExpenseCards({
+    symbol,
+    totalIncome,
+    totalExpense,
+    theme,
+    styles,
+}: {
+    symbol: string;
+    totalIncome: number;
+    totalExpense: number;
+    theme: any;
+    styles: any;
+}) {
+    return (
+        <View style={styles.statsContainer}>
+            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.incomeBg }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.income }]}>
+                    <Plus size={20} color="white" />
+                </View>
+                <Text style={styles.statLabel}>Total In</Text>
+                <Text style={styles.statValue}>
+                    {symbol}
+                    {totalIncome.toLocaleString()}
+                </Text>
+            </View>
+            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.expenseBg }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.expense }]}>
+                    <MinusIcon size={20} color="white" />
+                </View>
+                <Text style={styles.statLabel}>Total Out</Text>
+                <Text style={styles.statValue}>
+                    {symbol}
+                    {totalExpense.toLocaleString()}
+                </Text>
+            </View>
+        </View>
+    );
+}
+
 const bdvStyles = StyleSheet.create({
-    legendDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    pieRow: {
-        flexDirection: "row",
-        alignItems: "center",
-    },
-    pieLegend: {
-        flex: 1,
-        marginLeft: 16,
-        gap: 6,
-    },
-    pieLegendRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-    },
-    pieLegendText: {
-        fontSize: 12,
-        fontWeight: "600",
-        flex: 1,
-    },
-    pieLegendAmt: {
-        fontSize: 11,
-    },
+    legendDot: { width: 8, height: 8, borderRadius: 4 },
+    pieRow: { flexDirection: "row", alignItems: "center" },
+    pieLegend: { flex: 1, marginLeft: 16, gap: 6 },
+    pieLegendRow: { flexDirection: "row", alignItems: "center", gap: 6 },
+    pieLegendText: { fontSize: 12, fontWeight: "600", flex: 1 },
+    pieLegendAmt: { fontSize: 11 },
 });
 
 export const getCategoryIcon = (category: string | undefined, color: string) => {
