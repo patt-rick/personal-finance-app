@@ -82,6 +82,17 @@ function MainApp() {
         await apiSaveUserProfile(profile);
     };
 
+    const handleDataImported = async () => {
+        const [loadedBusinesses, loadedTransactions, loadedProfile] = await Promise.all([
+            loadBusinesses(),
+            loadTransactions(),
+            loadUserProfile(),
+        ]);
+        setBusinesses(loadedBusinesses);
+        setTransactions(loadedTransactions);
+        setUserProfile(loadedProfile);
+    };
+
     if (isLoading) {
         return <SplashScreen />;
     }
@@ -201,6 +212,7 @@ function MainApp() {
                                 <SettingsScreen
                                     userProfile={userProfile}
                                     saveUserProfile={handleSaveUserProfile}
+                                    onDataImported={handleDataImported}
                                 />
                             )}
                         </Tab.Screen>

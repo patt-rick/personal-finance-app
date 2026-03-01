@@ -1,4 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as FileSystem from "expo-file-system/legacy";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
 import { Business, Transaction, UserProfile, Category, Budget } from "../types";
 
 const STORAGE_KEYS = {
@@ -167,5 +170,101 @@ export const deleteBudget = async (budgetId: string): Promise<boolean> => {
     } catch (error) {
         console.error("Error deleting budget:", error);
         return false;
+    }
+};
+
+// Full Data Export/Import
+
+interface AppBackup {
+    version: 1;
+    exportedAt: string;
+    data: {
+        businesses: Business[];
+        transactions: Transaction[];
+        userProfile: UserProfile | null;
+        categories: Category[];
+        budgets: Budget[];
+    };
+}
+
+export const exportAllData = async (): Promise<boolean> => {
+    try {
+        const [businesses, transactions, userProfile, categories, budgets] = await Promise.all([
+            loadBusinesses(),
+            loadTransactions(),
+            loadUserProfile(),
+            loadCategories(),
+            loadBudgets(),
+        ]);
+
+        const backup: AppBackup = {
+            version: 1,
+            exportedAt: new Date().toISOString(),
+            data: { businesses, transactions, userProfile, categories, budgets },
+        };
+
+        const fileName = `finance_tracker_backup_${Date.now()}.json`;
+        const fileUri = FileSystem.cacheDirectory + fileName;
+
+        await FileSystem.writeAsStringAsync(fileUri, JSON.stringify(backup), {
+            encoding: FileSystem.EncodingType.UTF8,
+        });
+
+        if (await Sharing.isAvailableAsync()) {
+            await Sharing.shareAsync(fileUri, {
+                mimeType: "application/json",
+                dialogTitle: "Export App Data",
+                UTI: "public.json",
+            });
+            return true;
+        }
+
+        return false;
+    } catch (error) {
+        console.error("Error exporting data:", error);
+        return false;
+    }
+};
+
+export const importAllData = async (): Promise<boolean> => {
+    try {
+        const result = await DocumentPicker.getDocumentAsync({
+            type: "application/json",
+            copyToCacheDirectory: true,
+        });
+
+        if (result.canceled || !result.assets?.length) {
+            return false;
+        }
+
+        const fileUri = result.assets[0].uri;
+        const content = await FileSystem.readAsStringAsync(fileUri, {
+            encoding: FileSystem.EncodingType.UTF8,
+        });
+
+        const backup: AppBackup = JSON.parse(content);
+
+        if (!backup.version || !backup.data) {
+            throw new Error("Invalid backup file format");
+        }
+
+        const { businesses, transactions, userProfile, categories, budgets } = backup.data;
+
+        if (!Array.isArray(businesses) || !Array.isArray(transactions) || !Array.isArray(categories)) {
+            throw new Error("Invalid backup data structure");
+        }
+
+        await Promise.all([
+            saveBusinesses(businesses),
+            saveTransactions(transactions),
+            userProfile ? saveUserProfile(userProfile) : Promise.resolve(true),
+            saveCategories(categories),
+            saveBudgets(budgets || []),
+        ]);
+
+        return true;
+    } catch (error) {
+        console.error("Error importing data:", error);
+        throw error;
     }
 };
