@@ -2,6 +2,7 @@ import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Plus, Bell, ChevronRight, Wallet } from "lucide-react-native";
+import { useNavigation } from "@react-navigation/native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
@@ -25,6 +26,7 @@ export default function BusinessesScreen({
     setCurrentBusiness,
 }: BusinessesScreenProps) {
     const insets = useSafeAreaInsets();
+    const navigation = useNavigation();
     const theme = useTheme();
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
     const s = useMemo(() => createLocalStyles(theme), [theme]);
@@ -170,7 +172,10 @@ export default function BusinessesScreen({
                 business={sheetBusiness}
                 transactions={transactions}
                 onClose={() => setSheetBusiness(null)}
-                onOpenCashbook={setCurrentBusiness}
+                onOpenCashbook={(biz) => {
+                    setCurrentBusiness(biz);
+                    navigation.navigate("Dashboard" as never);
+                }}
                 onDelete={deleteBusiness}
                 onRename={handleRename}
             />

@@ -23,6 +23,7 @@ import {
     Upload,
     Download,
     Shield,
+    Lock,
     Info,
     Palette,
     Pencil,
@@ -33,14 +34,16 @@ import { useThemeContext } from "../theme/ThemeContext";
 import { UserProfile } from "../types";
 import { exportAllData, importAllData, loadUserProfile } from "../utils/storage";
 import CategoryManagementScreen from "./CategoryManagementScreen";
+import SecuritySettingsScreen from "./SecuritySettingsScreen";
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
     saveUserProfile: (profile: UserProfile) => void;
     onDataImported: () => Promise<void>;
+    onPinChanged: () => void;
 }
 
-export default function SettingsScreen({ userProfile, saveUserProfile, onDataImported }: SettingsScreenProps) {
+export default function SettingsScreen({ userProfile, saveUserProfile, onDataImported, onPinChanged }: SettingsScreenProps) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const { themeMode, setThemeMode } = useThemeContext();
@@ -50,6 +53,7 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
     const [email, setEmail] = useState(userProfile?.email || "");
     const [isEditing, setIsEditing] = useState(false);
     const [showCategories, setShowCategories] = useState(false);
+    const [showSecurity, setShowSecurity] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
 
@@ -122,6 +126,10 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
 
     if (showCategories) {
         return <CategoryManagementScreen onBack={() => setShowCategories(false)} />;
+    }
+
+    if (showSecurity) {
+        return <SecuritySettingsScreen onBack={() => setShowSecurity(false)} onPinChanged={onPinChanged} />;
     }
 
     const themeOptions = [
@@ -232,6 +240,19 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
                                     <Tags size={18} color={theme.colors.expense} />
                                 </View>
                                 <Text style={styles.rowText}>Categories</Text>
+                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.row, { borderBottomWidth: 0 }]}
+                                onPress={() => setShowSecurity(true)}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
+                                    <Lock size={18} color="#6366F1" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Security</Text>
+                                    <Text style={styles.rowSubText}>PIN lock & biometrics</Text>
+                                </View>
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
                         </View>

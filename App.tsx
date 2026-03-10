@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import { View, StyleSheet, useColorScheme } from "react-native";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { View, StyleSheet, useColorScheme, AppState } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
@@ -10,6 +10,7 @@ import BusinessesScreen from "./src/screens/BusinessesScreen";
 import BudgetDashboardScreen from "./src/screens/BudgetDashboardScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SplashScreen from "./src/screens/SplashScreen";
+import LockScreen from "./src/screens/LockScreen";
 import { Business, Transaction, UserProfile } from "./src/types";
 import { useTheme } from "./src/theme/theme";
 import { ThemeProvider, useThemeContext } from "./src/theme/ThemeContext";
@@ -22,6 +23,13 @@ import {
     saveUserProfile as apiSaveUserProfile,
 } from "./src/utils/storage";
 import { scheduleReminders } from "./src/utils/notifications";
+import {
+    isPinEnabled,
+    isBiometricsEnabled,
+    isBiometricsAvailable,
+    getBiometricType,
+    authenticateWithBiometrics,
+} from "./src/utils/security";
 
 const Tab = createBottomTabNavigator();
 
@@ -39,22 +47,49 @@ function MainApp() {
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
+    const [isLocked, setIsLocked] = useState(false);
+    const [pinEnabled, setPinEnabled] = useState(false);
+    const [biometricsAvailable, setBiometricsAvailable] = useState(false);
+    const [biometricsEnabled, setBiometricsEnabled] = useState(false);
+    const [biometricType, setBiometricType] = useState("Biometrics");
+    const appState = useRef(AppState.currentState);
     const { themeMode, theme } = useThemeContext();
     const systemColorScheme = useColorScheme();
 
     const isDark = themeMode === "system" ? systemColorScheme === "dark" : themeMode === "dark";
 
+    const loadSecuritySettings = useCallback(async () => {
+        const [pinOn, bioAvail, bioOn, bioType] = await Promise.all([
+            isPinEnabled(),
+            isBiometricsAvailable(),
+            isBiometricsEnabled(),
+            getBiometricType(),
+        ]);
+        setPinEnabled(pinOn);
+        setBiometricsAvailable(bioAvail);
+        setBiometricsEnabled(bioOn);
+        setBiometricType(bioType);
+        return pinOn;
+    }, []);
+
     useEffect(() => {
         async function loadData() {
             const startTime = Date.now();
 
-            const loadedBusinesses = await loadBusinesses();
-            const loadedTransactions = await loadTransactions();
-            const loadedProfile = await loadUserProfile();
+            const [loadedBusinesses, loadedTransactions, loadedProfile] = await Promise.all([
+                loadBusinesses(),
+                loadTransactions(),
+                loadUserProfile(),
+            ]);
 
             setBusinesses(loadedBusinesses);
             setTransactions(loadedTransactions);
             setUserProfile(loadedProfile);
+
+            const pinOn = await loadSecuritySettings();
+            if (pinOn) {
+                setIsLocked(true);
+            }
 
             const elapsedTime = Date.now() - startTime;
             const remainingTime = Math.max(0, 3000 - elapsedTime);
@@ -65,7 +100,37 @@ function MainApp() {
         }
         loadData();
         scheduleReminders();
+    }, [loadSecuritySettings]);
+
+    useEffect(() => {
+        const subscription = AppState.addEventListener("change", (nextAppState) => {
+            if (
+                appState.current.match(/active/) &&
+                nextAppState.match(/inactive|background/)
+            ) {
+                if (pinEnabled) {
+                    setIsLocked(true);
+                }
+            }
+            appState.current = nextAppState;
+        });
+        return () => subscription.remove();
+    }, [pinEnabled]);
+
+    const handleUnlock = useCallback(() => {
+        setIsLocked(false);
     }, []);
+
+    const handleBiometricAuth = useCallback(async () => {
+        const success = await authenticateWithBiometrics();
+        if (success) {
+            setIsLocked(false);
+        }
+    }, []);
+
+    const handlePinChanged = useCallback(async () => {
+        await loadSecuritySettings();
+    }, [loadSecuritySettings]);
 
     const handleSaveBusinesses = async (newBusinesses: Business[]) => {
         setBusinesses(newBusinesses);
@@ -95,6 +160,17 @@ function MainApp() {
 
     if (isLoading) {
         return <SplashScreen />;
+    }
+
+    if (isLocked) {
+        return (
+            <LockScreen
+                onUnlock={handleUnlock}
+                biometricsAvailable={biometricsAvailable && biometricsEnabled}
+                biometricType={biometricType}
+                onBiometricAuth={handleBiometricAuth}
+            />
+        );
     }
 
     const MyDefaultTheme = {
@@ -213,6 +289,7 @@ function MainApp() {
                                     userProfile={userProfile}
                                     saveUserProfile={handleSaveUserProfile}
                                     onDataImported={handleDataImported}
+                                    onPinChanged={handlePinChanged}
                                 />
                             )}
                         </Tab.Screen>
