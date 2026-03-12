@@ -10,7 +10,6 @@ import {
     KeyboardAvoidingView,
     Platform,
     TouchableWithoutFeedback,
-    Dimensions,
 } from "react-native";
 import {
     X,
@@ -25,10 +24,8 @@ import {
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
 import { getCurrencySymbol } from "../utils/_helpers";
-import { BarChart } from "react-native-gifted-charts";
+import WeeklyBarChart from "./dashboard/WeeklyBarChart";
 import { LinearGradient } from "expo-linear-gradient";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 interface CashbookDetailSheetProps {
     business: Business | null;
@@ -63,7 +60,9 @@ export default function CashbookDetailSheet({
         const avg = count > 0 ? (income + expense) / count : 0;
         const symbol = getCurrencySymbol(business.currency);
 
-        const barData: any[] = [];
+        const chartLabels: string[] = [];
+        const chartIncome: number[] = [];
+        const chartExpense: number[] = [];
         const now = new Date();
         let hasActivity = false;
         for (let i = 6; i >= 0; i--) {
@@ -87,18 +86,9 @@ export default function CashbookDetailSheet({
                 .reduce((a, t) => a + t.amount, 0);
 
             if (dayIn > 0 || dayOut > 0) hasActivity = true;
-            const label = date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2);
-            barData.push(
-                {
-                    value: dayIn,
-                    label,
-                    spacing: 3,
-                    labelWidth: 26,
-                    labelTextStyle: { color: theme.colors.textSecondary, fontSize: 9 },
-                    frontColor: "#6366F1",
-                },
-                { value: dayOut, frontColor: "#F59E0B" },
-            );
+            chartLabels.push(date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2));
+            chartIncome.push(dayIn);
+            chartExpense.push(dayOut);
         }
 
         const catMap: Record<string, number> = {};
@@ -119,7 +109,9 @@ export default function CashbookDetailSheet({
             count,
             avg,
             symbol,
-            barData,
+            chartLabels,
+            chartIncome,
+            chartExpense,
             hasActivity,
             topCategories,
         };
@@ -186,14 +178,6 @@ export default function CashbookDetailSheet({
                                     <BalanceCard sheetData={sheetData} s={s} />
 
                                     <StatsGrid sheetData={sheetData} theme={theme} s={s} />
-
-                                    {sheetData.hasActivity && (
-                                        <ActivityChart
-                                            barData={sheetData.barData}
-                                            theme={theme}
-                                            s={s}
-                                        />
-                                    )}
 
                                     {sheetData.topCategories.length > 0 && (
                                         <TopCategories
@@ -377,7 +361,7 @@ function StatsGrid({ sheetData, theme, s }: any) {
     );
 }
 
-function ActivityChart({ barData, theme, s }: any) {
+function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: any) {
     return (
         <View style={s.chartSection}>
             <View style={s.chartHeaderRow}>
@@ -386,11 +370,11 @@ function ActivityChart({ barData, theme, s }: any) {
                 </Text>
                 <View style={s.chartLegend}>
                     <View style={s.legendItem}>
-                        <View style={[s.legendDot, { backgroundColor: "#6366F1" }]} />
+                        <View style={[s.legendDot, { backgroundColor: theme.colors.income }]} />
                         <Text style={[s.legendLbl, { color: theme.colors.textSecondary }]}>In</Text>
                     </View>
                     <View style={s.legendItem}>
-                        <View style={[s.legendDot, { backgroundColor: "#F59E0B" }]} />
+                        <View style={[s.legendDot, { backgroundColor: theme.colors.expense }]} />
                         <Text style={[s.legendLbl, { color: theme.colors.textSecondary }]}>
                             Out
                         </Text>
@@ -398,20 +382,13 @@ function ActivityChart({ barData, theme, s }: any) {
                 </View>
             </View>
             <View style={[s.chartBox, { backgroundColor: theme.colors.surface }]}>
-                <BarChart
-                    data={barData}
-                    barWidth={8}
-                    spacing={10}
-                    roundedTop
-                    roundedBottom
-                    xAxisThickness={0}
-                    yAxisThickness={0}
-                    yAxisTextStyle={{ color: theme.colors.textSecondary, fontSize: 8 }}
-                    noOfSections={3}
-                    height={80}
-                    width={SCREEN_WIDTH - 110}
-                    hideRules
-                    isAnimated
+                <WeeklyBarChart
+                    labels={labels}
+                    incomeData={incomeData}
+                    expenseData={expenseData}
+                    currencySymbol={symbol}
+                    incomeColor={theme.colors.income}
+                    expenseColor={theme.colors.expense}
                 />
             </View>
         </View>

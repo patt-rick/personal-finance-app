@@ -54,8 +54,15 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                         <View style={styles.legendRow}>
                             {page.legend.map((l, i) => (
                                 <View key={i} style={styles.legendItem}>
-                                    <View style={[styles.legendDot, { backgroundColor: l.color }]} />
-                                    <Text style={[styles.legendText, { color: theme.colors.textSecondary }]}>
+                                    <View
+                                        style={[styles.legendDot, { backgroundColor: l.color }]}
+                                    />
+                                    <Text
+                                        style={[
+                                            styles.legendText,
+                                            { color: theme.colors.textSecondary },
+                                        ]}
+                                    >
                                         {l.label}
                                     </Text>
                                 </View>
@@ -82,7 +89,12 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                         {pages[activeIndex].legend!.map((l, i) => (
                             <View key={i} style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: l.color }]} />
-                                <Text style={[styles.legendText, { color: theme.colors.textSecondary }]}>
+                                <Text
+                                    style={[
+                                        styles.legendText,
+                                        { color: theme.colors.textSecondary },
+                                    ]}
+                                >
                                     {l.label}
                                 </Text>
                             </View>
@@ -106,7 +118,10 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                 {pages.map((page, index) => (
                     <View
                         key={index}
-                        style={[styles.card, { backgroundColor: theme.colors.card, width: cardWidth }]}
+                        style={[
+                            styles.card,
+                            { backgroundColor: theme.colors.card, width: cardWidth },
+                        ]}
                     >
                         {page.content}
                     </View>
@@ -171,7 +186,7 @@ const styles = StyleSheet.create({
         fontWeight: "500",
     },
     card: {
-        borderRadius: 14,
+        borderRadius: 24,
         padding: 16,
         justifyContent: "center",
         elevation: 1,

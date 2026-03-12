@@ -23,7 +23,6 @@ import React, { useState, useMemo, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 import {
     Alert,
-    Dimensions,
     ScrollView,
     StyleSheet,
     Text,
@@ -38,13 +37,12 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
 import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
-import { BarChart, PieChart } from "react-native-gifted-charts";
 import ChartCarousel from "../components/ChartCarousel";
+import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
+import DonutChart from "../components/dashboard/DonutChart";
 import TransactionEntryModal from "../components/TransactionEntryModal";
 import TransactionDetailModal from "../components/TransactionDetailModal";
 import DateRangePickerModal from "../components/DateRangePickerModal";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CHART_COLORS = [
     "#6366F1",
@@ -136,8 +134,10 @@ export default function BusinessDetailView({
     const totalBalance = totalIncome - totalExpense;
     const symbol = getCurrencySymbol(business.currency);
 
-    const dailyBarData = useMemo(() => {
-        const days = [];
+    const dailyChartData = useMemo(() => {
+        const labels: string[] = [];
+        const incomeValues: number[] = [];
+        const expenseValues: number[] = [];
         const now = new Date();
         for (let i = 6; i >= 0; i--) {
             const date = new Date(now);
@@ -160,21 +160,12 @@ export default function BusinessDetailView({
                 })
                 .reduce((acc, t) => acc + t.amount, 0);
 
-            const dayLabel = date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3);
-            days.push(
-                {
-                    value: dayIncome,
-                    label: dayLabel,
-                    spacing: 4,
-                    labelWidth: 32,
-                    labelTextStyle: { color: theme.colors.textSecondary, fontSize: 10 },
-                    frontColor: "#6366F1",
-                },
-                { value: dayExpense, frontColor: "#F59E0B" },
-            );
+            labels.push(date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3));
+            incomeValues.push(dayIncome);
+            expenseValues.push(dayExpense);
         }
-        return days;
-    }, [transactions, theme]);
+        return { labels, incomeValues, expenseValues };
+    }, [transactions]);
 
     const categoryPieData = useMemo(() => {
         const catMap: Record<string, number> = {};
@@ -184,14 +175,18 @@ export default function BusinessDetailView({
                 const cat = t.category || "Other";
                 catMap[cat] = (catMap[cat] || 0) + t.amount;
             });
-        return Object.entries(catMap)
+        const entries = Object.entries(catMap)
             .sort((a, b) => b[1] - a[1])
-            .slice(0, 6)
-            .map(([name, value], i) => ({
+            .slice(0, 6);
+        const total = entries.reduce((sum, [, v]) => sum + v, 0);
+        return {
+            items: entries.map(([name, value], i) => ({
                 value,
                 color: CHART_COLORS[i % CHART_COLORS.length],
-                text: name,
-            }));
+                label: name,
+            })),
+            total,
+        };
     }, [transactions]);
 
     const groupedTransactions = useMemo(() => {
@@ -410,121 +405,30 @@ export default function BusinessDetailView({
                                 {
                                     title: "Daily Cash Flow",
                                     legend: [
-                                        { label: "In", color: "#6366F1" },
-                                        { label: "Out", color: "#F59E0B" },
+                                        { label: "In", color: theme.colors.income },
+                                        { label: "Out", color: theme.colors.expense },
                                     ],
                                     content: (
-                                        <BarChart
-                                            data={dailyBarData}
-                                            barWidth={10}
-                                            spacing={14}
-                                            roundedTop
-                                            roundedBottom
-                                            xAxisThickness={0}
-                                            yAxisThickness={0}
-                                            yAxisTextStyle={{
-                                                color: theme.colors.textSecondary,
-                                                fontSize: 9,
-                                            }}
-                                            noOfSections={4}
-                                            height={120}
-                                            width={SCREEN_WIDTH - 100}
-                                            hideRules
-                                            isAnimated
+                                        <WeeklyBarChart
+                                            labels={dailyChartData.labels}
+                                            incomeData={dailyChartData.incomeValues}
+                                            expenseData={dailyChartData.expenseValues}
+                                            currencySymbol={symbol}
+                                            incomeColor={theme.colors.income}
+                                            expenseColor={theme.colors.expense}
                                         />
                                     ),
                                 },
-                                ...(categoryPieData.length > 0
+                                ...(categoryPieData.items.length > 0
                                     ? [
                                           {
                                               title: "Expense Categories",
                                               content: (
-                                                  <View style={bdvStyles.pieRow}>
-                                                      <PieChart
-                                                          data={categoryPieData}
-                                                          donut
-                                                          radius={55}
-                                                          innerRadius={35}
-                                                          innerCircleColor={theme.colors.card}
-                                                          centerLabelComponent={() => (
-                                                              <View
-                                                                  style={{ alignItems: "center" }}
-                                                              >
-                                                                  <Text
-                                                                      style={{
-                                                                          fontSize: 13,
-                                                                          fontWeight: "700",
-                                                                          color: theme.colors.text,
-                                                                      }}
-                                                                  >
-                                                                      {symbol}
-                                                                      {totalExpense.toLocaleString(
-                                                                          undefined,
-                                                                          {
-                                                                              maximumFractionDigits: 0,
-                                                                          },
-                                                                      )}
-                                                                  </Text>
-                                                                  <Text
-                                                                      style={{
-                                                                          fontSize: 9,
-                                                                          color: theme.colors
-                                                                              .textSecondary,
-                                                                      }}
-                                                                  >
-                                                                      Total
-                                                                  </Text>
-                                                              </View>
-                                                          )}
-                                                      />
-                                                      <View style={bdvStyles.pieLegend}>
-                                                          {categoryPieData.map((item, index) => (
-                                                              <View
-                                                                  key={index}
-                                                                  style={bdvStyles.pieLegendRow}
-                                                              >
-                                                                  <View
-                                                                      style={[
-                                                                          bdvStyles.legendDot,
-                                                                          {
-                                                                              backgroundColor:
-                                                                                  item.color,
-                                                                          },
-                                                                      ]}
-                                                                  />
-                                                                  <Text
-                                                                      style={[
-                                                                          bdvStyles.pieLegendText,
-                                                                          {
-                                                                              color: theme.colors
-                                                                                  .text,
-                                                                          },
-                                                                      ]}
-                                                                      numberOfLines={1}
-                                                                  >
-                                                                      {item.text}
-                                                                  </Text>
-                                                                  <Text
-                                                                      style={[
-                                                                          bdvStyles.pieLegendAmt,
-                                                                          {
-                                                                              color: theme.colors
-                                                                                  .textSecondary,
-                                                                          },
-                                                                      ]}
-                                                                  >
-                                                                      {symbol}
-                                                                      {item.value.toLocaleString(
-                                                                          undefined,
-                                                                          {
-                                                                              maximumFractionDigits: 0,
-                                                                          },
-                                                                      )}
-                                                                  </Text>
-                                                              </View>
-                                                          ))}
-                                                      </View>
-                                                  </View>
+                                                  <DonutChart
+                                                      data={categoryPieData.items}
+                                                      total={categoryPieData.total}
+                                                      currencySymbol={symbol}
+                                                  />
                                               ),
                                           },
                                       ]
@@ -871,15 +775,6 @@ function IncomeExpenseCards({
         </View>
     );
 }
-
-const bdvStyles = StyleSheet.create({
-    legendDot: { width: 8, height: 8, borderRadius: 4 },
-    pieRow: { flexDirection: "row", alignItems: "center" },
-    pieLegend: { flex: 1, marginLeft: 16, gap: 6 },
-    pieLegendRow: { flexDirection: "row", alignItems: "center", gap: 6 },
-    pieLegendText: { fontSize: 12, fontWeight: "600", flex: 1 },
-    pieLegendAmt: { fontSize: 11 },
-});
 
 export const getCategoryIcon = (category: string | undefined, color: string) => {
     switch (category?.toLowerCase()) {

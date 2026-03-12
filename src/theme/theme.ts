@@ -4,8 +4,8 @@ import { useContext } from "react";
 
 const palette = {
     primary: "#6366F1",
-    secondary: "#F59E0B",
-    success: "#10B981",
+    secondary: "#E2C878",
+    success: "#22C55E",
     error: "#EF4444",
     placeholder: "#9CA3AF",
 };
@@ -27,6 +27,14 @@ export const lightTheme = {
         accent: "#6366F1",
         incomeBg: "#dae2ffff",
         expenseBg: "#FFF7ED",
+        sage: "#C5CCBA",
+        sageSurface: "#D5DAC8",
+        gold: "#E8D5A3",
+        goldDark: "#D4B85C",
+        charcoal: "#1E1E2D",
+        chartBlue: "#7B8CDE",
+        chartPurple: "#9B8EC4",
+        chartGreen: "#7BC4A0",
     },
     spacing: {
         xs: 4,
@@ -58,6 +66,14 @@ export const darkTheme = {
         borderLight: "#283548",
         incomeBg: "rgba(99, 102, 241, 0.15)",
         expenseBg: "rgba(245, 158, 11, 0.15)",
+        sage: "#0F172A",
+        sageSurface: "#1E293B",
+        gold: "#C9A84C",
+        goldDark: "#A88A3A",
+        charcoal: "#F8FAFC",
+        chartBlue: "#8B9AE8",
+        chartPurple: "#A99ED4",
+        chartGreen: "#8BD4B0",
     },
 };
 

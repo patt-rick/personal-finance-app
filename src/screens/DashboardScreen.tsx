@@ -1,22 +1,15 @@
 import { getCurrencySymbol } from "../utils/_helpers";
-import { Bell, Users, ArrowUpRight, ArrowDownRight, Wallet } from "lucide-react-native";
-import React, { useMemo } from "react";
-import { Dimensions, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { Users } from "lucide-react-native";
+import React, { useMemo, useState } from "react";
+import { ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
-import { createDashboardStyles } from "../styles/dashboardStyles";
-import { LinearGradient } from "expo-linear-gradient";
-import { PieChart, BarChart } from "react-native-gifted-charts";
+import BalanceCard, { CurrencyBalance } from "../components/dashboard/BalanceCard";
 import ChartCarousel from "../components/ChartCarousel";
-
-const { width } = Dimensions.get("window");
-
-const CHART_COLORS = [
-    "#6366F1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6",
-    "#EC4899", "#14B8A6", "#F97316", "#06B6D4", "#84CC16",
-];
+import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
+import DonutChart from "../components/dashboard/DonutChart";
 
 function DashboardHome({
     businesses,
@@ -31,342 +24,271 @@ function DashboardHome({
 }) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
-    const styles = useMemo(() => createDashboardStyles(theme), [theme]);
-    const localStyles = useMemo(() => createLocalStyles(theme), [theme]);
 
-    const businessCurrencyMap = useMemo(() => {
-        const map: Record<string, string> = {};
+    const currencyBalances = useMemo<CurrencyBalance[]>(() => {
+        const map: Record<string, { income: number; expense: number }> = {};
+        const bizCurrencyMap: Record<string, string> = {};
         for (const biz of businesses) {
-            map[biz.id] = biz.currency || "USD";
+            bizCurrencyMap[biz.id] = biz.currency || "USD";
         }
-        return map;
-    }, [businesses]);
-
-    const currencyTotals = useMemo(() => {
-        const totals: Record<string, { income: number; expense: number }> = {};
         for (const t of transactions) {
-            const currency = businessCurrencyMap[t.businessId] || "USD";
-            if (!totals[currency]) totals[currency] = { income: 0, expense: 0 };
-            if (t.type === "income") totals[currency].income += t.amount;
-            else totals[currency].expense += t.amount;
+            const c = bizCurrencyMap[t.businessId] || "USD";
+            if (!map[c]) map[c] = { income: 0, expense: 0 };
+            if (t.type === "income") map[c].income += t.amount;
+            else map[c].expense += t.amount;
         }
-        return totals;
-    }, [transactions, businessCurrencyMap]);
-
-    const currencyKeys = Object.keys(currencyTotals);
-    const isSingleCurrency = currencyKeys.length <= 1;
-    const displayCurrency = currencyKeys[0] || "USD";
-
-    const totalIncome = transactions
-        .filter((t) => t.type === "income")
-        .reduce((acc, t) => acc + t.amount, 0);
-    const totalExpense = transactions
-        .filter((t) => t.type === "expense")
-        .reduce((acc, t) => acc + t.amount, 0);
-    const totalBalance = totalIncome - totalExpense;
-
-    const businessPieData = useMemo(() => {
-        return businesses
-            .map((biz, index) => {
-                const bizExpense = transactions
-                    .filter((t) => t.businessId === biz.id && t.type === "expense")
-                    .reduce((acc, t) => acc + t.amount, 0);
-                return {
-                    value: bizExpense,
-                    color: CHART_COLORS[index % CHART_COLORS.length],
-                    text: biz.name,
-                    label: biz.name,
-                    currencySymbol: getCurrencySymbol(biz.currency),
-                };
-            })
-            .filter((d) => d.value > 0);
+        const keys = Object.keys(map);
+        if (keys.length === 0) return [{ currency: "USD", income: 0, expense: 0, balance: 0 }];
+        return keys.map((c) => ({
+            currency: c,
+            income: map[c].income,
+            expense: map[c].expense,
+            balance: map[c].income - map[c].expense,
+        }));
     }, [businesses, transactions]);
 
-    const weeklyBarData = useMemo(() => {
-        const days: any[] = [];
+    const [activeCurrencyIndex, setActiveCurrencyIndex] = useState(0);
+    const activeCurrency = currencyBalances[activeCurrencyIndex] ?? currencyBalances[0];
+
+    const activeBizIds = useMemo(() => {
+        const currency = activeCurrency.currency;
+        return new Set(
+            businesses.filter((b) => (b.currency || "USD") === currency).map((b) => b.id),
+        );
+    }, [businesses, activeCurrency.currency]);
+
+    const filteredTransactions = useMemo(
+        () => transactions.filter((t) => activeBizIds.has(t.businessId)),
+        [transactions, activeBizIds],
+    );
+
+    const weeklyGrowth = useMemo(() => {
+        const now = new Date();
+        const weekAgo = new Date(now);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        const twoWeeksAgo = new Date(now);
+        twoWeeksAgo.setDate(twoWeeksAgo.getDate() - 14);
+
+        const thisWeekNet = filteredTransactions
+            .filter((t) => new Date(t.date) >= weekAgo)
+            .reduce((acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount), 0);
+        const lastWeekNet = filteredTransactions
+            .filter((t) => {
+                const d = new Date(t.date);
+                return d >= twoWeeksAgo && d < weekAgo;
+            })
+            .reduce((acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount), 0);
+
+        if (lastWeekNet === 0) return 0;
+        return ((thisWeekNet - lastWeekNet) / Math.abs(lastWeekNet)) * 100;
+    }, [filteredTransactions]);
+
+    const weeklyChartData = useMemo(() => {
+        const labels: string[] = [];
+        const incomeValues: number[] = [];
+        const expenseValues: number[] = [];
         const now = new Date();
         const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const dayOfWeek = now.getDay();
-        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const dayOfWeek = today.getDay();
         const monday = new Date(today);
-        monday.setDate(today.getDate() + mondayOffset);
+        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
 
         for (let i = 0; i < 7; i++) {
             const date = new Date(monday);
             date.setDate(monday.getDate() + i);
             const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-            if (dayStart > today) break;
             const dayEnd = new Date(dayStart);
             dayEnd.setDate(dayEnd.getDate() + 1);
 
-            const dayIncome = transactions
+            const dayIncome = filteredTransactions
                 .filter((t) => {
                     const td = new Date(t.date);
                     return t.type === "income" && td >= dayStart && td < dayEnd;
                 })
                 .reduce((acc, t) => acc + t.amount, 0);
 
-            const dayExpense = transactions
+            const dayExpense = filteredTransactions
                 .filter((t) => {
                     const td = new Date(t.date);
                     return t.type === "expense" && td >= dayStart && td < dayEnd;
                 })
                 .reduce((acc, t) => acc + t.amount, 0);
 
-            const dayLabel = date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3);
-            days.push(
-                { value: dayIncome, label: dayLabel, spacing: 4, labelWidth: 32, labelTextStyle: { color: theme.colors.textSecondary, fontSize: 10 }, frontColor: "#6366F1" },
-                { value: dayExpense, frontColor: "#F59E0B" },
-            );
+            labels.push(date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3));
+            incomeValues.push(dayIncome);
+            expenseValues.push(dayExpense);
         }
-        return days;
-    }, [transactions, theme]);
+        return { labels, incomeValues, expenseValues };
+    }, [filteredTransactions]);
 
-    const hasTransactions = transactions.length > 0;
+    const currencySymbol = getCurrencySymbol(activeCurrency.currency);
 
-    // Build carousel pages
+    const pieData = useMemo(() => {
+        const income = filteredTransactions
+            .filter((t) => t.type === "income")
+            .reduce((acc, t) => acc + t.amount, 0);
+        const expense = filteredTransactions
+            .filter((t) => t.type === "expense")
+            .reduce((acc, t) => acc + t.amount, 0);
+        const total = income + expense;
+
+        const items = [
+            { value: income, color: theme.colors.income, label: "Income" },
+            { value: expense, color: theme.colors.expense, label: "Expense" },
+        ].filter((d) => d.value > 0);
+
+        return { items, total };
+    }, [filteredTransactions]);
+
     const chartPages = useMemo(() => {
-        const pages: { title: string; legend?: { label: string; color: string }[]; content: React.ReactNode }[] = [];
+        const pages: {
+            title: string;
+            legend?: { label: string; color: string }[];
+            content: React.ReactNode;
+        }[] = [];
 
-        if (hasTransactions) {
+        if (filteredTransactions.length > 0) {
             pages.push({
-                title: "Weekly Cash Flow",
+                title: "Last 7 Days",
                 legend: [
-                    { label: "In", color: "#6366F1" },
-                    { label: "Out", color: "#F59E0B" },
+                    { label: "Income", color: theme.colors.income },
+                    { label: "Expense", color: theme.colors.expense },
                 ],
                 content: (
-                    <BarChart
-                        data={weeklyBarData}
-                        barWidth={12}
-                        spacing={16}
-                        roundedTop
-                        roundedBottom
-                        xAxisThickness={0}
-                        yAxisThickness={0}
-                        yAxisTextStyle={{ color: theme.colors.textSecondary, fontSize: 10 }}
-                        noOfSections={4}
-                        height={140}
-                        width={width - 100}
-                        hideRules
-                        isAnimated
+                    <WeeklyBarChart
+                        labels={weeklyChartData.labels}
+                        incomeData={weeklyChartData.incomeValues}
+                        expenseData={weeklyChartData.expenseValues}
+                        currencySymbol={currencySymbol}
+                        incomeColor={theme.colors.income}
+                        expenseColor={theme.colors.expense}
                     />
                 ),
             });
         }
 
-        if (businessPieData.length > 0) {
+        if (pieData.items.length > 0) {
             pages.push({
-                title: "Spending by Cashbook",
+                title: "Income vs Expense",
                 content: (
-                    <View style={localStyles.pieContent}>
-                        <PieChart
-                            data={businessPieData}
-                            donut
-                            radius={60}
-                            innerRadius={38}
-                            innerCircleColor={theme.colors.card}
-                            centerLabelComponent={() => (
-                                <View style={{ alignItems: "center" }}>
-                                    {isSingleCurrency ? (
-                                        <Text style={{ fontSize: 14, fontWeight: "700", color: theme.colors.text }}>
-                                            {getCurrencySymbol(displayCurrency)}{totalExpense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                        </Text>
-                                    ) : (
-                                        <Text style={{ fontSize: 11, fontWeight: "700", color: theme.colors.text, textAlign: "center" }}>
-                                            {currencyKeys.map((c) => `${getCurrencySymbol(c)}${currencyTotals[c].expense.toLocaleString(undefined, { maximumFractionDigits: 0 })}`).join("\n")}
-                                        </Text>
-                                    )}
-                                    <Text style={{ fontSize: 9, color: theme.colors.textSecondary }}>Total</Text>
-                                </View>
-                            )}
-                        />
-                        <View style={localStyles.pieLegendContainer}>
-                            {businessPieData.map((item, index) => (
-                                <View key={index} style={localStyles.pieLegendItem}>
-                                    <View style={[localStyles.pieLegendDot, { backgroundColor: item.color }]} />
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[localStyles.pieLegendLabel, { color: theme.colors.text }]} numberOfLines={1}>
-                                            {item.text}
-                                        </Text>
-                                        <Text style={[localStyles.pieLegendValue, { color: theme.colors.textSecondary }]}>
-                                            {item.currencySymbol}{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                        </Text>
-                                    </View>
-                                </View>
-                            ))}
-                        </View>
-                    </View>
+                    <DonutChart
+                        data={pieData.items}
+                        total={pieData.total}
+                        currencySymbol={currencySymbol}
+                    />
                 ),
             });
         }
 
         return pages;
-    }, [hasTransactions, weeklyBarData, businessPieData, totalExpense, theme, localStyles, isSingleCurrency, displayCurrency, currencyKeys, currencyTotals]);
+    }, [filteredTransactions, weeklyChartData, pieData, theme, currencySymbol]);
 
     return (
-        <View style={styles.container}>
-            <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
-
-            <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <View>
-                    <Text style={styles.greetingText}>Welcome back,</Text>
-                    <Text style={styles.userNameText}>{userProfile?.name || "John Doe"}</Text>
+                    <Text style={[styles.greeting, { color: theme.colors.textSecondary }]}>
+                        Welcome back,
+                    </Text>
+                    <Text style={[styles.userName, { color: theme.colors.text }]}>
+                        {userProfile?.name || "John Doe"}
+                    </Text>
                 </View>
-                <TouchableOpacity style={styles.notificationBtn}>
-                    <Bell size={22} color={theme.colors.primary} />
-                </TouchableOpacity>
             </View>
-            <ScrollView showsVerticalScrollIndicator={false}>
-                {/* Balance Overview Card */}
-                <View style={styles.heroSection}>
-                    <LinearGradient
-                        colors={["#3A5CFF", "#2F3FD4", "#1E2A8A"]}
-                        start={{ x: 0, y: 0 }}
-                        end={{ x: 1, y: 1 }}
-                        style={styles.heroCard}
-                    >
-                        <View style={styles.heroGlow} />
-                        <View style={localStyles.balanceOverviewRow}>
-                            <View style={{ flex: 1 }}>
-                                <Text style={localStyles.balanceLabel}>Total Balance</Text>
-                                {isSingleCurrency ? (
-                                    <Text style={localStyles.balanceAmount} numberOfLines={1} adjustsFontSizeToFit>
-                                        {getCurrencySymbol(displayCurrency)}{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                    </Text>
-                                ) : (
-                                    <View style={{ gap: 2 }}>
-                                        {currencyKeys.map((c) => {
-                                            const bal = currencyTotals[c].income - currencyTotals[c].expense;
-                                            return (
-                                                <Text key={c} style={localStyles.balanceAmountMulti} numberOfLines={1} adjustsFontSizeToFit>
-                                                    {getCurrencySymbol(c)}{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                                    <Text style={localStyles.balanceCurrencyCode}> {c}</Text>
-                                                </Text>
-                                            );
-                                        })}
-                                    </View>
-                                )}
-                            </View>
-                            <View style={localStyles.balanceBadge}>
-                                <Wallet size={20} color="rgba(255,255,255,0.9)" />
-                            </View>
-                        </View>
 
-                        {isSingleCurrency ? (
-                            <View style={localStyles.miniStatsRow}>
-                                <View style={localStyles.miniStat}>
-                                    <View style={localStyles.miniStatIcon}>
-                                        <ArrowUpRight size={14} color="#4ADE80" />
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={localStyles.miniStatLabel}>Income</Text>
-                                        <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
-                                            {getCurrencySymbol(displayCurrency)}{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                        </Text>
-                                    </View>
-                                </View>
-                                <View style={localStyles.miniStatDivider} />
-                                <View style={localStyles.miniStat}>
-                                    <View style={[localStyles.miniStatIcon, { backgroundColor: "rgba(248,113,113,0.2)" }]}>
-                                        <ArrowDownRight size={14} color="#F87171" />
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={localStyles.miniStatLabel}>Expenses</Text>
-                                        <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
-                                            {getCurrencySymbol(displayCurrency)}{totalExpense.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                        </Text>
-                                    </View>
-                                </View>
-                            </View>
-                        ) : (
-                            <View style={localStyles.multiCurrencyStatsRow}>
-                                {currencyKeys.map((c, i) => (
-                                    <React.Fragment key={c}>
-                                        {i > 0 && <View style={localStyles.multiCurrencyDivider} />}
-                                        <View style={localStyles.multiCurrencyStat}>
-                                            <Text style={localStyles.multiCurrencyCode}>{c}</Text>
-                                            <View style={localStyles.multiCurrencyValues}>
-                                                <View style={localStyles.multiCurrencyValueRow}>
-                                                    <ArrowUpRight size={10} color="#4ADE80" />
-                                                    <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
-                                                        {getCurrencySymbol(c)}{currencyTotals[c].income.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                                    </Text>
-                                                </View>
-                                                <View style={localStyles.multiCurrencyValueRow}>
-                                                    <ArrowDownRight size={10} color="#F87171" />
-                                                    <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
-                                                        {getCurrencySymbol(c)}{currencyTotals[c].expense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                                    </Text>
-                                                </View>
-                                            </View>
-                                        </View>
-                                    </React.Fragment>
-                                ))}
-                            </View>
-                        )}
-                    </LinearGradient>
-                </View>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 40 }}
+            >
+                <BalanceCard
+                    currencies={currencyBalances}
+                    weeklyGrowth={weeklyGrowth}
+                    onPageChange={setActiveCurrencyIndex}
+                />
 
-                {/* Charts Carousel */}
                 {chartPages.length > 0 && <ChartCarousel pages={chartPages} />}
 
-                {/* Businesses / Cashbooks List */}
                 <View style={styles.sectionHeader}>
-                    <Text style={styles.sectionTitle}>Your Cashbooks</Text>
-                    <Text style={styles.viewAllText}>{businesses.length} total</Text>
+                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                        Your Cashbooks
+                    </Text>
+                    <Text style={[styles.sectionCount, { color: theme.colors.textSecondary }]}>
+                        {businesses.length} total
+                    </Text>
                 </View>
 
-                <View style={styles.cashbooksListModern}>
+                <View style={styles.cashbooksList}>
                     {businesses.map((business) => {
-                        const bizTransactions = transactions.filter(
-                            (t) => t.businessId === business.id,
-                        );
-                        const balance = bizTransactions.reduce(
+                        const bizTx = transactions.filter((t) => t.businessId === business.id);
+                        const balance = bizTx.reduce(
                             (acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount),
                             0,
                         );
                         const symbol = getCurrencySymbol(business.currency);
-                        const txCount = bizTransactions.length;
+                        const txCount = bizTx.length;
 
                         return (
                             <TouchableOpacity
                                 key={business.id}
-                                style={styles.modernCashbookItem}
+                                style={[
+                                    styles.cashbookItem,
+                                    { backgroundColor: theme.colors.card },
+                                ]}
                                 onPress={() => setCurrentBusiness(business)}
                             >
-                                <View style={styles.cashbookIconModern}>
-                                    <Users size={22} color={theme.colors.primary} />
+                                <View
+                                    style={[
+                                        styles.cashbookIcon,
+                                        { backgroundColor: theme.colors.surface },
+                                    ]}
+                                >
+                                    <Users size={20} color={theme.colors.text} />
                                 </View>
-                                <View style={styles.cashbookInfoModern}>
-                                    <Text style={styles.cashbookNameModern}>{business.name}</Text>
-                                    <Text style={styles.cashbookMetaModern}>
-                                        {txCount} transaction{txCount !== 1 ? "s" : ""} · {business.currency || "USD"}
+                                <View style={styles.cashbookInfo}>
+                                    <Text
+                                        style={[styles.cashbookName, { color: theme.colors.text }]}
+                                    >
+                                        {business.name}
                                     </Text>
-                                </View>
-                                <View style={styles.balanceContainerModern}>
                                     <Text
                                         style={[
-                                            styles.cashbookBalanceModern,
-                                            balance >= 0
-                                                ? { color: theme.colors.success }
-                                                : { color: theme.colors.error },
+                                            styles.cashbookMeta,
+                                            { color: theme.colors.textSecondary },
                                         ]}
                                     >
-                                        {balance >= 0 ? "+" : "-"}
-                                        {symbol}
-                                        {Math.abs(balance).toLocaleString()}
+                                        {txCount} transaction
+                                        {txCount !== 1 ? "s" : ""} · {business.currency || "USD"}
                                     </Text>
                                 </View>
+                                <Text
+                                    style={[
+                                        styles.cashbookBalance,
+                                        {
+                                            color:
+                                                balance >= 0
+                                                    ? theme.colors.success
+                                                    : theme.colors.error,
+                                        },
+                                    ]}
+                                >
+                                    {balance >= 0 ? "+" : "-"}
+                                    {symbol}
+                                    {Math.abs(balance).toLocaleString()}
+                                </Text>
                             </TouchableOpacity>
                         );
                     })}
                     {businesses.length === 0 && (
                         <View style={styles.emptyContainer}>
-                            <View style={styles.emptyIconContainer}>
-                                <Users size={40} color={theme.colors.placeholder} />
+                            <View
+                                style={[
+                                    styles.emptyIcon,
+                                    { backgroundColor: theme.colors.surface },
+                                ]}
+                            >
+                                <Users size={40} color={theme.colors.textSecondary} />
                             </View>
-                            <Text style={styles.emptyText}>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
                                 Go to Cashbooks tab to add your first business!
                             </Text>
                         </View>
@@ -377,143 +299,104 @@ function DashboardHome({
     );
 }
 
-const createLocalStyles = (theme: any) =>
-    StyleSheet.create({
-        balanceOverviewRow: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        balanceLabel: {
-            fontSize: 13,
-            color: "rgba(255,255,255,0.7)",
-            marginBottom: 4,
-            fontWeight: "500",
-            letterSpacing: 0.3,
-        },
-        balanceAmount: {
-            fontSize: 30,
-            fontWeight: "800",
-            color: "white",
-            letterSpacing: -0.5,
-        },
-        balanceAmountMulti: {
-            fontSize: 22,
-            fontWeight: "800",
-            color: "white",
-            letterSpacing: -0.3,
-        },
-        balanceCurrencyCode: {
-            fontSize: 12,
-            fontWeight: "500",
-            color: "rgba(255,255,255,0.5)",
-        },
-        balanceBadge: {
-            width: 44,
-            height: 44,
-            borderRadius: 14,
-            backgroundColor: "rgba(255,255,255,0.15)",
-            alignItems: "center",
-            justifyContent: "center",
-        },
-        miniStatsRow: {
-            flexDirection: "row",
-            alignItems: "center",
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 14,
-            padding: 12,
-        },
-        miniStat: {
-            flex: 1,
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-        },
-        miniStatIcon: {
-            width: 28,
-            height: 28,
-            borderRadius: 8,
-            backgroundColor: "rgba(74,222,128,0.2)",
-            alignItems: "center",
-            justifyContent: "center",
-        },
-        miniStatLabel: {
-            fontSize: 10,
-            color: "rgba(255,255,255,0.6)",
-            fontWeight: "500",
-        },
-        miniStatValue: {
-            fontSize: 14,
-            color: "white",
-            fontWeight: "700",
-        },
-        miniStatDivider: {
-            width: 1,
-            height: 28,
-            backgroundColor: "rgba(255,255,255,0.15)",
-            marginHorizontal: 12,
-        },
-        multiCurrencyStatsRow: {
-            backgroundColor: "rgba(255,255,255,0.1)",
-            borderRadius: 14,
-            padding: 12,
-            flexDirection: "row",
-            alignItems: "center",
-        },
-        multiCurrencyStat: {
-            flex: 1,
-            alignItems: "center",
-            gap: 4,
-        },
-        multiCurrencyCode: {
-            fontSize: 10,
-            fontWeight: "600",
-            color: "rgba(255,255,255,0.5)",
-            letterSpacing: 0.5,
-        },
-        multiCurrencyValues: {
-            gap: 2,
-        },
-        multiCurrencyValueRow: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 3,
-        },
-        multiCurrencyDivider: {
-            width: 1,
-            height: 36,
-            backgroundColor: "rgba(255,255,255,0.15)",
-        },
-        pieContent: {
-            flexDirection: "row",
-            alignItems: "center",
-        },
-        pieLegendContainer: {
-            flex: 1,
-            marginLeft: 16,
-            gap: 8,
-        },
-        pieLegendItem: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 8,
-        },
-        pieLegendDot: {
-            width: 9,
-            height: 9,
-            borderRadius: 4.5,
-        },
-        pieLegendLabel: {
-            fontSize: 12,
-            fontWeight: "600",
-        },
-        pieLegendValue: {
-            fontSize: 10,
-        },
-    });
-
-// --- Main Export ---
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+    },
+    header: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        paddingBottom: 16,
+    },
+    greeting: {
+        fontSize: 12,
+        fontWeight: "600",
+        textTransform: "uppercase",
+        letterSpacing: 0.8,
+    },
+    userName: {
+        fontSize: 26,
+        fontWeight: "800",
+        marginTop: 2,
+        letterSpacing: -0.3,
+    },
+    sectionHeader: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "center",
+        paddingHorizontal: 20,
+        marginTop: 24,
+        marginBottom: 12,
+    },
+    sectionTitle: {
+        fontSize: 17,
+        fontWeight: "700",
+        letterSpacing: -0.2,
+    },
+    sectionCount: {
+        fontSize: 12,
+        fontWeight: "500",
+    },
+    cashbooksList: {
+        paddingHorizontal: 20,
+    },
+    cashbookItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 14,
+        borderRadius: 16,
+        marginBottom: 10,
+        elevation: 1,
+        shadowColor: "#000",
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.04,
+        shadowRadius: 3,
+    },
+    cashbookIcon: {
+        width: 42,
+        height: 42,
+        borderRadius: 12,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    cashbookInfo: {
+        flex: 1,
+        marginLeft: 14,
+    },
+    cashbookName: {
+        fontSize: 15,
+        fontWeight: "600",
+        letterSpacing: -0.1,
+    },
+    cashbookMeta: {
+        fontSize: 12,
+        marginTop: 2,
+    },
+    cashbookBalance: {
+        fontSize: 15,
+        fontWeight: "700",
+        letterSpacing: -0.2,
+    },
+    emptyContainer: {
+        padding: 40,
+        alignItems: "center",
+    },
+    emptyIcon: {
+        width: 80,
+        height: 80,
+        borderRadius: 40,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 16,
+    },
+    emptyText: {
+        textAlign: "center",
+        fontSize: 14,
+        lineHeight: 20,
+    },
+});
 
 interface DashboardScreenProps {
     businesses: Business[];

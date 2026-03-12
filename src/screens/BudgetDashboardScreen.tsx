@@ -7,7 +7,6 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     RefreshControl,
-    Dimensions,
 } from "react-native";
 import {
     AlertCircle,
@@ -31,10 +30,9 @@ import {
 } from "../utils/budgetCalculations";
 import { getCurrencySymbol } from "../utils/_helpers";
 import BudgetSetupScreen from "./BudgetSetupScreen";
-import { PieChart, BarChart } from "react-native-gifted-charts";
 import ChartCarousel from "../components/ChartCarousel";
-
-const { width: SCREEN_WIDTH } = Dimensions.get("window");
+import DonutChart from "../components/dashboard/DonutChart";
+import PairedBarChart from "../components/dashboard/PairedBarChart";
 
 const BUDGET_CHART_COLORS = [
     "#6366F1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6",
@@ -161,42 +159,25 @@ export default function BudgetDashboardScreen({
             ? theme.colors.secondary
             : theme.colors.error;
 
-    // Donut chart data for health score
     const healthDonutData = [
-        { value: Math.min(100, 100 - healthScore), color: theme.colors.surface },
-        { value: healthScore, color: healthColor },
+        { value: healthScore, color: healthColor, label: "Health" },
+        { value: Math.min(100, 100 - healthScore), color: theme.colors.surface, label: "Remaining" },
     ];
 
-    // Bar chart data for category budget vs spent
-    const categoryBarData = budgetData.map((item, index) => ({
-        value: item.limit,
-        label: item.categoryName.length > 6 ? item.categoryName.slice(0, 6) + ".." : item.categoryName,
-        spacing: 4,
-        labelWidth: 50,
-        labelTextStyle: { color: theme.colors.textSecondary, fontSize: 9 },
-        frontColor: BUDGET_CHART_COLORS[index % BUDGET_CHART_COLORS.length] + "40",
-    }));
+    const budgetBarLabels = budgetData.map((item) =>
+        item.categoryName.length > 6 ? item.categoryName.slice(0, 6) + ".." : item.categoryName,
+    );
+    const budgetBarLimits = budgetData.map((item) => item.limit);
+    const budgetBarSpent = budgetData.map((item) => item.spent);
 
-    const categorySpentBarData = budgetData.map((item, index) => ({
-        value: item.spent,
-        frontColor: BUDGET_CHART_COLORS[index % BUDGET_CHART_COLORS.length],
-    }));
-
-    // Interleave budget and spent bars
-    const interleavedBarData: any[] = [];
-    for (let i = 0; i < categoryBarData.length; i++) {
-        interleavedBarData.push(categoryBarData[i]);
-        interleavedBarData.push(categorySpentBarData[i]);
-    }
-
-    // Spending allocation pie chart
-    const spendingPieData = budgetData
+    const spendingPieItems = budgetData
         .filter((item) => item.spent > 0)
         .map((item, index) => ({
             value: item.spent,
             color: BUDGET_CHART_COLORS[index % BUDGET_CHART_COLORS.length],
-            text: item.categoryName,
+            label: item.categoryName,
         }));
+    const spendingPieTotal = spendingPieItems.reduce((sum, d) => sum + d.value, 0);
 
     return (
         <View style={styles.container}>
@@ -349,15 +330,12 @@ export default function BudgetDashboardScreen({
                                 </TouchableOpacity>
                             </View>
 
-                            {/* Donut Health Chart */}
                             <View style={budgetStyles.healthScoreContainer}>
-                                <PieChart
+                                <DonutChart
                                     data={healthDonutData}
-                                    donut
-                                    radius={68}
-                                    innerRadius={52}
-                                    innerCircleColor={theme.colors.card}
-                                    centerLabelComponent={() => (
+                                    total={100}
+                                    currencySymbol=""
+                                    centerOverride={
                                         <View style={{ alignItems: "center" }}>
                                             <Text
                                                 style={{
@@ -382,7 +360,8 @@ export default function BudgetDashboardScreen({
                                                         : "Over Budget"}
                                             </Text>
                                         </View>
-                                    )}
+                                    }
+                                    hideLegend
                                 />
                             </View>
 
@@ -449,73 +428,40 @@ export default function BudgetDashboardScreen({
                             </View>
                         </View>
 
-                        {/* Budget Charts Carousel */}
-                        {(interleavedBarData.length > 0 || spendingPieData.length > 0) && (
+                        {(budgetBarLabels.length > 0 || spendingPieItems.length > 0) && (
                             <ChartCarousel
                                 pages={[
-                                    ...(interleavedBarData.length > 0
+                                    ...(budgetBarLabels.length > 0
                                         ? [
                                               {
                                                   title: "Budget vs Spent",
                                                   legend: [
-                                                      { label: "Budget", color: "#6366F140" },
-                                                      { label: "Spent", color: "#6366F1" },
+                                                      { label: "Budget", color: theme.colors.primary + "40" },
+                                                      { label: "Spent", color: theme.colors.primary },
                                                   ],
                                                   content: (
-                                                      <BarChart
-                                                          data={interleavedBarData}
-                                                          barWidth={14}
-                                                          spacing={16}
-                                                          roundedTop
-                                                          roundedBottom
-                                                          xAxisThickness={0}
-                                                          yAxisThickness={0}
-                                                          yAxisTextStyle={{ color: theme.colors.textSecondary, fontSize: 9 }}
-                                                          noOfSections={4}
-                                                          height={140}
-                                                          width={SCREEN_WIDTH - 100}
-                                                          hideRules
-                                                          isAnimated
+                                                      <PairedBarChart
+                                                          labels={budgetBarLabels}
+                                                          primaryData={budgetBarLimits}
+                                                          secondaryData={budgetBarSpent}
+                                                          primaryColor={theme.colors.primary + "40"}
+                                                          secondaryColor={theme.colors.primary}
+                                                          currencySymbol={currencySymbol}
                                                       />
                                                   ),
                                               },
                                           ]
                                         : []),
-                                    ...(spendingPieData.length > 0
+                                    ...(spendingPieItems.length > 0
                                         ? [
                                               {
                                                   title: "Spending Allocation",
                                                   content: (
-                                                      <View style={budgetStyles.pieRow}>
-                                                          <PieChart
-                                                              data={spendingPieData}
-                                                              donut
-                                                              radius={55}
-                                                              innerRadius={35}
-                                                              innerCircleColor={theme.colors.card}
-                                                              centerLabelComponent={() => (
-                                                                  <View style={{ alignItems: "center" }}>
-                                                                      <Text style={{ fontSize: 13, fontWeight: "700", color: theme.colors.text }}>
-                                                                          {currencySymbol}{totalSpent.toFixed(0)}
-                                                                      </Text>
-                                                                      <Text style={{ fontSize: 9, color: theme.colors.textSecondary }}>Spent</Text>
-                                                                  </View>
-                                                              )}
-                                                          />
-                                                          <View style={budgetStyles.pieLegend}>
-                                                              {spendingPieData.map((item, index) => (
-                                                                  <View key={index} style={budgetStyles.pieLegendItem}>
-                                                                      <View style={[budgetStyles.legendDot, { backgroundColor: item.color }]} />
-                                                                      <Text style={[budgetStyles.pieLegendLabel, { color: theme.colors.text }]} numberOfLines={1}>
-                                                                          {item.text}
-                                                                      </Text>
-                                                                      <Text style={[budgetStyles.pieLegendValue, { color: theme.colors.textSecondary }]}>
-                                                                          {currencySymbol}{item.value.toFixed(0)}
-                                                                      </Text>
-                                                                  </View>
-                                                              ))}
-                                                          </View>
-                                                      </View>
+                                                      <DonutChart
+                                                          data={spendingPieItems}
+                                                          total={spendingPieTotal}
+                                                          currencySymbol={currencySymbol}
+                                                      />
                                                   ),
                                               },
                                           ]
@@ -782,35 +728,6 @@ const createBudgetStyles = (theme: any) =>
         statDivider: {
             width: 1,
             backgroundColor: theme.colors.border,
-        },
-
-        // Pie chart inside carousel card
-        pieRow: {
-            flexDirection: "row",
-            alignItems: "center",
-        },
-        legendDot: {
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-        },
-        pieLegend: {
-            flex: 1,
-            marginLeft: 16,
-            gap: 8,
-        },
-        pieLegendItem: {
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 6,
-        },
-        pieLegendLabel: {
-            fontSize: 12,
-            fontWeight: "600",
-            flex: 1,
-        },
-        pieLegendValue: {
-            fontSize: 11,
         },
 
         // Category cards
