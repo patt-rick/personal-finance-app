@@ -47,8 +47,16 @@ import DateRangePickerModal from "../components/DateRangePickerModal";
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CHART_COLORS = [
-    "#6366F1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6",
-    "#EC4899", "#14B8A6", "#F97316", "#06B6D4", "#84CC16",
+    "#6366F1",
+    "#F59E0B",
+    "#10B981",
+    "#EF4444",
+    "#8B5CF6",
+    "#EC4899",
+    "#14B8A6",
+    "#F97316",
+    "#06B6D4",
+    "#84CC16",
 ];
 
 export default function BusinessDetailView({
@@ -72,7 +80,9 @@ export default function BusinessDetailView({
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
     const [entryType, setEntryType] = useState<"income" | "expense">("income");
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
-    const [filterRange, setFilterRange] = useState<"all" | "today" | "week" | "month" | "custom">("all");
+    const [filterRange, setFilterRange] = useState<"all" | "today" | "week" | "month" | "custom">(
+        "all",
+    );
     const [categories, setCategories] = useState<Category[]>([]);
     const [customStartDate, setCustomStartDate] = useState(() => {
         const d = new Date();
@@ -152,7 +162,14 @@ export default function BusinessDetailView({
 
             const dayLabel = date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3);
             days.push(
-                { value: dayIncome, label: dayLabel, spacing: 4, labelWidth: 32, labelTextStyle: { color: theme.colors.textSecondary, fontSize: 10 }, frontColor: "#6366F1" },
+                {
+                    value: dayIncome,
+                    label: dayLabel,
+                    spacing: 4,
+                    labelWidth: 32,
+                    labelTextStyle: { color: theme.colors.textSecondary, fontSize: 10 },
+                    frontColor: "#6366F1",
+                },
                 { value: dayExpense, frontColor: "#F59E0B" },
             );
         }
@@ -207,10 +224,7 @@ export default function BusinessDetailView({
         return groups;
     }, [filteredTransactions]);
 
-    const checkBudgetWarning = async (
-        categoryName: string,
-        updatedTransactions: Transaction[],
-    ) => {
+    const checkBudgetWarning = async (categoryName: string, updatedTransactions: Transaction[]) => {
         try {
             const budget = await getBudgetByBusinessId(business.id);
             if (!budget) return;
@@ -408,7 +422,10 @@ export default function BusinessDetailView({
                                             roundedBottom
                                             xAxisThickness={0}
                                             yAxisThickness={0}
-                                            yAxisTextStyle={{ color: theme.colors.textSecondary, fontSize: 9 }}
+                                            yAxisTextStyle={{
+                                                color: theme.colors.textSecondary,
+                                                fontSize: 9,
+                                            }}
                                             noOfSections={4}
                                             height={120}
                                             width={SCREEN_WIDTH - 100}
@@ -430,23 +447,79 @@ export default function BusinessDetailView({
                                                           innerRadius={35}
                                                           innerCircleColor={theme.colors.card}
                                                           centerLabelComponent={() => (
-                                                              <View style={{ alignItems: "center" }}>
-                                                                  <Text style={{ fontSize: 13, fontWeight: "700", color: theme.colors.text }}>
-                                                                      {symbol}{totalExpense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                              <View
+                                                                  style={{ alignItems: "center" }}
+                                                              >
+                                                                  <Text
+                                                                      style={{
+                                                                          fontSize: 13,
+                                                                          fontWeight: "700",
+                                                                          color: theme.colors.text,
+                                                                      }}
+                                                                  >
+                                                                      {symbol}
+                                                                      {totalExpense.toLocaleString(
+                                                                          undefined,
+                                                                          {
+                                                                              maximumFractionDigits: 0,
+                                                                          },
+                                                                      )}
                                                                   </Text>
-                                                                  <Text style={{ fontSize: 9, color: theme.colors.textSecondary }}>Total</Text>
+                                                                  <Text
+                                                                      style={{
+                                                                          fontSize: 9,
+                                                                          color: theme.colors
+                                                                              .textSecondary,
+                                                                      }}
+                                                                  >
+                                                                      Total
+                                                                  </Text>
                                                               </View>
                                                           )}
                                                       />
                                                       <View style={bdvStyles.pieLegend}>
                                                           {categoryPieData.map((item, index) => (
-                                                              <View key={index} style={bdvStyles.pieLegendRow}>
-                                                                  <View style={[bdvStyles.legendDot, { backgroundColor: item.color }]} />
-                                                                  <Text style={[bdvStyles.pieLegendText, { color: theme.colors.text }]} numberOfLines={1}>
+                                                              <View
+                                                                  key={index}
+                                                                  style={bdvStyles.pieLegendRow}
+                                                              >
+                                                                  <View
+                                                                      style={[
+                                                                          bdvStyles.legendDot,
+                                                                          {
+                                                                              backgroundColor:
+                                                                                  item.color,
+                                                                          },
+                                                                      ]}
+                                                                  />
+                                                                  <Text
+                                                                      style={[
+                                                                          bdvStyles.pieLegendText,
+                                                                          {
+                                                                              color: theme.colors
+                                                                                  .text,
+                                                                          },
+                                                                      ]}
+                                                                      numberOfLines={1}
+                                                                  >
                                                                       {item.text}
                                                                   </Text>
-                                                                  <Text style={[bdvStyles.pieLegendAmt, { color: theme.colors.textSecondary }]}>
-                                                                      {symbol}{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                                  <Text
+                                                                      style={[
+                                                                          bdvStyles.pieLegendAmt,
+                                                                          {
+                                                                              color: theme.colors
+                                                                                  .textSecondary,
+                                                                          },
+                                                                      ]}
+                                                                  >
+                                                                      {symbol}
+                                                                      {item.value.toLocaleString(
+                                                                          undefined,
+                                                                          {
+                                                                              maximumFractionDigits: 0,
+                                                                          },
+                                                                      )}
                                                                   </Text>
                                                               </View>
                                                           ))}
@@ -651,7 +724,10 @@ export default function BusinessDetailView({
                     ]}
                 >
                     <TouchableOpacity
-                        style={[styles.bigActionBtnModern, { backgroundColor: theme.colors.income }]}
+                        style={[
+                            styles.bigActionBtnModern,
+                            { backgroundColor: theme.colors.income },
+                        ]}
                         onPress={() => {
                             setEntryType("income");
                             setEditingTx(null);
@@ -663,7 +739,10 @@ export default function BusinessDetailView({
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
-                        style={[styles.bigActionBtnModern, { backgroundColor: theme.colors.expense }]}
+                        style={[
+                            styles.bigActionBtnModern,
+                            { backgroundColor: theme.colors.expense },
+                        ]}
                         onPress={() => {
                             setEntryType("expense");
                             setEditingTx(null);
@@ -739,14 +818,15 @@ function BalanceCard({
                     {symbol}
                     {totalBalance.toLocaleString()}
                 </Text>
-                <MoreHorizontal color="white" size={24} />
             </View>
             <Text style={styles.balanceSubtitle}>Current Balance</Text>
             <View style={styles.cardFooter}>
                 <Text style={styles.cardNumber}>{currency} Cashbook</Text>
                 <View style={styles.mastercardLogo}>
                     <View style={[styles.circle, { backgroundColor: "#EB001B" }]} />
-                    <View style={[styles.circle, { backgroundColor: "#F79E1B", marginLeft: -10 }]} />
+                    <View
+                        style={[styles.circle, { backgroundColor: "#F79E1B", marginLeft: -10 }]}
+                    />
                 </View>
             </View>
         </LinearGradient>

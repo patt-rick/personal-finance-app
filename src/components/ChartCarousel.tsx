@@ -25,17 +25,20 @@ interface ChartCarouselProps {
 export default function ChartCarousel({ pages }: ChartCarouselProps) {
     const theme = useTheme();
     const [activeIndex, setActiveIndex] = useState(0);
+    const cardGap = 12;
     const cardWidth = SCREEN_WIDTH - 40; // 20px padding each side
+
+    const snapInterval = cardWidth + cardGap;
 
     const onScroll = useCallback(
         (e: NativeSyntheticEvent<NativeScrollEvent>) => {
             const offsetX = e.nativeEvent.contentOffset.x;
-            const index = Math.round(offsetX / cardWidth);
+            const index = Math.round(offsetX / snapInterval);
             if (index !== activeIndex && index >= 0 && index < pages.length) {
                 setActiveIndex(index);
             }
         },
-        [activeIndex, cardWidth, pages.length],
+        [activeIndex, snapInterval, pages.length],
     );
 
     if (pages.length === 0) return null;
@@ -96,9 +99,9 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                 onScroll={onScroll}
                 scrollEventThrottle={16}
                 decelerationRate="fast"
-                snapToInterval={cardWidth}
+                snapToInterval={snapInterval}
                 snapToAlignment="start"
-                contentContainerStyle={{ gap: 0 }}
+                contentContainerStyle={{ gap: cardGap }}
             >
                 {pages.map((page, index) => (
                     <View
@@ -170,6 +173,7 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 14,
         padding: 16,
+        justifyContent: "center",
         elevation: 1,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },

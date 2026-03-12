@@ -34,6 +34,29 @@ function DashboardHome({
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
     const localStyles = useMemo(() => createLocalStyles(theme), [theme]);
 
+    const businessCurrencyMap = useMemo(() => {
+        const map: Record<string, string> = {};
+        for (const biz of businesses) {
+            map[biz.id] = biz.currency || "USD";
+        }
+        return map;
+    }, [businesses]);
+
+    const currencyTotals = useMemo(() => {
+        const totals: Record<string, { income: number; expense: number }> = {};
+        for (const t of transactions) {
+            const currency = businessCurrencyMap[t.businessId] || "USD";
+            if (!totals[currency]) totals[currency] = { income: 0, expense: 0 };
+            if (t.type === "income") totals[currency].income += t.amount;
+            else totals[currency].expense += t.amount;
+        }
+        return totals;
+    }, [transactions, businessCurrencyMap]);
+
+    const currencyKeys = Object.keys(currencyTotals);
+    const isSingleCurrency = currencyKeys.length <= 1;
+    const displayCurrency = currencyKeys[0] || "USD";
+
     const totalIncome = transactions
         .filter((t) => t.type === "income")
         .reduce((acc, t) => acc + t.amount, 0);
@@ -53,6 +76,7 @@ function DashboardHome({
                     color: CHART_COLORS[index % CHART_COLORS.length],
                     text: biz.name,
                     label: biz.name,
+                    currencySymbol: getCurrencySymbol(biz.currency),
                 };
             })
             .filter((d) => d.value > 0);
@@ -61,10 +85,17 @@ function DashboardHome({
     const weeklyBarData = useMemo(() => {
         const days: any[] = [];
         const now = new Date();
-        for (let i = 6; i >= 0; i--) {
-            const date = new Date(now);
-            date.setDate(now.getDate() - i);
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const dayOfWeek = now.getDay();
+        const mondayOffset = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(today);
+        monday.setDate(today.getDate() + mondayOffset);
+
+        for (let i = 0; i < 7; i++) {
+            const date = new Date(monday);
+            date.setDate(monday.getDate() + i);
             const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            if (dayStart > today) break;
             const dayEnd = new Date(dayStart);
             dayEnd.setDate(dayEnd.getDate() + 1);
 
@@ -137,9 +168,15 @@ function DashboardHome({
                             innerCircleColor={theme.colors.card}
                             centerLabelComponent={() => (
                                 <View style={{ alignItems: "center" }}>
-                                    <Text style={{ fontSize: 14, fontWeight: "700", color: theme.colors.text }}>
-                                        ${totalExpense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                    </Text>
+                                    {isSingleCurrency ? (
+                                        <Text style={{ fontSize: 14, fontWeight: "700", color: theme.colors.text }}>
+                                            {getCurrencySymbol(displayCurrency)}{totalExpense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                        </Text>
+                                    ) : (
+                                        <Text style={{ fontSize: 11, fontWeight: "700", color: theme.colors.text, textAlign: "center" }}>
+                                            {currencyKeys.map((c) => `${getCurrencySymbol(c)}${currencyTotals[c].expense.toLocaleString(undefined, { maximumFractionDigits: 0 })}`).join("\n")}
+                                        </Text>
+                                    )}
                                     <Text style={{ fontSize: 9, color: theme.colors.textSecondary }}>Total</Text>
                                 </View>
                             )}
@@ -153,7 +190,7 @@ function DashboardHome({
                                             {item.text}
                                         </Text>
                                         <Text style={[localStyles.pieLegendValue, { color: theme.colors.textSecondary }]}>
-                                            ${item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                            {item.currencySymbol}{item.value.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                         </Text>
                                     </View>
                                 </View>
@@ -165,7 +202,7 @@ function DashboardHome({
         }
 
         return pages;
-    }, [hasTransactions, weeklyBarData, businessPieData, totalExpense, theme, localStyles]);
+    }, [hasTransactions, weeklyBarData, businessPieData, totalExpense, theme, localStyles, isSingleCurrency, displayCurrency, currencyKeys, currencyTotals]);
 
     return (
         <View style={styles.container}>
@@ -193,40 +230,81 @@ function DashboardHome({
                         <View style={localStyles.balanceOverviewRow}>
                             <View style={{ flex: 1 }}>
                                 <Text style={localStyles.balanceLabel}>Total Balance</Text>
-                                <Text style={localStyles.balanceAmount}>
-                                    ${totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                                </Text>
+                                {isSingleCurrency ? (
+                                    <Text style={localStyles.balanceAmount} numberOfLines={1} adjustsFontSizeToFit>
+                                        {getCurrencySymbol(displayCurrency)}{totalBalance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                    </Text>
+                                ) : (
+                                    <View style={{ gap: 2 }}>
+                                        {currencyKeys.map((c) => {
+                                            const bal = currencyTotals[c].income - currencyTotals[c].expense;
+                                            return (
+                                                <Text key={c} style={localStyles.balanceAmountMulti} numberOfLines={1} adjustsFontSizeToFit>
+                                                    {getCurrencySymbol(c)}{bal.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                                                    <Text style={localStyles.balanceCurrencyCode}> {c}</Text>
+                                                </Text>
+                                            );
+                                        })}
+                                    </View>
+                                )}
                             </View>
                             <View style={localStyles.balanceBadge}>
                                 <Wallet size={20} color="rgba(255,255,255,0.9)" />
                             </View>
                         </View>
 
-                        <View style={localStyles.miniStatsRow}>
-                            <View style={localStyles.miniStat}>
-                                <View style={localStyles.miniStatIcon}>
-                                    <ArrowUpRight size={14} color="#4ADE80" />
+                        {isSingleCurrency ? (
+                            <View style={localStyles.miniStatsRow}>
+                                <View style={localStyles.miniStat}>
+                                    <View style={localStyles.miniStatIcon}>
+                                        <ArrowUpRight size={14} color="#4ADE80" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={localStyles.miniStatLabel}>Income</Text>
+                                        <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
+                                            {getCurrencySymbol(displayCurrency)}{totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                        </Text>
+                                    </View>
                                 </View>
-                                <View>
-                                    <Text style={localStyles.miniStatLabel}>Income</Text>
-                                    <Text style={localStyles.miniStatValue}>
-                                        ${totalIncome.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                    </Text>
+                                <View style={localStyles.miniStatDivider} />
+                                <View style={localStyles.miniStat}>
+                                    <View style={[localStyles.miniStatIcon, { backgroundColor: "rgba(248,113,113,0.2)" }]}>
+                                        <ArrowDownRight size={14} color="#F87171" />
+                                    </View>
+                                    <View style={{ flex: 1 }}>
+                                        <Text style={localStyles.miniStatLabel}>Expenses</Text>
+                                        <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
+                                            {getCurrencySymbol(displayCurrency)}{totalExpense.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                                        </Text>
+                                    </View>
                                 </View>
                             </View>
-                            <View style={localStyles.miniStatDivider} />
-                            <View style={localStyles.miniStat}>
-                                <View style={[localStyles.miniStatIcon, { backgroundColor: "rgba(248,113,113,0.2)" }]}>
-                                    <ArrowDownRight size={14} color="#F87171" />
-                                </View>
-                                <View>
-                                    <Text style={localStyles.miniStatLabel}>Expenses</Text>
-                                    <Text style={localStyles.miniStatValue}>
-                                        ${totalExpense.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
-                                    </Text>
-                                </View>
+                        ) : (
+                            <View style={localStyles.multiCurrencyStatsRow}>
+                                {currencyKeys.map((c, i) => (
+                                    <React.Fragment key={c}>
+                                        {i > 0 && <View style={localStyles.multiCurrencyDivider} />}
+                                        <View style={localStyles.multiCurrencyStat}>
+                                            <Text style={localStyles.multiCurrencyCode}>{c}</Text>
+                                            <View style={localStyles.multiCurrencyValues}>
+                                                <View style={localStyles.multiCurrencyValueRow}>
+                                                    <ArrowUpRight size={10} color="#4ADE80" />
+                                                    <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
+                                                        {getCurrencySymbol(c)}{currencyTotals[c].income.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                    </Text>
+                                                </View>
+                                                <View style={localStyles.multiCurrencyValueRow}>
+                                                    <ArrowDownRight size={10} color="#F87171" />
+                                                    <Text style={localStyles.miniStatValue} numberOfLines={1} adjustsFontSizeToFit>
+                                                        {getCurrencySymbol(c)}{currencyTotals[c].expense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                    </Text>
+                                                </View>
+                                            </View>
+                                        </View>
+                                    </React.Fragment>
+                                ))}
                             </View>
-                        </View>
+                        )}
                     </LinearGradient>
                 </View>
 
@@ -320,6 +398,17 @@ const createLocalStyles = (theme: any) =>
             color: "white",
             letterSpacing: -0.5,
         },
+        balanceAmountMulti: {
+            fontSize: 22,
+            fontWeight: "800",
+            color: "white",
+            letterSpacing: -0.3,
+        },
+        balanceCurrencyCode: {
+            fontSize: 12,
+            fontWeight: "500",
+            color: "rgba(255,255,255,0.5)",
+        },
         balanceBadge: {
             width: 44,
             height: 44,
@@ -364,6 +453,37 @@ const createLocalStyles = (theme: any) =>
             height: 28,
             backgroundColor: "rgba(255,255,255,0.15)",
             marginHorizontal: 12,
+        },
+        multiCurrencyStatsRow: {
+            backgroundColor: "rgba(255,255,255,0.1)",
+            borderRadius: 14,
+            padding: 12,
+            flexDirection: "row",
+            alignItems: "center",
+        },
+        multiCurrencyStat: {
+            flex: 1,
+            alignItems: "center",
+            gap: 4,
+        },
+        multiCurrencyCode: {
+            fontSize: 10,
+            fontWeight: "600",
+            color: "rgba(255,255,255,0.5)",
+            letterSpacing: 0.5,
+        },
+        multiCurrencyValues: {
+            gap: 2,
+        },
+        multiCurrencyValueRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 3,
+        },
+        multiCurrencyDivider: {
+            width: 1,
+            height: 36,
+            backgroundColor: "rgba(255,255,255,0.15)",
         },
         pieContent: {
             flexDirection: "row",

@@ -2,7 +2,7 @@
   "expo": {
     "name": "Finance Tracker",
     "slug": "finance-tracker",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "orientation": "portrait",
     "icon": "./src/icon.png",
     "userInterfaceStyle": "automatic",
@@ -11,13 +11,13 @@
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.yourcompany.financetracker",
+      "bundleIdentifier": "com.patrickackom.financetracker",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
-      "package": "com.yourcompany.financetracker",
+      "package": "com.patrickackom.financetracker",
       "adaptiveIcon": {
         "foregroundImage": "./src/icon.png",
         "backgroundColor": "#6366F1"
