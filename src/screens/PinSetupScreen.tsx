@@ -6,11 +6,15 @@ import {
     Animated,
     Dimensions,
     TouchableOpacity,
+    TextInput,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { ArrowLeft, Delete } from "lucide-react-native";
-import { setupPin } from "../utils/security";
+import { ArrowLeft, Delete, ChevronDown, Check, Shield } from "lucide-react-native";
+import { setupPin, saveSecurityQuestions, SECURITY_QUESTIONS } from "../utils/security";
 
 const { width, height } = Dimensions.get("window");
 
@@ -212,13 +216,179 @@ function NumKey({
     );
 }
 
+function SecurityQuestionsStep({
+    onComplete: onQuestionsComplete,
+    onBack: onQuestionsBack,
+}: {
+    onComplete: (q1: string, a1: string, q2: string, a2: string) => void;
+    onBack: () => void;
+}) {
+    const [q1, setQ1] = useState("");
+    const [a1, setA1] = useState("");
+    const [q2, setQ2] = useState("");
+    const [a2, setA2] = useState("");
+    const [showQ1Picker, setShowQ1Picker] = useState(false);
+    const [showQ2Picker, setShowQ2Picker] = useState(false);
+    const scrollRef = useRef<ScrollView>(null);
+
+    const availableForQ2 = SECURITY_QUESTIONS.filter((q) => q !== q1);
+    const canContinue = q1 && a1.trim().length >= 2 && q2 && a2.trim().length >= 2 && q1 !== q2;
+
+    const scrollToInput = (y: number) => {
+        setTimeout(() => {
+            scrollRef.current?.scrollTo({ y: Math.max(0, y - 150), animated: true });
+        }, 300);
+    };
+
+    return (
+        <View style={styles.container}>
+            <StatusBar style="light" backgroundColor="#0B0F1A" />
+            <LinearGradient
+                colors={["#0B0F1A", "#131B2E", "#1A1040"]}
+                start={{ x: 0.2, y: 0 }}
+                end={{ x: 0.8, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
+
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={onQuestionsBack}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+                <ArrowLeft size={22} color="rgba(255, 255, 255, 0.7)" />
+            </TouchableOpacity>
+
+            <KeyboardAvoidingView
+                style={{ flex: 1 }}
+                behavior={Platform.OS === "ios" ? "padding" : "height"}
+            >
+                <ScrollView
+                    ref={scrollRef}
+                    contentContainerStyle={sqStyles.scrollContent}
+                    keyboardShouldPersistTaps="handled"
+                    showsVerticalScrollIndicator={false}
+                >
+                    <View style={sqStyles.iconCircle}>
+                        <Shield size={28} color="#6366F1" />
+                    </View>
+                    <Text style={sqStyles.title}>Security Questions</Text>
+                    <Text style={sqStyles.subtitle}>
+                        These will help you recover your PIN if you forget it
+                    </Text>
+
+                    <View style={sqStyles.questionBlock}>
+                        <Text style={sqStyles.label}>Question 1</Text>
+                        <TouchableOpacity
+                            style={sqStyles.picker}
+                            onPress={() => { setShowQ1Picker(!showQ1Picker); setShowQ2Picker(false); }}
+                        >
+                            <Text style={[sqStyles.pickerText, !q1 && sqStyles.placeholder]}>
+                                {q1 || "Select a question"}
+                            </Text>
+                            <ChevronDown size={18} color="rgba(255,255,255,0.4)" />
+                        </TouchableOpacity>
+                        {showQ1Picker && (
+                            <View style={sqStyles.dropdown}>
+                                {SECURITY_QUESTIONS.map((q) => (
+                                    <TouchableOpacity
+                                        key={q}
+                                        style={[sqStyles.dropdownItem, q === q1 && sqStyles.dropdownItemActive]}
+                                        onPress={() => { setQ1(q); setShowQ1Picker(false); if (q === q2) setQ2(""); }}
+                                    >
+                                        <Text style={[sqStyles.dropdownText, q === q1 && sqStyles.dropdownTextActive]}>{q}</Text>
+                                        {q === q1 && <Check size={16} color="#6366F1" />}
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                        <TextInput
+                            style={sqStyles.input}
+                            placeholder="Your answer"
+                            placeholderTextColor="rgba(255,255,255,0.25)"
+                            value={a1}
+                            onChangeText={setA1}
+                            autoCapitalize="none"
+                            onFocus={(e) => {
+                                setShowQ1Picker(false);
+                                setShowQ2Picker(false);
+                                const target = e.target;
+                                setTimeout(() => {
+                                    (target as any).measureInWindow?.((
+                                        _x: number, y: number,
+                                    ) => { scrollToInput(y); });
+                                }, 100);
+                            }}
+                        />
+                    </View>
+
+                    <View style={sqStyles.questionBlock}>
+                        <Text style={sqStyles.label}>Question 2</Text>
+                        <TouchableOpacity
+                            style={sqStyles.picker}
+                            onPress={() => { setShowQ2Picker(!showQ2Picker); setShowQ1Picker(false); }}
+                        >
+                            <Text style={[sqStyles.pickerText, !q2 && sqStyles.placeholder]}>
+                                {q2 || "Select a question"}
+                            </Text>
+                            <ChevronDown size={18} color="rgba(255,255,255,0.4)" />
+                        </TouchableOpacity>
+                        {showQ2Picker && (
+                            <View style={sqStyles.dropdown}>
+                                {availableForQ2.map((q) => (
+                                    <TouchableOpacity
+                                        key={q}
+                                        style={[sqStyles.dropdownItem, q === q2 && sqStyles.dropdownItemActive]}
+                                        onPress={() => { setQ2(q); setShowQ2Picker(false); }}
+                                    >
+                                        <Text style={[sqStyles.dropdownText, q === q2 && sqStyles.dropdownTextActive]}>{q}</Text>
+                                        {q === q2 && <Check size={16} color="#6366F1" />}
+                                    </TouchableOpacity>
+                                ))}
+                            </View>
+                        )}
+                        <TextInput
+                            style={sqStyles.input}
+                            placeholder="Your answer"
+                            placeholderTextColor="rgba(255,255,255,0.25)"
+                            value={a2}
+                            onChangeText={setA2}
+                            autoCapitalize="none"
+                            onFocus={(e) => {
+                                setShowQ1Picker(false);
+                                setShowQ2Picker(false);
+                                const target = e.target;
+                                setTimeout(() => {
+                                    (target as any).measureInWindow?.((
+                                        _x: number, y: number,
+                                    ) => { scrollToInput(y); });
+                                }, 100);
+                            }}
+                        />
+                    </View>
+
+                    <TouchableOpacity
+                        style={[sqStyles.continueBtn, !canContinue && sqStyles.continueBtnDisabled]}
+                        disabled={!canContinue}
+                        onPress={() => onQuestionsComplete(q1, a1, q2, a2)}
+                    >
+                        <Text style={[sqStyles.continueBtnText, !canContinue && sqStyles.continueBtnTextDisabled]}>
+                            Continue
+                        </Text>
+                    </TouchableOpacity>
+                </ScrollView>
+            </KeyboardAvoidingView>
+        </View>
+    );
+}
+
 export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenProps) {
-    const [stage, setStage] = useState<"create" | "confirm">("create");
+    const [stage, setStage] = useState<"questions" | "create" | "confirm">("questions");
     const [pin, setPin] = useState("");
     const [firstPin, setFirstPin] = useState("");
     const [error, setError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [saving, setSaving] = useState(false);
+    const [securityData, setSecurityData] = useState<{ q1: string; a1: string; q2: string; a2: string } | null>(null);
 
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const fadeIn = useRef(new Animated.Value(0)).current;
@@ -265,6 +435,11 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
         [stageOpacity]
     );
 
+    const handleQuestionsComplete = useCallback((q1: string, a1: string, q2: string, a2: string) => {
+        setSecurityData({ q1, a1, q2, a2 });
+        setStage("create");
+    }, []);
+
     const handleDigit = useCallback(
         async (digit: string) => {
             if (error || saving) return;
@@ -282,6 +457,14 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                     if (next === firstPin) {
                         setSaving(true);
                         await setupPin(next);
+                        if (securityData) {
+                            await saveSecurityQuestions(
+                                securityData.q1,
+                                securityData.a1,
+                                securityData.q2,
+                                securityData.a2,
+                            );
+                        }
                         onComplete();
                     } else {
                         setError(true);
@@ -295,13 +478,22 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                 }
             }
         },
-        [pin, stage, firstPin, error, saving, onComplete, triggerShake, transitionToStage]
+        [pin, stage, firstPin, error, saving, securityData, onComplete, triggerShake, transitionToStage]
     );
 
     const handleDelete = useCallback(() => {
         if (error || saving) return;
         setPin((prev) => prev.slice(0, -1));
     }, [error, saving]);
+
+    if (stage === "questions") {
+        return (
+            <SecurityQuestionsStep
+                onComplete={handleQuestionsComplete}
+                onBack={onBack}
+            />
+        );
+    }
 
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
@@ -326,7 +518,14 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
 
             <TouchableOpacity
                 style={styles.backButton}
-                onPress={onBack}
+                onPress={() => {
+                    if (stage === "create") {
+                        setStage("questions");
+                    } else {
+                        setFirstPin("");
+                        transitionToStage("create");
+                    }
+                }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
                 <ArrowLeft size={22} color="rgba(255, 255, 255, 0.7)" />
@@ -512,5 +711,128 @@ const styles = StyleSheet.create({
         height: "100%",
         alignItems: "center",
         justifyContent: "center",
+    },
+});
+
+const sqStyles = StyleSheet.create({
+    scrollContent: {
+        paddingTop: 120,
+        paddingHorizontal: 28,
+        paddingBottom: 40,
+        alignItems: "center",
+    },
+    iconCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
+        backgroundColor: "rgba(99, 102, 241, 0.15)",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: "600",
+        color: "rgba(255, 255, 255, 0.85)",
+        letterSpacing: 1,
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 13,
+        color: "rgba(255, 255, 255, 0.4)",
+        letterSpacing: 0.5,
+        marginBottom: 36,
+        textAlign: "center",
+    },
+    questionBlock: {
+        width: "100%",
+        marginBottom: 24,
+    },
+    label: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "rgba(255, 255, 255, 0.5)",
+        textTransform: "uppercase",
+        letterSpacing: 0.8,
+        marginBottom: 8,
+    },
+    picker: {
+        flexDirection: "row",
+        alignItems: "center",
+        justifyContent: "space-between",
+        backgroundColor: "rgba(255, 255, 255, 0.06)",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.08)",
+        paddingHorizontal: 16,
+        height: 48,
+        marginBottom: 10,
+    },
+    pickerText: {
+        flex: 1,
+        fontSize: 14,
+        color: "rgba(255, 255, 255, 0.85)",
+    },
+    placeholder: {
+        color: "rgba(255, 255, 255, 0.25)",
+    },
+    dropdown: {
+        backgroundColor: "rgba(30, 30, 50, 0.98)",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.1)",
+        marginBottom: 10,
+        overflow: "hidden",
+    },
+    dropdownItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingHorizontal: 16,
+        paddingVertical: 13,
+        borderBottomWidth: StyleSheet.hairlineWidth,
+        borderBottomColor: "rgba(255, 255, 255, 0.06)",
+    },
+    dropdownItemActive: {
+        backgroundColor: "rgba(99, 102, 241, 0.1)",
+    },
+    dropdownText: {
+        flex: 1,
+        fontSize: 13,
+        color: "rgba(255, 255, 255, 0.7)",
+    },
+    dropdownTextActive: {
+        color: "#6366F1",
+        fontWeight: "600",
+    },
+    input: {
+        backgroundColor: "rgba(255, 255, 255, 0.06)",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.08)",
+        paddingHorizontal: 16,
+        height: 48,
+        fontSize: 14,
+        color: "rgba(255, 255, 255, 0.85)",
+    },
+    continueBtn: {
+        width: "100%",
+        height: 52,
+        borderRadius: 14,
+        backgroundColor: "#6366F1",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 12,
+    },
+    continueBtnDisabled: {
+        backgroundColor: "rgba(99, 102, 241, 0.25)",
+    },
+    continueBtnText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "white",
+        letterSpacing: 0.3,
+    },
+    continueBtnTextDisabled: {
+        color: "rgba(255, 255, 255, 0.4)",
     },
 });

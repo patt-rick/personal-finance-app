@@ -103,10 +103,10 @@ const styles = StyleSheet.create({
         marginTop: 20,
         borderRadius: 20,
         padding: 20,
-        elevation: 2,
+        elevation: 1,
         shadowColor: "#000",
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.06,
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.03,
         shadowRadius: 8,
     },
     headerRow: {

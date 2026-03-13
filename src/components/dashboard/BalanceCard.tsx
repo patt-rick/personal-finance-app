@@ -211,10 +211,10 @@ const styles = StyleSheet.create({
     card: {
         borderRadius: 24,
         padding: 24,
-        elevation: 6,
+        elevation: 3,
         shadowColor: "#1E2A8A",
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.25,
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.12,
         shadowRadius: 16,
     },
     topRow: {

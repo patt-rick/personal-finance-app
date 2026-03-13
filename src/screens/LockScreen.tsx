@@ -7,11 +7,23 @@ import {
     Dimensions,
     TouchableOpacity,
     Image,
+    TextInput,
+    ScrollView,
+    KeyboardAvoidingView,
+    Platform,
+    Alert,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
 import { LinearGradient } from "expo-linear-gradient";
-import { Fingerprint, Delete, ScanFace } from "lucide-react-native";
-import { verifyPin } from "../utils/security";
+import { Fingerprint, Delete, ScanFace, ArrowLeft, Shield } from "lucide-react-native";
+import {
+    verifyPin,
+    getSecurityQuestions,
+    verifySecurityAnswers,
+    removePin,
+    setupPin,
+    saveSecurityQuestions,
+} from "../utils/security";
 
 const { width, height } = Dimensions.get("window");
 
@@ -324,6 +336,7 @@ export default function LockScreen({
     const [error, setError] = useState(false);
     const [attempts, setAttempts] = useState(0);
     const [lockoutRemaining, setLockoutRemaining] = useState(0);
+    const [showRecovery, setShowRecovery] = useState(false);
 
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const fadeIn = useRef(new Animated.Value(0)).current;
@@ -411,6 +424,15 @@ export default function LockScreen({
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
 
     const BiometricIcon = biometricType === "Face ID" ? ScanFace : Fingerprint;
+
+    if (showRecovery) {
+        return (
+            <PinRecoveryScreen
+                onRecovered={onUnlock}
+                onBack={() => setShowRecovery(false)}
+            />
+        );
+    }
 
     return (
         <View style={styles.container}>
@@ -520,7 +542,300 @@ export default function LockScreen({
                         </TouchableOpacity>
                     </View>
                 </View>
+
+                <TouchableOpacity
+                    style={styles.forgotBtn}
+                    onPress={() => setShowRecovery(true)}
+                >
+                    <Text style={styles.forgotText}>Forgot PIN?</Text>
+                </TouchableOpacity>
             </Animated.View>
+        </View>
+    );
+}
+
+function PinRecoveryScreen({
+    onRecovered,
+    onBack,
+}: {
+    onRecovered: () => void;
+    onBack: () => void;
+}) {
+    const [questions, setQuestions] = useState<{ q1: string; q2: string } | null>(null);
+    const [a1, setA1] = useState("");
+    const [a2, setA2] = useState("");
+    const [verifying, setVerifying] = useState(false);
+    const [errorMsg, setErrorMsg] = useState("");
+    const scrollRef = useRef<ScrollView>(null);
+    const [stage, setStage] = useState<"answers" | "newpin" | "confirmpin">("answers");
+    const [newPin, setNewPin] = useState("");
+    const [confirmPin, setConfirmPin] = useState("");
+    const [pinError, setPinError] = useState("");
+    const shakeAnim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        getSecurityQuestions().then((qs) => {
+            if (!qs) {
+                Alert.alert(
+                    "No Recovery Available",
+                    "Security questions were not set up. You cannot recover your PIN.",
+                    [{ text: "OK", onPress: onBack }],
+                );
+            } else {
+                setQuestions(qs);
+            }
+        });
+    }, [onBack]);
+
+    const triggerShake = useCallback(() => {
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 16, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -16, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 12, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -12, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
+        ]).start();
+    }, [shakeAnim]);
+
+    const handleVerifyAnswers = useCallback(async () => {
+        if (!a1.trim() || !a2.trim()) return;
+        setVerifying(true);
+        setErrorMsg("");
+        const valid = await verifySecurityAnswers(a1, a2);
+        setVerifying(false);
+        if (valid) {
+            setStage("newpin");
+        } else {
+            setErrorMsg("Incorrect answers. Please try again.");
+        }
+    }, [a1, a2]);
+
+    const handlePinDigit = useCallback(
+        async (digit: string) => {
+            if (pinError) return;
+            if (stage === "newpin") {
+                const next = newPin + digit;
+                if (next.length > 4) return;
+                setNewPin(next);
+                if (next.length === 4) {
+                    setStage("confirmpin");
+                }
+            } else {
+                const next = confirmPin + digit;
+                if (next.length > 4) return;
+                setConfirmPin(next);
+                if (next.length === 4) {
+                    if (next === newPin) {
+                        await removePin();
+                        await setupPin(next);
+                        if (questions) {
+                            await saveSecurityQuestions(questions.q1, a1, questions.q2, a2);
+                        }
+                        onRecovered();
+                    } else {
+                        setPinError("PINs don't match");
+                        triggerShake();
+                        setTimeout(() => {
+                            setNewPin("");
+                            setConfirmPin("");
+                            setPinError("");
+                            setStage("newpin");
+                        }, 800);
+                    }
+                }
+            }
+        },
+        [stage, newPin, confirmPin, pinError, questions, a1, a2, onRecovered, triggerShake]
+    );
+
+    const handlePinDelete = useCallback(() => {
+        if (pinError) return;
+        if (stage === "newpin") {
+            setNewPin((prev) => prev.slice(0, -1));
+        } else {
+            setConfirmPin((prev) => prev.slice(0, -1));
+        }
+    }, [stage, pinError]);
+
+    if (!questions) return null;
+
+    if (stage === "answers") {
+        const canSubmit = a1.trim().length >= 2 && a2.trim().length >= 2;
+        return (
+            <View style={styles.container}>
+                <StatusBar style="light" backgroundColor="#0B0F1A" />
+                <LinearGradient
+                    colors={["#0B0F1A", "#131B2E", "#1A1040"]}
+                    start={{ x: 0.2, y: 0 }}
+                    end={{ x: 0.8, y: 1 }}
+                    style={StyleSheet.absoluteFill}
+                />
+                <TouchableOpacity
+                    style={styles.backButton}
+                    onPress={onBack}
+                    hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+                >
+                    <ArrowLeft size={22} color="rgba(255, 255, 255, 0.7)" />
+                </TouchableOpacity>
+                <KeyboardAvoidingView
+                    style={{ flex: 1 }}
+                    behavior={Platform.OS === "ios" ? "padding" : "height"}
+                >
+                    <ScrollView
+                        ref={scrollRef}
+                        contentContainerStyle={recoveryStyles.scrollContent}
+                        keyboardShouldPersistTaps="handled"
+                        showsVerticalScrollIndicator={false}
+                    >
+                        <View style={recoveryStyles.iconCircle}>
+                            <Shield size={28} color="#6366F1" />
+                        </View>
+                        <Text style={recoveryStyles.title}>Recover Your PIN</Text>
+                        <Text style={recoveryStyles.subtitle}>
+                            Answer your security questions to reset your PIN
+                        </Text>
+
+                        <View style={recoveryStyles.questionBlock}>
+                            <Text style={recoveryStyles.label}>{questions.q1}</Text>
+                            <TextInput
+                                style={recoveryStyles.input}
+                                placeholder="Your answer"
+                                placeholderTextColor="rgba(255,255,255,0.25)"
+                                value={a1}
+                                onChangeText={(t) => { setA1(t); setErrorMsg(""); }}
+                                autoCapitalize="none"
+                                onFocus={(e) => {
+                                    const target = e.target;
+                                    setTimeout(() => {
+                                        (target as any).measureInWindow?.((
+                                            _x: number, y: number,
+                                        ) => {
+                                            scrollRef.current?.scrollTo({ y: Math.max(0, y - 150), animated: true });
+                                        });
+                                    }, 300);
+                                }}
+                            />
+                        </View>
+
+                        <View style={recoveryStyles.questionBlock}>
+                            <Text style={recoveryStyles.label}>{questions.q2}</Text>
+                            <TextInput
+                                style={recoveryStyles.input}
+                                placeholder="Your answer"
+                                placeholderTextColor="rgba(255,255,255,0.25)"
+                                value={a2}
+                                onChangeText={(t) => { setA2(t); setErrorMsg(""); }}
+                                autoCapitalize="none"
+                                onFocus={(e) => {
+                                    const target = e.target;
+                                    setTimeout(() => {
+                                        (target as any).measureInWindow?.((
+                                            _x: number, y: number,
+                                        ) => {
+                                            scrollRef.current?.scrollTo({ y: Math.max(0, y - 150), animated: true });
+                                        });
+                                    }, 300);
+                                }}
+                            />
+                        </View>
+
+                        {errorMsg ? (
+                            <Text style={recoveryStyles.error}>{errorMsg}</Text>
+                        ) : null}
+
+                        <TouchableOpacity
+                            style={[recoveryStyles.submitBtn, (!canSubmit || verifying) && recoveryStyles.submitBtnDisabled]}
+                            disabled={!canSubmit || verifying}
+                            onPress={handleVerifyAnswers}
+                        >
+                            <Text style={[recoveryStyles.submitBtnText, (!canSubmit || verifying) && recoveryStyles.submitBtnTextDisabled]}>
+                                {verifying ? "Verifying..." : "Verify Answers"}
+                            </Text>
+                        </TouchableOpacity>
+                    </ScrollView>
+                </KeyboardAvoidingView>
+            </View>
+        );
+    }
+
+    const currentPin = stage === "newpin" ? newPin : confirmPin;
+    const pinTitle = stage === "newpin" ? "Create New PIN" : "Confirm New PIN";
+    const pinSub = stage === "newpin" ? "Choose a new 4-digit PIN" : "Re-enter your new PIN";
+    const pinKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
+    return (
+        <View style={styles.container}>
+            <StatusBar style="light" backgroundColor="#0B0F1A" />
+            <LinearGradient
+                colors={["#0B0F1A", "#131B2E", "#1A1040"]}
+                start={{ x: 0.2, y: 0 }}
+                end={{ x: 0.8, y: 1 }}
+                style={StyleSheet.absoluteFill}
+            />
+            <FloatingOrb size={180} color="rgba(99, 102, 241, 0.05)" startX={-30} startY={height * 0.08} delay={0} />
+            <FloatingOrb size={140} color="rgba(168, 85, 247, 0.04)" startX={width - 60} startY={height * 0.2} delay={500} />
+
+            <TouchableOpacity
+                style={styles.backButton}
+                onPress={() => {
+                    if (stage === "confirmpin") {
+                        setConfirmPin("");
+                        setPinError("");
+                        setStage("newpin");
+                        setNewPin("");
+                    } else {
+                        setNewPin("");
+                        setStage("answers");
+                    }
+                }}
+                hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            >
+                <ArrowLeft size={22} color="rgba(255, 255, 255, 0.7)" />
+            </TouchableOpacity>
+
+            <View style={styles.content}>
+                <Text style={styles.title}>{pinTitle}</Text>
+                <Text style={recoveryStyles.pinSubtitle}>{pinSub}</Text>
+
+                <Animated.View style={[styles.dotsRow, { transform: [{ translateX: shakeAnim }] }]}>
+                    {[0, 1, 2, 3].map((i) => (
+                        <View
+                            key={i}
+                            style={[
+                                recoveryStyles.dot,
+                                i < currentPin.length && recoveryStyles.dotFilled,
+                                pinError ? recoveryStyles.dotError : null,
+                            ]}
+                        />
+                    ))}
+                </Animated.View>
+
+                {pinError ? (
+                    <Text style={recoveryStyles.pinErrorText}>{pinError}</Text>
+                ) : (
+                    <View style={{ height: 22 }} />
+                )}
+
+                <View style={styles.keypad}>
+                    {pinKeys.map((k) => (
+                        <NumKey key={k} label={k} onPress={() => handlePinDigit(k)} disabled={false} />
+                    ))}
+                    <View style={styles.keyTouchable} />
+                    <NumKey label="0" onPress={() => handlePinDigit("0")} disabled={false} />
+                    <View style={styles.keyTouchable}>
+                        <TouchableOpacity
+                            style={styles.actionKey}
+                            onPress={handlePinDelete}
+                            disabled={currentPin.length === 0}
+                        >
+                            <Delete
+                                size={24}
+                                color={currentPin.length === 0 ? "rgba(255,255,255,0.15)" : "rgba(255,255,255,0.7)"}
+                            />
+                        </TouchableOpacity>
+                    </View>
+                </View>
+            </View>
         </View>
     );
 }
@@ -697,5 +1012,138 @@ const styles = StyleSheet.create({
         height: "100%",
         alignItems: "center",
         justifyContent: "center",
+    },
+    backButton: {
+        position: "absolute",
+        top: 56,
+        left: 20,
+        zIndex: 10,
+        width: 40,
+        height: 40,
+        borderRadius: 14,
+        backgroundColor: "rgba(255, 255, 255, 0.06)",
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.08)",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    forgotBtn: {
+        marginTop: 24,
+        paddingVertical: 8,
+        paddingHorizontal: 16,
+    },
+    forgotText: {
+        fontSize: 13,
+        color: "rgba(99, 102, 241, 0.8)",
+        fontWeight: "600",
+        letterSpacing: 0.3,
+    },
+});
+
+const recoveryStyles = StyleSheet.create({
+    scrollContent: {
+        paddingTop: 120,
+        paddingHorizontal: 28,
+        paddingBottom: 40,
+        alignItems: "center",
+    },
+    iconCircle: {
+        width: 64,
+        height: 64,
+        borderRadius: 20,
+        backgroundColor: "rgba(99, 102, 241, 0.15)",
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 20,
+    },
+    title: {
+        fontSize: 20,
+        fontWeight: "600",
+        color: "rgba(255, 255, 255, 0.85)",
+        letterSpacing: 1,
+        marginBottom: 8,
+    },
+    subtitle: {
+        fontSize: 13,
+        color: "rgba(255, 255, 255, 0.4)",
+        letterSpacing: 0.5,
+        marginBottom: 36,
+        textAlign: "center",
+    },
+    questionBlock: {
+        width: "100%",
+        marginBottom: 24,
+    },
+    label: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "rgba(255, 255, 255, 0.6)",
+        marginBottom: 8,
+    },
+    input: {
+        backgroundColor: "rgba(255, 255, 255, 0.06)",
+        borderRadius: 12,
+        borderWidth: 1,
+        borderColor: "rgba(255, 255, 255, 0.08)",
+        paddingHorizontal: 16,
+        height: 48,
+        fontSize: 14,
+        color: "rgba(255, 255, 255, 0.85)",
+    },
+    error: {
+        fontSize: 13,
+        color: "#EF4444",
+        fontWeight: "600",
+        marginBottom: 16,
+        textAlign: "center",
+    },
+    submitBtn: {
+        width: "100%",
+        height: 52,
+        borderRadius: 14,
+        backgroundColor: "#6366F1",
+        alignItems: "center",
+        justifyContent: "center",
+        marginTop: 12,
+    },
+    submitBtnDisabled: {
+        backgroundColor: "rgba(99, 102, 241, 0.25)",
+    },
+    submitBtnText: {
+        fontSize: 15,
+        fontWeight: "700",
+        color: "white",
+        letterSpacing: 0.3,
+    },
+    submitBtnTextDisabled: {
+        color: "rgba(255, 255, 255, 0.4)",
+    },
+    pinSubtitle: {
+        fontSize: 13,
+        color: "rgba(255, 255, 255, 0.4)",
+        letterSpacing: 0.5,
+        marginBottom: 28,
+    },
+    dot: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        borderWidth: 2,
+        borderColor: "rgba(255, 255, 255, 0.2)",
+    },
+    dotFilled: {
+        backgroundColor: "#6366F1",
+        borderColor: "#6366F1",
+    },
+    dotError: {
+        backgroundColor: "#EF4444",
+        borderColor: "#EF4444",
+    },
+    pinErrorText: {
+        fontSize: 12,
+        color: "rgba(239, 68, 68, 0.85)",
+        letterSpacing: 0.5,
+        marginTop: 4,
+        height: 22,
     },
 });

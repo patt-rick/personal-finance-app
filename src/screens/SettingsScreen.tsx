@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useRef, useEffect } from "react";
 import {
     View,
     Text,
@@ -10,7 +10,10 @@ import {
     Platform,
     KeyboardAvoidingView,
     ActivityIndicator,
+    BackHandler,
+    Animated,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     User,
@@ -28,11 +31,14 @@ import {
     Palette,
     Pencil,
     Check,
+    ArrowLeft,
+    Delete,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
 import { UserProfile } from "../types";
 import { exportAllData, importAllData, loadUserProfile } from "../utils/storage";
+import { isPinEnabled, verifyPin } from "../utils/security";
 import CategoryManagementScreen from "./CategoryManagementScreen";
 import SecuritySettingsScreen from "./SecuritySettingsScreen";
 
@@ -56,6 +62,29 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
     const [showSecurity, setShowSecurity] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
+    const [showExportVerify, setShowExportVerify] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                if (showExportVerify) {
+                    setShowExportVerify(false);
+                    return true;
+                }
+                if (showCategories) {
+                    setShowCategories(false);
+                    return true;
+                }
+                if (showSecurity) {
+                    setShowSecurity(false);
+                    return true;
+                }
+                return false;
+            };
+            const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+            return () => subscription.remove();
+        }, [showCategories, showSecurity, showExportVerify])
+    );
 
     const initials = (name || "U")
         .split(" ")
@@ -79,7 +108,7 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
         setIsEditing(false);
     }, [userProfile]);
 
-    const handleExport = useCallback(async () => {
+    const doExport = useCallback(async () => {
         setIsExporting(true);
         try {
             const success = await exportAllData();
@@ -92,6 +121,20 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
             setIsExporting(false);
         }
     }, []);
+
+    const handleExport = useCallback(async () => {
+        const pinOn = await isPinEnabled();
+        if (pinOn) {
+            setShowExportVerify(true);
+        } else {
+            doExport();
+        }
+    }, [doExport]);
+
+    const handleExportVerified = useCallback(() => {
+        setShowExportVerify(false);
+        doExport();
+    }, [doExport]);
 
     const handleImport = useCallback(() => {
         Alert.alert(
@@ -123,6 +166,16 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
             ],
         );
     }, [onDataImported]);
+
+    if (showExportVerify) {
+        return (
+            <ExportPinVerifyScreen
+                theme={theme}
+                onVerified={handleExportVerified}
+                onBack={() => setShowExportVerify(false)}
+            />
+        );
+    }
 
     if (showCategories) {
         return <CategoryManagementScreen onBack={() => setShowCategories(false)} />;
@@ -371,6 +424,232 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
         </View>
     );
 }
+
+function ExportPinVerifyScreen({
+    theme,
+    onVerified,
+    onBack,
+}: {
+    theme: any;
+    onVerified: () => void;
+    onBack: () => void;
+}) {
+    const insets = useSafeAreaInsets();
+    const [pin, setPin] = useState("");
+    const [error, setError] = useState(false);
+    const shakeAnim = useRef(new Animated.Value(0)).current;
+    const verifyStyles = useMemo(() => createVerifyStyles(theme), [theme]);
+
+    const triggerShake = useCallback(() => {
+        Animated.sequence([
+            Animated.timing(shakeAnim, { toValue: 16, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -16, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 12, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: -12, duration: 50, useNativeDriver: true }),
+            Animated.timing(shakeAnim, { toValue: 0, duration: 40, useNativeDriver: true }),
+        ]).start();
+    }, [shakeAnim]);
+
+    const handleDigit = useCallback(
+        async (digit: string) => {
+            if (error) return;
+            const next = pin + digit;
+            if (next.length > 4) return;
+            setPin(next);
+            if (next.length === 4) {
+                const valid = await verifyPin(next);
+                if (valid) {
+                    onVerified();
+                } else {
+                    setError(true);
+                    triggerShake();
+                    setTimeout(() => {
+                        setPin("");
+                        setError(false);
+                    }, 600);
+                }
+            }
+        },
+        [pin, error, onVerified, triggerShake]
+    );
+
+    const handleDelete = useCallback(() => {
+        if (error) return;
+        setPin((prev) => prev.slice(0, -1));
+    }, [error]);
+
+    useEffect(() => {
+        const onBackPress = () => {
+            onBack();
+            return true;
+        };
+        const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+        return () => subscription.remove();
+    }, [onBack]);
+
+    const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "", "0", "del"];
+
+    return (
+        <View style={verifyStyles.container}>
+            <View style={[verifyStyles.header, { paddingTop: Math.max(insets.top, 40) }]}>
+                <TouchableOpacity
+                    onPress={onBack}
+                    style={verifyStyles.backBtn}
+                    hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                >
+                    <ArrowLeft size={20} color={theme.colors.text} />
+                </TouchableOpacity>
+                <Text style={verifyStyles.headerTitle}>Verify PIN</Text>
+            </View>
+
+            <View style={verifyStyles.content}>
+                <View style={verifyStyles.lockIconCircle}>
+                    <Upload size={28} color={theme.colors.primary} />
+                </View>
+                <Text style={verifyStyles.subtitle}>Enter your PIN to export data</Text>
+
+                <Animated.View style={[verifyStyles.dotsRow, { transform: [{ translateX: shakeAnim }] }]}>
+                    {[0, 1, 2, 3].map((i) => (
+                        <View
+                            key={i}
+                            style={[
+                                verifyStyles.dot,
+                                i < pin.length && verifyStyles.dotFilled,
+                                error && verifyStyles.dotError,
+                            ]}
+                        />
+                    ))}
+                </Animated.View>
+
+                {error && <Text style={verifyStyles.errorText}>Incorrect PIN</Text>}
+
+                <View style={verifyStyles.keypad}>
+                    {keys.map((k, i) => {
+                        if (k === "") return <View key={i} style={verifyStyles.key} />;
+                        if (k === "del") {
+                            return (
+                                <TouchableOpacity
+                                    key={i}
+                                    style={verifyStyles.key}
+                                    onPress={handleDelete}
+                                    disabled={pin.length === 0 || error}
+                                >
+                                    <Delete
+                                        size={22}
+                                        color={pin.length === 0 || error ? theme.colors.border : theme.colors.text}
+                                    />
+                                </TouchableOpacity>
+                            );
+                        }
+                        return (
+                            <TouchableOpacity
+                                key={i}
+                                style={verifyStyles.key}
+                                onPress={() => handleDigit(k)}
+                                disabled={error}
+                            >
+                                <Text style={verifyStyles.keyText}>{k}</Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+            </View>
+        </View>
+    );
+}
+
+const createVerifyStyles = (theme: any) =>
+    StyleSheet.create({
+        container: { flex: 1, backgroundColor: theme.colors.background },
+        header: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingBottom: 16,
+            gap: 12,
+        },
+        backBtn: {
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            backgroundColor: theme.colors.card,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        headerTitle: {
+            fontSize: 26,
+            fontWeight: "800",
+            color: theme.colors.text,
+            letterSpacing: -0.3,
+        },
+        content: {
+            flex: 1,
+            alignItems: "center",
+            paddingTop: 60,
+        },
+        lockIconCircle: {
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            backgroundColor: "rgba(99, 102, 241, 0.1)",
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+        },
+        subtitle: {
+            fontSize: 15,
+            color: theme.colors.textSecondary,
+            fontWeight: "500",
+            marginBottom: 32,
+        },
+        dotsRow: {
+            flexDirection: "row",
+            gap: 18,
+            marginBottom: 12,
+        },
+        dot: {
+            width: 14,
+            height: 14,
+            borderRadius: 7,
+            borderWidth: 2,
+            borderColor: theme.colors.border,
+        },
+        dotFilled: {
+            backgroundColor: theme.colors.primary,
+            borderColor: theme.colors.primary,
+        },
+        dotError: {
+            backgroundColor: "#EF4444",
+            borderColor: "#EF4444",
+        },
+        errorText: {
+            fontSize: 13,
+            color: "#EF4444",
+            fontWeight: "600",
+            marginTop: 4,
+        },
+        keypad: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            width: 240,
+            marginTop: 36,
+            gap: 12,
+        },
+        key: {
+            width: 68,
+            height: 68,
+            borderRadius: 34,
+            backgroundColor: theme.colors.card,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        keyText: {
+            fontSize: 24,
+            fontWeight: "400",
+            color: theme.colors.text,
+        },
+    });
 
 const createStyles = (theme: any) =>
     StyleSheet.create({

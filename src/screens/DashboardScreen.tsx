@@ -1,7 +1,8 @@
 import { getCurrencySymbol } from "../utils/_helpers";
 import { Users } from "lucide-react-native";
-import React, { useMemo, useState } from "react";
-import { ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { BackHandler, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
@@ -351,7 +352,7 @@ const styles = StyleSheet.create({
         elevation: 1,
         shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.04,
+        shadowOpacity: 0.02,
         shadowRadius: 3,
     },
     cashbookIcon: {
@@ -415,6 +416,20 @@ export default function DashboardScreen({
     saveTransactions,
     userProfile,
 }: DashboardScreenProps) {
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                if (currentBusiness) {
+                    setCurrentBusiness(null);
+                    return true;
+                }
+                return false;
+            };
+            const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+            return () => subscription.remove();
+        }, [currentBusiness, setCurrentBusiness])
+    );
+
     if (currentBusiness) {
         return (
             <BusinessDetailView

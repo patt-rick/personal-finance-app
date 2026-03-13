@@ -7,7 +7,9 @@ import {
     TouchableOpacity,
     ActivityIndicator,
     RefreshControl,
+    BackHandler,
 } from "react-native";
+import { useFocusEffect } from "@react-navigation/native";
 import {
     AlertCircle,
     Edit,
@@ -63,6 +65,20 @@ export default function BudgetDashboardScreen({
 
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
     const budgetStyles = useMemo(() => createBudgetStyles(theme), [theme]);
+
+    useFocusEffect(
+        useCallback(() => {
+            const onBackPress = () => {
+                if (showSetup) {
+                    setShowSetup(false);
+                    return true;
+                }
+                return false;
+            };
+            const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+            return () => subscription.remove();
+        }, [showSetup])
+    );
 
     useEffect(() => {
         if (currentBusiness) {
