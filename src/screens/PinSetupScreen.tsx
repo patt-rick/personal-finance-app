@@ -10,11 +10,24 @@ import {
     ScrollView,
     KeyboardAvoidingView,
     Platform,
+    useColorScheme,
 } from "react-native";
 import { StatusBar } from "expo-status-bar";
-import { LinearGradient } from "expo-linear-gradient";
-import { ArrowLeft, Delete, ChevronDown, Check, Shield } from "lucide-react-native";
-import { setupPin, saveSecurityQuestions, SECURITY_QUESTIONS } from "../utils/security";
+import Svg, { Path } from "react-native-svg";
+import {
+    ArrowLeft,
+    Delete,
+    ChevronDown,
+    Check,
+    Shield,
+} from "lucide-react-native";
+import {
+    setupPin,
+    saveSecurityQuestions,
+    SECURITY_QUESTIONS,
+} from "../utils/security";
+import { useTheme } from "../theme/theme";
+import { useThemeContext } from "../theme/ThemeContext";
 
 const { width, height } = Dimensions.get("window");
 
@@ -23,60 +36,53 @@ interface PinSetupScreenProps {
     onBack: () => void;
 }
 
-function FloatingOrb({
-    size,
-    color,
-    startX,
-    startY,
-    delay,
-}: {
-    size: number;
-    color: string;
-    startX: number;
-    startY: number;
-    delay: number;
-}) {
-    const opacity = useRef(new Animated.Value(0)).current;
-    const translateY = useRef(new Animated.Value(0)).current;
-
-    useEffect(() => {
-        Animated.timing(opacity, {
-            toValue: 1,
-            duration: 1200,
-            delay,
-            useNativeDriver: true,
-        }).start(() => {
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(translateY, {
-                        toValue: -12,
-                        duration: 3000 + delay,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(translateY, {
-                        toValue: 12,
-                        duration: 3000 + delay,
-                        useNativeDriver: true,
-                    }),
-                ])
-            ).start();
-        });
-    }, [opacity, translateY, delay]);
+function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string }) {
+    const primaryLight = isDark
+        ? "rgba(99, 102, 241, 0.12)"
+        : "rgba(99, 102, 241, 0.07)";
+    const primaryMedium = isDark
+        ? "rgba(99, 102, 241, 0.2)"
+        : "rgba(99, 102, 241, 0.10)";
 
     return (
-        <Animated.View
-            style={{
-                position: "absolute",
-                left: startX,
-                top: startY,
-                width: size,
-                height: size,
-                borderRadius: size / 2,
-                backgroundColor: color,
-                opacity,
-                transform: [{ translateY }],
-            }}
-        />
+        <View style={StyleSheet.absoluteFill} pointerEvents="none">
+            <Svg
+                width={width}
+                height={height}
+                viewBox={`0 0 ${width} ${height}`}
+                style={StyleSheet.absoluteFill}
+            >
+                <Path
+                    d={`M${width * 0.55},0
+                        C${width * 0.4},${height * 0.06} ${width * 1.05},${height * 0.1} ${width},${height * 0.18}
+                        L${width},0 Z`}
+                    fill={primary}
+                    opacity={isDark ? 0.15 : 0.7}
+                />
+                <Path
+                    d={`M${width * 0.72},0
+                        C${width * 0.5},${height * 0.05} ${width * 1.1},${height * 0.12} ${width},${height * 0.22}
+                        L${width},${height * 0.15}
+                        C${width * 0.9},${height * 0.08} ${width * 0.55},${height * 0.03} ${width * 0.82},0 Z`}
+                    fill={primaryMedium}
+                />
+                <Path
+                    d={`M0,${height * 0.82}
+                        C${width * 0.12},${height * 0.78} ${width * 0.08},${height * 0.9} ${width * 0.3},${height * 0.88}
+                        C${width * 0.42},${height * 0.87} ${width * 0.35},${height * 0.95} ${width * 0.45},${height}
+                        L0,${height} Z`}
+                    fill={primary}
+                    opacity={isDark ? 0.14 : 0.65}
+                />
+                <Path
+                    d={`M0,${height * 0.88}
+                        C${width * 0.08},${height * 0.85} ${width * 0.12},${height * 0.93} ${width * 0.3},${height * 0.92}
+                        C${width * 0.38},${height * 0.915} ${width * 0.35},${height * 0.97} ${width * 0.42},${height}
+                        L0,${height} Z`}
+                    fill={primaryLight}
+                />
+            </Svg>
+        </View>
     );
 }
 
@@ -84,10 +90,14 @@ function PinDot({
     filled,
     error,
     shakeAnim,
+    theme,
+    isDark,
 }: {
     filled: boolean;
     error: boolean;
     shakeAnim: Animated.Value;
+    theme: ReturnType<typeof useTheme>;
+    isDark: boolean;
 }) {
     const scale = useRef(new Animated.Value(0)).current;
     const glowOpacity = useRef(new Animated.Value(0)).current;
@@ -123,35 +133,33 @@ function PinDot({
         }
     }, [filled, scale, glowOpacity]);
 
-    const dotColor = error ? "#EF4444" : "#6366F1";
-    const glowColor = error ? "rgba(239, 68, 68, 0.4)" : "rgba(99, 102, 241, 0.4)";
+    const dotColor = error ? theme.colors.error : theme.colors.primary;
+    const glowColor = error
+        ? "rgba(239, 68, 68, 0.35)"
+        : "rgba(99, 102, 241, 0.35)";
+    const ringColor = error
+        ? "rgba(239, 68, 68, 0.5)"
+        : isDark
+            ? "rgba(255, 255, 255, 0.15)"
+            : "rgba(0, 0, 0, 0.12)";
 
     return (
         <Animated.View
             style={[
-                styles.dotOuter,
+                dotStyles.outer,
                 { transform: [{ translateX: shakeAnim }] },
             ]}
         >
             <Animated.View
                 style={[
-                    styles.dotGlow,
+                    dotStyles.glow,
                     { backgroundColor: glowColor, opacity: glowOpacity },
                 ]}
             />
-            <View
-                style={[
-                    styles.dotRing,
-                    {
-                        borderColor: error
-                            ? "rgba(239, 68, 68, 0.5)"
-                            : "rgba(255, 255, 255, 0.15)",
-                    },
-                ]}
-            >
+            <View style={[dotStyles.ring, { borderColor: ringColor }]}>
                 <Animated.View
                     style={[
-                        styles.dotFill,
+                        dotStyles.fill,
                         { backgroundColor: dotColor, transform: [{ scale }] },
                     ]}
                 />
@@ -164,10 +172,14 @@ function NumKey({
     label,
     onPress,
     disabled,
+    theme,
+    isDark,
 }: {
     label: string;
     onPress: () => void;
     disabled: boolean;
+    theme: ReturnType<typeof useTheme>;
+    isDark: boolean;
 }) {
     const pressAnim = useRef(new Animated.Value(1)).current;
 
@@ -195,22 +207,35 @@ function NumKey({
             onPressIn={handlePressIn}
             onPressOut={handlePressOut}
             disabled={disabled}
-            style={styles.keyTouchable}
+            style={keypadStyles.touchable}
         >
             <Animated.View
                 style={[
-                    styles.keyOuter,
+                    keypadStyles.outer,
                     {
                         transform: [{ scale: pressAnim }],
                         opacity: disabled ? 0.3 : 1,
+                        backgroundColor: isDark
+                            ? "rgba(255, 255, 255, 0.06)"
+                            : "rgba(0, 0, 0, 0.03)",
+                        borderColor: isDark
+                            ? "rgba(255, 255, 255, 0.08)"
+                            : "rgba(0, 0, 0, 0.06)",
                     },
                 ]}
             >
-                <LinearGradient
-                    colors={["rgba(255,255,255,0.08)", "rgba(255,255,255,0.02)"]}
-                    style={styles.keyGlass}
-                />
-                <Text style={styles.keyLabel}>{label}</Text>
+                <Text
+                    style={[
+                        keypadStyles.label,
+                        {
+                            color: isDark
+                                ? "rgba(255, 255, 255, 0.85)"
+                                : theme.colors.text,
+                        },
+                    ]}
+                >
+                    {label}
+                </Text>
             </Animated.View>
         </TouchableOpacity>
     );
@@ -223,6 +248,14 @@ function SecurityQuestionsStep({
     onComplete: (q1: string, a1: string, q2: string, a2: string) => void;
     onBack: () => void;
 }) {
+    const theme = useTheme();
+    const { themeMode } = useThemeContext();
+    const systemColorScheme = useColorScheme();
+    const isDark =
+        themeMode === "system"
+            ? systemColorScheme === "dark"
+            : themeMode === "dark";
+
     const [q1, setQ1] = useState("");
     const [a1, setA1] = useState("");
     const [q2, setQ2] = useState("");
@@ -232,30 +265,64 @@ function SecurityQuestionsStep({
     const scrollRef = useRef<ScrollView>(null);
 
     const availableForQ2 = SECURITY_QUESTIONS.filter((q) => q !== q1);
-    const canContinue = q1 && a1.trim().length >= 2 && q2 && a2.trim().length >= 2 && q1 !== q2;
+    const canContinue =
+        q1 && a1.trim().length >= 2 && q2 && a2.trim().length >= 2 && q1 !== q2;
 
     const scrollToInput = (y: number) => {
         setTimeout(() => {
-            scrollRef.current?.scrollTo({ y: Math.max(0, y - 150), animated: true });
+            scrollRef.current?.scrollTo({
+                y: Math.max(0, y - 150),
+                animated: true,
+            });
         }, 300);
     };
 
+    const inputBg = isDark
+        ? "rgba(255, 255, 255, 0.06)"
+        : "rgba(0, 0, 0, 0.03)";
+    const inputBorder = isDark
+        ? "rgba(255, 255, 255, 0.08)"
+        : "rgba(0, 0, 0, 0.08)";
+    const placeholderColor = isDark
+        ? "rgba(255,255,255,0.25)"
+        : "rgba(0,0,0,0.25)";
+
     return (
-        <View style={styles.container}>
-            <StatusBar style="light" backgroundColor="#0B0F1A" />
-            <LinearGradient
-                colors={["#0B0F1A", "#131B2E", "#1A1040"]}
-                start={{ x: 0.2, y: 0 }}
-                end={{ x: 0.8, y: 1 }}
-                style={StyleSheet.absoluteFill}
+        <View
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background },
+            ]}
+        >
+            <StatusBar
+                style={isDark ? "light" : "dark"}
+                backgroundColor={theme.colors.background}
             />
+            <WaveBackground isDark={isDark} primary={theme.colors.primary} />
 
             <TouchableOpacity
-                style={styles.backButton}
+                style={[
+                    styles.backButton,
+                    {
+                        backgroundColor: isDark
+                            ? "rgba(255, 255, 255, 0.06)"
+                            : "rgba(0, 0, 0, 0.04)",
+                        borderColor: isDark
+                            ? "rgba(255, 255, 255, 0.08)"
+                            : "rgba(0, 0, 0, 0.06)",
+                    },
+                ]}
                 onPress={onQuestionsBack}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft size={22} color="rgba(255, 255, 255, 0.7)" />
+                <ArrowLeft
+                    size={22}
+                    color={
+                        isDark
+                            ? "rgba(255, 255, 255, 0.7)"
+                            : "rgba(0, 0, 0, 0.5)"
+                    }
+                />
             </TouchableOpacity>
 
             <KeyboardAvoidingView
@@ -268,43 +335,147 @@ function SecurityQuestionsStep({
                     keyboardShouldPersistTaps="handled"
                     showsVerticalScrollIndicator={false}
                 >
-                    <View style={sqStyles.iconCircle}>
-                        <Shield size={28} color="#6366F1" />
+                    <View
+                        style={[
+                            sqStyles.iconCircle,
+                            {
+                                backgroundColor: isDark
+                                    ? "rgba(99, 102, 241, 0.15)"
+                                    : "rgba(99, 102, 241, 0.1)",
+                            },
+                        ]}
+                    >
+                        <Shield size={28} color={theme.colors.primary} />
                     </View>
-                    <Text style={sqStyles.title}>Security Questions</Text>
-                    <Text style={sqStyles.subtitle}>
+                    <Text
+                        style={[
+                            sqStyles.title,
+                            { color: theme.colors.text },
+                        ]}
+                    >
+                        Security Questions
+                    </Text>
+                    <Text
+                        style={[
+                            sqStyles.subtitle,
+                            { color: theme.colors.textSecondary },
+                        ]}
+                    >
                         These will help you recover your PIN if you forget it
                     </Text>
 
                     <View style={sqStyles.questionBlock}>
-                        <Text style={sqStyles.label}>Question 1</Text>
-                        <TouchableOpacity
-                            style={sqStyles.picker}
-                            onPress={() => { setShowQ1Picker(!showQ1Picker); setShowQ2Picker(false); }}
+                        <Text
+                            style={[
+                                sqStyles.label,
+                                { color: theme.colors.textSecondary },
+                            ]}
                         >
-                            <Text style={[sqStyles.pickerText, !q1 && sqStyles.placeholder]}>
+                            Question 1
+                        </Text>
+                        <TouchableOpacity
+                            style={[
+                                sqStyles.picker,
+                                {
+                                    backgroundColor: inputBg,
+                                    borderColor: inputBorder,
+                                },
+                            ]}
+                            onPress={() => {
+                                setShowQ1Picker(!showQ1Picker);
+                                setShowQ2Picker(false);
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    sqStyles.pickerText,
+                                    { color: theme.colors.text },
+                                    !q1 && {
+                                        color: placeholderColor,
+                                    },
+                                ]}
+                            >
                                 {q1 || "Select a question"}
                             </Text>
-                            <ChevronDown size={18} color="rgba(255,255,255,0.4)" />
+                            <ChevronDown
+                                size={18}
+                                color={theme.colors.textSecondary}
+                            />
                         </TouchableOpacity>
                         {showQ1Picker && (
-                            <View style={sqStyles.dropdown}>
+                            <View
+                                style={[
+                                    sqStyles.dropdown,
+                                    {
+                                        backgroundColor: isDark
+                                            ? "rgba(30, 30, 50, 0.98)"
+                                            : "rgba(255, 255, 255, 0.98)",
+                                        borderColor: isDark
+                                            ? "rgba(255, 255, 255, 0.1)"
+                                            : "rgba(0, 0, 0, 0.08)",
+                                    },
+                                ]}
+                            >
                                 {SECURITY_QUESTIONS.map((q) => (
                                     <TouchableOpacity
                                         key={q}
-                                        style={[sqStyles.dropdownItem, q === q1 && sqStyles.dropdownItemActive]}
-                                        onPress={() => { setQ1(q); setShowQ1Picker(false); if (q === q2) setQ2(""); }}
+                                        style={[
+                                            sqStyles.dropdownItem,
+                                            {
+                                                borderBottomColor: isDark
+                                                    ? "rgba(255, 255, 255, 0.06)"
+                                                    : "rgba(0, 0, 0, 0.05)",
+                                            },
+                                            q === q1 && {
+                                                backgroundColor: isDark
+                                                    ? "rgba(99, 102, 241, 0.1)"
+                                                    : "rgba(99, 102, 241, 0.06)",
+                                            },
+                                        ]}
+                                        onPress={() => {
+                                            setQ1(q);
+                                            setShowQ1Picker(false);
+                                            if (q === q2) setQ2("");
+                                        }}
                                     >
-                                        <Text style={[sqStyles.dropdownText, q === q1 && sqStyles.dropdownTextActive]}>{q}</Text>
-                                        {q === q1 && <Check size={16} color="#6366F1" />}
+                                        <Text
+                                            style={[
+                                                sqStyles.dropdownText,
+                                                {
+                                                    color: isDark
+                                                        ? "rgba(255, 255, 255, 0.7)"
+                                                        : "rgba(0, 0, 0, 0.6)",
+                                                },
+                                                q === q1 && {
+                                                    color: theme.colors
+                                                        .primary,
+                                                    fontWeight: "600",
+                                                },
+                                            ]}
+                                        >
+                                            {q}
+                                        </Text>
+                                        {q === q1 && (
+                                            <Check
+                                                size={16}
+                                                color={theme.colors.primary}
+                                            />
+                                        )}
                                     </TouchableOpacity>
                                 ))}
                             </View>
                         )}
                         <TextInput
-                            style={sqStyles.input}
+                            style={[
+                                sqStyles.input,
+                                {
+                                    backgroundColor: inputBg,
+                                    borderColor: inputBorder,
+                                    color: theme.colors.text,
+                                },
+                            ]}
                             placeholder="Your answer"
-                            placeholderTextColor="rgba(255,255,255,0.25)"
+                            placeholderTextColor={placeholderColor}
                             value={a1}
                             onChangeText={setA1}
                             autoCapitalize="none"
@@ -313,43 +484,127 @@ function SecurityQuestionsStep({
                                 setShowQ2Picker(false);
                                 const target = e.target;
                                 setTimeout(() => {
-                                    (target as any).measureInWindow?.((
-                                        _x: number, y: number,
-                                    ) => { scrollToInput(y); });
+                                    (target as any).measureInWindow?.(
+                                        (_x: number, y: number) => {
+                                            scrollToInput(y);
+                                        }
+                                    );
                                 }, 100);
                             }}
                         />
                     </View>
 
                     <View style={sqStyles.questionBlock}>
-                        <Text style={sqStyles.label}>Question 2</Text>
-                        <TouchableOpacity
-                            style={sqStyles.picker}
-                            onPress={() => { setShowQ2Picker(!showQ2Picker); setShowQ1Picker(false); }}
+                        <Text
+                            style={[
+                                sqStyles.label,
+                                { color: theme.colors.textSecondary },
+                            ]}
                         >
-                            <Text style={[sqStyles.pickerText, !q2 && sqStyles.placeholder]}>
+                            Question 2
+                        </Text>
+                        <TouchableOpacity
+                            style={[
+                                sqStyles.picker,
+                                {
+                                    backgroundColor: inputBg,
+                                    borderColor: inputBorder,
+                                },
+                            ]}
+                            onPress={() => {
+                                setShowQ2Picker(!showQ2Picker);
+                                setShowQ1Picker(false);
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    sqStyles.pickerText,
+                                    { color: theme.colors.text },
+                                    !q2 && {
+                                        color: placeholderColor,
+                                    },
+                                ]}
+                            >
                                 {q2 || "Select a question"}
                             </Text>
-                            <ChevronDown size={18} color="rgba(255,255,255,0.4)" />
+                            <ChevronDown
+                                size={18}
+                                color={theme.colors.textSecondary}
+                            />
                         </TouchableOpacity>
                         {showQ2Picker && (
-                            <View style={sqStyles.dropdown}>
+                            <View
+                                style={[
+                                    sqStyles.dropdown,
+                                    {
+                                        backgroundColor: isDark
+                                            ? "rgba(30, 30, 50, 0.98)"
+                                            : "rgba(255, 255, 255, 0.98)",
+                                        borderColor: isDark
+                                            ? "rgba(255, 255, 255, 0.1)"
+                                            : "rgba(0, 0, 0, 0.08)",
+                                    },
+                                ]}
+                            >
                                 {availableForQ2.map((q) => (
                                     <TouchableOpacity
                                         key={q}
-                                        style={[sqStyles.dropdownItem, q === q2 && sqStyles.dropdownItemActive]}
-                                        onPress={() => { setQ2(q); setShowQ2Picker(false); }}
+                                        style={[
+                                            sqStyles.dropdownItem,
+                                            {
+                                                borderBottomColor: isDark
+                                                    ? "rgba(255, 255, 255, 0.06)"
+                                                    : "rgba(0, 0, 0, 0.05)",
+                                            },
+                                            q === q2 && {
+                                                backgroundColor: isDark
+                                                    ? "rgba(99, 102, 241, 0.1)"
+                                                    : "rgba(99, 102, 241, 0.06)",
+                                            },
+                                        ]}
+                                        onPress={() => {
+                                            setQ2(q);
+                                            setShowQ2Picker(false);
+                                        }}
                                     >
-                                        <Text style={[sqStyles.dropdownText, q === q2 && sqStyles.dropdownTextActive]}>{q}</Text>
-                                        {q === q2 && <Check size={16} color="#6366F1" />}
+                                        <Text
+                                            style={[
+                                                sqStyles.dropdownText,
+                                                {
+                                                    color: isDark
+                                                        ? "rgba(255, 255, 255, 0.7)"
+                                                        : "rgba(0, 0, 0, 0.6)",
+                                                },
+                                                q === q2 && {
+                                                    color: theme.colors
+                                                        .primary,
+                                                    fontWeight: "600",
+                                                },
+                                            ]}
+                                        >
+                                            {q}
+                                        </Text>
+                                        {q === q2 && (
+                                            <Check
+                                                size={16}
+                                                color={theme.colors.primary}
+                                            />
+                                        )}
                                     </TouchableOpacity>
                                 ))}
                             </View>
                         )}
                         <TextInput
-                            style={sqStyles.input}
+                            style={[
+                                sqStyles.input,
+                                {
+                                    backgroundColor: inputBg,
+                                    borderColor: inputBorder,
+                                    color: theme.colors.text,
+                                },
+                            ]}
                             placeholder="Your answer"
-                            placeholderTextColor="rgba(255,255,255,0.25)"
+                            placeholderTextColor={placeholderColor}
                             value={a2}
                             onChangeText={setA2}
                             autoCapitalize="none"
@@ -358,20 +613,42 @@ function SecurityQuestionsStep({
                                 setShowQ2Picker(false);
                                 const target = e.target;
                                 setTimeout(() => {
-                                    (target as any).measureInWindow?.((
-                                        _x: number, y: number,
-                                    ) => { scrollToInput(y); });
+                                    (target as any).measureInWindow?.(
+                                        (_x: number, y: number) => {
+                                            scrollToInput(y);
+                                        }
+                                    );
                                 }, 100);
                             }}
                         />
                     </View>
 
                     <TouchableOpacity
-                        style={[sqStyles.continueBtn, !canContinue && sqStyles.continueBtnDisabled]}
+                        style={[
+                            sqStyles.continueBtn,
+                            {
+                                backgroundColor: canContinue
+                                    ? theme.colors.primary
+                                    : isDark
+                                        ? "rgba(99, 102, 241, 0.25)"
+                                        : "rgba(99, 102, 241, 0.3)",
+                            },
+                        ]}
                         disabled={!canContinue}
                         onPress={() => onQuestionsComplete(q1, a1, q2, a2)}
                     >
-                        <Text style={[sqStyles.continueBtnText, !canContinue && sqStyles.continueBtnTextDisabled]}>
+                        <Text
+                            style={[
+                                sqStyles.continueBtnText,
+                                {
+                                    color: canContinue
+                                        ? "white"
+                                        : isDark
+                                            ? "rgba(255, 255, 255, 0.4)"
+                                            : "rgba(255, 255, 255, 0.6)",
+                                },
+                            ]}
+                        >
                             Continue
                         </Text>
                     </TouchableOpacity>
@@ -381,18 +658,38 @@ function SecurityQuestionsStep({
     );
 }
 
-export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenProps) {
-    const [stage, setStage] = useState<"questions" | "create" | "confirm">("questions");
+export default function PinSetupScreen({
+    onComplete,
+    onBack,
+}: PinSetupScreenProps) {
+    const theme = useTheme();
+    const { themeMode } = useThemeContext();
+    const systemColorScheme = useColorScheme();
+    const isDark =
+        themeMode === "system"
+            ? systemColorScheme === "dark"
+            : themeMode === "dark";
+
+    const [stage, setStage] = useState<"questions" | "create" | "confirm">(
+        "questions"
+    );
     const [pin, setPin] = useState("");
     const [firstPin, setFirstPin] = useState("");
     const [error, setError] = useState(false);
     const [errorMessage, setErrorMessage] = useState("");
     const [saving, setSaving] = useState(false);
-    const [securityData, setSecurityData] = useState<{ q1: string; a1: string; q2: string; a2: string } | null>(null);
+    const [securityData, setSecurityData] = useState<{
+        q1: string;
+        a1: string;
+        q2: string;
+        a2: string;
+    } | null>(null);
 
     const shakeAnim = useRef(new Animated.Value(0)).current;
     const fadeIn = useRef(new Animated.Value(0)).current;
     const stageOpacity = useRef(new Animated.Value(1)).current;
+
+    const iconColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)";
 
     useEffect(() => {
         Animated.timing(fadeIn, {
@@ -435,20 +732,20 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
         [stageOpacity]
     );
 
-    const handleQuestionsComplete = useCallback((q1: string, a1: string, q2: string, a2: string) => {
-        setSecurityData({ q1, a1, q2, a2 });
-        setStage("create");
-    }, []);
+    const handleQuestionsComplete = useCallback(
+        (q1: string, a1: string, q2: string, a2: string) => {
+            setSecurityData({ q1, a1, q2, a2 });
+            setStage("create");
+        },
+        []
+    );
 
     const handleDigit = useCallback(
         async (digit: string) => {
             if (error || saving) return;
-
             const next = pin + digit;
             if (next.length > 4) return;
-
             setPin(next);
-
             if (next.length === 4) {
                 if (stage === "create") {
                     setFirstPin(next);
@@ -462,7 +759,7 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                                 securityData.q1,
                                 securityData.a1,
                                 securityData.q2,
-                                securityData.a2,
+                                securityData.a2
                             );
                         }
                         onComplete();
@@ -478,7 +775,17 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                 }
             }
         },
-        [pin, stage, firstPin, error, saving, securityData, onComplete, triggerShake, transitionToStage]
+        [
+            pin,
+            stage,
+            firstPin,
+            error,
+            saving,
+            securityData,
+            onComplete,
+            triggerShake,
+            transitionToStage,
+        ]
     );
 
     const handleDelete = useCallback(() => {
@@ -496,28 +803,38 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
     }
 
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
-
-    const title = stage === "create" ? "Create Your PIN" : "Confirm Your PIN";
-    const subtitle = stage === "create"
-        ? "Choose a 4-digit PIN"
-        : "Re-enter your PIN to confirm";
+    const title =
+        stage === "create" ? "Create Your PIN" : "Confirm Your PIN";
+    const subtitle =
+        stage === "create"
+            ? "Choose a 4-digit PIN"
+            : "Re-enter your PIN to confirm";
 
     return (
-        <View style={styles.container}>
-            <StatusBar style="light" backgroundColor="#0B0F1A" />
-            <LinearGradient
-                colors={["#0B0F1A", "#131B2E", "#1A1040"]}
-                start={{ x: 0.2, y: 0 }}
-                end={{ x: 0.8, y: 1 }}
-                style={StyleSheet.absoluteFill}
+        <View
+            style={[
+                styles.container,
+                { backgroundColor: theme.colors.background },
+            ]}
+        >
+            <StatusBar
+                style={isDark ? "light" : "dark"}
+                backgroundColor={theme.colors.background}
             />
-
-            <FloatingOrb size={180} color="rgba(99, 102, 241, 0.05)" startX={-30} startY={height * 0.08} delay={0} />
-            <FloatingOrb size={140} color="rgba(168, 85, 247, 0.04)" startX={width - 60} startY={height * 0.2} delay={500} />
-            <FloatingOrb size={100} color="rgba(59, 130, 246, 0.04)" startX={width * 0.25} startY={height * 0.75} delay={300} />
+            <WaveBackground isDark={isDark} primary={theme.colors.primary} />
 
             <TouchableOpacity
-                style={styles.backButton}
+                style={[
+                    styles.backButton,
+                    {
+                        backgroundColor: isDark
+                            ? "rgba(255, 255, 255, 0.06)"
+                            : "rgba(0, 0, 0, 0.04)",
+                        borderColor: isDark
+                            ? "rgba(255, 255, 255, 0.08)"
+                            : "rgba(0, 0, 0, 0.06)",
+                    },
+                ]}
                 onPress={() => {
                     if (stage === "create") {
                         setStage("questions");
@@ -528,13 +845,36 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                 }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft size={22} color="rgba(255, 255, 255, 0.7)" />
+                <ArrowLeft
+                    size={22}
+                    color={
+                        isDark
+                            ? "rgba(255, 255, 255, 0.7)"
+                            : "rgba(0, 0, 0, 0.5)"
+                    }
+                />
             </TouchableOpacity>
 
             <Animated.View style={[styles.content, { opacity: fadeIn }]}>
-                <Animated.View style={{ opacity: stageOpacity, alignItems: "center" }}>
-                    <Text style={styles.title}>{title}</Text>
-                    <Text style={styles.subtitle}>{subtitle}</Text>
+                <Animated.View
+                    style={{ opacity: stageOpacity, alignItems: "center" }}
+                >
+                    <Text
+                        style={[
+                            styles.title,
+                            { color: theme.colors.text },
+                        ]}
+                    >
+                        {title}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.subtitle,
+                            { color: theme.colors.textSecondary },
+                        ]}
+                    >
+                        {subtitle}
+                    </Text>
 
                     <View style={styles.dotsRow}>
                         {[0, 1, 2, 3].map((i) => (
@@ -543,38 +883,48 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                                 filled={i < pin.length}
                                 error={error}
                                 shakeAnim={shakeAnim}
+                                theme={theme}
+                                isDark={isDark}
                             />
                         ))}
                     </View>
 
                     {errorMessage ? (
-                        <Text style={styles.errorText}>{errorMessage}</Text>
+                        <Text
+                            style={[
+                                styles.errorText,
+                                { color: theme.colors.error },
+                            ]}
+                        >
+                            {errorMessage}
+                        </Text>
                     ) : (
                         <View style={styles.errorPlaceholder} />
                     )}
                 </Animated.View>
 
-                <View style={styles.keypad}>
+                <View style={keypadStyles.keypad}>
                     {keys.map((k) => (
                         <NumKey
                             key={k}
                             label={k}
                             onPress={() => handleDigit(k)}
                             disabled={saving}
+                            theme={theme}
+                            isDark={isDark}
                         />
                     ))}
-
-                    <View style={styles.keyTouchable} />
-
+                    <View style={keypadStyles.touchable} />
                     <NumKey
                         label="0"
                         onPress={() => handleDigit("0")}
                         disabled={saving}
+                        theme={theme}
+                        isDark={isDark}
                     />
-
-                    <View style={styles.keyTouchable}>
+                    <View style={keypadStyles.touchable}>
                         <TouchableOpacity
-                            style={styles.actionKey}
+                            style={keypadStyles.actionKey}
                             onPress={handleDelete}
                             disabled={saving || pin.length === 0}
                         >
@@ -582,8 +932,10 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
                                 size={24}
                                 color={
                                     saving || pin.length === 0
-                                        ? "rgba(255,255,255,0.15)"
-                                        : "rgba(255,255,255,0.7)"
+                                        ? isDark
+                                            ? "rgba(255,255,255,0.15)"
+                                            : "rgba(0,0,0,0.1)"
+                                        : iconColor
                                 }
                             />
                         </TouchableOpacity>
@@ -595,6 +947,68 @@ export default function PinSetupScreen({ onComplete, onBack }: PinSetupScreenPro
 }
 
 const KEY_SIZE = Math.min((width - 120) / 3, 76);
+
+const dotStyles = StyleSheet.create({
+    outer: {
+        width: 20,
+        height: 20,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    glow: {
+        position: "absolute",
+        width: 28,
+        height: 28,
+        borderRadius: 14,
+    },
+    ring: {
+        width: 14,
+        height: 14,
+        borderRadius: 7,
+        borderWidth: 1.5,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    fill: {
+        width: 8,
+        height: 8,
+        borderRadius: 4,
+    },
+});
+
+const keypadStyles = StyleSheet.create({
+    keypad: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        width: KEY_SIZE * 3 + 36,
+        marginTop: 20,
+        gap: 12,
+    },
+    touchable: {
+        width: KEY_SIZE,
+        height: KEY_SIZE,
+    },
+    outer: {
+        width: "100%",
+        height: "100%",
+        borderRadius: KEY_SIZE / 2,
+        alignItems: "center",
+        justifyContent: "center",
+        borderWidth: 1,
+    },
+    label: {
+        fontSize: 26,
+        fontWeight: "300",
+        letterSpacing: 0.5,
+    },
+    actionKey: {
+        width: "100%",
+        height: "100%",
+        alignItems: "center",
+        justifyContent: "center",
+    },
+});
 
 const styles = StyleSheet.create({
     container: {
@@ -608,9 +1022,7 @@ const styles = StyleSheet.create({
         width: 40,
         height: 40,
         borderRadius: 14,
-        backgroundColor: "rgba(255, 255, 255, 0.06)",
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.08)",
         alignItems: "center",
         justifyContent: "center",
     },
@@ -623,14 +1035,12 @@ const styles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: "600",
-        color: "rgba(255, 255, 255, 0.85)",
         letterSpacing: 1,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 13,
         fontWeight: "400",
-        color: "rgba(255, 255, 255, 0.4)",
         letterSpacing: 0.5,
         marginBottom: 32,
     },
@@ -639,78 +1049,14 @@ const styles = StyleSheet.create({
         gap: 20,
         marginBottom: 8,
     },
-    dotOuter: {
-        width: 20,
-        height: 20,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    dotGlow: {
-        position: "absolute",
-        width: 28,
-        height: 28,
-        borderRadius: 14,
-    },
-    dotRing: {
-        width: 14,
-        height: 14,
-        borderRadius: 7,
-        borderWidth: 1.5,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    dotFill: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
     errorText: {
         fontSize: 12,
-        color: "rgba(239, 68, 68, 0.85)",
         letterSpacing: 0.5,
         marginTop: 4,
         height: 18,
     },
     errorPlaceholder: {
         height: 22,
-    },
-    keypad: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        width: KEY_SIZE * 3 + 36,
-        marginTop: 20,
-        gap: 12,
-    },
-    keyTouchable: {
-        width: KEY_SIZE,
-        height: KEY_SIZE,
-    },
-    keyOuter: {
-        width: "100%",
-        height: "100%",
-        borderRadius: KEY_SIZE / 2,
-        alignItems: "center",
-        justifyContent: "center",
-        overflow: "hidden",
-        borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.06)",
-    },
-    keyGlass: {
-        ...StyleSheet.absoluteFillObject,
-        borderRadius: KEY_SIZE / 2,
-    },
-    keyLabel: {
-        fontSize: 26,
-        fontWeight: "300",
-        color: "rgba(255, 255, 255, 0.85)",
-        letterSpacing: 0.5,
-    },
-    actionKey: {
-        width: "100%",
-        height: "100%",
-        alignItems: "center",
-        justifyContent: "center",
     },
 });
 
@@ -725,7 +1071,6 @@ const sqStyles = StyleSheet.create({
         width: 64,
         height: 64,
         borderRadius: 20,
-        backgroundColor: "rgba(99, 102, 241, 0.15)",
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 20,
@@ -733,13 +1078,11 @@ const sqStyles = StyleSheet.create({
     title: {
         fontSize: 20,
         fontWeight: "600",
-        color: "rgba(255, 255, 255, 0.85)",
         letterSpacing: 1,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 13,
-        color: "rgba(255, 255, 255, 0.4)",
         letterSpacing: 0.5,
         marginBottom: 36,
         textAlign: "center",
@@ -751,7 +1094,6 @@ const sqStyles = StyleSheet.create({
     label: {
         fontSize: 12,
         fontWeight: "700",
-        color: "rgba(255, 255, 255, 0.5)",
         textTransform: "uppercase",
         letterSpacing: 0.8,
         marginBottom: 8,
@@ -760,10 +1102,8 @@ const sqStyles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "space-between",
-        backgroundColor: "rgba(255, 255, 255, 0.06)",
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.08)",
         paddingHorizontal: 16,
         height: 48,
         marginBottom: 10,
@@ -771,16 +1111,10 @@ const sqStyles = StyleSheet.create({
     pickerText: {
         flex: 1,
         fontSize: 14,
-        color: "rgba(255, 255, 255, 0.85)",
-    },
-    placeholder: {
-        color: "rgba(255, 255, 255, 0.25)",
     },
     dropdown: {
-        backgroundColor: "rgba(30, 30, 50, 0.98)",
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.1)",
         marginBottom: 10,
         overflow: "hidden",
     },
@@ -790,49 +1124,29 @@ const sqStyles = StyleSheet.create({
         paddingHorizontal: 16,
         paddingVertical: 13,
         borderBottomWidth: StyleSheet.hairlineWidth,
-        borderBottomColor: "rgba(255, 255, 255, 0.06)",
-    },
-    dropdownItemActive: {
-        backgroundColor: "rgba(99, 102, 241, 0.1)",
     },
     dropdownText: {
         flex: 1,
         fontSize: 13,
-        color: "rgba(255, 255, 255, 0.7)",
-    },
-    dropdownTextActive: {
-        color: "#6366F1",
-        fontWeight: "600",
     },
     input: {
-        backgroundColor: "rgba(255, 255, 255, 0.06)",
         borderRadius: 12,
         borderWidth: 1,
-        borderColor: "rgba(255, 255, 255, 0.08)",
         paddingHorizontal: 16,
         height: 48,
         fontSize: 14,
-        color: "rgba(255, 255, 255, 0.85)",
     },
     continueBtn: {
         width: "100%",
         height: 52,
         borderRadius: 14,
-        backgroundColor: "#6366F1",
         alignItems: "center",
         justifyContent: "center",
         marginTop: 12,
     },
-    continueBtnDisabled: {
-        backgroundColor: "rgba(99, 102, 241, 0.25)",
-    },
     continueBtnText: {
         fontSize: 15,
         fontWeight: "700",
-        color: "white",
         letterSpacing: 0.3,
-    },
-    continueBtnTextDisabled: {
-        color: "rgba(255, 255, 255, 0.4)",
     },
 });

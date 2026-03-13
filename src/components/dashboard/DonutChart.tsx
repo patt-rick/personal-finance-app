@@ -15,6 +15,7 @@ interface DonutChartProps {
     currencySymbol: string;
     centerOverride?: React.ReactNode;
     hideLegend?: boolean;
+    midTotal?: number;
 }
 
 const SIZE = 160;
@@ -23,7 +24,14 @@ const RADIUS = (SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const GAP_DEGREES = 4;
 
-export default function DonutChart({ data, total, currencySymbol, centerOverride, hideLegend }: DonutChartProps) {
+export default function DonutChart({
+    data,
+    total,
+    currencySymbol,
+    centerOverride,
+    hideLegend,
+    midTotal,
+}: DonutChartProps) {
     const theme = useTheme();
 
     const gapPerSegment = data.length > 1 ? GAP_DEGREES / 360 : 0;
@@ -78,12 +86,20 @@ export default function DonutChart({ data, total, currencySymbol, centerOverride
                 <View style={styles.centerLabel}>
                     {centerOverride ?? (
                         <>
-                            <Text style={[styles.centerSmall, { color: theme.colors.textSecondary }]}>
-                                Total
+                            <Text
+                                style={[styles.centerSmall, { color: theme.colors.textSecondary }]}
+                            >
+                                {midTotal ? "Balance" : "Total"}
                             </Text>
                             <Text style={[styles.centerBig, { color: theme.colors.text }]}>
                                 {currencySymbol}
-                                {total.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                {midTotal
+                                    ? midTotal.toLocaleString(undefined, {
+                                          maximumFractionDigits: 0,
+                                      })
+                                    : total.toLocaleString(undefined, {
+                                          maximumFractionDigits: 0,
+                                      })}
                             </Text>
                         </>
                     )}
@@ -98,7 +114,10 @@ export default function DonutChart({ data, total, currencySymbol, centerOverride
                             <View key={i} style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: item.color }]} />
                                 <Text
-                                    style={[styles.legendLabel, { color: theme.colors.textSecondary }]}
+                                    style={[
+                                        styles.legendLabel,
+                                        { color: theme.colors.textSecondary },
+                                    ]}
                                     numberOfLines={1}
                                 >
                                     {item.label}

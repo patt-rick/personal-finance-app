@@ -214,63 +214,16 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
                                 <Text style={styles.avatarText}>{initials}</Text>
                             </View>
                             <View style={styles.profileInfo}>
-                                {isEditing ? (
-                                    <>
-                                        <View style={styles.editInputRow}>
-                                            <User size={16} color={theme.colors.textSecondary} />
-                                            <TextInput
-                                                style={styles.editInput}
-                                                value={name}
-                                                onChangeText={setName}
-                                                placeholder="Full Name"
-                                                placeholderTextColor={theme.colors.placeholder}
-                                                autoFocus
-                                            />
-                                        </View>
-                                        <View style={styles.editInputRow}>
-                                            <Mail size={16} color={theme.colors.textSecondary} />
-                                            <TextInput
-                                                style={styles.editInput}
-                                                value={email}
-                                                onChangeText={setEmail}
-                                                placeholder="Email address"
-                                                placeholderTextColor={theme.colors.placeholder}
-                                                keyboardType="email-address"
-                                                autoCapitalize="none"
-                                            />
-                                        </View>
-                                    </>
+                                <Text style={styles.profileName}>{name || "New User"}</Text>
+                                {email ? (
+                                    <Text style={styles.profileEmail}>{email}</Text>
                                 ) : (
-                                    <>
-                                        <Text style={styles.profileName}>{name || "New User"}</Text>
-                                        {email ? (
-                                            <Text style={styles.profileEmail}>{email}</Text>
-                                        ) : (
-                                            <Text style={[styles.profileEmail, { fontStyle: "italic" }]}>
-                                                No email set
-                                            </Text>
-                                        )}
-                                    </>
+                                    <Text style={[styles.profileEmail, { fontStyle: "italic" }]}>
+                                        No email set
+                                    </Text>
                                 )}
                             </View>
-                            {isEditing ? (
-                                <View style={{ flexDirection: "row", gap: 8 }}>
-                                    <TouchableOpacity
-                                        style={styles.editActionBtn}
-                                        onPress={handleCancelEdit}
-                                    >
-                                        <Text style={[styles.editActionText, { color: theme.colors.textSecondary }]}>
-                                            Cancel
-                                        </Text>
-                                    </TouchableOpacity>
-                                    <TouchableOpacity
-                                        style={[styles.editActionBtn, { backgroundColor: theme.colors.primary }]}
-                                        onPress={handleSave}
-                                    >
-                                        <Check size={16} color="white" />
-                                    </TouchableOpacity>
-                                </View>
-                            ) : (
+                            {!isEditing && (
                                 <TouchableOpacity
                                     style={styles.editBtn}
                                     onPress={() => setIsEditing(true)}
@@ -279,6 +232,55 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
                                 </TouchableOpacity>
                             )}
                         </View>
+
+                        {isEditing && (
+                            <View style={styles.editSection}>
+                                <View style={styles.editFieldGroup}>
+                                    <Text style={styles.editFieldLabel}>Name</Text>
+                                    <View style={styles.editInputRow}>
+                                        <User size={16} color={theme.colors.textSecondary} />
+                                        <TextInput
+                                            style={styles.editInput}
+                                            value={name}
+                                            onChangeText={setName}
+                                            placeholder="Full Name"
+                                            placeholderTextColor={theme.colors.placeholder}
+                                            autoFocus
+                                        />
+                                    </View>
+                                </View>
+                                <View style={styles.editFieldGroup}>
+                                    <Text style={styles.editFieldLabel}>Email</Text>
+                                    <View style={styles.editInputRow}>
+                                        <Mail size={16} color={theme.colors.textSecondary} />
+                                        <TextInput
+                                            style={styles.editInput}
+                                            value={email}
+                                            onChangeText={setEmail}
+                                            placeholder="Email address"
+                                            placeholderTextColor={theme.colors.placeholder}
+                                            keyboardType="email-address"
+                                            autoCapitalize="none"
+                                        />
+                                    </View>
+                                </View>
+                                <View style={styles.editActions}>
+                                    <TouchableOpacity
+                                        style={styles.editCancelBtn}
+                                        onPress={handleCancelEdit}
+                                    >
+                                        <Text style={styles.editCancelText}>Cancel</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={styles.editSaveBtn}
+                                        onPress={handleSave}
+                                    >
+                                        <Check size={16} color="white" />
+                                        <Text style={styles.editSaveText}>Save</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        )}
                     </View>
 
                     {/* General Section */}
@@ -719,7 +721,7 @@ const createStyles = (theme: any) =>
         profileEmail: {
             fontSize: 13,
             color: theme.colors.textSecondary,
-            marginTop: 2,
+            marginTop: 3,
         },
         editBtn: {
             width: 36,
@@ -729,33 +731,73 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
         },
+        editSection: {
+            marginTop: 20,
+            paddingTop: 20,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: theme.colors.borderLight,
+        },
+        editFieldGroup: {
+            marginBottom: 16,
+        },
+        editFieldLabel: {
+            fontSize: 12,
+            fontWeight: "600",
+            color: theme.colors.textSecondary,
+            marginBottom: 8,
+            marginLeft: 2,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+        },
         editInputRow: {
             flexDirection: "row",
             alignItems: "center",
             backgroundColor: theme.colors.background,
-            borderRadius: 10,
-            paddingHorizontal: 10,
-            height: 38,
-            marginBottom: 6,
-            gap: 8,
+            borderRadius: 14,
+            paddingHorizontal: 14,
+            height: 48,
+            gap: 10,
+            borderWidth: 1,
+            borderColor: theme.colors.borderLight,
         },
         editInput: {
             flex: 1,
-            fontSize: 14,
+            fontSize: 15,
             color: theme.colors.text,
             padding: 0,
         },
-        editActionBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
+        editActions: {
+            flexDirection: "row",
+            gap: 10,
+            marginTop: 4,
+        },
+        editCancelBtn: {
+            flex: 1,
+            height: 46,
+            borderRadius: 14,
             backgroundColor: theme.colors.surface,
             alignItems: "center",
             justifyContent: "center",
         },
-        editActionText: {
-            fontSize: 11,
+        editCancelText: {
+            fontSize: 14,
             fontWeight: "600",
+            color: theme.colors.textSecondary,
+        },
+        editSaveBtn: {
+            flex: 1,
+            height: 46,
+            borderRadius: 14,
+            backgroundColor: theme.colors.primary,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+        },
+        editSaveText: {
+            fontSize: 14,
+            fontWeight: "700",
+            color: "white",
         },
 
         // Sections

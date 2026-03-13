@@ -138,7 +138,7 @@ function DashboardHome({
             { value: expense, color: theme.colors.expense, label: "Expense" },
         ].filter((d) => d.value > 0);
 
-        return { items, total };
+        return { items, total, midTotal: income - expense };
     }, [filteredTransactions]);
 
     const chartPages = useMemo(() => {
@@ -176,6 +176,7 @@ function DashboardHome({
                         data={pieData.items}
                         total={pieData.total}
                         currencySymbol={currencySymbol}
+                        midTotal={pieData.midTotal}
                     />
                 ),
             });
@@ -427,7 +428,7 @@ export default function DashboardScreen({
             };
             const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
             return () => subscription.remove();
-        }, [currentBusiness, setCurrentBusiness])
+        }, [currentBusiness, setCurrentBusiness]),
     );
 
     if (currentBusiness) {
