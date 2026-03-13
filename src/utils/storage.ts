@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
-import { Business, Transaction, UserProfile, Category, Budget } from "../types";
+import { Business, Transaction, UserProfile, Category, Budget, RecurringTransaction, Debt } from "../types";
 
 const STORAGE_KEYS = {
     BUSINESSES: "@businesses",
@@ -10,6 +10,8 @@ const STORAGE_KEYS = {
     USER_PROFILE: "@user_profile",
     CATEGORIES: "@categories",
     BUDGETS: "@budgets",
+    RECURRING_TRANSACTIONS: "@recurring_transactions",
+    DEBTS: "@debts",
 };
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -173,10 +175,52 @@ export const deleteBudget = async (budgetId: string): Promise<boolean> => {
     }
 };
 
+// Recurring Transactions Storage
+export const loadRecurringTransactions = async (): Promise<RecurringTransaction[]> => {
+    try {
+        const data = await AsyncStorage.getItem(STORAGE_KEYS.RECURRING_TRANSACTIONS);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error("Error loading recurring transactions:", error);
+        return [];
+    }
+};
+
+export const saveRecurringTransactions = async (items: RecurringTransaction[]): Promise<boolean> => {
+    try {
+        await AsyncStorage.setItem(STORAGE_KEYS.RECURRING_TRANSACTIONS, JSON.stringify(items));
+        return true;
+    } catch (error) {
+        console.error("Error saving recurring transactions:", error);
+        return false;
+    }
+};
+
+// Debts Storage
+export const loadDebts = async (): Promise<Debt[]> => {
+    try {
+        const data = await AsyncStorage.getItem(STORAGE_KEYS.DEBTS);
+        return data ? JSON.parse(data) : [];
+    } catch (error) {
+        console.error("Error loading debts:", error);
+        return [];
+    }
+};
+
+export const saveDebts = async (debts: Debt[]): Promise<boolean> => {
+    try {
+        await AsyncStorage.setItem(STORAGE_KEYS.DEBTS, JSON.stringify(debts));
+        return true;
+    } catch (error) {
+        console.error("Error saving debts:", error);
+        return false;
+    }
+};
+
 // Full Data Export/Import
 
 interface AppBackup {
-    version: 1;
+    version: 2;
     exportedAt: string;
     data: {
         businesses: Business[];
@@ -184,23 +228,27 @@ interface AppBackup {
         userProfile: UserProfile | null;
         categories: Category[];
         budgets: Budget[];
+        recurringTransactions: RecurringTransaction[];
+        debts: Debt[];
     };
 }
 
 export const exportAllData = async (): Promise<boolean> => {
     try {
-        const [businesses, transactions, userProfile, categories, budgets] = await Promise.all([
+        const [businesses, transactions, userProfile, categories, budgets, recurringTransactions, debts] = await Promise.all([
             loadBusinesses(),
             loadTransactions(),
             loadUserProfile(),
             loadCategories(),
             loadBudgets(),
+            loadRecurringTransactions(),
+            loadDebts(),
         ]);
 
         const backup: AppBackup = {
-            version: 1,
+            version: 2,
             exportedAt: new Date().toISOString(),
-            data: { businesses, transactions, userProfile, categories, budgets },
+            data: { businesses, transactions, userProfile, categories, budgets, recurringTransactions, debts },
         };
 
         const fileName = `finance_tracker_backup_${Date.now()}.json`;
@@ -248,7 +296,7 @@ export const importAllData = async (): Promise<boolean> => {
             throw new Error("Invalid backup file format");
         }
 
-        const { businesses, transactions, userProfile, categories, budgets } = backup.data;
+        const { businesses, transactions, userProfile, categories, budgets, recurringTransactions, debts } = backup.data;
 
         if (!Array.isArray(businesses) || !Array.isArray(transactions) || !Array.isArray(categories)) {
             throw new Error("Invalid backup data structure");
@@ -260,6 +308,8 @@ export const importAllData = async (): Promise<boolean> => {
             userProfile ? saveUserProfile(userProfile) : Promise.resolve(true),
             saveCategories(categories),
             saveBudgets(budgets || []),
+            saveRecurringTransactions(recurringTransactions || []),
+            saveDebts(debts || []),
         ]);
 
         return true;

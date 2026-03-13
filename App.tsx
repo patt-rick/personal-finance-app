@@ -4,14 +4,15 @@ import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { LayoutGrid, Landmark, Settings, PiggyBank } from "lucide-react-native";
+import { LayoutGrid, Landmark, Settings, PiggyBank, BarChart3 } from "lucide-react-native";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import BusinessesScreen from "./src/screens/BusinessesScreen";
 import BudgetDashboardScreen from "./src/screens/BudgetDashboardScreen";
+import ReportsScreen from "./src/screens/ReportsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 import LockScreen from "./src/screens/LockScreen";
-import { Business, Transaction, UserProfile } from "./src/types";
+import { Business, Transaction, UserProfile, RecurringTransaction, Debt } from "./src/types";
 import { useTheme } from "./src/theme/theme";
 import { ThemeProvider, useThemeContext } from "./src/theme/ThemeContext";
 import {
@@ -21,7 +22,12 @@ import {
     saveTransactions,
     loadUserProfile,
     saveUserProfile as apiSaveUserProfile,
+    loadRecurringTransactions,
+    saveRecurringTransactions as apiSaveRecurringTransactions,
+    loadDebts,
+    saveDebts as apiSaveDebts,
 } from "./src/utils/storage";
+import { processRecurringTransactions } from "./src/utils/recurringTransactions";
 import { scheduleReminders } from "./src/utils/notifications";
 import {
     isPinEnabled,
@@ -45,6 +51,8 @@ function MainApp() {
     const [businesses, setBusinesses] = useState<Business[]>([]);
     const [transactions, setTransactions] = useState<Transaction[]>([]);
     const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
+    const [recurringTransactions, setRecurringTransactions] = useState<RecurringTransaction[]>([]);
+    const [debts, setDebts] = useState<Debt[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
     const [isLocked, setIsLocked] = useState(false);
@@ -76,15 +84,30 @@ function MainApp() {
         async function loadData() {
             const startTime = Date.now();
 
-            const [loadedBusinesses, loadedTransactions, loadedProfile] = await Promise.all([
+            const [loadedBusinesses, loadedTransactions, loadedProfile, loadedRecurring, loadedDebts] = await Promise.all([
                 loadBusinesses(),
                 loadTransactions(),
                 loadUserProfile(),
+                loadRecurringTransactions(),
+                loadDebts(),
             ]);
 
             setBusinesses(loadedBusinesses);
-            setTransactions(loadedTransactions);
             setUserProfile(loadedProfile);
+            setDebts(loadedDebts);
+
+            const { newTransactions, updatedRecurring } = processRecurringTransactions(loadedRecurring);
+            if (newTransactions.length > 0) {
+                const mergedTransactions = [...loadedTransactions, ...newTransactions];
+                setTransactions(mergedTransactions);
+                await saveTransactions(mergedTransactions);
+            } else {
+                setTransactions(loadedTransactions);
+            }
+            setRecurringTransactions(updatedRecurring);
+            if (newTransactions.length > 0 || JSON.stringify(updatedRecurring) !== JSON.stringify(loadedRecurring)) {
+                await apiSaveRecurringTransactions(updatedRecurring);
+            }
 
             const pinOn = await loadSecuritySettings();
             if (pinOn) {
@@ -147,15 +170,29 @@ function MainApp() {
         await apiSaveUserProfile(profile);
     };
 
+    const handleSaveRecurringTransactions = async (items: RecurringTransaction[]) => {
+        setRecurringTransactions(items);
+        await apiSaveRecurringTransactions(items);
+    };
+
+    const handleSaveDebts = async (newDebts: Debt[]) => {
+        setDebts(newDebts);
+        await apiSaveDebts(newDebts);
+    };
+
     const handleDataImported = async () => {
-        const [loadedBusinesses, loadedTransactions, loadedProfile] = await Promise.all([
+        const [loadedBusinesses, loadedTransactions, loadedProfile, loadedRecurring, loadedDebts] = await Promise.all([
             loadBusinesses(),
             loadTransactions(),
             loadUserProfile(),
+            loadRecurringTransactions(),
+            loadDebts(),
         ]);
         setBusinesses(loadedBusinesses);
         setTransactions(loadedTransactions);
         setUserProfile(loadedProfile);
+        setRecurringTransactions(loadedRecurring);
+        setDebts(loadedDebts);
     };
 
     if (isLoading) {
@@ -276,6 +313,22 @@ function MainApp() {
                             )}
                         </Tab.Screen>
                         <Tab.Screen
+                            name="Reports"
+                            options={{
+                                tabBarIcon: ({ color }) => <BarChart3 size={24} color={color} />,
+                            }}
+                            listeners={{
+                                tabPress: () => setCurrentBusiness(null),
+                            }}
+                        >
+                            {() => (
+                                <ReportsScreen
+                                    businesses={businesses}
+                                    transactions={transactions}
+                                />
+                            )}
+                        </Tab.Screen>
+                        <Tab.Screen
                             name="Settings"
                             options={{
                                 tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
@@ -290,6 +343,11 @@ function MainApp() {
                                     saveUserProfile={handleSaveUserProfile}
                                     onDataImported={handleDataImported}
                                     onPinChanged={handlePinChanged}
+                                    recurringTransactions={recurringTransactions}
+                                    saveRecurringTransactions={handleSaveRecurringTransactions}
+                                    businesses={businesses}
+                                    debts={debts}
+                                    saveDebts={handleSaveDebts}
                                 />
                             )}
                         </Tab.Screen>

@@ -58,3 +58,42 @@ export interface CategoryBudgetSpent {
     remaining: number;
     percentage: number;
 }
+
+export type RecurrenceFrequency = "daily" | "weekly" | "biweekly" | "monthly" | "yearly";
+
+export interface RecurringTransaction {
+    id: string;
+    description: string;
+    amount: number;
+    type: "income" | "expense";
+    businessId: string;
+    category?: string;
+    remark?: string;
+    frequency: RecurrenceFrequency;
+    startDate: string;
+    nextDueDate: string;
+    endDate?: string;
+    isActive: boolean;
+    createdAt: string;
+    lastGeneratedDate?: string;
+}
+
+export interface DebtPayment {
+    id: string;
+    amount: number;
+    date: string;
+    note?: string;
+}
+
+export interface Debt {
+    id: string;
+    personName: string;
+    amount: number;
+    type: "owed_to_me" | "i_owe";
+    description?: string;
+    dueDate?: string;
+    currency: string;
+    payments: DebtPayment[];
+    createdAt: string;
+    status: "active" | "settled";
+}

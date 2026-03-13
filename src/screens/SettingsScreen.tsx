@@ -33,23 +33,42 @@ import {
     Check,
     ArrowLeft,
     Delete,
+    Repeat,
+    Handshake,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
-import { UserProfile } from "../types";
+import { UserProfile, RecurringTransaction, Debt, Business } from "../types";
 import { exportAllData, importAllData, loadUserProfile } from "../utils/storage";
 import { isPinEnabled, verifyPin } from "../utils/security";
 import CategoryManagementScreen from "./CategoryManagementScreen";
 import SecuritySettingsScreen from "./SecuritySettingsScreen";
+import RecurringTransactionsScreen from "./RecurringTransactionsScreen";
+import DebtTrackerScreen from "./DebtTrackerScreen";
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
     saveUserProfile: (profile: UserProfile) => void;
     onDataImported: () => Promise<void>;
     onPinChanged: () => void;
+    recurringTransactions: RecurringTransaction[];
+    saveRecurringTransactions: (items: RecurringTransaction[]) => void;
+    businesses: Business[];
+    debts: Debt[];
+    saveDebts: (debts: Debt[]) => void;
 }
 
-export default function SettingsScreen({ userProfile, saveUserProfile, onDataImported, onPinChanged }: SettingsScreenProps) {
+export default function SettingsScreen({
+    userProfile,
+    saveUserProfile,
+    onDataImported,
+    onPinChanged,
+    recurringTransactions,
+    saveRecurringTransactions,
+    businesses,
+    debts,
+    saveDebts,
+}: SettingsScreenProps) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const { themeMode, setThemeMode } = useThemeContext();
@@ -60,6 +79,8 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
     const [isEditing, setIsEditing] = useState(false);
     const [showCategories, setShowCategories] = useState(false);
     const [showSecurity, setShowSecurity] = useState(false);
+    const [showRecurring, setShowRecurring] = useState(false);
+    const [showDebts, setShowDebts] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [showExportVerify, setShowExportVerify] = useState(false);
@@ -79,11 +100,19 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
                     setShowSecurity(false);
                     return true;
                 }
+                if (showRecurring) {
+                    setShowRecurring(false);
+                    return true;
+                }
+                if (showDebts) {
+                    setShowDebts(false);
+                    return true;
+                }
                 return false;
             };
             const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
             return () => subscription.remove();
-        }, [showCategories, showSecurity, showExportVerify])
+        }, [showCategories, showSecurity, showExportVerify, showRecurring, showDebts])
     );
 
     const initials = (name || "U")
@@ -183,6 +212,27 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
 
     if (showSecurity) {
         return <SecuritySettingsScreen onBack={() => setShowSecurity(false)} onPinChanged={onPinChanged} />;
+    }
+
+    if (showRecurring) {
+        return (
+            <RecurringTransactionsScreen
+                onBack={() => setShowRecurring(false)}
+                recurringTransactions={recurringTransactions}
+                businesses={businesses}
+                onSave={saveRecurringTransactions}
+            />
+        );
+    }
+
+    if (showDebts) {
+        return (
+            <DebtTrackerScreen
+                onBack={() => setShowDebts(false)}
+                debts={debts}
+                onSave={saveDebts}
+            />
+        );
     }
 
     const themeOptions = [
@@ -298,7 +348,7 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.row, { borderBottomWidth: 0 }]}
+                                style={styles.row}
                                 onPress={() => setShowSecurity(true)}
                             >
                                 <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
@@ -307,6 +357,32 @@ export default function SettingsScreen({ userProfile, saveUserProfile, onDataImp
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Security</Text>
                                     <Text style={styles.rowSubText}>PIN lock & biometrics</Text>
+                                </View>
+                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={styles.row}
+                                onPress={() => setShowRecurring(true)}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
+                                    <Repeat size={18} color="#10B981" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Recurring Transactions</Text>
+                                    <Text style={styles.rowSubText}>Manage automated entries</Text>
+                                </View>
+                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.row, { borderBottomWidth: 0 }]}
+                                onPress={() => setShowDebts(true)}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(245, 158, 11, 0.1)" }]}>
+                                    <Handshake size={18} color="#F59E0B" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Debts & Loans</Text>
+                                    <Text style={styles.rowSubText}>Track money owed & owing</Text>
                                 </View>
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
