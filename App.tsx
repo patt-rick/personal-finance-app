@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Alert, Platform, View, StyleSheet, useColorScheme, AppState } from "react-native";
-import * as ExpoInAppUpdates from "expo-in-app-updates";
+
 import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
@@ -130,6 +130,7 @@ function MainApp() {
 
         const checkForUpdates = async () => {
             try {
+                const ExpoInAppUpdates = await import("expo-in-app-updates");
                 if (Platform.OS === "android") {
                     await ExpoInAppUpdates.checkAndStartUpdate(false);
                 } else {
@@ -146,7 +147,7 @@ function MainApp() {
                     );
                 }
             } catch (e) {
-                // silently fail — update check is non-critical
+                // silently fail — native module unavailable in Expo Go
             }
         };
 
