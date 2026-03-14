@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { View, StyleSheet, useColorScheme, AppState } from "react-native";
+import { Alert, Platform, View, StyleSheet, useColorScheme, AppState } from "react-native";
+import * as ExpoInAppUpdates from "expo-in-app-updates";
 import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
@@ -123,6 +124,34 @@ function MainApp() {
         loadData();
         scheduleReminders();
     }, [loadSecuritySettings]);
+
+    useEffect(() => {
+        if (__DEV__ || Platform.OS === "web") return;
+
+        const checkForUpdates = async () => {
+            try {
+                if (Platform.OS === "android") {
+                    await ExpoInAppUpdates.checkAndStartUpdate(false);
+                } else {
+                    const result = await ExpoInAppUpdates.checkForUpdate();
+                    if (!result.updateAvailable) return;
+
+                    Alert.alert(
+                        "Update Available",
+                        `A new version (${result.storeVersion}) is available. Update now for the latest features and improvements.`,
+                        [
+                            { text: "Update", onPress: () => ExpoInAppUpdates.startUpdate() },
+                            { text: "Later", style: "cancel" },
+                        ],
+                    );
+                }
+            } catch (e) {
+                // silently fail — update check is non-critical
+            }
+        };
+
+        checkForUpdates();
+    }, []);
 
     useEffect(() => {
         const subscription = AppState.addEventListener("change", (nextAppState) => {

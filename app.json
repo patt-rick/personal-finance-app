@@ -36,7 +36,8 @@
     "plugins": [
       "@react-native-community/datetimepicker",
       "expo-notifications",
-      "expo-secure-store"
+      "expo-secure-store",
+      "expo-in-app-updates"
     ],
     "notification": {
       "icon": "./src/icon.png",
