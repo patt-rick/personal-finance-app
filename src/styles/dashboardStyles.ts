@@ -36,20 +36,6 @@ export const createDashboardStyles = (theme: any) =>
             marginTop: 2,
             letterSpacing: -0.3,
         },
-        notificationBtn: {
-            width: 44,
-            height: 44,
-            borderRadius: 14,
-            backgroundColor: theme.colors.card,
-            alignItems: "center",
-            justifyContent: "center",
-            elevation: 1,
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 4,
-        },
-
         // Hero Section
         heroSection: { paddingHorizontal: 20, marginTop: 8, marginBottom: 8 },
         heroCard: {

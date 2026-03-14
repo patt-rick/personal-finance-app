@@ -151,6 +151,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                     end={{ x: 1, y: 1 }}
                     style={styles.card}
                 >
+                    <View style={styles.bigCircle} pointerEvents="none" />
                     <HolographicOverlay />
 
                     <View style={styles.balanceSection}>
@@ -274,6 +275,15 @@ const styles = StyleSheet.create({
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
         shadowRadius: 20,
+    },
+    bigCircle: {
+        position: "absolute",
+        width: 200,
+        height: 200,
+        borderRadius: 100,
+        backgroundColor: "rgba(255, 255, 255, 0.05)",
+        top: -60,
+        right: -40,
     },
     topRow: {
         flexDirection: "row",

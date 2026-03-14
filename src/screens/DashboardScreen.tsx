@@ -1,7 +1,7 @@
 import { getCurrencySymbol } from "../utils/_helpers";
 import { Users } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
-import { BackHandler, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import { BackHandler, RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
@@ -17,11 +17,13 @@ function DashboardHome({
     transactions,
     setCurrentBusiness,
     userProfile,
+    onRefresh,
 }: {
     businesses: Business[];
     transactions: Transaction[];
     setCurrentBusiness: (b: Business) => void;
     userProfile: UserProfile | null;
+    onRefresh: () => Promise<void>;
 }) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
@@ -122,6 +124,14 @@ function DashboardHome({
         return { labels, incomeValues, expenseValues };
     }, [filteredTransactions]);
 
+    const [refreshing, setRefreshing] = useState(false);
+
+    const handleRefresh = useCallback(async () => {
+        setRefreshing(true);
+        await onRefresh();
+        setRefreshing(false);
+    }, [onRefresh]);
+
     const currencySymbol = getCurrencySymbol(activeCurrency.currency);
 
     const pieData = useMemo(() => {
@@ -201,6 +211,14 @@ function DashboardHome({
             <ScrollView
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 40 }}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing}
+                        onRefresh={handleRefresh}
+                        tintColor={theme.colors.primary}
+                        colors={[theme.colors.primary]}
+                    />
+                }
             >
                 <BalanceCard
                     currencies={currencyBalances}
@@ -407,6 +425,7 @@ interface DashboardScreenProps {
     setCurrentBusiness: (business: Business | null) => void;
     saveTransactions: (transactions: Transaction[]) => void;
     userProfile: UserProfile | null;
+    onRefresh: () => Promise<void>;
 }
 
 export default function DashboardScreen({
@@ -416,6 +435,7 @@ export default function DashboardScreen({
     setCurrentBusiness,
     saveTransactions,
     userProfile,
+    onRefresh,
 }: DashboardScreenProps) {
     useFocusEffect(
         useCallback(() => {
@@ -449,6 +469,7 @@ export default function DashboardScreen({
             transactions={transactions}
             setCurrentBusiness={setCurrentBusiness}
             userProfile={userProfile}
+            onRefresh={onRefresh}
         />
     );
 }

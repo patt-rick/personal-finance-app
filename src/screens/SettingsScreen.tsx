@@ -35,16 +35,20 @@ import {
     Delete,
     Repeat,
     Handshake,
+    BarChart3,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
-import { UserProfile, RecurringTransaction, Debt, Business } from "../types";
+import { UserProfile, RecurringTransaction, Debt, Business, Transaction } from "../types";
 import { exportAllData, importAllData, loadUserProfile } from "../utils/storage";
 import { isPinEnabled, verifyPin } from "../utils/security";
 import CategoryManagementScreen from "./CategoryManagementScreen";
 import SecuritySettingsScreen from "./SecuritySettingsScreen";
 import RecurringTransactionsScreen from "./RecurringTransactionsScreen";
 import DebtTrackerScreen from "./DebtTrackerScreen";
+import ReportsScreen from "./ReportsScreen";
+
+const APP_VERSION = require("../../app.json").expo.version;
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
@@ -54,6 +58,7 @@ interface SettingsScreenProps {
     recurringTransactions: RecurringTransaction[];
     saveRecurringTransactions: (items: RecurringTransaction[]) => void;
     businesses: Business[];
+    transactions: Transaction[];
     debts: Debt[];
     saveDebts: (debts: Debt[]) => void;
 }
@@ -66,6 +71,7 @@ export default function SettingsScreen({
     recurringTransactions,
     saveRecurringTransactions,
     businesses,
+    transactions,
     debts,
     saveDebts,
 }: SettingsScreenProps) {
@@ -81,6 +87,7 @@ export default function SettingsScreen({
     const [showSecurity, setShowSecurity] = useState(false);
     const [showRecurring, setShowRecurring] = useState(false);
     const [showDebts, setShowDebts] = useState(false);
+    const [showReports, setShowReports] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [showExportVerify, setShowExportVerify] = useState(false);
@@ -108,11 +115,15 @@ export default function SettingsScreen({
                     setShowDebts(false);
                     return true;
                 }
+                if (showReports) {
+                    setShowReports(false);
+                    return true;
+                }
                 return false;
             };
             const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
             return () => subscription.remove();
-        }, [showCategories, showSecurity, showExportVerify, showRecurring, showDebts])
+        }, [showCategories, showSecurity, showExportVerify, showRecurring, showDebts, showReports])
     );
 
     const initials = (name || "U")
@@ -235,6 +246,16 @@ export default function SettingsScreen({
         );
     }
 
+    if (showReports) {
+        return (
+            <ReportsScreen
+                businesses={businesses}
+                transactions={transactions}
+                onBack={() => setShowReports(false)}
+            />
+        );
+    }
+
     const themeOptions = [
         { mode: "light" as const, label: "Light", icon: Sun },
         { mode: "dark" as const, label: "Dark", icon: Moon },
@@ -348,7 +369,7 @@ export default function SettingsScreen({
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={styles.row}
+                                style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowSecurity(true)}
                             >
                                 <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
@@ -357,6 +378,26 @@ export default function SettingsScreen({
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Security</Text>
                                     <Text style={styles.rowSubText}>PIN lock & biometrics</Text>
+                                </View>
+                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+
+                    {/* Features Section */}
+                    <View style={styles.section}>
+                        <Text style={styles.sectionLabel}>Features</Text>
+                        <View style={styles.groupCard}>
+                            <TouchableOpacity
+                                style={styles.row}
+                                onPress={() => setShowReports(true)}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(14, 165, 233, 0.1)" }]}>
+                                    <BarChart3 size={18} color="#0EA5E9" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Reports</Text>
+                                    <Text style={styles.rowSubText}>Financial insights & analytics</Text>
                                 </View>
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
@@ -483,7 +524,7 @@ export default function SettingsScreen({
                                     <Info size={18} color="#0EA5E9" />
                                 </View>
                                 <Text style={styles.rowText}>Version</Text>
-                                <Text style={styles.rowValueText}>1.0.0</Text>
+                                <Text style={styles.rowValueText}>{APP_VERSION}</Text>
                                 <View style={styles.premiumBadge}>
                                     <Text style={styles.premiumBadgeText}>Premium</Text>
                                 </View>

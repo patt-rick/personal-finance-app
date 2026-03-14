@@ -1,7 +1,7 @@
-import React, { useMemo, useState } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useMemo, useState, useCallback, useEffect } from "react";
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TrendingUp, TrendingDown, FileText } from "lucide-react-native";
+import { TrendingUp, TrendingDown, FileText, ArrowLeft } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
@@ -19,6 +19,7 @@ import ChartCarousel from "../components/ChartCarousel";
 interface ReportsScreenProps {
     businesses: Business[];
     transactions: Transaction[];
+    onBack?: () => void;
 }
 
 const PERIODS = ["This Month", "3 Months", "6 Months", "Year"] as const;
@@ -52,10 +53,20 @@ function getDateRange(period: Period): { start: Date; end: Date; monthCount: num
     return { start, end, monthCount };
 }
 
-export default function ReportsScreen({ businesses, transactions }: ReportsScreenProps) {
+export default function ReportsScreen({ businesses, transactions, onBack }: ReportsScreenProps) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
+
+    useEffect(() => {
+        if (!onBack) return;
+        const onBackPress = () => {
+            onBack();
+            return true;
+        };
+        const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
+        return () => subscription.remove();
+    }, [onBack]);
 
     const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>("3 Months");
@@ -152,6 +163,15 @@ export default function ReportsScreen({ businesses, transactions }: ReportsScree
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
+                {onBack && (
+                    <TouchableOpacity
+                        onPress={onBack}
+                        style={[styles.backBtn, { backgroundColor: theme.colors.card }]}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <ArrowLeft size={20} color={theme.colors.text} />
+                    </TouchableOpacity>
+                )}
                 <Text style={[styles.title, { color: theme.colors.text }]}>Reports</Text>
             </View>
 
@@ -376,8 +396,18 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             flex: 1,
         },
         header: {
+            flexDirection: "row" as const,
+            alignItems: "center" as const,
             paddingHorizontal: 20,
             paddingBottom: 16,
+            gap: 12,
+        },
+        backBtn: {
+            width: 36,
+            height: 36,
+            borderRadius: 12,
+            alignItems: "center" as const,
+            justifyContent: "center" as const,
         },
         title: {
             fontSize: 26,

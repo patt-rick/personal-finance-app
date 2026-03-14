@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus, Bell, ChevronRight, Wallet } from "lucide-react-native";
+import { Plus, ChevronRight, Wallet } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
@@ -80,9 +80,6 @@ export default function BusinessesScreen({
                     <Text style={styles.greetingText}>Manage businesses,</Text>
                     <Text style={styles.userNameText}>Cashbooks</Text>
                 </View>
-                <TouchableOpacity style={styles.notificationBtn} onPress={() => {}}>
-                    <Bell size={22} color={theme.colors.primary} />
-                </TouchableOpacity>
             </View>
 
             <ScrollView style={s.list} contentContainerStyle={{ paddingBottom: 100 }}>

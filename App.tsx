@@ -4,11 +4,10 @@ import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { LayoutGrid, Landmark, Settings, PiggyBank, BarChart3 } from "lucide-react-native";
+import { LayoutGrid, Landmark, Settings, PiggyBank } from "lucide-react-native";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import BusinessesScreen from "./src/screens/BusinessesScreen";
 import BudgetDashboardScreen from "./src/screens/BudgetDashboardScreen";
-import ReportsScreen from "./src/screens/ReportsScreen";
 import SettingsScreen from "./src/screens/SettingsScreen";
 import SplashScreen from "./src/screens/SplashScreen";
 import LockScreen from "./src/screens/LockScreen";
@@ -180,7 +179,7 @@ function MainApp() {
         await apiSaveDebts(newDebts);
     };
 
-    const handleDataImported = async () => {
+    const refreshData = useCallback(async () => {
         const [loadedBusinesses, loadedTransactions, loadedProfile, loadedRecurring, loadedDebts] = await Promise.all([
             loadBusinesses(),
             loadTransactions(),
@@ -193,7 +192,9 @@ function MainApp() {
         setUserProfile(loadedProfile);
         setRecurringTransactions(loadedRecurring);
         setDebts(loadedDebts);
-    };
+    }, []);
+
+    const handleDataImported = refreshData;
 
     if (isLoading) {
         return <SplashScreen />;
@@ -272,6 +273,7 @@ function MainApp() {
                                     setCurrentBusiness={setCurrentBusiness}
                                     saveTransactions={handleSaveTransactions}
                                     userProfile={userProfile}
+                                    onRefresh={refreshData}
                                 />
                             )}
                         </Tab.Screen>
@@ -313,22 +315,6 @@ function MainApp() {
                             )}
                         </Tab.Screen>
                         <Tab.Screen
-                            name="Reports"
-                            options={{
-                                tabBarIcon: ({ color }) => <BarChart3 size={24} color={color} />,
-                            }}
-                            listeners={{
-                                tabPress: () => setCurrentBusiness(null),
-                            }}
-                        >
-                            {() => (
-                                <ReportsScreen
-                                    businesses={businesses}
-                                    transactions={transactions}
-                                />
-                            )}
-                        </Tab.Screen>
-                        <Tab.Screen
                             name="Settings"
                             options={{
                                 tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
@@ -346,6 +332,7 @@ function MainApp() {
                                     recurringTransactions={recurringTransactions}
                                     saveRecurringTransactions={handleSaveRecurringTransactions}
                                     businesses={businesses}
+                                    transactions={transactions}
                                     debts={debts}
                                     saveDebts={handleSaveDebts}
                                 />

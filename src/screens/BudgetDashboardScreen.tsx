@@ -15,7 +15,6 @@ import {
     Edit,
     Plus,
     PiggyBank,
-    Bell,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -204,9 +203,6 @@ export default function BudgetDashboardScreen({
                     <Text style={styles.greetingText}>Keep tracking,</Text>
                     <Text style={styles.userNameText}>Budgeting</Text>
                 </View>
-                <TouchableOpacity style={styles.notificationBtn} onPress={() => {}}>
-                    <Bell size={22} color={theme.colors.primary} />
-                </TouchableOpacity>
             </View>
 
             <ScrollView
