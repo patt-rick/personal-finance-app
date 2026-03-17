@@ -321,6 +321,7 @@ function MainApp() {
                                     businesses={businesses}
                                     transactions={transactions}
                                     saveBusinesses={handleSaveBusinesses}
+                                    saveTransactions={handleSaveTransactions}
                                     currentBusiness={currentBusiness}
                                     setCurrentBusiness={setCurrentBusiness}
                                 />

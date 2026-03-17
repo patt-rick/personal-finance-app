@@ -94,6 +94,19 @@ export default function SettingsScreen({
 
     useFocusEffect(
         useCallback(() => {
+            return () => {
+                setShowCategories(false);
+                setShowSecurity(false);
+                setShowRecurring(false);
+                setShowDebts(false);
+                setShowReports(false);
+                setShowExportVerify(false);
+            };
+        }, [])
+    );
+
+    useFocusEffect(
+        useCallback(() => {
             const onBackPress = () => {
                 if (showExportVerify) {
                     setShowExportVerify(false);

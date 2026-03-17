@@ -31,9 +31,41 @@ interface RecurringTransactionModalProps {
         category: string;
         remark: string;
         frequency: RecurrenceFrequency;
+        startDate?: string;
         endDate?: string;
         editingId: string | null;
     }) => void;
+}
+
+const DAY_LABELS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+function getNextDayOfWeek(dayIndex: number): string {
+    const today = new Date();
+    const todayDay = today.getDay();
+    let diff = dayIndex - todayDay;
+    if (diff < 0) diff += 7;
+    const target = new Date(today);
+    target.setDate(target.getDate() + diff);
+    return target.toISOString().split("T")[0];
+}
+
+function getNextDayOfMonth(day: number): string {
+    const today = new Date();
+    const currentDay = today.getDate();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    let targetMonth = currentDay <= day ? currentMonth : currentMonth + 1;
+    let targetYear = currentYear;
+    if (targetMonth > 11) {
+        targetMonth = 0;
+        targetYear++;
+    }
+
+    const lastDayOfMonth = new Date(targetYear, targetMonth + 1, 0).getDate();
+    const clampedDay = Math.min(day, lastDayOfMonth);
+    const target = new Date(targetYear, targetMonth, clampedDay);
+    return target.toISOString().split("T")[0];
 }
 
 const FREQUENCIES: { label: string; value: RecurrenceFrequency }[] = [
@@ -61,6 +93,10 @@ export default function RecurringTransactionModal({
     const [selectedCategory, setSelectedCategory] = useState("");
     const [frequency, setFrequency] = useState<RecurrenceFrequency>("monthly");
     const [remark, setRemark] = useState("");
+    const [selectedDayOfWeek, setSelectedDayOfWeek] = useState<number | null>(null);
+    const [selectedDayOfMonth, setSelectedDayOfMonth] = useState<number | null>(null);
+    const [startDate, setStartDate] = useState<Date | null>(null);
+    const [showStartDatePicker, setShowStartDatePicker] = useState(false);
     const [endDate, setEndDate] = useState<Date | null>(null);
     const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -74,6 +110,21 @@ export default function RecurringTransactionModal({
             setRemark(editingItem.remark || "");
             setEndDate(editingItem.endDate ? new Date(editingItem.endDate) : null);
             setShowDatePicker(false);
+            const sd = new Date(editingItem.startDate);
+            if (editingItem.frequency === "weekly" || editingItem.frequency === "biweekly") {
+                setSelectedDayOfWeek(sd.getDay());
+                setSelectedDayOfMonth(null);
+                setStartDate(null);
+            } else if (editingItem.frequency === "monthly") {
+                setSelectedDayOfMonth(sd.getDate());
+                setSelectedDayOfWeek(null);
+                setStartDate(null);
+            } else {
+                setStartDate(sd);
+                setSelectedDayOfWeek(null);
+                setSelectedDayOfMonth(null);
+            }
+            setShowStartDatePicker(false);
         } else {
             setType("expense");
             setAmount("");
@@ -83,16 +134,30 @@ export default function RecurringTransactionModal({
             setRemark("");
             setEndDate(null);
             setShowDatePicker(false);
+            setSelectedDayOfWeek(null);
+            setSelectedDayOfMonth(null);
+            setStartDate(null);
+            setShowStartDatePicker(false);
         }
     }, [editingItem, visible, businesses]);
 
     const filteredCategories = useMemo(
         () => categories.filter((c) => c.type === type),
-        [categories, type]
+        [categories, type],
     );
 
     const formatEndDate = (date: Date) =>
         date.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
+
+    const handleStartDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
+        if (Platform.OS === "android") {
+            setShowStartDatePicker(false);
+        }
+        if (event.type === "dismissed") return;
+        if (selectedDate) {
+            setStartDate(selectedDate);
+        }
+    };
 
     const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (Platform.OS === "android") {
@@ -103,6 +168,16 @@ export default function RecurringTransactionModal({
             setEndDate(selectedDate);
         }
     };
+
+    const resolvedStartDate = useMemo((): string | undefined => {
+        if (frequency === "weekly" || frequency === "biweekly") {
+            return selectedDayOfWeek !== null ? getNextDayOfWeek(selectedDayOfWeek) : undefined;
+        }
+        if (frequency === "monthly") {
+            return selectedDayOfMonth !== null ? getNextDayOfMonth(selectedDayOfMonth) : undefined;
+        }
+        return startDate ? startDate.toISOString().split("T")[0] : undefined;
+    }, [frequency, selectedDayOfWeek, selectedDayOfMonth, startDate]);
 
     const handleSubmit = () => {
         if (!amount || isNaN(parseFloat(amount))) {
@@ -121,6 +196,7 @@ export default function RecurringTransactionModal({
             category: selectedCategory,
             remark,
             frequency,
+            startDate: resolvedStartDate,
             endDate: endDate ? endDate.toISOString().split("T")[0] : undefined,
             editingId: editingItem?.id ?? null,
         });
@@ -129,6 +205,10 @@ export default function RecurringTransactionModal({
         setRemark("");
         setEndDate(null);
         setShowDatePicker(false);
+        setSelectedDayOfWeek(null);
+        setSelectedDayOfMonth(null);
+        setStartDate(null);
+        setShowStartDatePicker(false);
     };
 
     const handleClose = () => {
@@ -136,6 +216,10 @@ export default function RecurringTransactionModal({
         setRemark("");
         setEndDate(null);
         setShowDatePicker(false);
+        setSelectedDayOfWeek(null);
+        setSelectedDayOfMonth(null);
+        setStartDate(null);
+        setShowStartDatePicker(false);
         onClose();
     };
 
@@ -281,10 +365,15 @@ export default function RecurringTransactionModal({
                                             key={f.value}
                                             style={[
                                                 styles.categoryChip,
-                                                frequency === f.value &&
-                                                    styles.categoryChipActive,
+                                                frequency === f.value && styles.categoryChipActive,
                                             ]}
-                                            onPress={() => setFrequency(f.value)}
+                                            onPress={() => {
+                                                setFrequency(f.value);
+                                                setSelectedDayOfWeek(null);
+                                                setSelectedDayOfMonth(null);
+                                                setStartDate(null);
+                                                setShowStartDatePicker(false);
+                                            }}
                                         >
                                             <Text
                                                 style={[
@@ -299,6 +388,168 @@ export default function RecurringTransactionModal({
                                     ))}
                                 </ScrollView>
 
+                                <Text style={styles.inputLabelModern}>
+                                    Starts On{" "}
+                                    <Text
+                                        style={{
+                                            fontWeight: "400",
+                                            color: theme.colors.textSecondary,
+                                        }}
+                                    >
+                                        (Optional)
+                                    </Text>
+                                </Text>
+                                {(frequency === "weekly" || frequency === "biweekly") && (
+                                    <ScrollView
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        style={styles.categoryPicker}
+                                    >
+                                        {DAY_LABELS.map((label, index) => (
+                                            <TouchableOpacity
+                                                key={label}
+                                                style={[
+                                                    styles.categoryChip,
+                                                    selectedDayOfWeek === index &&
+                                                        styles.categoryChipActive,
+                                                ]}
+                                                onPress={() =>
+                                                    setSelectedDayOfWeek(
+                                                        selectedDayOfWeek === index ? null : index,
+                                                    )
+                                                }
+                                            >
+                                                <Text
+                                                    style={[
+                                                        styles.categoryChipText,
+                                                        selectedDayOfWeek === index &&
+                                                            styles.categoryChipTextActive,
+                                                    ]}
+                                                >
+                                                    {label}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                )}
+                                {frequency === "monthly" && (
+                                    <ScrollView
+                                        horizontal
+                                        showsHorizontalScrollIndicator={false}
+                                        style={styles.categoryPicker}
+                                    >
+                                        {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
+                                            <TouchableOpacity
+                                                key={day}
+                                                style={[
+                                                    styles.categoryChip,
+                                                    { minWidth: 40, paddingHorizontal: 8 },
+                                                    selectedDayOfMonth === day &&
+                                                        styles.categoryChipActive,
+                                                ]}
+                                                onPress={() =>
+                                                    setSelectedDayOfMonth(
+                                                        selectedDayOfMonth === day ? null : day,
+                                                    )
+                                                }
+                                            >
+                                                <Text
+                                                    style={[
+                                                        styles.categoryChipText,
+                                                        selectedDayOfMonth === day &&
+                                                            styles.categoryChipTextActive,
+                                                    ]}
+                                                >
+                                                    {day}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                )}
+                                {(frequency === "daily" || frequency === "yearly") && (
+                                    <View style={{ marginBottom: 8 }}>
+                                        <View
+                                            style={{
+                                                flexDirection: "row",
+                                                alignItems: "center",
+                                                gap: 8,
+                                            }}
+                                        >
+                                            <TouchableOpacity
+                                                style={{
+                                                    flex: 1,
+                                                    flexDirection: "row",
+                                                    alignItems: "center",
+                                                    gap: 10,
+                                                    height: 48,
+                                                    borderRadius: 12,
+                                                    borderWidth: 1,
+                                                    borderColor: showStartDatePicker
+                                                        ? theme.colors.primary
+                                                        : theme.colors.border,
+                                                    backgroundColor: theme.colors.background,
+                                                    paddingHorizontal: 16,
+                                                }}
+                                                onPress={() =>
+                                                    setShowStartDatePicker(!showStartDatePicker)
+                                                }
+                                            >
+                                                <Calendar
+                                                    size={16}
+                                                    color={
+                                                        startDate
+                                                            ? theme.colors.primary
+                                                            : theme.colors.textSecondary
+                                                    }
+                                                />
+                                                <Text
+                                                    style={{
+                                                        fontSize: 14,
+                                                        color: startDate
+                                                            ? theme.colors.text
+                                                            : theme.colors.placeholder,
+                                                        fontWeight: startDate ? "600" : "400",
+                                                    }}
+                                                >
+                                                    {startDate
+                                                        ? formatEndDate(startDate)
+                                                        : "Starts today"}
+                                                </Text>
+                                            </TouchableOpacity>
+                                            {startDate && (
+                                                <TouchableOpacity
+                                                    onPress={() => {
+                                                        setStartDate(null);
+                                                        setShowStartDatePicker(false);
+                                                    }}
+                                                    hitSlop={{
+                                                        top: 8,
+                                                        bottom: 8,
+                                                        left: 8,
+                                                        right: 8,
+                                                    }}
+                                                >
+                                                    <X
+                                                        size={20}
+                                                        color={theme.colors.textSecondary}
+                                                    />
+                                                </TouchableOpacity>
+                                            )}
+                                        </View>
+                                        {showStartDatePicker && (
+                                            <DateTimePicker
+                                                value={startDate || new Date()}
+                                                mode="date"
+                                                display={
+                                                    Platform.OS === "ios" ? "inline" : "default"
+                                                }
+                                                onChange={handleStartDateChange}
+                                                minimumDate={new Date()}
+                                            />
+                                        )}
+                                    </View>
+                                )}
+
                                 <Text style={styles.inputLabelModern}>Remark</Text>
                                 <TextInput
                                     style={styles.modalInputModern}
@@ -310,7 +561,13 @@ export default function RecurringTransactionModal({
 
                                 <Text style={styles.inputLabelModern}>End Date (Optional)</Text>
                                 <View style={{ marginBottom: 24 }}>
-                                    <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+                                    <View
+                                        style={{
+                                            flexDirection: "row",
+                                            alignItems: "center",
+                                            gap: 8,
+                                        }}
+                                    >
                                         <TouchableOpacity
                                             style={{
                                                 flex: 1,
@@ -320,7 +577,9 @@ export default function RecurringTransactionModal({
                                                 height: 48,
                                                 borderRadius: 12,
                                                 borderWidth: 1,
-                                                borderColor: showDatePicker ? theme.colors.primary : theme.colors.border,
+                                                borderColor: showDatePicker
+                                                    ? theme.colors.primary
+                                                    : theme.colors.border,
                                                 backgroundColor: theme.colors.background,
                                                 paddingHorizontal: 16,
                                             }}
@@ -328,13 +587,21 @@ export default function RecurringTransactionModal({
                                         >
                                             <Calendar
                                                 size={16}
-                                                color={endDate ? theme.colors.primary : theme.colors.textSecondary}
+                                                color={
+                                                    endDate
+                                                        ? theme.colors.primary
+                                                        : theme.colors.textSecondary
+                                                }
                                             />
-                                            <Text style={{
-                                                fontSize: 14,
-                                                color: endDate ? theme.colors.text : theme.colors.placeholder,
-                                                fontWeight: endDate ? "600" : "400",
-                                            }}>
+                                            <Text
+                                                style={{
+                                                    fontSize: 14,
+                                                    color: endDate
+                                                        ? theme.colors.text
+                                                        : theme.colors.placeholder,
+                                                    fontWeight: endDate ? "600" : "400",
+                                                }}
+                                            >
                                                 {endDate ? formatEndDate(endDate) : "No end date"}
                                             </Text>
                                         </TouchableOpacity>

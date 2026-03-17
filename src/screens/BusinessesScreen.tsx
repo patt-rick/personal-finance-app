@@ -9,11 +9,13 @@ import { createDashboardStyles } from "../styles/dashboardStyles";
 import { getCurrencySymbol } from "../utils/_helpers";
 import CashbookDetailSheet from "../components/CashbookDetailSheet";
 import CreateCashbookModal from "../components/CreateCashbookModal";
+import TransferCashbookModal from "../components/TransferCashbookModal";
 
 interface BusinessesScreenProps {
     businesses: Business[];
     transactions: Transaction[];
     saveBusinesses: (businesses: Business[]) => void;
+    saveTransactions: (transactions: Transaction[]) => void;
     currentBusiness: Business | null;
     setCurrentBusiness: (business: Business | null) => void;
 }
@@ -22,6 +24,7 @@ export default function BusinessesScreen({
     businesses,
     transactions,
     saveBusinesses,
+    saveTransactions,
     currentBusiness,
     setCurrentBusiness,
 }: BusinessesScreenProps) {
@@ -33,6 +36,7 @@ export default function BusinessesScreen({
 
     const [createModalVisible, setCreateModalVisible] = useState(false);
     const [sheetBusiness, setSheetBusiness] = useState<Business | null>(null);
+    const [transferModalBusinessId, setTransferModalBusinessId] = useState<string | null>(null);
 
     const handleCreateCashbook = (name: string, currency: string) => {
         const newBusiness: Business = {
@@ -46,23 +50,57 @@ export default function BusinessesScreen({
         setCreateModalVisible(false);
     };
 
+    const removeBusiness = (businessId: string) => {
+        saveBusinesses(businesses.filter((b) => b.id !== businessId));
+        if (currentBusiness?.id === businessId) setCurrentBusiness(null);
+        setSheetBusiness(null);
+    };
+
     const deleteBusiness = (businessId: string) => {
+        const txCount = transactions.filter((t) => t.businessId === businessId).length;
+        const hasOtherCashbooks = businesses.filter((b) => b.id !== businessId).length > 0;
+
+        if (txCount === 0) {
+            Alert.alert("Delete Cashbook", "This cashbook has no transactions. Delete it?", [
+                { text: "Cancel", style: "cancel" },
+                { text: "Delete", style: "destructive", onPress: () => removeBusiness(businessId) },
+            ]);
+            return;
+        }
+
+        const buttons: any[] = [{ text: "Cancel", style: "cancel" }];
+
+        if (hasOtherCashbooks) {
+            buttons.push({
+                text: "Transfer",
+                onPress: () => setTransferModalBusinessId(businessId),
+            });
+        }
+
+        buttons.push({
+            text: "Delete All",
+            style: "destructive",
+            onPress: () => {
+                saveTransactions(transactions.filter((t) => t.businessId !== businessId));
+                removeBusiness(businessId);
+            },
+        });
+
         Alert.alert(
             "Delete Cashbook",
-            "This will permanently delete this cashbook. Associated transactions will remain unassigned.",
-            [
-                { text: "Cancel", style: "cancel" },
-                {
-                    text: "Delete",
-                    style: "destructive",
-                    onPress: () => {
-                        saveBusinesses(businesses.filter((b) => b.id !== businessId));
-                        if (currentBusiness?.id === businessId) setCurrentBusiness(null);
-                        setSheetBusiness(null);
-                    },
-                },
-            ],
+            `This cashbook has ${txCount} transaction${txCount !== 1 ? "s" : ""}. Would you like to transfer them to another cashbook or delete everything?`,
+            buttons,
         );
+    };
+
+    const handleTransfer = (targetBusinessId: string) => {
+        if (!transferModalBusinessId) return;
+        const updated = transactions.map((t) =>
+            t.businessId === transferModalBusinessId ? { ...t, businessId: targetBusinessId } : t,
+        );
+        saveTransactions(updated);
+        removeBusiness(transferModalBusinessId);
+        setTransferModalBusinessId(null);
     };
 
     const handleRename = (businessId: string, newName: string) => {
@@ -181,6 +219,15 @@ export default function BusinessesScreen({
                 visible={createModalVisible}
                 onClose={() => setCreateModalVisible(false)}
                 onSubmit={handleCreateCashbook}
+            />
+
+            <TransferCashbookModal
+                visible={!!transferModalBusinessId}
+                businesses={businesses}
+                transactions={transactions}
+                deletingBusinessId={transferModalBusinessId || ""}
+                onTransfer={handleTransfer}
+                onClose={() => setTransferModalBusinessId(null)}
             />
         </View>
     );

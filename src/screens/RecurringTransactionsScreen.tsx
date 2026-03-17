@@ -105,10 +105,12 @@ export default function RecurringTransactionsScreen({
             category: string;
             remark: string;
             frequency: RecurrenceFrequency;
+            startDate?: string;
             endDate?: string;
             editingId: string | null;
         }) => {
             const today = new Date().toISOString().split("T")[0];
+            const effectiveStartDate = data.startDate || today;
 
             if (data.editingId) {
                 const updated = recurringTransactions.map((r) =>
@@ -121,6 +123,8 @@ export default function RecurringTransactionsScreen({
                               category: data.category,
                               remark: data.remark,
                               frequency: data.frequency,
+                              startDate: effectiveStartDate,
+                              nextDueDate: effectiveStartDate,
                               endDate: data.endDate,
                               description: data.category || data.remark || "Recurring",
                           }
@@ -137,8 +141,8 @@ export default function RecurringTransactionsScreen({
                     category: data.category,
                     remark: data.remark,
                     frequency: data.frequency,
-                    startDate: today,
-                    nextDueDate: today,
+                    startDate: effectiveStartDate,
+                    nextDueDate: effectiveStartDate,
                     endDate: data.endDate,
                     isActive: true,
                     createdAt: new Date().toISOString(),
@@ -164,7 +168,7 @@ export default function RecurringTransactionsScreen({
                     </View>
                     <View style={styles.itemInfo}>
                         <Text style={styles.itemTitle} numberOfLines={1}>
-                            {item.description}
+                            {item.remark || item.description}
                         </Text>
                         <Text style={styles.itemMeta}>
                             {getBusinessName(item.businessId)}
