@@ -1,5 +1,4 @@
 import * as Notifications from "expo-notifications";
-import { Platform } from "react-native";
 export type MessageTone = "funny" | "corny" | "gentle" | "motivational" | "time" | "serious";
 
 export interface NotificationMessage {
@@ -8,7 +7,7 @@ export interface NotificationMessage {
     body: string;
 }
 
-export const MESSAGES = [
+export const MESSAGES: NotificationMessage[] = [
     // 🎭 Funny / Corny
     {
         tone: "funny",
@@ -110,8 +109,9 @@ export async function requestNotificationPermissions() {
     return finalStatus === "granted";
 }
 
+const SCHEDULE_DAYS = 14;
+
 export async function scheduleReminders() {
-    // Cancel all existing notifications to avoid duplicates
     await Notifications.cancelAllScheduledNotificationsAsync();
 
     const isGranted = await requestNotificationPermissions();
@@ -120,25 +120,37 @@ export async function scheduleReminders() {
         return;
     }
 
-    // Set up morning reminder (9:00 AM)
-    await Notifications.scheduleNotificationAsync({
-        content: getRandomMessage(),
-        trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DAILY,
-            hour: 9,
-            minute: 0,
-        },
-    });
+    const now = new Date();
 
-    // Set up evening reminder (8:00 PM)
-    await Notifications.scheduleNotificationAsync({
-        content: getRandomMessage(),
-        trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DAILY,
-            hour: 20,
-            minute: 0,
-        },
-    });
+    for (let day = 0; day < SCHEDULE_DAYS; day++) {
+        const morning = new Date(now);
+        morning.setDate(morning.getDate() + day);
+        morning.setHours(9, 0, 0, 0);
+
+        const evening = new Date(now);
+        evening.setDate(evening.getDate() + day);
+        evening.setHours(20, 0, 0, 0);
+
+        if (morning.getTime() > now.getTime()) {
+            await Notifications.scheduleNotificationAsync({
+                content: getRandomMessage(),
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: morning,
+                },
+            });
+        }
+
+        if (evening.getTime() > now.getTime()) {
+            await Notifications.scheduleNotificationAsync({
+                content: getRandomMessage(),
+                trigger: {
+                    type: Notifications.SchedulableTriggerInputTypes.DATE,
+                    date: evening,
+                },
+            });
+        }
+    }
 
     console.log("Notifications scheduled successfully");
 }
@@ -158,51 +170,8 @@ export async function sendTestNotification() {
         },
     });
 }
-const TONE_ROTATION: readonly MessageTone[] = [
-    "funny",
-    "gentle",
-    "motivational",
-    "corny",
-    "serious",
-    "time",
-];
-
-type MessagesByTone = Record<MessageTone, NotificationMessage[]>;
-
-const messagesByTone = (MESSAGES as NotificationMessage[]).reduce<MessagesByTone>(
-    (acc, msg) => {
-        acc[msg.tone].push(msg);
-        return acc;
-    },
-    {
-        funny: [],
-        corny: [],
-        gentle: [],
-        motivational: [],
-        time: [],
-        serious: [],
-    },
-);
-
-let toneIndex = 0;
-let messageIndexMap: { [tone: string]: number } = {};
-
 export function getRandomMessage(): NotificationMessage {
-    const tone = TONE_ROTATION[toneIndex % TONE_ROTATION.length];
-    const list = messagesByTone[tone];
-
-    if (!list.length) {
-        toneIndex++;
-        return getRandomMessage();
-    }
-
-    const index = messageIndexMap[tone] ?? 0;
-    const message = list[index % list.length];
-
-    messageIndexMap[tone] = index + 1;
-    toneIndex++;
-
-    return message;
+    return MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
 }
 
 // Initial configuration

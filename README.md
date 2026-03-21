@@ -121,3 +121,9 @@ All your data is saved locally on your device using `AsyncStorage`. This ensures
 ---
 
 _Built with ❤️ for better financial management._
+
+## Build for production
+
+```bash
+eas build --platform android --profile production
+```
