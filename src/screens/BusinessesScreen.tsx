@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from "react";
 import { View, Text, TouchableOpacity, ScrollView, Alert, StyleSheet } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus, ChevronRight, Wallet } from "lucide-react-native";
+import { Plus, ChevronRight, Wallet, Landmark, ArrowRightLeft } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
@@ -10,6 +10,7 @@ import { getCurrencySymbol } from "../utils/_helpers";
 import CashbookDetailSheet from "../components/CashbookDetailSheet";
 import CreateCashbookModal from "../components/CreateCashbookModal";
 import TransferCashbookModal from "../components/TransferCashbookModal";
+import TourOverlay from "../components/TourOverlay";
 
 interface BusinessesScreenProps {
     businesses: Business[];
@@ -228,6 +229,30 @@ export default function BusinessesScreen({
                 deletingBusinessId={transferModalBusinessId || ""}
                 onTransfer={handleTransfer}
                 onClose={() => setTransferModalBusinessId(null)}
+            />
+
+            <TourOverlay
+                page="cashbooks"
+                steps={[
+                    {
+                        title: "Your Cashbooks",
+                        icon: <Landmark size={24} color={theme.colors.primary} />,
+                        description:
+                            "Cashbooks let you track finances for different businesses or accounts separately. Each one has its own transactions and currency.",
+                    },
+                    {
+                        title: "Create & Manage",
+                        icon: <Plus size={24} color={theme.colors.primary} />,
+                        description:
+                            "Tap the + button to create a new cashbook. Tap any existing cashbook to view details, rename it, or delete it.",
+                    },
+                    {
+                        title: "Transfer Between Cashbooks",
+                        icon: <ArrowRightLeft size={24} color={theme.colors.primary} />,
+                        description:
+                            "When deleting a cashbook, you can transfer its transactions to another cashbook instead of losing them.",
+                    },
+                ]}
             />
         </View>
     );

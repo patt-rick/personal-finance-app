@@ -1,8 +1,8 @@
 import { getCurrencySymbol } from "../utils/_helpers";
-import { Users } from "lucide-react-native";
+import { Users, Wallet, BarChart3, LayoutGrid, Plus } from "lucide-react-native";
 import React, { useCallback, useMemo, useState } from "react";
 import { BackHandler, RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
@@ -11,6 +11,7 @@ import BalanceCard, { CurrencyBalance } from "../components/dashboard/BalanceCar
 import ChartCarousel from "../components/ChartCarousel";
 import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
+import TourOverlay from "../components/TourOverlay";
 
 function DashboardHome({
     businesses,
@@ -27,6 +28,7 @@ function DashboardHome({
 }) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
+    const navigation = useNavigation();
 
     const currencyBalances = useMemo<CurrencyBalance[]>(() => {
         const map: Record<string, { income: number; expense: number }> = {};
@@ -303,18 +305,58 @@ function DashboardHome({
                             <View
                                 style={[
                                     styles.emptyIcon,
-                                    { backgroundColor: theme.colors.surface },
+                                    { backgroundColor: theme.colors.primary + "14" },
                                 ]}
                             >
-                                <Users size={40} color={theme.colors.textSecondary} />
+                                <Wallet size={40} color={theme.colors.primary} />
                             </View>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                                Go to Cashbooks tab to add your first business!
+                            <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
+                                No cashbooks yet
                             </Text>
+                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                                Create your first cashbook to start tracking income and expenses
+                            </Text>
+                            <TouchableOpacity
+                                style={[styles.createBtn, { backgroundColor: theme.colors.primary }]}
+                                onPress={() => navigation.navigate("Cashbooks" as never)}
+                            >
+                                <Plus size={18} color="#fff" />
+                                <Text style={styles.createBtnText}>Create Cashbook</Text>
+                            </TouchableOpacity>
                         </View>
                     )}
                 </View>
             </ScrollView>
+
+            <TourOverlay
+                page="dashboard"
+                steps={[
+                    {
+                        title: "Your Financial Overview",
+                        icon: <LayoutGrid size={24} color={theme.colors.primary} />,
+                        description:
+                            "This is your dashboard — a snapshot of all your finances across every cashbook, grouped by currency.",
+                    },
+                    {
+                        title: "Balance & Growth",
+                        icon: <Wallet size={24} color={theme.colors.primary} />,
+                        description:
+                            "The balance card shows your total income, expenses, and net balance. Swipe to see balances in different currencies.",
+                    },
+                    {
+                        title: "Charts & Trends",
+                        icon: <BarChart3 size={24} color={theme.colors.primary} />,
+                        description:
+                            "Visual charts show your spending patterns over the past 7 days and how your income compares to expenses.",
+                    },
+                    {
+                        title: "Your Cashbooks",
+                        icon: <Users size={24} color={theme.colors.primary} />,
+                        description:
+                            "All your cashbooks are listed here with their balances. Tap any cashbook to view its transactions in detail.",
+                    },
+                ]}
+            />
         </View>
     );
 }
@@ -406,15 +448,34 @@ const styles = StyleSheet.create({
     emptyIcon: {
         width: 80,
         height: 80,
-        borderRadius: 40,
+        borderRadius: 24,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 16,
+    },
+    emptyTitle: {
+        fontSize: 18,
+        fontWeight: "700",
+        marginBottom: 6,
     },
     emptyText: {
         textAlign: "center",
         fontSize: 14,
         lineHeight: 20,
+        marginBottom: 20,
+    },
+    createBtn: {
+        flexDirection: "row",
+        alignItems: "center",
+        paddingVertical: 12,
+        paddingHorizontal: 24,
+        borderRadius: 14,
+        gap: 8,
+    },
+    createBtnText: {
+        color: "#fff",
+        fontSize: 15,
+        fontWeight: "700",
     },
 });
 

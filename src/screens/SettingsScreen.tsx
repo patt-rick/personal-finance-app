@@ -36,17 +36,22 @@ import {
     Repeat,
     Handshake,
     BarChart3,
+    Settings as SettingsIcon,
+    Database,
+    Sparkles,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
 import { UserProfile, RecurringTransaction, Debt, Business, Transaction } from "../types";
 import { exportAllData, importAllData, loadUserProfile } from "../utils/storage";
 import { isPinEnabled, verifyPin } from "../utils/security";
+import { resetAllTours } from "../utils/tourStorage";
 import CategoryManagementScreen from "./CategoryManagementScreen";
 import SecuritySettingsScreen from "./SecuritySettingsScreen";
 import RecurringTransactionsScreen from "./RecurringTransactionsScreen";
 import DebtTrackerScreen from "./DebtTrackerScreen";
 import ReportsScreen from "./ReportsScreen";
+import TourOverlay from "../components/TourOverlay";
 
 const APP_VERSION = require("../../app.json").expo.version;
 
@@ -542,17 +547,63 @@ export default function SettingsScreen({
                                     <Text style={styles.premiumBadgeText}>Premium</Text>
                                 </View>
                             </View>
-                            <View style={[styles.row, { borderBottomWidth: 0 }]}>
+                            <View style={styles.row}>
                                 <View style={[styles.iconCircle, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
                                     <Shield size={18} color="#10B981" />
                                 </View>
                                 <Text style={styles.rowText}>Encryption</Text>
                                 <Text style={styles.rowValueText}>AES-256</Text>
                             </View>
+                            <TouchableOpacity
+                                style={[styles.row, { borderBottomWidth: 0 }]}
+                                onPress={() => {
+                                    resetAllTours();
+                                    Alert.alert("Tours Reset", "The guided tours will show again on each page.");
+                                }}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
+                                    <Info size={18} color="#6366F1" />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Replay Tours</Text>
+                                    <Text style={styles.rowSubText}>Show feature guides again</Text>
+                                </View>
+                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                            </TouchableOpacity>
                         </View>
                     </View>
                 </ScrollView>
             </KeyboardAvoidingView>
+
+            <TourOverlay
+                page="settings"
+                steps={[
+                    {
+                        title: "Your Profile",
+                        icon: <User size={24} color={theme.colors.primary} />,
+                        description:
+                            "Set your name and email at the top. Tap the pencil icon to edit your profile details.",
+                    },
+                    {
+                        title: "Categories & Security",
+                        icon: <SettingsIcon size={24} color={theme.colors.primary} />,
+                        description:
+                            "Customize transaction categories for income and expenses. Enable PIN lock or biometric authentication to protect your data.",
+                    },
+                    {
+                        title: "Advanced Features",
+                        icon: <Sparkles size={24} color={theme.colors.primary} />,
+                        description:
+                            "Access reports for financial insights, set up recurring transactions that auto-log, and track debts owed to or from others.",
+                    },
+                    {
+                        title: "Backup & Restore",
+                        icon: <Database size={24} color={theme.colors.primary} />,
+                        description:
+                            "Export all your data as a backup file, or import a previous backup to restore your information.",
+                    },
+                ]}
+            />
         </View>
     );
 }

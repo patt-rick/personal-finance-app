@@ -15,6 +15,8 @@ import {
     Edit,
     Plus,
     PiggyBank,
+    Target,
+    BarChart3,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -34,6 +36,7 @@ import BudgetSetupScreen from "./BudgetSetupScreen";
 import ChartCarousel from "../components/ChartCarousel";
 import DonutChart from "../components/dashboard/DonutChart";
 import PairedBarChart from "../components/dashboard/PairedBarChart";
+import TourOverlay from "../components/TourOverlay";
 
 const BUDGET_CHART_COLORS = [
     "#6366F1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6",
@@ -594,6 +597,30 @@ export default function BudgetDashboardScreen({
 
                 <View style={{ height: 40 }} />
             </ScrollView>
+
+            <TourOverlay
+                page="budget"
+                steps={[
+                    {
+                        title: "Budget Tracking",
+                        icon: <PiggyBank size={24} color={theme.colors.primary} />,
+                        description:
+                            "Set spending limits for each cashbook to stay on top of your finances. Budgets can be weekly, monthly, or yearly.",
+                    },
+                    {
+                        title: "Health Score",
+                        icon: <Target size={24} color={theme.colors.primary} />,
+                        description:
+                            "Your budget health score shows how well you're staying within your limits. Green means great, yellow needs attention, red means over budget.",
+                    },
+                    {
+                        title: "Category Breakdown",
+                        icon: <BarChart3 size={24} color={theme.colors.primary} />,
+                        description:
+                            "Track spending per category with progress bars. Set individual limits for food, transport, and more to control where your money goes.",
+                    },
+                ]}
+            />
         </View>
     );
 }
