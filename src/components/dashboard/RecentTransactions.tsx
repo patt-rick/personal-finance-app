@@ -3,7 +3,7 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "../../theme/theme";
 import { Transaction } from "../../types";
 
-const ICON_COLORS = ["#7B8CDE", "#E2C878", "#9B8EC4", "#7BC4A0", "#DE7B7B", "#78BEC5"];
+const ICON_COLORS = ["#4A7C8F", "#C17F59", "#8B7A9E", "#5B8A72", "#C4453A", "#C9A86C"];
 
 function getIconColor(name: string): string {
     let hash = 0;
@@ -81,7 +81,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                         <Text
                             style={[
                                 styles.txAmount,
-                                { color: isIncome ? "#22C55E" : theme.colors.text },
+                                { color: isIncome ? theme.colors.success : theme.colors.text },
                             ]}
                         >
                             {isIncome ? "+" : "-"}$

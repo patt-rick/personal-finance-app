@@ -39,8 +39,8 @@ import PairedBarChart from "../components/dashboard/PairedBarChart";
 import TourOverlay from "../components/TourOverlay";
 
 const BUDGET_CHART_COLORS = [
-    "#6366F1", "#F59E0B", "#10B981", "#EF4444", "#8B5CF6",
-    "#EC4899", "#14B8A6", "#F97316",
+    "#2D6A4F", "#C17F59", "#4A7C8F", "#C4453A", "#8B7A9E",
+    "#B07D94", "#5B8A72", "#C9A86C",
 ];
 
 interface BudgetDashboardScreenProps {

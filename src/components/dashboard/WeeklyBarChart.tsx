@@ -24,8 +24,8 @@ export default function WeeklyBarChart({
     incomeData,
     expenseData,
     currencySymbol,
-    incomeColor = "#10B981",
-    expenseColor = "#EF4444",
+    incomeColor = "#2D6A4F",
+    expenseColor = "#C17F59",
 }: WeeklyBarChartProps) {
     const theme = useTheme();
     const [tooltip, setTooltip] = useState<{ index: number; type: "income" | "expense" } | null>(

@@ -469,7 +469,7 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             elevation: 4,
-            shadowColor: "#6366F1",
+            shadowColor: "#2D6A4F",
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,

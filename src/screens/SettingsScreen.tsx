@@ -390,8 +390,8 @@ export default function SettingsScreen({
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowSecurity(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
-                                    <Lock size={18} color="#6366F1" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
+                                    <Lock size={18} color="#2D6A4F" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Security</Text>
@@ -410,8 +410,8 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowReports(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(14, 165, 233, 0.1)" }]}>
-                                    <BarChart3 size={18} color="#0EA5E9" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(74, 124, 143, 0.1)" }]}>
+                                    <BarChart3 size={18} color="#4A7C8F" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Reports</Text>
@@ -423,8 +423,8 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowRecurring(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
-                                    <Repeat size={18} color="#10B981" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
+                                    <Repeat size={18} color="#3A7D5C" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Recurring Transactions</Text>
@@ -436,8 +436,8 @@ export default function SettingsScreen({
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowDebts(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(245, 158, 11, 0.1)" }]}>
-                                    <Handshake size={18} color="#F59E0B" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(193, 127, 89, 0.1)" }]}>
+                                    <Handshake size={18} color="#C17F59" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Debts & Loans</Text>
@@ -499,8 +499,8 @@ export default function SettingsScreen({
                                 onPress={handleExport}
                                 disabled={isExporting}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
-                                    <Upload size={18} color="#10B981" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
+                                    <Upload size={18} color="#3A7D5C" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Export Data</Text>
@@ -517,8 +517,8 @@ export default function SettingsScreen({
                                 onPress={handleImport}
                                 disabled={isImporting}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
-                                    <Download size={18} color="#6366F1" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
+                                    <Download size={18} color="#2D6A4F" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Import Data</Text>
@@ -538,8 +538,8 @@ export default function SettingsScreen({
                         <Text style={styles.sectionLabel}>About</Text>
                         <View style={styles.groupCard}>
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(14, 165, 233, 0.1)" }]}>
-                                    <Info size={18} color="#0EA5E9" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(74, 124, 143, 0.1)" }]}>
+                                    <Info size={18} color="#4A7C8F" />
                                 </View>
                                 <Text style={styles.rowText}>Version</Text>
                                 <Text style={styles.rowValueText}>{APP_VERSION}</Text>
@@ -548,8 +548,8 @@ export default function SettingsScreen({
                                 </View>
                             </View>
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
-                                    <Shield size={18} color="#10B981" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
+                                    <Shield size={18} color="#3A7D5C" />
                                 </View>
                                 <Text style={styles.rowText}>Encryption</Text>
                                 <Text style={styles.rowValueText}>AES-256</Text>
@@ -561,8 +561,8 @@ export default function SettingsScreen({
                                     Alert.alert("Tours Reset", "The guided tours will show again on each page.");
                                 }}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
-                                    <Info size={18} color="#6366F1" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
+                                    <Info size={18} color="#2D6A4F" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Replay Tours</Text>
@@ -774,7 +774,7 @@ const createVerifyStyles = (theme: any) =>
             width: 64,
             height: 64,
             borderRadius: 20,
-            backgroundColor: "rgba(99, 102, 241, 0.1)",
+            backgroundColor: "rgba(45, 106, 79, 0.1)",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
@@ -802,12 +802,12 @@ const createVerifyStyles = (theme: any) =>
             borderColor: theme.colors.primary,
         },
         dotError: {
-            backgroundColor: "#EF4444",
-            borderColor: "#EF4444",
+            backgroundColor: "#C4453A",
+            borderColor: "#C4453A",
         },
         errorText: {
             fontSize: 13,
-            color: "#EF4444",
+            color: "#C4453A",
             fontWeight: "600",
             marginTop: 4,
         },

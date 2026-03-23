@@ -71,7 +71,7 @@ function CardCircles({ size }: { size: number }) {
                     width: size,
                     height: size,
                     borderRadius: r,
-                    backgroundColor: "rgba(235, 87, 87, 0.85)",
+                    backgroundColor: "rgba(193, 127, 89, 0.85)",
                 }}
             />
             <View
@@ -79,7 +79,7 @@ function CardCircles({ size }: { size: number }) {
                     width: size,
                     height: size,
                     borderRadius: r,
-                    backgroundColor: "rgba(242, 175, 60, 0.8)",
+                    backgroundColor: "rgba(201, 168, 108, 0.8)",
                     marginLeft: -overlap,
                 }}
             />
@@ -105,8 +105,8 @@ function HolographicOverlay() {
             <LinearGradient
                 colors={[
                     "transparent",
-                    "rgba(99,102,241,0.04)",
-                    "rgba(168,85,247,0.04)",
+                    "rgba(45,106,79,0.06)",
+                    "rgba(193,127,89,0.04)",
                     "transparent",
                 ]}
                 start={{ x: 1, y: 0 }}
@@ -138,8 +138,8 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
     );
 
     const cardGradient: [string, string, string] = isDark
-        ? [theme.colors.primary, "#3f488dff", theme.colors.primary]
-        : [theme.colors.primary, "#252a51ff", theme.colors.primary];
+        ? [theme.colors.primary, "#1E4F3D", theme.colors.primary]
+        : [theme.colors.primary, "#1A3C34", "#0E2420"];
 
     const renderPage = (item: CurrencyBalance, cardWidth: number) => {
         const symbol = getCurrencySymbol(item.currency);

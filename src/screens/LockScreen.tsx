@@ -48,11 +48,11 @@ interface LockScreenProps {
 
 function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string }) {
     const primaryLight = isDark
-        ? "rgba(99, 102, 241, 0.12)"
-        : "rgba(99, 102, 241, 0.07)";
+        ? "rgba(45, 106, 79, 0.12)"
+        : "rgba(45, 106, 79, 0.07)";
     const primaryMedium = isDark
-        ? "rgba(99, 102, 241, 0.2)"
-        : "rgba(99, 102, 241, 0.10)";
+        ? "rgba(45, 106, 79, 0.2)"
+        : "rgba(45, 106, 79, 0.10)";
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -146,10 +146,10 @@ function PinDot({
 
     const dotColor = error ? theme.colors.error : theme.colors.primary;
     const glowColor = error
-        ? "rgba(239, 68, 68, 0.35)"
-        : "rgba(99, 102, 241, 0.35)";
+        ? "rgba(196, 69, 58, 0.35)"
+        : "rgba(45, 106, 79, 0.35)";
     const ringColor = error
-        ? "rgba(239, 68, 68, 0.5)"
+        ? "rgba(196, 69, 58, 0.5)"
         : isDark
             ? "rgba(255, 255, 255, 0.15)"
             : "rgba(0, 0, 0, 0.12)";
@@ -386,7 +386,7 @@ export default function LockScreen({
                             styles.logoContainer,
                             {
                                 backgroundColor: isDark
-                                    ? "rgba(99, 102, 241, 0.12)"
+                                    ? "rgba(45, 106, 79, 0.12)"
                                     : "#FFFFFF",
                                 shadowColor: theme.colors.primary,
                                 shadowOffset: { width: 0, height: 4 },
@@ -725,8 +725,8 @@ function PinRecoveryScreen({
                                 recoveryStyles.iconCircle,
                                 {
                                     backgroundColor: isDark
-                                        ? "rgba(99, 102, 241, 0.15)"
-                                        : "rgba(99, 102, 241, 0.1)",
+                                        ? "rgba(45, 106, 79, 0.15)"
+                                        : "rgba(45, 106, 79, 0.1)",
                                 },
                             ]}
                         >
@@ -862,8 +862,8 @@ function PinRecoveryScreen({
                                     backgroundColor:
                                         !canSubmit || verifying
                                             ? isDark
-                                                ? "rgba(99, 102, 241, 0.25)"
-                                                : "rgba(99, 102, 241, 0.3)"
+                                                ? "rgba(45, 106, 79, 0.25)"
+                                                : "rgba(45, 106, 79, 0.3)"
                                             : theme.colors.primary,
                                 },
                             ]}

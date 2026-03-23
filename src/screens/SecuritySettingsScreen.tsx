@@ -173,8 +173,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                     <Text style={styles.sectionLabel}>App Lock</Text>
                     <View style={styles.groupCard}>
                         <View style={styles.row}>
-                            <View style={[styles.iconCircle, { backgroundColor: "rgba(99, 102, 241, 0.1)" }]}>
-                                <Lock size={18} color="#6366F1" />
+                            <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
+                                <Lock size={18} color="#2D6A4F" />
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.rowText}>PIN Lock</Text>
@@ -192,8 +192,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
 
                         {pinEnabled && biometricsAvailable && (
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(16, 185, 129, 0.1)" }]}>
-                                    <BiometricIcon size={18} color="#10B981" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
+                                    <BiometricIcon size={18} color="#3A7D5C" />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>{biometricType}</Text>
@@ -204,7 +204,7 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 <Switch
                                     value={biometricsOn}
                                     onValueChange={handleToggleBiometrics}
-                                    trackColor={{ false: theme.colors.surface, true: "#10B981" }}
+                                    trackColor={{ false: theme.colors.surface, true: "#3A7D5C" }}
                                     thumbColor="white"
                                 />
                             </View>
@@ -215,8 +215,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleChangePin}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(245, 158, 11, 0.1)" }]}>
-                                    <Lock size={18} color="#F59E0B" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(193, 127, 89, 0.1)" }]}>
+                                    <Lock size={18} color="#C17F59" />
                                 </View>
                                 <Text style={styles.rowText}>Change PIN</Text>
                             </TouchableOpacity>
@@ -231,10 +231,10 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleTogglePin}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(239, 68, 68, 0.1)" }]}>
-                                    <Trash2 size={18} color="#EF4444" />
+                                <View style={[styles.iconCircle, { backgroundColor: "rgba(196, 69, 58, 0.1)" }]}>
+                                    <Trash2 size={18} color="#C4453A" />
                                 </View>
-                                <Text style={[styles.rowText, { color: "#EF4444" }]}>Remove PIN</Text>
+                                <Text style={[styles.rowText, { color: "#C4453A" }]}>Remove PIN</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -413,7 +413,7 @@ const createVerifyStyles = (theme: any) =>
             width: 64,
             height: 64,
             borderRadius: 20,
-            backgroundColor: "rgba(99, 102, 241, 0.1)",
+            backgroundColor: "rgba(45, 106, 79, 0.1)",
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
@@ -441,12 +441,12 @@ const createVerifyStyles = (theme: any) =>
             borderColor: theme.colors.primary,
         },
         dotError: {
-            backgroundColor: "#EF4444",
-            borderColor: "#EF4444",
+            backgroundColor: "#C4453A",
+            borderColor: "#C4453A",
         },
         errorText: {
             fontSize: 13,
-            color: "#EF4444",
+            color: "#C4453A",
             fontWeight: "600",
             marginTop: 4,
         },

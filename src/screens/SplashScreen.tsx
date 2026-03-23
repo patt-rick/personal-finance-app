@@ -18,8 +18,8 @@ const { width, height } = Dimensions.get("window");
 function WaveBackground({ isDark }: { isDark: boolean }) {
     const theme = useTheme();
     const primary = theme.colors.primary;
-    const primaryLight = isDark ? "rgba(99, 102, 241, 0.15)" : "rgba(99, 102, 241, 0.08)";
-    const primaryMedium = isDark ? "rgba(99, 102, 241, 0.25)" : "rgba(99, 102, 241, 0.12)";
+    const primaryLight = isDark ? "rgba(45, 106, 79, 0.15)" : "rgba(45, 106, 79, 0.08)";
+    const primaryMedium = isDark ? "rgba(45, 106, 79, 0.25)" : "rgba(45, 106, 79, 0.12)";
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -227,7 +227,7 @@ export default function SplashScreen() {
                             styles.logoContainer,
                             {
                                 backgroundColor: isDark
-                                    ? "rgba(99, 102, 241, 0.15)"
+                                    ? "rgba(45, 106, 79, 0.15)"
                                     : "#FFFFFF",
                                 shadowColor: theme.colors.primary,
                                 shadowOffset: { width: 0, height: 8 },
