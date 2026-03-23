@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Alert, Platform, View, StyleSheet, useColorScheme, AppState } from "react-native";
+import { Alert, Platform, View, useColorScheme, AppState } from "react-native";
 
 import { StatusBar } from "expo-status-bar";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import { LayoutGrid, Landmark, Settings, PiggyBank } from "lucide-react-native";
+import FloatingTabBar from "./src/components/FloatingTabBar";
 import DashboardScreen from "./src/screens/DashboardScreen";
 import BusinessesScreen from "./src/screens/BusinessesScreen";
 import BudgetDashboardScreen from "./src/screens/BudgetDashboardScreen";
@@ -273,24 +273,14 @@ function MainApp() {
                 />
                 <NavigationContainer theme={isDark ? MyDarkTheme : MyDefaultTheme}>
                     <Tab.Navigator
+                        tabBar={(props) => <FloatingTabBar {...props} />}
                         screenOptions={{
-                            tabBarStyle: [
-                                styles.tabBar,
-                                {
-                                    backgroundColor: theme.colors.card,
-                                    borderTopColor: theme.colors.border,
-                                },
-                            ],
-                            tabBarActiveTintColor: theme.colors.primary,
-                            tabBarInactiveTintColor: theme.colors.textSecondary,
                             headerShown: false,
+                            tabBarShowLabel: false,
                         }}
                     >
                         <Tab.Screen
                             name="Dashboard"
-                            options={{
-                                tabBarIcon: ({ color }) => <LayoutGrid size={24} color={color} />,
-                            }}
                             listeners={{
                                 tabPress: () => setCurrentBusiness(null),
                             }}
@@ -309,9 +299,6 @@ function MainApp() {
                         </Tab.Screen>
                         <Tab.Screen
                             name="Cashbooks"
-                            options={{
-                                tabBarIcon: ({ color }) => <Landmark size={24} color={color} />,
-                            }}
                             listeners={{
                                 tabPress: () => setCurrentBusiness(null),
                             }}
@@ -329,9 +316,6 @@ function MainApp() {
                         </Tab.Screen>
                         <Tab.Screen
                             name="Budget"
-                            options={{
-                                tabBarIcon: ({ color }) => <PiggyBank size={24} color={color} />,
-                            }}
                             listeners={{
                                 tabPress: () => setCurrentBusiness(null),
                             }}
@@ -347,9 +331,6 @@ function MainApp() {
                         </Tab.Screen>
                         <Tab.Screen
                             name="Settings"
-                            options={{
-                                tabBarIcon: ({ color }) => <Settings size={24} color={color} />,
-                            }}
                             listeners={{
                                 tabPress: () => setCurrentBusiness(null),
                             }}
@@ -376,9 +357,3 @@ function MainApp() {
     );
 }
 
-const styles = StyleSheet.create({
-    tabBar: {
-        borderTopWidth: 1,
-        paddingTop: 8,
-    },
-});

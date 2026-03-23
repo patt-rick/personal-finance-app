@@ -346,7 +346,7 @@ export default function DebtTrackerScreen({
             </View>
 
             <ScrollView
-                contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 80 }}
+                contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 160 }}
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.summaryRow}>
@@ -401,7 +401,7 @@ export default function DebtTrackerScreen({
             </ScrollView>
 
             <TouchableOpacity
-                style={[styles.fab, { bottom: Math.max(insets.bottom, 20) + 16 }]}
+                style={[styles.fab, { bottom: Math.max(insets.bottom, 20) + 90 }]}
                 onPress={() => {
                     setEditingDebt(null);
                     setShowEntryModal(true);

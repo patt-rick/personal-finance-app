@@ -293,7 +293,7 @@ const createLocalStyles = (theme: any) =>
         fab: {
             position: "absolute",
             right: 20,
-            bottom: 24,
+            bottom: 100,
             width: 54,
             height: 54,
             borderRadius: 16,

@@ -207,7 +207,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
             <TouchableOpacity
                 style={[
                     styles.fab,
-                    { backgroundColor: theme.colors.primary, bottom: insets.bottom + 20 },
+                    { backgroundColor: theme.colors.primary, bottom: insets.bottom + 94 },
                 ]}
                 onPress={() => openModal()}
             >

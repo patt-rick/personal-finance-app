@@ -242,7 +242,7 @@ export default function RecurringTransactionsScreen({
 
             <ScrollView
                 contentContainerStyle={{
-                    paddingBottom: Math.max(insets.bottom, 20) + 80,
+                    paddingBottom: Math.max(insets.bottom, 20) + 160,
                 }}
                 showsVerticalScrollIndicator={false}
             >
@@ -275,7 +275,7 @@ export default function RecurringTransactionsScreen({
             </ScrollView>
 
             <TouchableOpacity
-                style={[styles.fab, { bottom: Math.max(insets.bottom, 16) + 16 }]}
+                style={[styles.fab, { bottom: Math.max(insets.bottom, 16) + 90 }]}
                 onPress={handleAdd}
                 activeOpacity={0.8}
             >

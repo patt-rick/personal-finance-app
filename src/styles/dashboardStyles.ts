@@ -342,7 +342,7 @@ export const createDashboardStyles = (theme: any) =>
         // Bottom Actions
         modernBottomActions: {
             position: "absolute",
-            bottom: 0,
+            bottom: 86,
             left: 0,
             right: 0,
             flexDirection: "row",
@@ -352,6 +352,9 @@ export const createDashboardStyles = (theme: any) =>
             backgroundColor: theme.colors.card,
             borderTopLeftRadius: 20,
             borderTopRightRadius: 20,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
+            marginHorizontal: 12,
             elevation: 4,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: -2 },

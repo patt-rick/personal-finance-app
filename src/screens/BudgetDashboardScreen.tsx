@@ -12,12 +12,12 @@ import {
 import { useFocusEffect } from "@react-navigation/native";
 import {
     AlertCircle,
-    Edit,
     Plus,
     PiggyBank,
     Target,
     BarChart3,
 } from "lucide-react-native";
+import Svg, { Circle } from "react-native-svg";
 import { useTheme } from "../theme/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
@@ -29,16 +29,13 @@ import {
     calculateTotalLimit,
     calculateBudgetHealthScore,
     getBudgetStatusColor,
-    getPeriodDisplayName,
+    getDateRangeForPeriod,
 } from "../utils/budgetCalculations";
 import { getCurrencySymbol } from "../utils/_helpers";
 import BudgetSetupScreen from "./BudgetSetupScreen";
-import ChartCarousel from "../components/ChartCarousel";
-import DonutChart from "../components/dashboard/DonutChart";
-import PairedBarChart from "../components/dashboard/PairedBarChart";
 import TourOverlay from "../components/TourOverlay";
 
-const BUDGET_CHART_COLORS = [
+const CATEGORY_COLORS = [
     "#2D6A4F", "#C17F59", "#4A7C8F", "#C4453A", "#8B7A9E",
     "#B07D94", "#5B8A72", "#C9A86C",
 ];
@@ -48,6 +45,35 @@ interface BudgetDashboardScreenProps {
     transactions: Transaction[];
     currentBusiness: Business | null;
     setCurrentBusiness: (business: Business | null) => void;
+}
+
+function getDaysLeft(period: "weekly" | "monthly" | "yearly"): number {
+    const { endDate } = getDateRangeForPeriod(period);
+    const now = new Date();
+    let periodEnd: Date;
+
+    switch (period) {
+        case "weekly": {
+            const dayOfWeek = now.getDay();
+            periodEnd = new Date(now);
+            periodEnd.setDate(now.getDate() + (6 - dayOfWeek));
+            periodEnd.setHours(23, 59, 59, 999);
+            break;
+        }
+        case "monthly": {
+            periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+            periodEnd.setHours(23, 59, 59, 999);
+            break;
+        }
+        case "yearly": {
+            periodEnd = new Date(now.getFullYear(), 11, 31);
+            periodEnd.setHours(23, 59, 59, 999);
+            break;
+        }
+    }
+
+    const diffMs = periodEnd.getTime() - now.getTime();
+    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
 }
 
 export default function BudgetDashboardScreen({
@@ -66,7 +92,7 @@ export default function BudgetDashboardScreen({
     const [showSetup, setShowSetup] = useState(false);
 
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
-    const budgetStyles = useMemo(() => createBudgetStyles(theme), [theme]);
+    const s = useMemo(() => createBudgetStyles(theme), [theme]);
 
     useFocusEffect(
         useCallback(() => {
@@ -155,10 +181,10 @@ export default function BudgetDashboardScreen({
                 </View>
                 <View style={styles.emptyContainer}>
                     <PiggyBank size={64} color={theme.colors.textSecondary} />
-                    <Text style={[budgetStyles.emptyTitle, { color: theme.colors.text }]}>
+                    <Text style={[s.emptyTitle, { color: theme.colors.text }]}>
                         No Businesses Yet
                     </Text>
-                    <Text style={[budgetStyles.emptyText, { color: theme.colors.textSecondary }]}>
+                    <Text style={[s.emptyText, { color: theme.colors.textSecondary }]}>
                         Create a business first to set up budgets
                     </Text>
                 </View>
@@ -168,34 +194,16 @@ export default function BudgetDashboardScreen({
 
     const totalSpent = calculateTotalSpent(budgetData);
     const totalLimit = budget?.totalLimit || calculateTotalLimit(budgetData);
+    const remaining = Math.max(0, totalLimit - totalSpent);
     const healthScore = calculateBudgetHealthScore(totalSpent, totalLimit);
     const currencySymbol = getCurrencySymbol(selectedBusiness?.currency);
+    const daysLeft = budget ? getDaysLeft(budget.period) : 0;
 
     const healthColor = healthScore >= 70
         ? theme.colors.success
         : healthScore >= 40
             ? theme.colors.secondary
             : theme.colors.error;
-
-    const healthDonutData = [
-        { value: healthScore, color: healthColor, label: "Health" },
-        { value: Math.min(100, 100 - healthScore), color: theme.colors.surface, label: "Remaining" },
-    ];
-
-    const budgetBarLabels = budgetData.map((item) =>
-        item.categoryName.length > 6 ? item.categoryName.slice(0, 6) + ".." : item.categoryName,
-    );
-    const budgetBarLimits = budgetData.map((item) => item.limit);
-    const budgetBarSpent = budgetData.map((item) => item.spent);
-
-    const spendingPieItems = budgetData
-        .filter((item) => item.spent > 0)
-        .map((item, index) => ({
-            value: item.spent,
-            color: BUDGET_CHART_COLORS[index % BUDGET_CHART_COLORS.length],
-            label: item.categoryName,
-        }));
-    const spendingPieTotal = spendingPieItems.reduce((sum, d) => sum + d.value, 0);
 
     return (
         <View style={styles.container}>
@@ -209,8 +217,9 @@ export default function BudgetDashboardScreen({
             </View>
 
             <ScrollView
-                style={budgetStyles.content}
+                style={s.content}
                 showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 100 }}
                 refreshControl={
                     <RefreshControl
                         refreshing={refreshing}
@@ -221,14 +230,10 @@ export default function BudgetDashboardScreen({
             >
                 {/* Business Selector */}
                 {businesses.length > 1 && (
-                    <View style={budgetStyles.section}>
-                        <Text style={[budgetStyles.sectionTitle, { color: theme.colors.text }]}>
-                            Select Business
-                        </Text>
+                    <View style={s.section}>
                         <ScrollView
                             horizontal
                             showsHorizontalScrollIndicator={false}
-                            style={budgetStyles.businessScroll}
                             contentContainerStyle={{ paddingBottom: 10 }}
                         >
                             {businesses.map((business) => (
@@ -236,7 +241,7 @@ export default function BudgetDashboardScreen({
                                     key={business.id}
                                     onPress={() => handleBusinessSelect(business)}
                                     style={[
-                                        budgetStyles.businessChip,
+                                        s.businessChip,
                                         {
                                             backgroundColor:
                                                 selectedBusiness?.id === business.id
@@ -248,7 +253,7 @@ export default function BudgetDashboardScreen({
                                 >
                                     <Text
                                         style={[
-                                            budgetStyles.businessChipText,
+                                            s.businessChipText,
                                             {
                                                 color:
                                                     selectedBusiness?.id === business.id
@@ -266,330 +271,157 @@ export default function BudgetDashboardScreen({
                 )}
 
                 {loading ? (
-                    <View style={budgetStyles.loadingContainer}>
+                    <View style={s.loadingContainer}>
                         <ActivityIndicator size="large" color={theme.colors.primary} />
                     </View>
                 ) : !budget ? (
-                    <View style={budgetStyles.noBudgetContainer}>
+                    <View style={s.noBudgetContainer}>
                         <View
-                            style={[
-                                budgetStyles.noBudgetCard,
-                                { backgroundColor: theme.colors.card },
-                            ]}
+                            style={[s.noBudgetCard, { backgroundColor: theme.colors.card }]}
                         >
                             <PiggyBank size={48} color={theme.colors.primary} />
-                            <Text
-                                style={[budgetStyles.noBudgetTitle, { color: theme.colors.text }]}
-                            >
+                            <Text style={[s.noBudgetTitle, { color: theme.colors.text }]}>
                                 No Budget Set
                             </Text>
-                            <Text
-                                style={[
-                                    budgetStyles.noBudgetText,
-                                    { color: theme.colors.textSecondary },
-                                ]}
-                            >
+                            <Text style={[s.noBudgetText, { color: theme.colors.textSecondary }]}>
                                 Set up a budget to track your spending and stay on target
                             </Text>
                             <TouchableOpacity
                                 onPress={() => setShowSetup(true)}
-                                style={[
-                                    budgetStyles.setupButton,
-                                    { backgroundColor: theme.colors.primary },
-                                ]}
+                                style={[s.setupButton, { backgroundColor: theme.colors.primary }]}
                             >
                                 <Plus size={20} color="#fff" />
-                                <Text style={budgetStyles.setupButtonText}>Set Budget</Text>
+                                <Text style={s.setupButtonText}>Set Budget</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 ) : (
                     <>
-                        {/* Budget Health Card with Donut Chart */}
-                        <View
-                            style={[
-                                budgetStyles.healthCard,
-                                {
-                                    backgroundColor: theme.colors.card,
-                                    borderColor: theme.colors.border,
-                                },
-                            ]}
-                        >
-                            <View style={budgetStyles.healthHeader}>
-                                <View>
-                                    <Text
-                                        style={[
-                                            budgetStyles.healthLabel,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
-                                        {getPeriodDisplayName(budget.period)}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            budgetStyles.healthTitle,
-                                            { color: theme.colors.text },
-                                        ]}
-                                    >
-                                        Budget Health
-                                    </Text>
-                                </View>
+                        {/* Summary Card */}
+                        <View style={[s.summaryCard, { backgroundColor: theme.colors.card }]}>
+                            <View style={s.summaryTop}>
+                                <Text style={[s.summaryLabel, { color: theme.colors.textSecondary }]}>
+                                    Left for {daysLeft} day{daysLeft !== 1 ? "s" : ""}
+                                </Text>
                                 <TouchableOpacity
                                     onPress={() => setShowSetup(true)}
-                                    style={[
-                                        budgetStyles.editButton,
-                                        { backgroundColor: theme.colors.surface },
-                                    ]}
+                                    style={[s.editBudgetBtn, { borderColor: theme.colors.border }]}
                                 >
-                                    <Edit size={18} color={theme.colors.primary} />
+                                    <Text style={[s.editBudgetText, { color: theme.colors.primary }]}>
+                                        Edit budget
+                                    </Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <View style={budgetStyles.healthScoreContainer}>
-                                <DonutChart
-                                    data={healthDonutData}
-                                    total={100}
-                                    currencySymbol=""
-                                    centerOverride={
-                                        <View style={{ alignItems: "center" }}>
-                                            <Text
-                                                style={{
-                                                    fontSize: 26,
-                                                    fontWeight: "800",
-                                                    color: healthColor,
-                                                }}
-                                            >
-                                                {healthScore.toFixed(0)}%
-                                            </Text>
-                                            <Text
-                                                style={{
-                                                    fontSize: 11,
-                                                    color: theme.colors.textSecondary,
-                                                    fontWeight: "500",
-                                                }}
-                                            >
-                                                {healthScore >= 70
-                                                    ? "Excellent"
-                                                    : healthScore >= 40
-                                                        ? "Fair"
-                                                        : "Over Budget"}
-                                            </Text>
-                                        </View>
-                                    }
-                                    hideLegend
+                            <Text style={[s.remainingAmount, { color: theme.colors.text }]}>
+                                {currencySymbol}{remaining.toFixed(2)}
+                            </Text>
+
+                            <View
+                                style={[s.summaryProgressBg, { backgroundColor: theme.colors.surface }]}
+                            >
+                                <View
+                                    style={[
+                                        s.summaryProgressFill,
+                                        {
+                                            backgroundColor: healthColor,
+                                            width: `${Math.min(100, (totalSpent / Math.max(totalLimit, 1)) * 100)}%`,
+                                        },
+                                    ]}
                                 />
                             </View>
 
-                            <View style={budgetStyles.healthStats}>
-                                <View style={budgetStyles.statItem}>
-                                    <Text
-                                        style={[
-                                            budgetStyles.statLabel,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
-                                        Spent
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            budgetStyles.statValue,
-                                            { color: theme.colors.error },
-                                        ]}
-                                    >
-                                        {currencySymbol}
-                                        {totalSpent.toFixed(2)}
-                                    </Text>
-                                </View>
-                                <View style={budgetStyles.statDivider} />
-                                <View style={budgetStyles.statItem}>
-                                    <Text
-                                        style={[
-                                            budgetStyles.statLabel,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
-                                        Budget
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            budgetStyles.statValue,
-                                            { color: theme.colors.text },
-                                        ]}
-                                    >
-                                        {currencySymbol}
-                                        {totalLimit.toFixed(2)}
-                                    </Text>
-                                </View>
-                                <View style={budgetStyles.statDivider} />
-                                <View style={budgetStyles.statItem}>
-                                    <Text
-                                        style={[
-                                            budgetStyles.statLabel,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
-                                        Remaining
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            budgetStyles.statValue,
-                                            { color: theme.colors.success },
-                                        ]}
-                                    >
-                                        {currencySymbol}
-                                        {Math.max(0, totalLimit - totalSpent).toFixed(2)}
-                                    </Text>
-                                </View>
+                            <View style={s.summaryFooter}>
+                                <Text style={[s.summaryFooterText, { color: theme.colors.textSecondary }]}>
+                                    {currencySymbol}{totalSpent.toFixed(2)} already spent
+                                </Text>
+                                <Text style={[s.summaryFooterText, { color: theme.colors.textSecondary }]}>
+                                    {currencySymbol}{totalLimit.toFixed(2)} set budget
+                                </Text>
                             </View>
                         </View>
 
-                        {(budgetBarLabels.length > 0 || spendingPieItems.length > 0) && (
-                            <ChartCarousel
-                                pages={[
-                                    ...(budgetBarLabels.length > 0
-                                        ? [
-                                              {
-                                                  title: "Budget vs Spent",
-                                                  legend: [
-                                                      { label: "Budget", color: theme.colors.primary + "40" },
-                                                      { label: "Spent", color: theme.colors.primary },
-                                                  ],
-                                                  content: (
-                                                      <PairedBarChart
-                                                          labels={budgetBarLabels}
-                                                          primaryData={budgetBarLimits}
-                                                          secondaryData={budgetBarSpent}
-                                                          primaryColor={theme.colors.primary + "40"}
-                                                          secondaryColor={theme.colors.primary}
-                                                          currencySymbol={currencySymbol}
-                                                      />
-                                                  ),
-                                              },
-                                          ]
-                                        : []),
-                                    ...(spendingPieItems.length > 0
-                                        ? [
-                                              {
-                                                  title: "Spending Allocation",
-                                                  content: (
-                                                      <DonutChart
-                                                          data={spendingPieItems}
-                                                          total={spendingPieTotal}
-                                                          currencySymbol={currencySymbol}
-                                                      />
-                                                  ),
-                                              },
-                                          ]
-                                        : []),
-                                ]}
-                            />
-                        )}
-
-                        {/* Category Budgets */}
-                        <View style={budgetStyles.section}>
-                            <Text style={[budgetStyles.sectionTitle, { color: theme.colors.text }]}>
-                                Category Breakdown
+                        {/* Category List */}
+                        <View style={s.categorySection}>
+                            <Text style={[s.categorySectionTitle, { color: theme.colors.text }]}>
+                                Budget categories
                             </Text>
 
                             {budgetData.length === 0 ? (
-                                <View
-                                    style={[
-                                        budgetStyles.emptyCard,
-                                        { backgroundColor: theme.colors.card },
-                                    ]}
-                                >
+                                <View style={[s.emptyCard, { backgroundColor: theme.colors.card }]}>
                                     <AlertCircle size={32} color={theme.colors.textSecondary} />
-                                    <Text
-                                        style={[
-                                            budgetStyles.emptyCardText,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
+                                    <Text style={[s.emptyCardText, { color: theme.colors.textSecondary }]}>
                                         No category budgets set
                                     </Text>
                                 </View>
                             ) : (
-                                budgetData.map((item) => {
-                                    const statusColor = getBudgetStatusColor(
-                                        item.percentage,
-                                        theme,
-                                    );
-                                    return (
-                                        <View
-                                            key={item.categoryId}
-                                            style={[
-                                                budgetStyles.categoryCard,
-                                                { backgroundColor: theme.colors.card },
-                                            ]}
-                                        >
-                                            <View style={budgetStyles.categoryHeader}>
-                                                <Text
-                                                    style={[
-                                                        budgetStyles.categoryName,
-                                                        { color: theme.colors.text },
-                                                    ]}
-                                                >
-                                                    {item.categoryName}
-                                                </Text>
-                                                <Text
-                                                    style={[
-                                                        budgetStyles.categoryPercentage,
-                                                        { color: statusColor },
-                                                    ]}
-                                                >
-                                                    {item.percentage.toFixed(0)}%
-                                                </Text>
-                                            </View>
+                                <View style={[s.categoryList, { backgroundColor: theme.colors.card }]}>
+                                    {budgetData.map((item, index) => {
+                                        const isOver = item.spent > item.limit;
+                                        const statusColor = getBudgetStatusColor(item.percentage, theme);
+                                        const iconColor = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
+                                        const initial = item.categoryName.charAt(0).toUpperCase();
+                                        const leftOrOver = isOver
+                                            ? item.spent - item.limit
+                                            : item.limit - item.spent;
 
+                                        return (
                                             <View
+                                                key={item.categoryId}
                                                 style={[
-                                                    budgetStyles.progressBarBg,
-                                                    { backgroundColor: theme.colors.surface },
+                                                    s.categoryRow,
+                                                    index < budgetData.length - 1 && {
+                                                        borderBottomWidth: StyleSheet.hairlineWidth,
+                                                        borderBottomColor: theme.colors.borderLight,
+                                                    },
                                                 ]}
                                             >
-                                                <View
-                                                    style={[
-                                                        budgetStyles.progressBarFill,
-                                                        {
-                                                            width: `${Math.min(
-                                                                100,
-                                                                item.percentage,
-                                                            )}%`,
-                                                            backgroundColor: statusColor,
-                                                        },
-                                                    ]}
-                                                />
-                                            </View>
-
-                                            <View style={budgetStyles.categoryFooter}>
-                                                <View>
-                                                    <Text
-                                                        style={[
-                                                            budgetStyles.categoryAmount,
-                                                            { color: theme.colors.text },
-                                                        ]}
-                                                    >
-                                                        {currencySymbol}
-                                                        {item.spent.toFixed(2)} / {currencySymbol}
-                                                        {item.limit.toFixed(2)}
-                                                    </Text>
-                                                    <Text
-                                                        style={[
-                                                            budgetStyles.categoryRemaining,
-                                                            { color: theme.colors.textSecondary },
-                                                        ]}
-                                                    >
-                                                        {currencySymbol}
-                                                        {item.remaining.toFixed(2)} remaining
+                                                <View style={s.categoryIcon}>
+                                                    <Svg width={40} height={40} viewBox="0 0 40 40">
+                                                        <Circle
+                                                            cx={20}
+                                                            cy={20}
+                                                            r={16}
+                                                            stroke={theme.colors.surface}
+                                                            strokeWidth={4}
+                                                            fill="none"
+                                                        />
+                                                        <Circle
+                                                            cx={20}
+                                                            cy={20}
+                                                            r={16}
+                                                            stroke={statusColor}
+                                                            strokeWidth={4}
+                                                            fill="none"
+                                                            strokeLinecap="round"
+                                                            strokeDasharray={`${Math.min(item.percentage, 100) / 100 * 100.5} 100.5`}
+                                                            rotation={-90}
+                                                            origin="20,20"
+                                                        />
+                                                    </Svg>
+                                                    <Text style={[s.categoryInitial, { color: iconColor }]}>
+                                                        {initial}
                                                     </Text>
                                                 </View>
-                                                {item.percentage >= 90 && (
-                                                    <AlertCircle size={20} color={statusColor} />
-                                                )}
+
+                                                <View style={s.categoryInfo}>
+                                                    <Text style={[s.categoryName, { color: theme.colors.text }]} numberOfLines={1}>
+                                                        {item.categoryName}
+                                                    </Text>
+                                                    <Text style={[s.categorySpent, { color: theme.colors.textSecondary }]}>
+                                                        {currencySymbol}{item.spent.toFixed(2)}{" "}
+                                                        <Text style={{ fontWeight: "400" }}>of</Text>{" "}
+                                                        {currencySymbol}{item.limit.toFixed(2)}
+                                                    </Text>
+                                                </View>
+
+                                                <Text style={[s.categoryStatus, { color: statusColor }]}>
+                                                    {currencySymbol}{leftOrOver.toFixed(2)} {isOver ? "over" : "left"}
+                                                </Text>
                                             </View>
-                                        </View>
-                                    );
-                                })
+                                        );
+                                    })}
+                                </View>
                             )}
                         </View>
                     </>
@@ -608,16 +440,16 @@ export default function BudgetDashboardScreen({
                             "Set spending limits for each cashbook to stay on top of your finances. Budgets can be weekly, monthly, or yearly.",
                     },
                     {
-                        title: "Health Score",
+                        title: "Remaining Budget",
                         icon: <Target size={24} color={theme.colors.primary} />,
                         description:
-                            "Your budget health score shows how well you're staying within your limits. Green means great, yellow needs attention, red means over budget.",
+                            "See how much you have left at a glance. The progress bar and color tell you if you're on track or overspending.",
                     },
                     {
                         title: "Category Breakdown",
                         icon: <BarChart3 size={24} color={theme.colors.primary} />,
                         description:
-                            "Track spending per category with progress bars. Set individual limits for food, transport, and more to control where your money goes.",
+                            "Track spending per category. Each row shows how much you've spent vs your limit, and how much is left.",
                     },
                 ]}
             />
@@ -627,32 +459,12 @@ export default function BudgetDashboardScreen({
 
 const createBudgetStyles = (theme: any) =>
     StyleSheet.create({
-        container: {
-            flex: 1,
-        },
-        header: {
-            paddingHorizontal: 16,
-            paddingVertical: 16,
-            borderBottomWidth: 1,
-        },
-        headerTitle: {
-            fontSize: 24,
-            fontWeight: "700",
-        },
         content: {
             flex: 1,
-            padding: 16,
         },
         section: {
-            marginBottom: 24,
-        },
-        sectionTitle: {
-            fontSize: 16,
-            fontWeight: "700",
-            marginBottom: 12,
-        },
-        businessScroll: {
-            marginBottom: 8,
+            marginBottom: 16,
+            paddingHorizontal: 20,
         },
         businessChip: {
             paddingHorizontal: 16,
@@ -669,12 +481,6 @@ const createBudgetStyles = (theme: any) =>
             paddingVertical: 60,
             alignItems: "center",
         },
-        emptyContainer: {
-            flex: 1,
-            justifyContent: "center",
-            alignItems: "center",
-            paddingHorizontal: 32,
-        },
         emptyTitle: {
             fontSize: 20,
             fontWeight: "600",
@@ -687,10 +493,11 @@ const createBudgetStyles = (theme: any) =>
         },
         noBudgetContainer: {
             paddingVertical: 40,
+            paddingHorizontal: 20,
         },
         noBudgetCard: {
             padding: 32,
-            borderRadius: 16,
+            borderRadius: 20,
             alignItems: "center",
         },
         noBudgetTitle: {
@@ -717,109 +524,120 @@ const createBudgetStyles = (theme: any) =>
             fontSize: 16,
             fontWeight: "600",
         },
-        healthCard: {
-            padding: 20,
-            borderRadius: 16,
-            marginBottom: 24,
-            borderWidth: 1,
-        },
-        healthHeader: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            marginBottom: 16,
-        },
-        healthLabel: {
-            fontSize: 13,
-            marginBottom: 4,
-        },
-        healthTitle: {
-            fontSize: 18,
-            fontWeight: "700",
-        },
-        editButton: {
-            padding: 8,
-            borderRadius: 8,
-        },
-        healthScoreContainer: {
-            alignItems: "center",
-            marginBottom: 20,
-        },
-        healthStats: {
-            flexDirection: "row",
-            justifyContent: "space-around",
-            paddingTop: 16,
-            borderTopWidth: 1,
-            borderTopColor: theme.colors.border,
-        },
-        statItem: {
-            alignItems: "center",
-            flex: 1,
-        },
-        statLabel: {
-            fontSize: 12,
-            marginBottom: 4,
-        },
-        statValue: {
-            fontSize: 16,
-            fontWeight: "700",
-        },
-        statDivider: {
-            width: 1,
-            backgroundColor: theme.colors.border,
-        },
 
-        // Category cards
-        categoryCard: {
-            padding: 16,
-            borderRadius: 12,
-            marginBottom: 12,
+        // Summary Card
+        summaryCard: {
+            marginHorizontal: 20,
+            marginBottom: 28,
+            padding: 20,
+            borderRadius: 20,
             elevation: 1,
             shadowColor: "#000",
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.03,
-            shadowRadius: 2,
+            shadowRadius: 4,
         },
-        categoryHeader: {
+        summaryTop: {
             flexDirection: "row",
             justifyContent: "space-between",
             alignItems: "center",
-            marginBottom: 12,
+            marginBottom: 8,
         },
-        categoryName: {
-            fontSize: 15,
+        summaryLabel: {
+            fontSize: 13,
+            fontWeight: "500",
+        },
+        editBudgetBtn: {
+            paddingHorizontal: 14,
+            paddingVertical: 6,
+            borderRadius: 20,
+            borderWidth: 1,
+        },
+        editBudgetText: {
+            fontSize: 12,
             fontWeight: "600",
         },
-        categoryPercentage: {
-            fontSize: 15,
-            fontWeight: "700",
+        remainingAmount: {
+            fontSize: 36,
+            fontWeight: "800",
+            letterSpacing: -1,
+            marginBottom: 16,
         },
-        progressBarBg: {
+        summaryProgressBg: {
             height: 8,
             borderRadius: 4,
             overflow: "hidden",
             marginBottom: 12,
         },
-        progressBarFill: {
+        summaryProgressFill: {
             height: "100%",
             borderRadius: 4,
         },
-        categoryFooter: {
+        summaryFooter: {
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "center",
         },
-        categoryAmount: {
-            fontSize: 14,
+        summaryFooterText: {
+            fontSize: 12,
+            fontWeight: "500",
+        },
+
+        // Category Section
+        categorySection: {
+            paddingHorizontal: 20,
+        },
+        categorySectionTitle: {
+            fontSize: 16,
+            fontWeight: "700",
+            marginBottom: 12,
+        },
+        categoryList: {
+            borderRadius: 20,
+            overflow: "hidden",
+            elevation: 1,
+            shadowColor: "#000",
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 4,
+        },
+        categoryRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 16,
+            paddingVertical: 14,
+        },
+        categoryIcon: {
+            width: 40,
+            height: 40,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        categoryInitial: {
+            position: "absolute",
+            fontSize: 13,
+            fontWeight: "700",
+        },
+        categoryInfo: {
+            flex: 1,
+            marginLeft: 12,
+        },
+        categoryName: {
+            fontSize: 15,
             fontWeight: "600",
             marginBottom: 2,
         },
-        categoryRemaining: {
+        categorySpent: {
             fontSize: 12,
+            fontWeight: "500",
+        },
+        categoryStatus: {
+            fontSize: 13,
+            fontWeight: "600",
+            marginLeft: 8,
         },
         emptyCard: {
             padding: 32,
-            borderRadius: 12,
+            borderRadius: 20,
             alignItems: "center",
         },
         emptyCardText: {

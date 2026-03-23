@@ -293,7 +293,7 @@ export default function SettingsScreen({
                 style={{ flex: 1 }}
             >
                 <ScrollView
-                    contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40 }}
+                    contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 100 }}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Profile Card */}

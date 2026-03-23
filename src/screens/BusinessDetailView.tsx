@@ -617,7 +617,7 @@ export default function BusinessDetailView({
                                 <Text style={styles.emptyText}>No transactions found</Text>
                             </View>
                         )}
-                        <View style={{ height: 120 }} />
+                        <View style={{ height: 200 }} />
                     </View>
                 </ScrollView>
 
