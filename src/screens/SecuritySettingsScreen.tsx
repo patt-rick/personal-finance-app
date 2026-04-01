@@ -173,8 +173,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                     <Text style={styles.sectionLabel}>App Lock</Text>
                     <View style={styles.groupCard}>
                         <View style={styles.row}>
-                            <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
-                                <Lock size={18} color="#2D6A4F" />
+                            <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                <Lock size={18} color={theme.colors.primary} />
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.rowText}>PIN Lock</Text>
@@ -186,14 +186,14 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 value={pinEnabled}
                                 onValueChange={handleTogglePin}
                                 trackColor={{ false: theme.colors.surface, true: theme.colors.primary }}
-                                thumbColor="white"
+                                thumbColor={theme.colors.textInverse}
                             />
                         </View>
 
                         {pinEnabled && biometricsAvailable && (
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
-                                    <BiometricIcon size={18} color="#3A7D5C" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <BiometricIcon size={18} color={theme.colors.success} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>{biometricType}</Text>
@@ -204,8 +204,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 <Switch
                                     value={biometricsOn}
                                     onValueChange={handleToggleBiometrics}
-                                    trackColor={{ false: theme.colors.surface, true: "#3A7D5C" }}
-                                    thumbColor="white"
+                                    trackColor={{ false: theme.colors.surface, true: theme.colors.success }}
+                                    thumbColor={theme.colors.textInverse}
                                 />
                             </View>
                         )}
@@ -215,8 +215,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleChangePin}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(193, 127, 89, 0.1)" }]}>
-                                    <Lock size={18} color="#C17F59" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.expenseBg }]}>
+                                    <Lock size={18} color={theme.colors.secondary} />
                                 </View>
                                 <Text style={styles.rowText}>Change PIN</Text>
                             </TouchableOpacity>
@@ -231,10 +231,10 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleTogglePin}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(196, 69, 58, 0.1)" }]}>
-                                    <Trash2 size={18} color="#C4453A" />
+                                <View style={[styles.iconCircle, { backgroundColor: `${theme.colors.error}1A` }]}>
+                                    <Trash2 size={18} color={theme.colors.error} />
                                 </View>
-                                <Text style={[styles.rowText, { color: "#C4453A" }]}>Remove PIN</Text>
+                                <Text style={[styles.rowText, { color: theme.colors.error }]}>Remove PIN</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -413,7 +413,7 @@ const createVerifyStyles = (theme: any) =>
             width: 64,
             height: 64,
             borderRadius: 20,
-            backgroundColor: "rgba(45, 106, 79, 0.1)",
+            backgroundColor: theme.colors.incomeBg,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
@@ -441,12 +441,12 @@ const createVerifyStyles = (theme: any) =>
             borderColor: theme.colors.primary,
         },
         dotError: {
-            backgroundColor: "#C4453A",
-            borderColor: "#C4453A",
+            backgroundColor: theme.colors.error,
+            borderColor: theme.colors.error,
         },
         errorText: {
             fontSize: 13,
-            color: "#C4453A",
+            color: theme.colors.error,
             fontWeight: "600",
             marginTop: 4,
         },
@@ -501,7 +501,7 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,
@@ -530,7 +530,7 @@ const createStyles = (theme: any) =>
             borderRadius: 16,
             overflow: "hidden",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,

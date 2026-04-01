@@ -54,7 +54,9 @@ export function getCategoryBreakdown(
     startDate: Date,
     endDate: Date,
     type: "income" | "expense",
+    colors?: string[],
 ): { name: string; amount: number; percentage: number; color: string }[] {
+    const palette = colors || CATEGORY_COLORS;
     const filtered = transactions.filter((t) => {
         const td = new Date(t.date);
         return t.type === type && td >= startDate && td <= endDate;
@@ -75,7 +77,7 @@ export function getCategoryBreakdown(
             percentage: total > 0 ? (amount / total) * 100 : 0,
         }))
         .sort((a, b) => b.amount - a.amount)
-        .map((item, i) => ({ ...item, color: CATEGORY_COLORS[i % CATEGORY_COLORS.length] }));
+        .map((item, i) => ({ ...item, color: palette[i % palette.length] }));
 }
 
 export function getMonthComparison(

@@ -3,14 +3,23 @@ import { View, Text, StyleSheet } from "react-native";
 import { useTheme } from "../../theme/theme";
 import { Transaction } from "../../types";
 
-const ICON_COLORS = ["#4A7C8F", "#C17F59", "#8B7A9E", "#5B8A72", "#C4453A", "#C9A86C"];
+function getIconColors(theme: ReturnType<typeof useTheme>) {
+    return [
+        theme.colors.chartBlue,
+        theme.colors.secondary,
+        theme.colors.chartPurple,
+        theme.colors.chartGreen,
+        theme.colors.error,
+        theme.colors.gold,
+    ];
+}
 
-function getIconColor(name: string): string {
+function getIconColor(name: string, iconColors: string[]): string {
     let hash = 0;
     for (let i = 0; i < name.length; i++) {
         hash = name.charCodeAt(i) + ((hash << 5) - hash);
     }
-    return ICON_COLORS[Math.abs(hash) % ICON_COLORS.length];
+    return iconColors[Math.abs(hash) % iconColors.length];
 }
 
 function formatTimeAgo(date: Date | string): string {
@@ -34,11 +43,12 @@ interface RecentTransactionsProps {
 
 export default function RecentTransactions({ transactions }: RecentTransactionsProps) {
     const theme = useTheme();
+    const iconColors = getIconColors(theme);
 
     if (transactions.length === 0) return null;
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.card }]}>
+        <View style={[styles.container, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
             <View style={styles.headerRow}>
                 <Text style={[styles.title, { color: theme.colors.text }]}>
                     Recent Transactions
@@ -49,7 +59,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
             </View>
 
             {transactions.map((tx, i) => {
-                const color = getIconColor(tx.category || tx.description);
+                const color = getIconColor(tx.category || tx.description, iconColors);
                 const initial = (tx.category || tx.description).charAt(0).toUpperCase();
                 const isIncome = tx.type === "income";
 
@@ -104,7 +114,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 20,
         elevation: 1,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.03,
         shadowRadius: 8,

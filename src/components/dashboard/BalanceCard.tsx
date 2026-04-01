@@ -138,8 +138,8 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
     );
 
     const cardGradient: [string, string, string] = isDark
-        ? [theme.colors.primary, "#1E4F3D", theme.colors.primary]
-        : [theme.colors.primary, "#1A3C34", "#0E2420"];
+        ? [theme.colors.primary, theme.colors.gradientStart, theme.colors.primary]
+        : [theme.colors.primary, theme.colors.gradientStart, theme.colors.gradientEnd];
 
     const renderPage = (item: CurrencyBalance, cardWidth: number) => {
         const symbol = getCurrencySymbol(item.currency);
@@ -149,7 +149,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                     colors={cardGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={styles.card}
+                    style={[styles.card, { shadowColor: theme.colors.shadow }]}
                 >
                     <View style={styles.bigCircle} pointerEvents="none" />
                     <HolographicOverlay />
@@ -161,7 +161,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                             </Text>
                             <CardCircles size={28} />
                         </View>
-                        <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
+                        <Text style={[styles.amount, { color: theme.colors.textInverse }]} numberOfLines={1} adjustsFontSizeToFit>
                             {symbol}{" "}
                             {item.balance.toLocaleString(undefined, {
                                 minimumFractionDigits: 2,
@@ -175,7 +175,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                             <View style={styles.miniStat}>
                                 <Text style={styles.miniLabel}>Income</Text>
                                 <Text
-                                    style={styles.miniValue}
+                                    style={[styles.miniValue, { color: theme.colors.textInverse }]}
                                     numberOfLines={1}
                                     adjustsFontSizeToFit
                                 >
@@ -189,7 +189,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                             <View style={styles.miniStat}>
                                 <Text style={styles.miniLabel}>Expense</Text>
                                 <Text
-                                    style={styles.miniValue}
+                                    style={[styles.miniValue, { color: theme.colors.textInverse }]}
                                     numberOfLines={1}
                                     adjustsFontSizeToFit
                                 >
@@ -246,7 +246,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                                         ? theme.colors.primary
                                         : isDark
                                           ? "rgba(255,255,255,0.15)"
-                                          : "#D1D5DB",
+                                          : theme.colors.border,
                                 width: i === activeIndex ? 18 : 6,
                             },
                         ]}
@@ -271,7 +271,6 @@ const styles = StyleSheet.create({
         paddingBottom: 20,
         overflow: "hidden",
         elevation: 8,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.25,
         shadowRadius: 20,
@@ -324,7 +323,6 @@ const styles = StyleSheet.create({
     amount: {
         fontSize: 32,
         fontWeight: "800",
-        color: "#FFFFFF",
         letterSpacing: -0.5,
     },
     cardDotsRow: {
@@ -368,7 +366,6 @@ const styles = StyleSheet.create({
     },
     miniValue: {
         fontSize: 13,
-        color: "#FFFFFF",
         fontWeight: "700",
     },
     miniDivider: {

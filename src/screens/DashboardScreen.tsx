@@ -1,7 +1,27 @@
 import { getCurrencySymbol } from "../utils/_helpers";
-import { Users, Wallet, BarChart3, LayoutGrid, Plus } from "lucide-react-native";
-import React, { useCallback, useMemo, useState } from "react";
-import { BackHandler, RefreshControl, ScrollView, Text, TouchableOpacity, View, StyleSheet } from "react-native";
+import {
+    Users,
+    Wallet,
+    BarChart3,
+    LayoutGrid,
+    Plus,
+    ArrowUpRight,
+    ArrowDownRight,
+    TrendingUp,
+    Hash,
+    Star,
+} from "lucide-react-native";
+import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
+import {
+    BackHandler,
+    RefreshControl,
+    ScrollView,
+    Text,
+    TouchableOpacity,
+    View,
+    StyleSheet,
+    Animated,
+} from "react-native";
 import { useFocusEffect, useNavigation } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
@@ -12,6 +32,244 @@ import ChartCarousel from "../components/ChartCarousel";
 import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import TourOverlay from "../components/TourOverlay";
+
+function getGreeting(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "Good morning";
+    if (hour < 17) return "Good afternoon";
+    return "Good evening";
+}
+
+function getGreetingEmoji(): string {
+    const hour = new Date().getHours();
+    if (hour < 12) return "sunrise";
+    if (hour < 17) return "sun";
+    return "moon";
+}
+
+function AnimatedCashbookItem({
+    business,
+    transactions,
+    theme,
+    onPress,
+    index,
+    styles,
+}: {
+    business: Business;
+    transactions: Transaction[];
+    theme: any;
+    onPress: () => void;
+    index: number;
+    styles: ReturnType<typeof createStyles>;
+}) {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(20)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 400,
+                delay: index * 60,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 400,
+                delay: index * 60,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    const bizTx = transactions.filter((t) => t.businessId === business.id);
+    const income = bizTx
+        .filter((t) => t.type === "income")
+        .reduce((acc, t) => acc + t.amount, 0);
+    const expense = bizTx
+        .filter((t) => t.type === "expense")
+        .reduce((acc, t) => acc + t.amount, 0);
+    const balance = income - expense;
+    const symbol = getCurrencySymbol(business.currency);
+    const txCount = bizTx.length;
+
+    const recentTx = bizTx.sort(
+        (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime(),
+    )[0];
+    const lastActivity = recentTx
+        ? formatRelativeDate(recentTx.date)
+        : "No activity";
+
+    return (
+        <Animated.View
+            style={{
+                opacity: fadeAnim,
+                transform: [{ translateY: slideAnim }],
+            }}
+        >
+            <TouchableOpacity
+                style={[styles.cashbookItem, { backgroundColor: theme.colors.card }]}
+                onPress={onPress}
+                activeOpacity={0.7}
+            >
+                <View
+                    style={[
+                        styles.cashbookIcon,
+                        {
+                            backgroundColor:
+                                balance >= 0
+                                    ? theme.colors.incomeBg
+                                    : theme.colors.expenseBg,
+                        },
+                    ]}
+                >
+                    <Wallet
+                        size={18}
+                        color={
+                            balance >= 0
+                                ? theme.colors.income
+                                : theme.colors.expense
+                        }
+                    />
+                </View>
+                <View style={styles.cashbookInfo}>
+                    <Text style={[styles.cashbookName, { color: theme.colors.text }]}>
+                        {business.name}
+                    </Text>
+                    <Text
+                        style={[
+                            styles.cashbookMeta,
+                            { color: theme.colors.textSecondary },
+                        ]}
+                    >
+                        {txCount} txn{txCount !== 1 ? "s" : ""} · {lastActivity}
+                    </Text>
+                </View>
+                <View style={styles.cashbookRight}>
+                    <Text
+                        style={[
+                            styles.cashbookBalance,
+                            {
+                                color:
+                                    balance >= 0
+                                        ? theme.colors.success
+                                        : theme.colors.error,
+                            },
+                        ]}
+                    >
+                        {balance >= 0 ? "+" : "-"}
+                        {symbol}
+                        {Math.abs(balance).toLocaleString()}
+                    </Text>
+                    <View style={styles.cashbookArrow}>
+                        {balance >= 0 ? (
+                            <ArrowUpRight size={12} color={theme.colors.success} />
+                        ) : (
+                            <ArrowDownRight size={12} color={theme.colors.error} />
+                        )}
+                    </View>
+                </View>
+            </TouchableOpacity>
+        </Animated.View>
+    );
+}
+
+function formatRelativeDate(dateStr: string): string {
+    const date = new Date(dateStr);
+    const now = new Date();
+    const diffMs = now.getTime() - date.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+    if (diffDays === 0) return "Today";
+    if (diffDays === 1) return "Yesterday";
+    if (diffDays < 7) return `${diffDays}d ago`;
+    if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+    return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+
+function QuickStats({
+    businesses,
+    transactions,
+    theme,
+    statsStyles,
+}: {
+    businesses: Business[];
+    transactions: Transaction[];
+    theme: any;
+    statsStyles: ReturnType<typeof createStatsStyles>;
+}) {
+    const stats = useMemo(() => {
+        const totalTx = transactions.length;
+
+        const now = new Date();
+        const thisMonthTx = transactions.filter((t) => {
+            const d = new Date(t.date);
+            return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        });
+
+        const mostActiveBiz = businesses.reduce(
+            (best, biz) => {
+                const count = transactions.filter((t) => t.businessId === biz.id).length;
+                return count > best.count ? { name: biz.name, count } : best;
+            },
+            { name: "—", count: 0 },
+        );
+
+        return {
+            totalTx,
+            monthlyTx: thisMonthTx.length,
+            mostActive: mostActiveBiz.name,
+            bookCount: businesses.length,
+        };
+    }, [businesses, transactions]);
+
+    if (businesses.length === 0) return null;
+
+    return (
+        <View style={[statsStyles.container]}>
+            <View style={[statsStyles.card, { backgroundColor: theme.colors.card }]}>
+                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.incomeBg }]}>
+                    <Hash size={14} color={theme.colors.income} />
+                </View>
+                <Text style={[statsStyles.value, { color: theme.colors.text }]}>
+                    {stats.monthlyTx}
+                </Text>
+                <Text style={[statsStyles.label, { color: theme.colors.textSecondary }]}>
+                    This month
+                </Text>
+            </View>
+
+            <View style={[statsStyles.card, { backgroundColor: theme.colors.card }]}>
+                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.expenseBg }]}>
+                    <TrendingUp size={14} color={theme.colors.expense} />
+                </View>
+                <Text style={[statsStyles.value, { color: theme.colors.text }]}>
+                    {stats.totalTx}
+                </Text>
+                <Text style={[statsStyles.label, { color: theme.colors.textSecondary }]}>
+                    All time
+                </Text>
+            </View>
+
+            <View style={[statsStyles.card, { backgroundColor: theme.colors.card }]}>
+                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.surface }]}>
+                    <Star size={14} color={theme.colors.gold} />
+                </View>
+                <Text
+                    style={[statsStyles.value, { color: theme.colors.text }]}
+                    numberOfLines={1}
+                >
+                    {stats.mostActive.length > 8
+                        ? stats.mostActive.slice(0, 7) + "..."
+                        : stats.mostActive}
+                </Text>
+                <Text style={[statsStyles.label, { color: theme.colors.textSecondary }]}>
+                    Top book
+                </Text>
+            </View>
+        </View>
+    );
+}
 
 function DashboardHome({
     businesses,
@@ -29,6 +287,8 @@ function DashboardHome({
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const navigation = useNavigation();
+    const styles = useMemo(() => createStyles(theme), [theme]);
+    const statsStyles = useMemo(() => createStatsStyles(theme), [theme]);
 
     const currencyBalances = useMemo<CurrencyBalance[]>(() => {
         const map: Record<string, { income: number; expense: number }> = {};
@@ -197,15 +457,17 @@ function DashboardHome({
         return pages;
     }, [filteredTransactions, weeklyChartData, pieData, theme, currencySymbol]);
 
+    const firstName = (userProfile?.name || "").split(" ")[0] || "there";
+
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <View>
                     <Text style={[styles.greeting, { color: theme.colors.textSecondary }]}>
-                        Welcome back,
+                        {getGreeting()},
                     </Text>
                     <Text style={[styles.userName, { color: theme.colors.text }]}>
-                        {userProfile?.name || "John Doe"}
+                        {firstName}
                     </Text>
                 </View>
             </View>
@@ -230,97 +492,84 @@ function DashboardHome({
 
                 {chartPages.length > 0 && <ChartCarousel pages={chartPages} />}
 
+                <QuickStats
+                    businesses={businesses}
+                    transactions={transactions}
+                    theme={theme}
+                    statsStyles={statsStyles}
+                />
+
                 <View style={styles.sectionHeader}>
                     <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
                         Your Cashbooks
                     </Text>
-                    <Text style={[styles.sectionCount, { color: theme.colors.textSecondary }]}>
-                        {businesses.length} total
-                    </Text>
+                    <View
+                        style={[
+                            styles.countBadge,
+                            { backgroundColor: theme.colors.surface },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.countBadgeText,
+                                { color: theme.colors.textSecondary },
+                            ]}
+                        >
+                            {businesses.length}
+                        </Text>
+                    </View>
                 </View>
 
                 <View style={styles.cashbooksList}>
-                    {businesses.map((business) => {
-                        const bizTx = transactions.filter((t) => t.businessId === business.id);
-                        const balance = bizTx.reduce(
-                            (acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount),
-                            0,
-                        );
-                        const symbol = getCurrencySymbol(business.currency);
-                        const txCount = bizTx.length;
-
-                        return (
-                            <TouchableOpacity
-                                key={business.id}
-                                style={[
-                                    styles.cashbookItem,
-                                    { backgroundColor: theme.colors.card },
-                                ]}
-                                onPress={() => setCurrentBusiness(business)}
-                            >
-                                <View
-                                    style={[
-                                        styles.cashbookIcon,
-                                        { backgroundColor: theme.colors.surface },
-                                    ]}
-                                >
-                                    <Users size={20} color={theme.colors.text} />
-                                </View>
-                                <View style={styles.cashbookInfo}>
-                                    <Text
-                                        style={[styles.cashbookName, { color: theme.colors.text }]}
-                                    >
-                                        {business.name}
-                                    </Text>
-                                    <Text
-                                        style={[
-                                            styles.cashbookMeta,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
-                                        {txCount} transaction
-                                        {txCount !== 1 ? "s" : ""} · {business.currency || "USD"}
-                                    </Text>
-                                </View>
-                                <Text
-                                    style={[
-                                        styles.cashbookBalance,
-                                        {
-                                            color:
-                                                balance >= 0
-                                                    ? theme.colors.success
-                                                    : theme.colors.error,
-                                        },
-                                    ]}
-                                >
-                                    {balance >= 0 ? "+" : "-"}
-                                    {symbol}
-                                    {Math.abs(balance).toLocaleString()}
-                                </Text>
-                            </TouchableOpacity>
-                        );
-                    })}
+                    {businesses.map((business, index) => (
+                        <AnimatedCashbookItem
+                            key={business.id}
+                            business={business}
+                            transactions={transactions}
+                            theme={theme}
+                            onPress={() => setCurrentBusiness(business)}
+                            index={index}
+                            styles={styles}
+                        />
+                    ))}
                     {businesses.length === 0 && (
                         <View style={styles.emptyContainer}>
                             <View
                                 style={[
-                                    styles.emptyIcon,
-                                    { backgroundColor: theme.colors.primary + "14" },
+                                    styles.emptyIconOuter,
+                                    { backgroundColor: theme.colors.surface },
                                 ]}
                             >
-                                <Wallet size={40} color={theme.colors.primary} />
+                                <View
+                                    style={[
+                                        styles.emptyIconInner,
+                                        { backgroundColor: theme.colors.incomeBg },
+                                    ]}
+                                >
+                                    <Wallet size={32} color={theme.colors.primary} />
+                                </View>
                             </View>
                             <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
-                                No cashbooks yet
+                                Start tracking your finances
                             </Text>
-                            <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
-                                Create your first cashbook to start tracking income and expenses
+                            <Text
+                                style={[
+                                    styles.emptyText,
+                                    { color: theme.colors.textSecondary },
+                                ]}
+                            >
+                                Create a cashbook to begin logging income and expenses across your
+                                businesses
                             </Text>
                             <TouchableOpacity
-                                style={[styles.createBtn, { backgroundColor: theme.colors.primary }]}
+                                style={[
+                                    styles.createBtn,
+                                    { backgroundColor: theme.colors.primary },
+                                ]}
                                 onPress={() => navigation.navigate("Cashbooks" as never)}
+                                activeOpacity={0.8}
                             >
-                                <Plus size={18} color="#fff" />
+                                <Plus size={18} color={theme.colors.textInverse} />
                                 <Text style={styles.createBtnText}>Create Cashbook</Text>
                             </TouchableOpacity>
                         </View>
@@ -361,123 +610,193 @@ function DashboardHome({
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-    },
-    header: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 20,
-        paddingBottom: 16,
-    },
-    greeting: {
-        fontSize: 12,
-        fontWeight: "600",
-        textTransform: "uppercase",
-        letterSpacing: 0.8,
-    },
-    userName: {
-        fontSize: 26,
-        fontWeight: "800",
-        marginTop: 2,
-        letterSpacing: -0.3,
-    },
-    sectionHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        paddingHorizontal: 20,
-        marginTop: 24,
-        marginBottom: 12,
-    },
-    sectionTitle: {
-        fontSize: 17,
-        fontWeight: "700",
-        letterSpacing: -0.2,
-    },
-    sectionCount: {
-        fontSize: 12,
-        fontWeight: "500",
-    },
-    cashbooksList: {
-        paddingHorizontal: 20,
-    },
-    cashbookItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        padding: 14,
-        borderRadius: 16,
-        marginBottom: 10,
-        elevation: 1,
-        shadowColor: "#000",
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.02,
-        shadowRadius: 3,
-    },
-    cashbookIcon: {
-        width: 42,
-        height: 42,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    cashbookInfo: {
-        flex: 1,
-        marginLeft: 14,
-    },
-    cashbookName: {
-        fontSize: 15,
-        fontWeight: "600",
-        letterSpacing: -0.1,
-    },
-    cashbookMeta: {
-        fontSize: 12,
-        marginTop: 2,
-    },
-    cashbookBalance: {
-        fontSize: 15,
-        fontWeight: "700",
-        letterSpacing: -0.2,
-    },
-    emptyContainer: {
-        padding: 40,
-        alignItems: "center",
-    },
-    emptyIcon: {
-        width: 80,
-        height: 80,
-        borderRadius: 24,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 16,
-    },
-    emptyTitle: {
-        fontSize: 18,
-        fontWeight: "700",
-        marginBottom: 6,
-    },
-    emptyText: {
-        textAlign: "center",
-        fontSize: 14,
-        lineHeight: 20,
-        marginBottom: 20,
-    },
-    createBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingVertical: 12,
-        paddingHorizontal: 24,
-        borderRadius: 14,
-        gap: 8,
-    },
-    createBtnText: {
-        color: "#fff",
-        fontSize: 15,
-        fontWeight: "700",
-    },
-});
+const createStatsStyles = (theme: any) =>
+    StyleSheet.create({
+        container: {
+            flexDirection: "row",
+            paddingHorizontal: 20,
+            gap: 10,
+            marginTop: 16,
+        },
+        card: {
+            flex: 1,
+            paddingVertical: 14,
+            paddingHorizontal: 12,
+            borderRadius: 16,
+            alignItems: "center",
+            elevation: 1,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.02,
+            shadowRadius: 3,
+        },
+        iconWrap: {
+            width: 28,
+            height: 28,
+            borderRadius: 8,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 8,
+        },
+        value: {
+            fontSize: 16,
+            fontWeight: "700",
+            letterSpacing: -0.3,
+            marginBottom: 2,
+        },
+        label: {
+            fontSize: 10,
+            fontWeight: "500",
+            textTransform: "uppercase",
+            letterSpacing: 0.3,
+        },
+    });
+
+const createStyles = (theme: any) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+        },
+        header: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingBottom: 16,
+        },
+        greeting: {
+            fontSize: 12,
+            fontWeight: "600",
+            textTransform: "uppercase",
+            letterSpacing: 0.8,
+        },
+        userName: {
+            fontSize: 26,
+            fontWeight: "800",
+            marginTop: 2,
+            letterSpacing: -0.3,
+        },
+        sectionHeader: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            marginTop: 24,
+            marginBottom: 12,
+        },
+        sectionTitle: {
+            fontSize: 17,
+            fontWeight: "700",
+            letterSpacing: -0.2,
+        },
+        countBadge: {
+            paddingHorizontal: 10,
+            paddingVertical: 4,
+            borderRadius: 10,
+        },
+        countBadgeText: {
+            fontSize: 12,
+            fontWeight: "700",
+        },
+        cashbooksList: {
+            paddingHorizontal: 20,
+        },
+        cashbookItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            padding: 14,
+            borderRadius: 16,
+            marginBottom: 10,
+            elevation: 1,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.02,
+            shadowRadius: 3,
+        },
+        cashbookIcon: {
+            width: 42,
+            height: 42,
+            borderRadius: 13,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        cashbookInfo: {
+            flex: 1,
+            marginLeft: 14,
+        },
+        cashbookName: {
+            fontSize: 15,
+            fontWeight: "600",
+            letterSpacing: -0.1,
+        },
+        cashbookMeta: {
+            fontSize: 11,
+            marginTop: 3,
+            letterSpacing: 0.1,
+        },
+        cashbookRight: {
+            alignItems: "flex-end",
+            gap: 2,
+        },
+        cashbookBalance: {
+            fontSize: 15,
+            fontWeight: "700",
+            letterSpacing: -0.2,
+        },
+        cashbookArrow: {
+            opacity: 0.6,
+        },
+        emptyContainer: {
+            padding: 40,
+            alignItems: "center",
+        },
+        emptyIconOuter: {
+            width: 96,
+            height: 96,
+            borderRadius: 28,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+        },
+        emptyIconInner: {
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        emptyTitle: {
+            fontSize: 19,
+            fontWeight: "700",
+            marginBottom: 8,
+            letterSpacing: -0.2,
+        },
+        emptyText: {
+            textAlign: "center",
+            fontSize: 14,
+            lineHeight: 21,
+            marginBottom: 24,
+            paddingHorizontal: 12,
+        },
+        createBtn: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingVertical: 13,
+            paddingHorizontal: 28,
+            borderRadius: 14,
+            gap: 8,
+            elevation: 2,
+            shadowColor: theme.colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
+        },
+        createBtnText: {
+            color: theme.colors.textInverse,
+            fontSize: 15,
+            fontWeight: "700",
+        },
+    });
 
 interface DashboardScreenProps {
     businesses: Business[];

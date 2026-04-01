@@ -44,18 +44,20 @@ import TransactionEntryModal from "../components/TransactionEntryModal";
 import TransactionDetailModal from "../components/TransactionDetailModal";
 import DateRangePickerModal from "../components/DateRangePickerModal";
 
-const CHART_COLORS = [
-    "#2D6A4F",
-    "#C17F59",
-    "#4A7C8F",
-    "#C4453A",
-    "#8B7A9E",
-    "#B07D94",
-    "#5B8A72",
-    "#C9A86C",
-    "#5C7A99",
-    "#7A6853",
-];
+function getChartColors(theme: any): string[] {
+    return [
+        theme.colors.primary,
+        theme.colors.secondary,
+        theme.colors.chartBlue,
+        theme.colors.error,
+        theme.colors.chartPurple,
+        theme.colors.chartPurple,
+        theme.colors.chartGreen,
+        theme.colors.gold,
+        theme.colors.chartBlue,
+        theme.colors.secondary,
+    ];
+}
 
 export default function BusinessDetailView({
     business,
@@ -167,6 +169,8 @@ export default function BusinessDetailView({
         return { labels, incomeValues, expenseValues };
     }, [transactions]);
 
+    const chartColors = useMemo(() => getChartColors(theme), [theme]);
+
     const categoryPieData = useMemo(() => {
         const catMap: Record<string, number> = {};
         transactions
@@ -182,12 +186,12 @@ export default function BusinessDetailView({
         return {
             items: entries.map(([name, value], i) => ({
                 value,
-                color: CHART_COLORS[i % CHART_COLORS.length],
+                color: chartColors[i % chartColors.length],
                 label: name,
             })),
             total,
         };
-    }, [transactions]);
+    }, [transactions, chartColors]);
 
     const groupedTransactions = useMemo(() => {
         const sorted = [...filteredTransactions].sort(
@@ -389,6 +393,7 @@ export default function BusinessDetailView({
                         totalBalance={totalBalance}
                         currency={business.currency}
                         styles={styles}
+                        theme={theme}
                     />
 
                     <IncomeExpenseCards
@@ -478,7 +483,7 @@ export default function BusinessDetailView({
                                             {
                                                 color:
                                                     filterRange === range
-                                                        ? "white"
+                                                        ? theme.colors.textInverse
                                                         : theme.colors.textSecondary,
                                             },
                                         ]}
@@ -510,7 +515,7 @@ export default function BusinessDetailView({
                                     size={12}
                                     color={
                                         filterRange === "custom"
-                                            ? "white"
+                                            ? theme.colors.textInverse
                                             : theme.colors.textSecondary
                                     }
                                 />
@@ -520,7 +525,7 @@ export default function BusinessDetailView({
                                         {
                                             color:
                                                 filterRange === "custom"
-                                                    ? "white"
+                                                    ? theme.colors.textInverse
                                                     : theme.colors.textSecondary,
                                         },
                                     ]}
@@ -638,7 +643,7 @@ export default function BusinessDetailView({
                             setActiveModal("entry");
                         }}
                     >
-                        <Text style={[styles.bigActionBtnTextModern, { color: "white" }]}>
+                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.textInverse }]}>
                             CASH IN
                         </Text>
                     </TouchableOpacity>
@@ -653,7 +658,7 @@ export default function BusinessDetailView({
                             setActiveModal("entry");
                         }}
                     >
-                        <Text style={[styles.bigActionBtnTextModern, { color: "white" }]}>
+                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.textInverse }]}>
                             CASH OUT
                         </Text>
                     </TouchableOpacity>
@@ -703,15 +708,17 @@ function BalanceCard({
     totalBalance,
     currency,
     styles,
+    theme,
 }: {
     symbol: string;
     totalBalance: number;
     currency?: string;
     styles: any;
+    theme: any;
 }) {
     return (
         <LinearGradient
-            colors={["#1B1E2F", "#2A2F4F", "#1A1D2B"]}
+            colors={[theme.colors.gradientStart, theme.colors.gradientMid, theme.colors.gradientEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.modernBalanceCard}
@@ -727,9 +734,9 @@ function BalanceCard({
             <View style={styles.cardFooter}>
                 <Text style={styles.cardNumber}>{currency} Cashbook</Text>
                 <View style={styles.mastercardLogo}>
-                    <View style={[styles.circle, { backgroundColor: "#EB001B" }]} />
+                    <View style={[styles.circle, { backgroundColor: theme.colors.error }]} />
                     <View
-                        style={[styles.circle, { backgroundColor: "#F79E1B", marginLeft: -10 }]}
+                        style={[styles.circle, { backgroundColor: theme.colors.gold, marginLeft: -10 }]}
                     />
                 </View>
             </View>
@@ -754,7 +761,7 @@ function IncomeExpenseCards({
         <View style={styles.statsContainer}>
             <View style={[styles.statCardFixed, { backgroundColor: theme.colors.incomeBg }]}>
                 <View style={[styles.statIconContainer, { backgroundColor: theme.colors.income }]}>
-                    <Plus size={20} color="white" />
+                    <Plus size={20} color={theme.colors.textInverse} />
                 </View>
                 <Text style={styles.statLabel}>Total In</Text>
                 <Text style={styles.statValue}>
@@ -764,7 +771,7 @@ function IncomeExpenseCards({
             </View>
             <View style={[styles.statCardFixed, { backgroundColor: theme.colors.expenseBg }]}>
                 <View style={[styles.statIconContainer, { backgroundColor: theme.colors.expense }]}>
-                    <MinusIcon size={20} color="white" />
+                    <MinusIcon size={20} color={theme.colors.textInverse} />
                 </View>
                 <Text style={styles.statLabel}>Total Out</Text>
                 <Text style={styles.statValue}>

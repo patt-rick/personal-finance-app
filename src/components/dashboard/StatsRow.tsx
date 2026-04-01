@@ -23,7 +23,7 @@ export default function StatsRow({ totalIncome, totalExpense, netBalance, curren
             {stats.map((stat) => (
                 <View
                     key={stat.label}
-                    style={[styles.card, { backgroundColor: theme.colors.card }]}
+                    style={[styles.card, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}
                 >
                     <Text style={[styles.label, { color: theme.colors.textSecondary }]}>
                         {stat.label}
@@ -53,7 +53,6 @@ const styles = StyleSheet.create({
         padding: 14,
         borderRadius: 16,
         elevation: 1,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.02,
         shadowRadius: 3,

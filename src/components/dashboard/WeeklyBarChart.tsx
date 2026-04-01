@@ -24,10 +24,12 @@ export default function WeeklyBarChart({
     incomeData,
     expenseData,
     currencySymbol,
-    incomeColor = "#2D6A4F",
-    expenseColor = "#C17F59",
+    incomeColor,
+    expenseColor,
 }: WeeklyBarChartProps) {
     const theme = useTheme();
+    const resolvedIncomeColor = incomeColor ?? theme.colors.primary;
+    const resolvedExpenseColor = expenseColor ?? theme.colors.secondary;
     const [tooltip, setTooltip] = useState<{ index: number; type: "income" | "expense" } | null>(
         null,
     );
@@ -112,7 +114,7 @@ export default function WeeklyBarChart({
                                 height={incH}
                                 rx={BAR_RADIUS}
                                 ry={BAR_RADIUS}
-                                fill={incomeColor}
+                                fill={resolvedIncomeColor}
                                 onPress={() =>
                                     setTooltip((prev) =>
                                         prev?.index === i && prev?.type === "income"
@@ -128,7 +130,7 @@ export default function WeeklyBarChart({
                                 height={expH}
                                 rx={BAR_RADIUS}
                                 ry={BAR_RADIUS}
-                                fill={expenseColor}
+                                fill={resolvedExpenseColor}
                                 onPress={() =>
                                     setTooltip((prev) =>
                                         prev?.index === i && prev?.type === "expense"

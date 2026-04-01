@@ -228,7 +228,7 @@ export default function SplashScreen() {
                             {
                                 backgroundColor: isDark
                                     ? "rgba(45, 106, 79, 0.15)"
-                                    : "#FFFFFF",
+                                    : theme.colors.card,
                                 shadowColor: theme.colors.primary,
                                 shadowOffset: { width: 0, height: 8 },
                                 shadowOpacity: isDark ? 0.3 : 0.15,

@@ -387,7 +387,7 @@ export default function LockScreen({
                             {
                                 backgroundColor: isDark
                                     ? "rgba(45, 106, 79, 0.12)"
-                                    : "#FFFFFF",
+                                    : theme.colors.card,
                                 shadowColor: theme.colors.primary,
                                 shadowOffset: { width: 0, height: 4 },
                                 shadowOpacity: isDark ? 0.25 : 0.1,
@@ -879,7 +879,7 @@ function PinRecoveryScreen({
                                                 ? isDark
                                                     ? "rgba(255, 255, 255, 0.4)"
                                                     : "rgba(255, 255, 255, 0.6)"
-                                                : "white",
+                                                : theme.colors.textInverse,
                                     },
                                 ]}
                             >

@@ -130,7 +130,7 @@ export default function TransferCashbookModal({
                                     >
                                         <Wallet
                                             size={16}
-                                            color={isSelected ? "#fff" : theme.colors.primary}
+                                            color={isSelected ? theme.colors.textInverse : theme.colors.primary}
                                         />
                                     </View>
                                     <View style={{ flex: 1 }}>
@@ -157,7 +157,7 @@ export default function TransferCashbookModal({
                                             },
                                         ]}
                                     >
-                                        {isSelected && <Check size={12} color="#fff" />}
+                                        {isSelected && <Check size={12} color={theme.colors.textInverse} />}
                                     </View>
                                 </TouchableOpacity>
                             );
@@ -174,7 +174,7 @@ export default function TransferCashbookModal({
                             onPress={handleTransfer}
                             disabled={!selectedId}
                         >
-                            <ArrowRightLeft size={16} color="#fff" />
+                            <ArrowRightLeft size={16} color={theme.colors.textInverse} />
                             <Text style={s.transferBtnText}>Transfer & Delete</Text>
                         </TouchableOpacity>
                         <TouchableOpacity style={s.cancelBtn} onPress={handleClose}>
@@ -274,7 +274,7 @@ const createStyles = (theme: any) =>
             justifyContent: "center",
             gap: 8,
         },
-        transferBtnText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+        transferBtnText: { color: theme.colors.textInverse, fontWeight: "700", fontSize: 15 },
         cancelBtn: { alignItems: "center", paddingVertical: 8 },
         cancelBtnText: { fontSize: 14, fontWeight: "600" },
     });

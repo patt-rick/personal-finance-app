@@ -98,7 +98,7 @@ export default function CreateCashbookModal({
                                             style={[
                                                 s.currSym,
                                                 { color: theme.colors.text },
-                                                selectedCurrency === curr.value && { color: "#fff" },
+                                                selectedCurrency === curr.value && { color: theme.colors.textInverse },
                                             ]}
                                         >
                                             {curr.symbol}
@@ -107,7 +107,7 @@ export default function CreateCashbookModal({
                                             style={[
                                                 s.currCode,
                                                 { color: theme.colors.textSecondary },
-                                                selectedCurrency === curr.value && { color: "#fff" },
+                                                selectedCurrency === curr.value && { color: theme.colors.textInverse },
                                             ]}
                                         >
                                             {curr.value}
@@ -120,7 +120,7 @@ export default function CreateCashbookModal({
                                 style={[s.submitBtn, { backgroundColor: theme.colors.primary }]}
                                 onPress={handleSubmit}
                             >
-                                <Text style={s.submitText}>Create Cashbook</Text>
+                                <Text style={[s.submitText, { color: theme.colors.textInverse }]}>Create Cashbook</Text>
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -176,5 +176,5 @@ const s = StyleSheet.create({
     currSym: { fontSize: 20, fontWeight: "700" },
     currCode: { fontSize: 10, fontWeight: "600", marginTop: 2 },
     submitBtn: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center" },
-    submitText: { color: "#fff", fontWeight: "700", fontSize: 15 },
+    submitText: { fontWeight: "700", fontSize: 15 },
 });

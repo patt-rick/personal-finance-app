@@ -642,7 +642,7 @@ function SecurityQuestionsStep({
                                 sqStyles.continueBtnText,
                                 {
                                     color: canContinue
-                                        ? "white"
+                                        ? theme.colors.textInverse
                                         : isDark
                                             ? "rgba(255, 255, 255, 0.4)"
                                             : "rgba(255, 255, 255, 0.6)",

@@ -140,7 +140,7 @@ export default function TransactionDetailModal({
                                     <Pencil size={20} color={theme.colors.primary} />
                                 </TouchableOpacity>
                                 <TouchableOpacity style={styles.txDetailCloseBtn} onPress={onClose}>
-                                    <Text style={{ color: "white", fontWeight: "bold" }}>Done</Text>
+                                    <Text style={{ color: theme.colors.textInverse, fontWeight: "bold" }}>Done</Text>
                                 </TouchableOpacity>
                             </View>
                         </>

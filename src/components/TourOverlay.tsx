@@ -150,7 +150,7 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
                 <View
                     style={[
                         styles.card,
-                        { backgroundColor: theme.colors.card },
+                        { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow },
                     ]}
                     pointerEvents="auto"
                 >
@@ -202,7 +202,7 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
                                 { backgroundColor: theme.colors.primary },
                             ]}
                         >
-                            <Text style={styles.nextText}>
+                            <Text style={[styles.nextText, { color: theme.colors.textInverse }]}>
                                 {isLast ? "Got it" : "Next"}
                             </Text>
                         </TouchableOpacity>
@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 24,
         elevation: 12,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 8 },
         shadowOpacity: 0.15,
         shadowRadius: 24,
@@ -290,6 +289,5 @@ const styles = StyleSheet.create({
     nextText: {
         fontSize: 14,
         fontWeight: "700",
-        color: "#fff",
     },
 });

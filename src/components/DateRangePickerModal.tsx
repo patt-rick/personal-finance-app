@@ -153,7 +153,7 @@ export default function DateRangePickerModal({
                         ]}
                         onPress={handleApply}
                     >
-                        <Text style={styles.applyBtnText}>Apply</Text>
+                        <Text style={[styles.applyBtnText, { color: theme.colors.textInverse }]}>Apply</Text>
                     </TouchableOpacity>
                 </View>
             </View>
@@ -256,7 +256,6 @@ const styles = StyleSheet.create({
         marginTop: 16,
     },
     applyBtnText: {
-        color: "white",
         fontSize: 16,
         fontWeight: "700",
     },

@@ -175,7 +175,7 @@ export default function CashbookDetailSheet({
                                         s={s}
                                     />
 
-                                    <BalanceCard sheetData={sheetData} s={s} />
+                                    <BalanceCard sheetData={sheetData} theme={theme} s={s} />
 
                                     <StatsGrid sheetData={sheetData} theme={theme} s={s} />
 
@@ -196,7 +196,7 @@ export default function CashbookDetailSheet({
                                             ]}
                                             onPress={handleOpen}
                                         >
-                                            <ExternalLink size={18} color="#fff" />
+                                            <ExternalLink size={18} color={theme.colors.textInverse} />
                                             <Text style={s.actionMainText}>Open Cashbook</Text>
                                         </TouchableOpacity>
                                         <TouchableOpacity
@@ -261,7 +261,7 @@ function SheetHeader({
                         onPress={handleRename}
                         style={[s.renameSave, { backgroundColor: theme.colors.primary }]}
                     >
-                        <Text style={{ color: "#fff", fontWeight: "700", fontSize: 13 }}>Save</Text>
+                        <Text style={{ color: theme.colors.textInverse, fontWeight: "700", fontSize: 13 }}>Save</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setIsRenaming(false)} style={s.renameCancel}>
                         <X size={18} color={theme.colors.textSecondary} />
@@ -293,10 +293,10 @@ function SheetHeader({
     );
 }
 
-function BalanceCard({ sheetData, s }: any) {
+function BalanceCard({ sheetData, theme, s }: any) {
     return (
         <LinearGradient
-            colors={["#1B1E2F", "#2A2F4F", "#1A1D2B"]}
+            colors={[theme.colors.gradientStart, theme.colors.gradientMid, theme.colors.gradientEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={s.balanceCard}
@@ -312,14 +312,14 @@ function BalanceCard({ sheetData, s }: any) {
             </Text>
             <View style={s.balanceRow}>
                 <View style={s.balanceMini}>
-                    <TrendingUp size={12} color="#4ADE80" />
+                    <TrendingUp size={12} color={theme.colors.success} />
                     <Text style={s.balanceMiniText}>
                         {sheetData.symbol}
                         {sheetData.income.toLocaleString()}
                     </Text>
                 </View>
                 <View style={[s.balanceMini, { marginLeft: 16 }]}>
-                    <TrendingDown size={12} color="#F87171" />
+                    <TrendingDown size={12} color={theme.colors.error} />
                     <Text style={s.balanceMiniText}>
                         {sheetData.symbol}
                         {sheetData.expense.toLocaleString()}
@@ -466,7 +466,7 @@ const createStyles = (theme: any) =>
         balanceValue: {
             fontSize: 28,
             fontWeight: "800",
-            color: "#fff",
+            color: theme.colors.textInverse,
             letterSpacing: -0.5,
             marginTop: 2,
         },
@@ -509,7 +509,7 @@ const createStyles = (theme: any) =>
             height: 48,
             borderRadius: 12,
         },
-        actionMainText: { color: "#fff", fontSize: 14, fontWeight: "700" },
+        actionMainText: { color: theme.colors.textInverse, fontSize: 14, fontWeight: "700" },
         actionIcon: {
             width: 48,
             height: 48,

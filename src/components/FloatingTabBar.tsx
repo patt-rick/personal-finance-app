@@ -72,8 +72,8 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                         backgroundColor: theme.colors.card,
                         borderColor: isDark ? theme.colors.border : theme.colors.borderLight,
                         ...(isDark
-                            ? { shadowColor: "#000000", shadowOpacity: 0.3 }
-                            : { shadowColor: theme.colors.text, shadowOpacity: 0.08 }),
+                            ? { shadowColor: theme.colors.shadow, shadowOpacity: 0.3 }
+                            : { shadowColor: theme.colors.shadow, shadowOpacity: 0.08 }),
                     },
                 ]}
             >
@@ -130,7 +130,7 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                                     <Animated.View
                                         style={[StyleSheet.absoluteFill, { opacity: focusAnim }]}
                                     >
-                                        <Icon size={20} color="#FFFFFF" />
+                                        <Icon size={20} color={theme.colors.textInverse} />
                                     </Animated.View>
                                 </View>
                                 <Animated.View
@@ -153,7 +153,7 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                                 <Animated.View
                                     style={[styles.labelAbsolute, { opacity: focusAnim }]}
                                 >
-                                    <Text style={[styles.label, { color: "#FFFFFF" }]}>
+                                    <Text style={[styles.label, { color: theme.colors.textInverse }]}>
                                         {label}
                                     </Text>
                                 </Animated.View>

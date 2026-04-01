@@ -407,7 +407,7 @@ export default function DebtTrackerScreen({
                     setShowEntryModal(true);
                 }}
             >
-                <Plus size={24} color="white" />
+                <Plus size={24} color={theme.colors.textInverse} />
             </TouchableOpacity>
 
             <DebtEntryModal
@@ -461,7 +461,7 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,
@@ -483,7 +483,7 @@ const createStyles = (theme: any) =>
             padding: 16,
             borderRadius: 16,
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.02,
             shadowRadius: 3,
@@ -510,7 +510,7 @@ const createStyles = (theme: any) =>
             marginBottom: 12,
             overflow: "hidden",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,
@@ -618,7 +618,7 @@ const createStyles = (theme: any) =>
             justifyContent: "center",
         },
         actionBtnText: {
-            color: "white",
+            color: theme.colors.textInverse,
             fontSize: 13,
             fontWeight: "700",
         },

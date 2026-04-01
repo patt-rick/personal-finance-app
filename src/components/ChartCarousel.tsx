@@ -70,7 +70,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                         </View>
                     )}
                 </View>
-                <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
+                <View style={[styles.card, { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow }]}>
                     {page.content}
                 </View>
             </View>
@@ -120,7 +120,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                         key={index}
                         style={[
                             styles.card,
-                            { backgroundColor: theme.colors.card, width: cardWidth },
+                            { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow, width: cardWidth },
                         ]}
                     >
                         {page.content}
@@ -190,7 +190,6 @@ const styles = StyleSheet.create({
         padding: 16,
         justifyContent: "center",
         elevation: 1,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.02,
         shadowRadius: 3,

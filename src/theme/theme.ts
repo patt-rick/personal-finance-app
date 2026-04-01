@@ -35,6 +35,10 @@ export const lightTheme = {
         chartBlue: "#4A7C8F",
         chartPurple: "#8B7A9E",
         chartGreen: "#5B8A72",
+        shadow: "#000000",
+        gradientStart: "#1A3C34",
+        gradientMid: "#224A40",
+        gradientEnd: "#0E2420",
     },
     spacing: {
         xs: 4,
@@ -74,6 +78,10 @@ export const darkTheme = {
         chartBlue: "#5A8C9F",
         chartPurple: "#9B8AAE",
         chartGreen: "#6B9A82",
+        shadow: "#000000",
+        gradientStart: "#162E28",
+        gradientMid: "#1E3E35",
+        gradientEnd: "#0F1F1A",
     },
 };
 

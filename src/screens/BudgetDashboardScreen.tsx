@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
     View,
     Text,
@@ -8,6 +8,7 @@ import {
     ActivityIndicator,
     RefreshControl,
     BackHandler,
+    Animated,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import {
@@ -35,11 +36,6 @@ import { getCurrencySymbol } from "../utils/_helpers";
 import BudgetSetupScreen from "./BudgetSetupScreen";
 import TourOverlay from "../components/TourOverlay";
 
-const CATEGORY_COLORS = [
-    "#2D6A4F", "#C17F59", "#4A7C8F", "#C4453A", "#8B7A9E",
-    "#B07D94", "#5B8A72", "#C9A86C",
-];
-
 interface BudgetDashboardScreenProps {
     businesses: Business[];
     transactions: Transaction[];
@@ -48,7 +44,6 @@ interface BudgetDashboardScreenProps {
 }
 
 function getDaysLeft(period: "weekly" | "monthly" | "yearly"): number {
-    const { endDate } = getDateRangeForPeriod(period);
     const now = new Date();
     let periodEnd: Date;
 
@@ -74,6 +69,129 @@ function getDaysLeft(period: "weekly" | "monthly" | "yearly"): number {
 
     const diffMs = periodEnd.getTime() - now.getTime();
     return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+}
+
+function BudgetRing({
+    spent,
+    limit,
+    healthColor,
+    theme,
+    currencySymbol,
+    remaining,
+}: {
+    spent: number;
+    limit: number;
+    healthColor: string;
+    theme: any;
+    currencySymbol: string;
+    remaining: number;
+}) {
+    const size = 180;
+    const strokeWidth = 12;
+    const radius = (size - strokeWidth) / 2;
+    const circumference = 2 * Math.PI * radius;
+    const percentage = Math.min(1, spent / Math.max(limit, 1));
+    const strokeDashoffset = circumference * (1 - percentage);
+
+    return (
+        <View style={{ alignItems: "center", justifyContent: "center" }}>
+            <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
+                <Circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke={theme.colors.surface}
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                />
+                <Circle
+                    cx={size / 2}
+                    cy={size / 2}
+                    r={radius}
+                    stroke={healthColor}
+                    strokeWidth={strokeWidth}
+                    fill="none"
+                    strokeLinecap="round"
+                    strokeDasharray={`${circumference}`}
+                    strokeDashoffset={strokeDashoffset}
+                    rotation={-90}
+                    origin={`${size / 2},${size / 2}`}
+                />
+            </Svg>
+            <View style={{ position: "absolute", alignItems: "center" }}>
+                <Text
+                    style={{
+                        fontSize: 11,
+                        fontWeight: "600",
+                        color: theme.colors.textSecondary,
+                        textTransform: "uppercase",
+                        letterSpacing: 0.5,
+                        marginBottom: 2,
+                    }}
+                >
+                    Remaining
+                </Text>
+                <Text
+                    style={{
+                        fontSize: 26,
+                        fontWeight: "800",
+                        color: theme.colors.text,
+                        letterSpacing: -0.5,
+                    }}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                >
+                    {currencySymbol}{remaining.toFixed(0)}
+                </Text>
+                <Text
+                    style={{
+                        fontSize: 11,
+                        fontWeight: "500",
+                        color: healthColor,
+                        marginTop: 2,
+                    }}
+                >
+                    {Math.round(percentage * 100)}% used
+                </Text>
+            </View>
+        </View>
+    );
+}
+
+function AnimatedCategoryRow({
+    children,
+    index,
+}: {
+    children: React.ReactNode;
+    index: number;
+}) {
+    const fadeAnim = useRef(new Animated.Value(0)).current;
+    const slideAnim = useRef(new Animated.Value(12)).current;
+
+    useEffect(() => {
+        Animated.parallel([
+            Animated.timing(fadeAnim, {
+                toValue: 1,
+                duration: 300,
+                delay: index * 50,
+                useNativeDriver: true,
+            }),
+            Animated.timing(slideAnim, {
+                toValue: 0,
+                duration: 300,
+                delay: index * 50,
+                useNativeDriver: true,
+            }),
+        ]).start();
+    }, []);
+
+    return (
+        <Animated.View
+            style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
+        >
+            {children}
+        </Animated.View>
+    );
 }
 
 export default function BudgetDashboardScreen({
@@ -175,17 +293,21 @@ export default function BudgetDashboardScreen({
                 <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
                 <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
                     <View>
-                        <Text style={styles.greetingText}>Financial Focus</Text>
+                        <Text style={styles.greetingText}>Financial focus,</Text>
                         <Text style={styles.userNameText}>Budgets</Text>
                     </View>
                 </View>
-                <View style={styles.emptyContainer}>
-                    <PiggyBank size={64} color={theme.colors.textSecondary} />
+                <View style={s.emptyCenter}>
+                    <View style={[s.emptyIconOuter, { backgroundColor: theme.colors.surface }]}>
+                        <View style={[s.emptyIconInner, { backgroundColor: theme.colors.incomeBg }]}>
+                            <PiggyBank size={32} color={theme.colors.primary} />
+                        </View>
+                    </View>
                     <Text style={[s.emptyTitle, { color: theme.colors.text }]}>
-                        No Businesses Yet
+                        No cashbooks yet
                     </Text>
                     <Text style={[s.emptyText, { color: theme.colors.textSecondary }]}>
-                        Create a business first to set up budgets
+                        Create a cashbook first to set up budgets
                     </Text>
                 </View>
             </View>
@@ -228,7 +350,6 @@ export default function BudgetDashboardScreen({
                     />
                 }
             >
-                {/* Business Selector */}
                 {businesses.length > 1 && (
                     <View style={s.section}>
                         <ScrollView
@@ -257,7 +378,7 @@ export default function BudgetDashboardScreen({
                                             {
                                                 color:
                                                     selectedBusiness?.id === business.id
-                                                        ? "#fff"
+                                                        ? theme.colors.textInverse
                                                         : theme.colors.text,
                                             },
                                         ]}
@@ -276,10 +397,22 @@ export default function BudgetDashboardScreen({
                     </View>
                 ) : !budget ? (
                     <View style={s.noBudgetContainer}>
-                        <View
-                            style={[s.noBudgetCard, { backgroundColor: theme.colors.card }]}
-                        >
-                            <PiggyBank size={48} color={theme.colors.primary} />
+                        <View style={[s.noBudgetCard, { backgroundColor: theme.colors.card }]}>
+                            <View
+                                style={[
+                                    s.emptyIconOuter,
+                                    { backgroundColor: theme.colors.surface },
+                                ]}
+                            >
+                                <View
+                                    style={[
+                                        s.emptyIconInner,
+                                        { backgroundColor: theme.colors.incomeBg },
+                                    ]}
+                                >
+                                    <PiggyBank size={32} color={theme.colors.primary} />
+                                </View>
+                            </View>
                             <Text style={[s.noBudgetTitle, { color: theme.colors.text }]}>
                                 No Budget Set
                             </Text>
@@ -289,67 +422,74 @@ export default function BudgetDashboardScreen({
                             <TouchableOpacity
                                 onPress={() => setShowSetup(true)}
                                 style={[s.setupButton, { backgroundColor: theme.colors.primary }]}
+                                activeOpacity={0.8}
                             >
-                                <Plus size={20} color="#fff" />
-                                <Text style={s.setupButtonText}>Set Budget</Text>
+                                <Plus size={20} color={theme.colors.textInverse} />
+                                <Text style={[s.setupButtonText, { color: theme.colors.textInverse }]}>
+                                    Set Budget
+                                </Text>
                             </TouchableOpacity>
                         </View>
                     </View>
                 ) : (
                     <>
-                        {/* Summary Card */}
                         <View style={[s.summaryCard, { backgroundColor: theme.colors.card }]}>
                             <View style={s.summaryTop}>
-                                <Text style={[s.summaryLabel, { color: theme.colors.textSecondary }]}>
-                                    Left for {daysLeft} day{daysLeft !== 1 ? "s" : ""}
-                                </Text>
+                                <View>
+                                    <Text style={[s.summaryLabel, { color: theme.colors.textSecondary }]}>
+                                        {daysLeft} day{daysLeft !== 1 ? "s" : ""} left
+                                    </Text>
+                                    <Text style={[s.periodLabel, { color: theme.colors.text }]}>
+                                        {budget.period === "weekly"
+                                            ? "This week"
+                                            : budget.period === "monthly"
+                                              ? "This month"
+                                              : "This year"}
+                                    </Text>
+                                </View>
                                 <TouchableOpacity
                                     onPress={() => setShowSetup(true)}
                                     style={[s.editBudgetBtn, { borderColor: theme.colors.border }]}
                                 >
                                     <Text style={[s.editBudgetText, { color: theme.colors.primary }]}>
-                                        Edit budget
+                                        Edit
                                     </Text>
                                 </TouchableOpacity>
                             </View>
 
-                            <Text style={[s.remainingAmount, { color: theme.colors.text }]}>
-                                {currencySymbol}{remaining.toFixed(2)}
-                            </Text>
-
-                            <View
-                                style={[s.summaryProgressBg, { backgroundColor: theme.colors.surface }]}
-                            >
-                                <View
-                                    style={[
-                                        s.summaryProgressFill,
-                                        {
-                                            backgroundColor: healthColor,
-                                            width: `${Math.min(100, (totalSpent / Math.max(totalLimit, 1)) * 100)}%`,
-                                        },
-                                    ]}
-                                />
-                            </View>
+                            <BudgetRing
+                                spent={totalSpent}
+                                limit={totalLimit}
+                                healthColor={healthColor}
+                                theme={theme}
+                                currencySymbol={currencySymbol}
+                                remaining={remaining}
+                            />
 
                             <View style={s.summaryFooter}>
-                                <Text style={[s.summaryFooterText, { color: theme.colors.textSecondary }]}>
-                                    {currencySymbol}{totalSpent.toFixed(2)} already spent
-                                </Text>
-                                <Text style={[s.summaryFooterText, { color: theme.colors.textSecondary }]}>
-                                    {currencySymbol}{totalLimit.toFixed(2)} set budget
-                                </Text>
+                                <View style={s.summaryFooterItem}>
+                                    <View style={[s.summaryFooterDot, { backgroundColor: healthColor }]} />
+                                    <Text style={[s.summaryFooterText, { color: theme.colors.textSecondary }]}>
+                                        {currencySymbol}{totalSpent.toFixed(2)} spent
+                                    </Text>
+                                </View>
+                                <View style={s.summaryFooterItem}>
+                                    <View style={[s.summaryFooterDot, { backgroundColor: theme.colors.surface }]} />
+                                    <Text style={[s.summaryFooterText, { color: theme.colors.textSecondary }]}>
+                                        {currencySymbol}{totalLimit.toFixed(2)} budget
+                                    </Text>
+                                </View>
                             </View>
                         </View>
 
-                        {/* Category List */}
                         <View style={s.categorySection}>
                             <Text style={[s.categorySectionTitle, { color: theme.colors.text }]}>
-                                Budget categories
+                                By category
                             </Text>
 
                             {budgetData.length === 0 ? (
                                 <View style={[s.emptyCard, { backgroundColor: theme.colors.card }]}>
-                                    <AlertCircle size={32} color={theme.colors.textSecondary} />
+                                    <AlertCircle size={28} color={theme.colors.textSecondary} />
                                     <Text style={[s.emptyCardText, { color: theme.colors.textSecondary }]}>
                                         No category budgets set
                                     </Text>
@@ -359,66 +499,91 @@ export default function BudgetDashboardScreen({
                                     {budgetData.map((item, index) => {
                                         const isOver = item.spent > item.limit;
                                         const statusColor = getBudgetStatusColor(item.percentage, theme);
-                                        const iconColor = CATEGORY_COLORS[index % CATEGORY_COLORS.length];
                                         const initial = item.categoryName.charAt(0).toUpperCase();
                                         const leftOrOver = isOver
                                             ? item.spent - item.limit
                                             : item.limit - item.spent;
 
                                         return (
-                                            <View
-                                                key={item.categoryId}
-                                                style={[
-                                                    s.categoryRow,
-                                                    index < budgetData.length - 1 && {
-                                                        borderBottomWidth: StyleSheet.hairlineWidth,
-                                                        borderBottomColor: theme.colors.borderLight,
-                                                    },
-                                                ]}
-                                            >
-                                                <View style={s.categoryIcon}>
-                                                    <Svg width={40} height={40} viewBox="0 0 40 40">
-                                                        <Circle
-                                                            cx={20}
-                                                            cy={20}
-                                                            r={16}
-                                                            stroke={theme.colors.surface}
-                                                            strokeWidth={4}
-                                                            fill="none"
-                                                        />
-                                                        <Circle
-                                                            cx={20}
-                                                            cy={20}
-                                                            r={16}
-                                                            stroke={statusColor}
-                                                            strokeWidth={4}
-                                                            fill="none"
-                                                            strokeLinecap="round"
-                                                            strokeDasharray={`${Math.min(item.percentage, 100) / 100 * 100.5} 100.5`}
-                                                            rotation={-90}
-                                                            origin="20,20"
-                                                        />
-                                                    </Svg>
-                                                    <Text style={[s.categoryInitial, { color: iconColor }]}>
-                                                        {initial}
+                                            <AnimatedCategoryRow key={item.categoryId} index={index}>
+                                                <View
+                                                    style={[
+                                                        s.categoryRow,
+                                                        index < budgetData.length - 1 && {
+                                                            borderBottomWidth: StyleSheet.hairlineWidth,
+                                                            borderBottomColor: theme.colors.borderLight,
+                                                        },
+                                                    ]}
+                                                >
+                                                    <View style={s.categoryIcon}>
+                                                        <Svg width={40} height={40} viewBox="0 0 40 40">
+                                                            <Circle
+                                                                cx={20}
+                                                                cy={20}
+                                                                r={16}
+                                                                stroke={theme.colors.surface}
+                                                                strokeWidth={4}
+                                                                fill="none"
+                                                            />
+                                                            <Circle
+                                                                cx={20}
+                                                                cy={20}
+                                                                r={16}
+                                                                stroke={statusColor}
+                                                                strokeWidth={4}
+                                                                fill="none"
+                                                                strokeLinecap="round"
+                                                                strokeDasharray={`${Math.min(item.percentage, 100) / 100 * 100.5} 100.5`}
+                                                                rotation={-90}
+                                                                origin="20,20"
+                                                            />
+                                                        </Svg>
+                                                        <Text style={[s.categoryInitial, { color: statusColor }]}>
+                                                            {initial}
+                                                        </Text>
+                                                    </View>
+
+                                                    <View style={s.categoryInfo}>
+                                                        <Text
+                                                            style={[s.categoryName, { color: theme.colors.text }]}
+                                                            numberOfLines={1}
+                                                        >
+                                                            {item.categoryName}
+                                                        </Text>
+                                                        <View style={s.categoryProgressRow}>
+                                                            <View
+                                                                style={[
+                                                                    s.categoryProgressBg,
+                                                                    { backgroundColor: theme.colors.surface },
+                                                                ]}
+                                                            >
+                                                                <View
+                                                                    style={[
+                                                                        s.categoryProgressFill,
+                                                                        {
+                                                                            backgroundColor: statusColor,
+                                                                            width: `${Math.min(100, item.percentage)}%`,
+                                                                        },
+                                                                    ]}
+                                                                />
+                                                            </View>
+                                                            <Text
+                                                                style={[
+                                                                    s.categorySpentLabel,
+                                                                    { color: theme.colors.textSecondary },
+                                                                ]}
+                                                            >
+                                                                {currencySymbol}{item.spent.toFixed(0)} / {currencySymbol}{item.limit.toFixed(0)}
+                                                            </Text>
+                                                        </View>
+                                                    </View>
+
+                                                    <Text style={[s.categoryStatus, { color: statusColor }]}>
+                                                        {isOver ? "-" : ""}
+                                                        {currencySymbol}{leftOrOver.toFixed(0)}
                                                     </Text>
                                                 </View>
-
-                                                <View style={s.categoryInfo}>
-                                                    <Text style={[s.categoryName, { color: theme.colors.text }]} numberOfLines={1}>
-                                                        {item.categoryName}
-                                                    </Text>
-                                                    <Text style={[s.categorySpent, { color: theme.colors.textSecondary }]}>
-                                                        {currencySymbol}{item.spent.toFixed(2)}{" "}
-                                                        <Text style={{ fontWeight: "400" }}>of</Text>{" "}
-                                                        {currencySymbol}{item.limit.toFixed(2)}
-                                                    </Text>
-                                                </View>
-
-                                                <Text style={[s.categoryStatus, { color: statusColor }]}>
-                                                    {currencySymbol}{leftOrOver.toFixed(2)} {isOver ? "over" : "left"}
-                                                </Text>
-                                            </View>
+                                            </AnimatedCategoryRow>
                                         );
                                     })}
                                 </View>
@@ -481,16 +646,42 @@ const createBudgetStyles = (theme: any) =>
             paddingVertical: 60,
             alignItems: "center",
         },
+
+        // Empty states
+        emptyCenter: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            paddingBottom: 80,
+        },
+        emptyIconOuter: {
+            width: 96,
+            height: 96,
+            borderRadius: 28,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 20,
+        },
+        emptyIconInner: {
+            width: 64,
+            height: 64,
+            borderRadius: 20,
+            alignItems: "center",
+            justifyContent: "center",
+        },
         emptyTitle: {
-            fontSize: 20,
-            fontWeight: "600",
-            marginTop: 16,
+            fontSize: 19,
+            fontWeight: "700",
             marginBottom: 8,
+            letterSpacing: -0.2,
         },
         emptyText: {
             fontSize: 14,
             textAlign: "center",
+            paddingHorizontal: 40,
         },
+
+        // No budget
         noBudgetContainer: {
             paddingVertical: 40,
             paddingHorizontal: 20,
@@ -499,30 +690,40 @@ const createBudgetStyles = (theme: any) =>
             padding: 32,
             borderRadius: 20,
             alignItems: "center",
+            elevation: 1,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 4,
         },
         noBudgetTitle: {
-            fontSize: 20,
-            fontWeight: "600",
-            marginTop: 16,
+            fontSize: 19,
+            fontWeight: "700",
             marginBottom: 8,
+            letterSpacing: -0.2,
         },
         noBudgetText: {
             fontSize: 14,
             textAlign: "center",
             marginBottom: 24,
+            lineHeight: 20,
         },
         setupButton: {
             flexDirection: "row",
             alignItems: "center",
             paddingHorizontal: 24,
-            paddingVertical: 12,
-            borderRadius: 12,
+            paddingVertical: 13,
+            borderRadius: 14,
             gap: 8,
+            elevation: 2,
+            shadowColor: theme.colors.primary,
+            shadowOffset: { width: 0, height: 4 },
+            shadowOpacity: 0.2,
+            shadowRadius: 8,
         },
         setupButtonText: {
-            color: "#fff",
             fontSize: 16,
-            fontWeight: "600",
+            fontWeight: "700",
         },
 
         // Summary Card
@@ -531,8 +732,9 @@ const createBudgetStyles = (theme: any) =>
             marginBottom: 28,
             padding: 20,
             borderRadius: 20,
+            alignItems: "center",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.03,
             shadowRadius: 4,
@@ -540,12 +742,19 @@ const createBudgetStyles = (theme: any) =>
         summaryTop: {
             flexDirection: "row",
             justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 8,
+            alignItems: "flex-start",
+            width: "100%",
+            marginBottom: 16,
         },
         summaryLabel: {
-            fontSize: 13,
+            fontSize: 12,
             fontWeight: "500",
+        },
+        periodLabel: {
+            fontSize: 16,
+            fontWeight: "700",
+            letterSpacing: -0.2,
+            marginTop: 2,
         },
         editBudgetBtn: {
             paddingHorizontal: 14,
@@ -557,25 +766,22 @@ const createBudgetStyles = (theme: any) =>
             fontSize: 12,
             fontWeight: "600",
         },
-        remainingAmount: {
-            fontSize: 36,
-            fontWeight: "800",
-            letterSpacing: -1,
-            marginBottom: 16,
-        },
-        summaryProgressBg: {
-            height: 8,
-            borderRadius: 4,
-            overflow: "hidden",
-            marginBottom: 12,
-        },
-        summaryProgressFill: {
-            height: "100%",
-            borderRadius: 4,
-        },
         summaryFooter: {
             flexDirection: "row",
-            justifyContent: "space-between",
+            justifyContent: "center",
+            gap: 24,
+            marginTop: 16,
+            width: "100%",
+        },
+        summaryFooterItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+        },
+        summaryFooterDot: {
+            width: 8,
+            height: 8,
+            borderRadius: 4,
         },
         summaryFooterText: {
             fontSize: 12,
@@ -590,12 +796,13 @@ const createBudgetStyles = (theme: any) =>
             fontSize: 16,
             fontWeight: "700",
             marginBottom: 12,
+            letterSpacing: -0.1,
         },
         categoryList: {
             borderRadius: 20,
             overflow: "hidden",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.03,
             shadowRadius: 4,
@@ -622,23 +829,42 @@ const createBudgetStyles = (theme: any) =>
             marginLeft: 12,
         },
         categoryName: {
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: "600",
-            marginBottom: 2,
+            marginBottom: 6,
         },
-        categorySpent: {
-            fontSize: 12,
+        categoryProgressRow: {
+            gap: 4,
+        },
+        categoryProgressBg: {
+            height: 4,
+            borderRadius: 2,
+            overflow: "hidden",
+        },
+        categoryProgressFill: {
+            height: "100%",
+            borderRadius: 2,
+        },
+        categorySpentLabel: {
+            fontSize: 11,
             fontWeight: "500",
+            marginTop: 2,
         },
         categoryStatus: {
             fontSize: 13,
-            fontWeight: "600",
+            fontWeight: "700",
             marginLeft: 8,
+            letterSpacing: -0.2,
         },
         emptyCard: {
             padding: 32,
             borderRadius: 20,
             alignItems: "center",
+            elevation: 1,
+            shadowColor: theme.colors.shadow,
+            shadowOffset: { width: 0, height: 1 },
+            shadowOpacity: 0.03,
+            shadowRadius: 4,
         },
         emptyCardText: {
             fontSize: 14,

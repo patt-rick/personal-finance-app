@@ -279,7 +279,7 @@ export default function RecurringTransactionsScreen({
                 onPress={handleAdd}
                 activeOpacity={0.8}
             >
-                <Plus size={24} color="white" />
+                <Plus size={24} color={theme.colors.textInverse} />
             </TouchableOpacity>
 
             <RecurringTransactionModal
@@ -325,7 +325,7 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,
@@ -355,7 +355,7 @@ const createStyles = (theme: any) =>
             padding: 14,
             marginBottom: 10,
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,
@@ -469,7 +469,7 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             elevation: 4,
-            shadowColor: "#2D6A4F",
+            shadowColor: theme.colors.primary,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.3,
             shadowRadius: 8,

@@ -207,11 +207,11 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
             <TouchableOpacity
                 style={[
                     styles.fab,
-                    { backgroundColor: theme.colors.primary, bottom: insets.bottom + 94 },
+                    { backgroundColor: theme.colors.primary, bottom: insets.bottom + 94, shadowColor: theme.colors.shadow },
                 ]}
                 onPress={() => openModal()}
             >
-                <Plus size={24} color="white" />
+                <Plus size={24} color={theme.colors.textInverse} />
             </TouchableOpacity>
 
             <Modal visible={modalVisible} transparent animationType="fade">
@@ -249,7 +249,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
                             style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
                             onPress={handleSave}
                         >
-                            <Text style={styles.saveButtonText}>Save</Text>
+                            <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Save</Text>
                         </TouchableOpacity>
                     </View>
                 </KeyboardAvoidingView>
@@ -304,7 +304,6 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         elevation: 5,
-        shadowColor: "#000",
         shadowOffset: { width: 0, height: 4 },
         shadowOpacity: 0.3,
         shadowRadius: 4.65,
@@ -340,5 +339,5 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    saveButtonText: { color: "white", fontSize: 16, fontWeight: "bold" },
+    saveButtonText: { fontSize: 16, fontWeight: "bold" as const },
 });

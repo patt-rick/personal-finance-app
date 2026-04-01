@@ -251,7 +251,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                                         style={[
                                             styles.periodButtonText,
                                             {
-                                                color: period === p ? "#fff" : theme.colors.text,
+                                                color: period === p ? theme.colors.textInverse : theme.colors.text,
                                             },
                                         ]}
                                     >
@@ -475,11 +475,11 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                         ]}
                     >
                         {saving ? (
-                            <ActivityIndicator color="#fff" />
+                            <ActivityIndicator color={theme.colors.textInverse} />
                         ) : (
                             <>
-                                <Save size={20} color="#fff" />
-                                <Text style={styles.saveButtonText}>Save Budget</Text>
+                                <Save size={20} color={theme.colors.textInverse} />
+                                <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Save Budget</Text>
                             </>
                         )}
                     </TouchableOpacity>
@@ -726,7 +726,6 @@ const styles = StyleSheet.create({
         gap: 8,
     },
     saveButtonText: {
-        color: "#fff",
         fontSize: 16,
         fontWeight: "600",
         fontFamily: "Inter",

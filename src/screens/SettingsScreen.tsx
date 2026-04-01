@@ -364,7 +364,7 @@ export default function SettingsScreen({
                                         style={styles.editSaveBtn}
                                         onPress={handleSave}
                                     >
-                                        <Check size={16} color="white" />
+                                        <Check size={16} color={theme.colors.textInverse} />
                                         <Text style={styles.editSaveText}>Save</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -390,8 +390,8 @@ export default function SettingsScreen({
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowSecurity(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
-                                    <Lock size={18} color="#2D6A4F" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Lock size={18} color={theme.colors.primary} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Security</Text>
@@ -410,8 +410,8 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowReports(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(74, 124, 143, 0.1)" }]}>
-                                    <BarChart3 size={18} color="#4A7C8F" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.surface }]}>
+                                    <BarChart3 size={18} color={theme.colors.chartBlue} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Reports</Text>
@@ -423,8 +423,8 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowRecurring(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
-                                    <Repeat size={18} color="#3A7D5C" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Repeat size={18} color={theme.colors.success} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Recurring Transactions</Text>
@@ -436,8 +436,8 @@ export default function SettingsScreen({
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowDebts(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(193, 127, 89, 0.1)" }]}>
-                                    <Handshake size={18} color="#C17F59" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.expenseBg }]}>
+                                    <Handshake size={18} color={theme.colors.secondary} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Debts & Loans</Text>
@@ -473,12 +473,12 @@ export default function SettingsScreen({
                                         >
                                             <Icon
                                                 size={18}
-                                                color={isActive ? "white" : theme.colors.textSecondary}
+                                                color={isActive ? theme.colors.textInverse : theme.colors.textSecondary}
                                             />
                                             <Text
                                                 style={[
                                                     styles.themeOptionLabel,
-                                                    isActive && { color: "white" },
+                                                    isActive && { color: theme.colors.textInverse },
                                                 ]}
                                             >
                                                 {option.label}
@@ -499,8 +499,8 @@ export default function SettingsScreen({
                                 onPress={handleExport}
                                 disabled={isExporting}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
-                                    <Upload size={18} color="#3A7D5C" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Upload size={18} color={theme.colors.success} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Export Data</Text>
@@ -517,8 +517,8 @@ export default function SettingsScreen({
                                 onPress={handleImport}
                                 disabled={isImporting}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
-                                    <Download size={18} color="#2D6A4F" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Download size={18} color={theme.colors.primary} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Import Data</Text>
@@ -538,8 +538,8 @@ export default function SettingsScreen({
                         <Text style={styles.sectionLabel}>About</Text>
                         <View style={styles.groupCard}>
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(74, 124, 143, 0.1)" }]}>
-                                    <Info size={18} color="#4A7C8F" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.surface }]}>
+                                    <Info size={18} color={theme.colors.chartBlue} />
                                 </View>
                                 <Text style={styles.rowText}>Version</Text>
                                 <Text style={styles.rowValueText}>{APP_VERSION}</Text>
@@ -548,8 +548,8 @@ export default function SettingsScreen({
                                 </View>
                             </View>
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(58, 125, 92, 0.1)" }]}>
-                                    <Shield size={18} color="#3A7D5C" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Shield size={18} color={theme.colors.success} />
                                 </View>
                                 <Text style={styles.rowText}>Encryption</Text>
                                 <Text style={styles.rowValueText}>AES-256</Text>
@@ -561,8 +561,8 @@ export default function SettingsScreen({
                                     Alert.alert("Tours Reset", "The guided tours will show again on each page.");
                                 }}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: "rgba(45, 106, 79, 0.1)" }]}>
-                                    <Info size={18} color="#2D6A4F" />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Info size={18} color={theme.colors.primary} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Replay Tours</Text>
@@ -774,7 +774,7 @@ const createVerifyStyles = (theme: any) =>
             width: 64,
             height: 64,
             borderRadius: 20,
-            backgroundColor: "rgba(45, 106, 79, 0.1)",
+            backgroundColor: theme.colors.incomeBg,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
@@ -802,12 +802,12 @@ const createVerifyStyles = (theme: any) =>
             borderColor: theme.colors.primary,
         },
         dotError: {
-            backgroundColor: "#C4453A",
-            borderColor: "#C4453A",
+            backgroundColor: theme.colors.error,
+            borderColor: theme.colors.error,
         },
         errorText: {
             fontSize: 13,
-            color: "#C4453A",
+            color: theme.colors.error,
             fontWeight: "600",
             marginTop: 4,
         },
@@ -866,7 +866,7 @@ const createStyles = (theme: any) =>
             borderRadius: 20,
             padding: 20,
             elevation: 2,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 2 },
             shadowOpacity: 0.06,
             shadowRadius: 8,
@@ -886,7 +886,7 @@ const createStyles = (theme: any) =>
         avatarText: {
             fontSize: 20,
             fontWeight: "700",
-            color: "white",
+            color: theme.colors.textInverse,
             letterSpacing: 0.5,
         },
         profileInfo: {
@@ -978,7 +978,7 @@ const createStyles = (theme: any) =>
         editSaveText: {
             fontSize: 14,
             fontWeight: "700",
-            color: "white",
+            color: theme.colors.textInverse,
         },
 
         // Sections
@@ -1002,7 +1002,7 @@ const createStyles = (theme: any) =>
             borderRadius: 16,
             overflow: "hidden",
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.04,
             shadowRadius: 3,

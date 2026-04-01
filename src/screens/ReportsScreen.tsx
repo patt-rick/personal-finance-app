@@ -193,7 +193,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         <Text
                             style={[
                                 styles.chipText,
-                                { color: !selectedBusinessId ? "#fff" : theme.colors.text },
+                                { color: !selectedBusinessId ? theme.colors.textInverse : theme.colors.text },
                             ]}
                         >
                             All
@@ -214,7 +214,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                             <Text
                                 style={[
                                     styles.chipText,
-                                    { color: selectedBusinessId === biz.id ? "#fff" : theme.colors.text },
+                                    { color: selectedBusinessId === biz.id ? theme.colors.textInverse : theme.colors.text },
                                 ]}
                             >
                                 {biz.name}
@@ -243,7 +243,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                             <Text
                                 style={[
                                     styles.chipText,
-                                    { color: selectedPeriod === period ? "#fff" : theme.colors.text },
+                                    { color: selectedPeriod === period ? theme.colors.textInverse : theme.colors.text },
                                 ]}
                             >
                                 {period}
@@ -467,7 +467,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             borderRadius: 16,
             gap: 6,
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.02,
             shadowRadius: 3,
@@ -487,7 +487,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             borderRadius: 16,
             padding: 14,
             elevation: 1,
-            shadowColor: "#000",
+            shadowColor: theme.colors.shadow,
             shadowOffset: { width: 0, height: 1 },
             shadowOpacity: 0.02,
             shadowRadius: 3,
