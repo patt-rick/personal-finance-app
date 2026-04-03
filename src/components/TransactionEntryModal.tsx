@@ -9,7 +9,6 @@ import {
     Alert,
     KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
     Keyboard,
 } from "react-native";
 import { X } from "lucide-react-native";
@@ -73,11 +72,13 @@ export default function TransactionEntryModal({
             entryType,
             editingTxId: editingTx?.id ?? null,
         });
+        Keyboard.dismiss();
         setAmount("");
         setRemark("");
     };
 
     const handleClose = () => {
+        Keyboard.dismiss();
         setAmount("");
         setRemark("");
         onClose();
@@ -89,7 +90,6 @@ export default function TransactionEntryModal({
                 behavior={Platform.OS === "ios" ? "padding" : "height"}
                 style={{ flex: 1 }}
             >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
                     <View style={styles.modalOverlay}>
                         <View style={styles.modalContentModern}>
                             <View style={styles.modalHeaderModern}>
@@ -121,6 +121,7 @@ export default function TransactionEntryModal({
                                 horizontal
                                 showsHorizontalScrollIndicator={false}
                                 style={styles.categoryPicker}
+                                keyboardShouldPersistTaps="always"
                             >
                                 {categories
                                     .filter((c) => c.type === entryType)
@@ -171,7 +172,6 @@ export default function TransactionEntryModal({
                             </TouchableOpacity>
                         </View>
                     </View>
-                </TouchableWithoutFeedback>
             </KeyboardAvoidingView>
         </Modal>
     );

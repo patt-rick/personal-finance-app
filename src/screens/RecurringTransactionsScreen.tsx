@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { hapticSuccess, hapticError, hapticLight } from "../utils/haptics";
 import {
     View,
     Text,
@@ -80,6 +81,7 @@ export default function RecurringTransactionsScreen({
                     style: "destructive",
                     onPress: () => {
                         onSave(recurringTransactions.filter((r) => r.id !== item.id));
+                        hapticError();
                     },
                 },
             ]);
@@ -93,6 +95,7 @@ export default function RecurringTransactionsScreen({
                 r.id === item.id ? { ...r, isActive: !r.isActive } : r
             );
             onSave(updated);
+            hapticLight();
         },
         [recurringTransactions, onSave]
     );
@@ -150,6 +153,7 @@ export default function RecurringTransactionsScreen({
                 onSave([...recurringTransactions, newItem]);
             }
 
+            hapticSuccess();
             setModalVisible(false);
             setEditingItem(null);
         },

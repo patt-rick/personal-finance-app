@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { hapticSuccess, hapticError } from "../utils/haptics";
 import {
     View,
     Text,
@@ -62,6 +63,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
 
         setCategories(updatedCategories);
         await saveCategories(updatedCategories);
+        hapticSuccess();
         setModalVisible(false);
         setCategoryName("");
         setEditingCategory(null);
@@ -77,6 +79,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
                     const updated = categories.filter((c) => c.id !== id);
                     setCategories(updated);
                     await saveCategories(updated);
+                    hapticError();
                 },
             },
         ]);

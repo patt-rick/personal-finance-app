@@ -87,7 +87,7 @@ function BudgetRing({
     remaining: number;
 }) {
     const size = 180;
-    const strokeWidth = 12;
+    const strokeWidth = 22;
     const radius = (size - strokeWidth) / 2;
     const circumference = 2 * Math.PI * radius;
     const percentage = Math.min(1, spent / Math.max(limit, 1));
@@ -321,9 +321,10 @@ export default function BudgetDashboardScreen({
     const currencySymbol = getCurrencySymbol(selectedBusiness?.currency);
     const daysLeft = budget ? getDaysLeft(budget.period) : 0;
 
-    const healthColor = healthScore >= 70
+    const spentPercentage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
+    const healthColor = spentPercentage < 70
         ? theme.colors.success
-        : healthScore >= 40
+        : spentPercentage < 90
             ? theme.colors.secondary
             : theme.colors.error;
 

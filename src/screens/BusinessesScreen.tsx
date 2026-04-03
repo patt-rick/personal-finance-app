@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useRef, useEffect } from "react";
+import { hapticSuccess, hapticError } from "../utils/haptics";
 import {
     View,
     Text,
@@ -318,11 +319,13 @@ export default function BusinessesScreen({
             memberCount: 1,
         };
         saveBusinesses([...businesses, newBusiness]);
+        hapticSuccess();
         setCreateModalVisible(false);
     };
 
     const removeBusiness = (businessId: string) => {
         saveBusinesses(businesses.filter((b) => b.id !== businessId));
+        hapticError();
         if (currentBusiness?.id === businessId) setCurrentBusiness(null);
         setSheetBusiness(null);
     };

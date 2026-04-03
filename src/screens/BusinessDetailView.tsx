@@ -1,6 +1,7 @@
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, Category } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
+import { hapticSuccess, hapticError, hapticWarning } from "../utils/haptics";
 import {
     Calendar,
     Car,
@@ -243,6 +244,7 @@ export default function BusinessDetailView({
             );
 
             if (message) {
+                hapticWarning();
                 if (Platform.OS === "android") {
                     ToastAndroid.show(message, ToastAndroid.LONG);
                 } else {
@@ -293,6 +295,7 @@ export default function BusinessDetailView({
         }
 
         saveTransactions(updatedTransactions);
+        hapticSuccess();
 
         if (data.entryType === "expense") {
             await checkBudgetWarning(data.category, updatedTransactions);
@@ -317,6 +320,7 @@ export default function BusinessDetailView({
                 style: "destructive",
                 onPress: () => {
                     saveTransactions(allTransactions.filter((t) => t.id !== id));
+                    hapticError();
                     setActiveModal("none");
                 },
             },

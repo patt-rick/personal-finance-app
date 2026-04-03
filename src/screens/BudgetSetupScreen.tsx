@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { hapticSuccess } from "../utils/haptics";
 import {
     View,
     Text,
@@ -147,6 +148,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         setSaving(false);
 
         if (success) {
+            hapticSuccess();
             Alert.alert(
                 "Success",
                 existingBudget ? "Budget updated successfully" : "Budget created successfully",

@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useCallback } from "react";
+import { hapticSuccess, hapticError } from "../utils/haptics";
 import {
     View,
     Text,
@@ -122,6 +123,7 @@ export default function DebtTrackerScreen({
                 updated = [...debts, newDebt];
             }
             onSave(updated);
+            hapticSuccess();
             setShowEntryModal(false);
             setEditingDebt(null);
         },
@@ -145,6 +147,7 @@ export default function DebtTrackerScreen({
                     : d
             );
             onSave(updated);
+            hapticSuccess();
             setPaymentDebt(null);
 
             if (totalPaidAfter >= paymentDebt.amount) {
@@ -201,6 +204,7 @@ export default function DebtTrackerScreen({
                     style: "destructive",
                     onPress: () => {
                         onSave(debts.filter((d) => d.id !== debtId));
+                        hapticError();
                         setExpandedDebtId(null);
                     },
                 },

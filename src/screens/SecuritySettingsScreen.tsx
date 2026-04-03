@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { hapticSuccess, hapticLight } from "../utils/haptics";
 import {
     View,
     Text,
@@ -96,6 +97,7 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
     const handlePinSetupComplete = useCallback(async () => {
         setShowPinSetup(false);
         setPinEnabled(true);
+        hapticSuccess();
         onPinChanged();
         if (await isBiometricsAvailable()) {
             Alert.alert(
@@ -119,6 +121,7 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
         async (value: boolean) => {
             await setBiometricsEnabled(value);
             setBiometricsOn(value);
+            hapticLight();
         },
         []
     );
