@@ -342,7 +342,7 @@ export const createDashboardStyles = (theme: any) =>
         // Bottom Actions
         modernBottomActions: {
             position: "absolute",
-            bottom: 86,
+            bottom: 0,
             left: 0,
             right: 0,
             flexDirection: "row",

@@ -105,7 +105,7 @@ function HolographicOverlay() {
             <LinearGradient
                 colors={[
                     "transparent",
-                    "rgba(45,106,79,0.06)",
+                    "rgba(0,102,255,0.06)",
                     "rgba(193,127,89,0.04)",
                     "transparent",
                 ]}

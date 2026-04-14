@@ -273,7 +273,7 @@ function MainApp() {
                 />
                 <NavigationContainer theme={isDark ? MyDarkTheme : MyDefaultTheme}>
                     <Tab.Navigator
-                        tabBar={(props) => <FloatingTabBar {...props} />}
+                        tabBar={(props) => (currentBusiness ? null : <FloatingTabBar {...props} />)}
                         screenOptions={{
                             headerShown: false,
                             tabBarShowLabel: false,

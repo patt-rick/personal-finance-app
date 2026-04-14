@@ -1,16 +1,16 @@
 import { Transaction } from "../types";
 
 const CATEGORY_COLORS = [
-    "#2D6A4F",
-    "#C17F59",
-    "#4A7C8F",
-    "#C4453A",
-    "#8B7A9E",
-    "#B07D94",
-    "#5B8A72",
-    "#C9A86C",
-    "#5C7A99",
-    "#7A6853",
+    "#0066FF",
+    "#F59E0B",
+    "#3B82F6",
+    "#EF4444",
+    "#A855F7",
+    "#EC4899",
+    "#06B6D4",
+    "#EAB308",
+    "#6366F1",
+    "#14B8A6",
 ];
 
 const SHORT_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
