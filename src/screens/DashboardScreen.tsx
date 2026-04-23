@@ -2,7 +2,6 @@ import { getCurrencySymbol } from "../utils/_helpers";
 import {
     Users,
     Wallet,
-    BarChart3,
     LayoutGrid,
     Plus,
     ArrowUpRight,
@@ -28,9 +27,6 @@ import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import BalanceCard, { CurrencyBalance } from "../components/dashboard/BalanceCard";
-import ChartCarousel from "../components/ChartCarousel";
-import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
-import DonutChart from "../components/dashboard/DonutChart";
 import TourOverlay from "../components/TourOverlay";
 
 function getGreeting(): string {
@@ -348,44 +344,6 @@ function DashboardHome({
         return ((thisWeekNet - lastWeekNet) / Math.abs(lastWeekNet)) * 100;
     }, [filteredTransactions]);
 
-    const weeklyChartData = useMemo(() => {
-        const labels: string[] = [];
-        const incomeValues: number[] = [];
-        const expenseValues: number[] = [];
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-        const dayOfWeek = today.getDay();
-        const monday = new Date(today);
-        monday.setDate(today.getDate() - ((dayOfWeek + 6) % 7));
-
-        for (let i = 0; i < 7; i++) {
-            const date = new Date(monday);
-            date.setDate(monday.getDate() + i);
-            const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate());
-            const dayEnd = new Date(dayStart);
-            dayEnd.setDate(dayEnd.getDate() + 1);
-
-            const dayIncome = filteredTransactions
-                .filter((t) => {
-                    const td = new Date(t.date);
-                    return t.type === "income" && td >= dayStart && td < dayEnd;
-                })
-                .reduce((acc, t) => acc + t.amount, 0);
-
-            const dayExpense = filteredTransactions
-                .filter((t) => {
-                    const td = new Date(t.date);
-                    return t.type === "expense" && td >= dayStart && td < dayEnd;
-                })
-                .reduce((acc, t) => acc + t.amount, 0);
-
-            labels.push(date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3));
-            incomeValues.push(dayIncome);
-            expenseValues.push(dayExpense);
-        }
-        return { labels, incomeValues, expenseValues };
-    }, [filteredTransactions]);
-
     const [refreshing, setRefreshing] = useState(false);
 
     const handleRefresh = useCallback(async () => {
@@ -393,69 +351,6 @@ function DashboardHome({
         await onRefresh();
         setRefreshing(false);
     }, [onRefresh]);
-
-    const currencySymbol = getCurrencySymbol(activeCurrency.currency);
-
-    const pieData = useMemo(() => {
-        const income = filteredTransactions
-            .filter((t) => t.type === "income")
-            .reduce((acc, t) => acc + t.amount, 0);
-        const expense = filteredTransactions
-            .filter((t) => t.type === "expense")
-            .reduce((acc, t) => acc + t.amount, 0);
-        const total = income + expense;
-
-        const items = [
-            { value: income, color: theme.colors.income, label: "Income" },
-            { value: expense, color: theme.colors.expense, label: "Expense" },
-        ].filter((d) => d.value > 0);
-
-        return { items, total, midTotal: income - expense };
-    }, [filteredTransactions]);
-
-    const chartPages = useMemo(() => {
-        const pages: {
-            title: string;
-            legend?: { label: string; color: string }[];
-            content: React.ReactNode;
-        }[] = [];
-
-        if (filteredTransactions.length > 0) {
-            pages.push({
-                title: "Last 7 Days",
-                legend: [
-                    { label: "Income", color: theme.colors.income },
-                    { label: "Expense", color: theme.colors.expense },
-                ],
-                content: (
-                    <WeeklyBarChart
-                        labels={weeklyChartData.labels}
-                        incomeData={weeklyChartData.incomeValues}
-                        expenseData={weeklyChartData.expenseValues}
-                        currencySymbol={currencySymbol}
-                        incomeColor={theme.colors.income}
-                        expenseColor={theme.colors.expense}
-                    />
-                ),
-            });
-        }
-
-        if (pieData.items.length > 0) {
-            pages.push({
-                title: "Income vs Expense",
-                content: (
-                    <DonutChart
-                        data={pieData.items}
-                        total={pieData.total}
-                        currencySymbol={currencySymbol}
-                        midTotal={pieData.midTotal}
-                    />
-                ),
-            });
-        }
-
-        return pages;
-    }, [filteredTransactions, weeklyChartData, pieData, theme, currencySymbol]);
 
     const firstName = (userProfile?.name || "").split(" ")[0] || "there";
 
@@ -489,8 +384,6 @@ function DashboardHome({
                     weeklyGrowth={weeklyGrowth}
                     onPageChange={setActiveCurrencyIndex}
                 />
-
-                {chartPages.length > 0 && <ChartCarousel pages={chartPages} />}
 
                 <QuickStats
                     businesses={businesses}
@@ -591,12 +484,6 @@ function DashboardHome({
                         icon: <Wallet size={24} color={theme.colors.primary} />,
                         description:
                             "The balance card shows your total income, expenses, and net balance. Swipe to see balances in different currencies.",
-                    },
-                    {
-                        title: "Charts & Trends",
-                        icon: <BarChart3 size={24} color={theme.colors.primary} />,
-                        description:
-                            "Visual charts show your spending patterns over the past 7 days and how your income compares to expenses.",
                     },
                     {
                         title: "Your Cashbooks",

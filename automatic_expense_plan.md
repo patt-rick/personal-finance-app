@@ -1,6 +1,7 @@
 # Automatic Expense Logging — Tailored Plan for Finance Tracker
 
 ## Objective
+
 Add an Android-first automatic expense logging feature to **Finance Tracker** (Expo SDK 54, React Native 0.81, TypeScript, AsyncStorage, cashbook-centric). The feature captures transaction SMS and financial app notifications, parses them into structured entries, prevents duplicates, categorizes them against the app's existing category system, saves them through the current storage layer (`saveTransactions`), and fits into the existing Settings → Features flow with zero regression to manual entry.
 
 ---
@@ -29,7 +30,7 @@ This plan is written against the app exactly as it exists today. Key architectur
 3. User can view, rename, and remap sender → cashbook mappings (e.g. merge "MTN" and "MTN-GH" into one cashbook, or redirect "GCB" into an existing "Personal" cashbook).
 4. Captures SMS and notifications while the app is backgrounded or closed (Android).
 5. Parses into the existing `Transaction` shape (plus a small additive metadata set) and saves through `saveTransactions`.
-6. Duplicate entries (same event arriving via SMS *and* notification, or repeated broadcasts) are collapsed into one.
+6. Duplicate entries (same event arriving via SMS _and_ notification, or repeated broadcasts) are collapsed into one.
 7. Low-confidence entries land in a **Review Queue** instead of the cashbook.
 8. Manual entry, recurring transactions, budgets, debts, and reports continue to behave identically.
 9. Feature is **off by default**, behind a toggle, and respects the app's existing PIN/biometric lock on sensitive flows.
@@ -40,6 +41,7 @@ This plan is written against the app exactly as it exists today. Key architectur
 ## Product Scope
 
 ### MVP
+
 1. Android-only automatic logging.
 2. SMS capture (BroadcastReceiver).
 3. Notification capture (NotificationListenerService).
@@ -54,6 +56,7 @@ This plan is written against the app exactly as it exists today. Key architectur
 12. Review Queue screen.
 
 ### Deferred
+
 1. Merchant-learning from user edits.
 2. Rule-based overrides ("always log Uber to Transportation in Personal cashbook").
 3. Insights / auto-log metrics dashboard.
@@ -85,7 +88,7 @@ This plan is written against the app exactly as it exists today. Key architectur
 - Kotlin native modules inside `android/app/src/main/java/...` alongside the existing MainApplication/MainActivity.
 - `BroadcastReceiver` for incoming SMS.
 - `NotificationListenerService` for posted notifications.
-- A small **event queue** (MMKV *or* a simple JSON file in app internal storage) that the native layer writes into even when JS is cold. The JS layer drains it on next foreground. This avoids the "JS bridge not alive" problem for background events.
+- A small **event queue** (MMKV _or_ a simple JSON file in app internal storage) that the native layer writes into even when JS is cold. The JS layer drains it on next foreground. This avoids the "JS bridge not alive" problem for background events.
 - `DeviceEventEmitter` (RN) for live events while the app is foregrounded.
 - AsyncStorage for settings; SecureStore only if we add encryption for the raw-text field.
 - `expo-dev-client` custom build is required; Expo Go cannot host these native modules. Shipping flow: EAS build (dev client for QA, production for store).
@@ -160,24 +163,24 @@ No breaking changes to `Transaction`. Add optional metadata, because existing tr
 ```ts
 // src/types.ts
 export interface Transaction {
-  id: string;
-  description: string;
-  amount: number;
-  date: string;
-  type: "income" | "expense";
-  businessId: string;
-  category?: string;
-  subCategory?: string;
-  paymentMode?: string;
-  remark?: string;
+    id: string;
+    description: string;
+    amount: number;
+    date: string;
+    type: "income" | "expense";
+    businessId: string;
+    category?: string;
+    subCategory?: string;
+    paymentMode?: string;
+    remark?: string;
 
-  // NEW — optional, only set for auto-logged entries
-  source?: "manual" | "recurring" | "sms" | "notification";
-  sourceApp?: string;          // e.g. "com.mtn.momo"
-  rawText?: string;            // original SMS body / notification text
-  autoLogged?: boolean;
-  confidence?: number;         // 0..1
-  reviewStatus?: "pending" | "confirmed" | "rejected";
+    // NEW — optional, only set for auto-logged entries
+    source?: "manual" | "recurring" | "sms" | "notification";
+    sourceApp?: string; // e.g. "com.mtn.momo"
+    rawText?: string; // original SMS body / notification text
+    autoLogged?: boolean;
+    confidence?: number; // 0..1
+    reviewStatus?: "pending" | "confirmed" | "rejected";
 }
 ```
 
@@ -185,58 +188,58 @@ New feature-local types live under `src/features/autoLogging/types/index.ts`:
 
 ```ts
 export interface RawEvent {
-  id: string;              // generated at capture time
-  source: "sms" | "notification";
-  packageName?: string;    // notifications only
-  sender?: string;         // sms only
-  title?: string;          // notifications only
-  body: string;
-  timestamp: number;
-  rawHash: string;         // for dedupe against already-drained events
+    id: string; // generated at capture time
+    source: "sms" | "notification";
+    packageName?: string; // notifications only
+    sender?: string; // sms only
+    title?: string; // notifications only
+    body: string;
+    timestamp: number;
+    rawHash: string; // for dedupe against already-drained events
 }
 
 export interface ParsedDraft {
-  amount: number;
-  currencyCode: string | null;  // "GHS", "USD", ... or null when not detected
-  merchant: string | null;
-  type: "expense" | "income" | "transfer";
-  category: string;             // must match an existing Category.name
-  description: string;
-  occurredAt: string;           // ISO
-  confidence: number;
-  source: "sms" | "notification";
-  sourceApp?: string;
-  senderKey: string;            // normalized routing key (see Sender Routing)
-  senderDisplay: string;        // e.g. "MTN", "Vodafone Cash", "GCB Bank"
-  rawText: string;
+    amount: number;
+    currencyCode: string | null; // "GHS", "USD", ... or null when not detected
+    merchant: string | null;
+    type: "expense" | "income" | "transfer";
+    category: string; // must match an existing Category.name
+    description: string;
+    occurredAt: string; // ISO
+    confidence: number;
+    source: "sms" | "notification";
+    sourceApp?: string;
+    senderKey: string; // normalized routing key (see Sender Routing)
+    senderDisplay: string; // e.g. "MTN", "Vodafone Cash", "GCB Bank"
+    rawText: string;
 }
 
 export interface SenderMapping {
-  senderKey: string;            // normalized, e.g. "mtn"
-  displayName: string;          // editable by user, e.g. "MTN MoMo"
-  businessId: string | null;    // null = unassigned (route still auto-creates)
-  autoCreated: boolean;         // true if the cashbook was created by the auto-logger
-  sampleSenders: string[];      // original raw senders/packages seen (for debugging + UI)
-  createdAt: string;
+    senderKey: string; // normalized, e.g. "mtn"
+    displayName: string; // editable by user, e.g. "MTN MoMo"
+    businessId: string | null; // null = unassigned (route still auto-creates)
+    autoCreated: boolean; // true if the cashbook was created by the auto-logger
+    sampleSenders: string[]; // original raw senders/packages seen (for debugging + UI)
+    createdAt: string;
 }
 
 export interface ReviewItem {
-  id: string;
-  draft: ParsedDraft;
-  businessId: string;           // pre-resolved via sender routing
-  createdAt: string;
+    id: string;
+    draft: ParsedDraft;
+    businessId: string; // pre-resolved via sender routing
+    createdAt: string;
 }
 
 export interface AutoLogSettings {
-  enabled: boolean;
-  captureSms: boolean;
-  captureNotifications: boolean;
-  defaultCurrency: string;      // e.g. "GHS" — used when auto-creating a cashbook with no currency signal
-  allowedPackages: string[];    // e.g. ["com.mtn.momo", "com.ghana.mobilemoney"]
-  allowedSenders: string[];     // e.g. ["MTN", "VODAFONE", "GCB"] — allowlist for SMS capture
-  reviewLowConfidenceOnly: boolean; // if false, review EVERY capture
-  askBeforeSaving: boolean;
-  minConfidenceForAutoSave: number; // 0..1, default 0.75
+    enabled: boolean;
+    captureSms: boolean;
+    captureNotifications: boolean;
+    defaultCurrency: string; // e.g. "GHS" — used when auto-creating a cashbook with no currency signal
+    allowedPackages: string[]; // e.g. ["com.mtn.momo", "com.ghana.mobilemoney"]
+    allowedSenders: string[]; // e.g. ["MTN", "VODAFONE", "GCB"] — allowlist for SMS capture
+    reviewLowConfidenceOnly: boolean; // if false, review EVERY capture
+    askBeforeSaving: boolean;
+    minConfidenceForAutoSave: number; // 0..1, default 0.75
 }
 ```
 
@@ -285,10 +288,10 @@ Every incoming event is tagged with a `senderKey` and routed to a cashbook using
 
 - Pick a display name from `senderDisplay`: use the user-friendly form derived from the original sender ID (title-case alphanumerics) or the package's app label if available via native.
 - Create a new `Business` with:
-  - `id`: `generateId()`
-  - `name`: the display name (e.g. "MTN MoMo").
-  - `createdAt`: `new Date().toISOString()`.
-  - `currency`: the currency detected in the first message's text if present, else `settings.defaultCurrency`.
+    - `id`: `generateId()`
+    - `name`: the display name (e.g. "MTN MoMo").
+    - `createdAt`: `new Date().toISOString()`.
+    - `currency`: the currency detected in the first message's text if present, else `settings.defaultCurrency`.
 - Append to businesses via the same safe load → merge → save pattern used for transactions.
 - Append a new `SenderMapping` row: `{ senderKey, displayName, businessId, autoCreated: true, sampleSenders: [rawSender], createdAt }`.
 
@@ -368,23 +371,23 @@ Input: `RawEvent`. Output: `ParsedDraft | null` (null when the text is clearly n
 Stages (pure functions, each one unit-testable):
 
 1. **Financial detection** — keyword scoring with two lexicons:
-   - Expense: `debit, paid, sent, charged, purchase, withdrawal, bought, deducted, spent`.
-   - Income: `credit, received, refund, deposit, salary, payout`.
-   - Reject if score < threshold, OR if spam keywords dominate: `won, promo, offer, reward, discount, congratulations, lottery`.
+    - Expense: `debit, paid, sent, charged, purchase, withdrawal, bought, deducted, spent`.
+    - Income: `credit, received, refund, deposit, salary, payout`.
+    - Reject if score < threshold, OR if spam keywords dominate: `won, promo, offer, reward, discount, congratulations, lottery`.
 2. **Amount extraction** — regex over common shapes, currency-code aware:
-   - `/(?:GHS|GH₵|₵|USD|US\$|\$|EUR|€|GBP|£)\s*([\d,]+(?:\.\d{1,2})?)/i`
-   - `/([\d,]+(?:\.\d{1,2})?)\s*(?:GHS|GH₵|USD|EUR|GBP)/i`
-   - Fallback bare number only when a financial keyword is adjacent.
+    - `/(?:GHS|GH₵|₵|USD|US\$|\$|EUR|€|GBP|£)\s*([\d,]+(?:\.\d{1,2})?)/i`
+    - `/([\d,]+(?:\.\d{1,2})?)\s*(?:GHS|GH₵|USD|EUR|GBP)/i`
+    - Fallback bare number only when a financial keyword is adjacent.
 3. **Currency resolution** — if detected currency ≠ the default cashbook's currency, mark the item low confidence and route it to Review. Do not silently convert.
 4. **Merchant / counterparty** — lightweight patterns: `at X`, `to X`, `from X`, `@ X`. Strip trailing punctuation, collapse whitespace.
 5. **Type inference** — expense vs. income from lexicon; `transfer` when keywords indicate peer-to-peer without settlement info.
-6. **Category mapping** — merchant-keyword lookup table (loaded at feature init) against `loadCategories()`. Examples using *existing* category names only:
-   - Uber / Bolt / Yango → `Transportation`
-   - Shell / Goil / Total / Shell → `Transportation`
-   - KFC / Papaye / Chicken Republic → `Food`
-   - Melcom / Shoprite / Palace → (fallback `Other Expense` — there is no "Shopping" default category, and we must NOT invent one)
-   - ECG / Ghana Water / Vodafone / MTN postpaid → `Utilities`
-   - Fallback → `Other Expense` or `Other Income`.
+6. **Category mapping** — merchant-keyword lookup table (loaded at feature init) against `loadCategories()`. Examples using _existing_ category names only:
+    - Uber / Bolt / Yango → `Transportation`
+    - Shell / Goil / Total / Shell → `Transportation`
+    - KFC / Papaye / Chicken Republic → `Food`
+    - Melcom / Shoprite / Palace → (fallback `Other Expense` — there is no "Shopping" default category, and we must NOT invent one)
+    - ECG / Ghana Water / Vodafone / MTN postpaid → `Utilities`
+    - Fallback → `Other Expense` or `Other Income`.
 7. **Confidence score** — sum of weighted signals (financial keyword present, amount parsed cleanly, currency matches cashbook, merchant extracted, category mapped). Normalized to 0..1.
 
 Return object: `ParsedDraft`.
@@ -396,44 +399,49 @@ Return object: `ParsedDraft`.
 ```ts
 // in src/features/autoLogging/services/ingestion/saveDraft.ts
 async function saveDraft(draft: ParsedDraft, settings: AutoLogSettings) {
-  // 1. Resolve (or auto-create) the cashbook via sender routing.
-  const { businessId, newBusiness, newMapping } = await resolveBusiness(draft, settings);
+    // 1. Resolve (or auto-create) the cashbook via sender routing.
+    const { businessId, newBusiness, newMapping } = await resolveBusiness(draft, settings);
 
-  // 2. If we had to create a cashbook or mapping, persist those first
-  //    using the same safe load-merge-save pattern as transactions.
-  if (newBusiness) {
-    const businesses = await loadBusinesses();
-    await saveBusinesses([...businesses, newBusiness]);
-  }
-  if (newMapping) {
-    await appendSenderMapping(newMapping);
-  }
+    // 2. If we had to create a cashbook or mapping, persist those first
+    //    using the same safe load-merge-save pattern as transactions.
+    if (newBusiness) {
+        const businesses = await loadBusinesses();
+        await saveBusinesses([...businesses, newBusiness]);
+    }
+    if (newMapping) {
+        await appendSenderMapping(newMapping);
+    }
 
-  // 3. Build the transaction.
-  const tx: Transaction = {
-    id: generateId(),
-    description: draft.merchant ?? (draft.type === "income" ? "Auto income" : "Auto expense"),
-    amount: draft.amount,
-    date: draft.occurredAt,
-    type: draft.type === "transfer" ? "expense" : draft.type,
-    businessId,
-    category: draft.category,
-    remark: draft.rawText.slice(0, 280),
-    source: draft.source,
-    sourceApp: draft.sourceApp ?? draft.senderDisplay,
-    rawText: draft.rawText,
-    autoLogged: true,
-    confidence: draft.confidence,
-    reviewStatus: "confirmed",
-  };
+    // 3. Build the transaction.
+    const tx: Transaction = {
+        id: generateId(),
+        description: draft.merchant ?? (draft.type === "income" ? "Auto income" : "Auto expense"),
+        amount: draft.amount,
+        date: draft.occurredAt,
+        type: draft.type === "transfer" ? "expense" : draft.type,
+        businessId,
+        category: draft.category,
+        remark: draft.rawText.slice(0, 280),
+        source: draft.source,
+        sourceApp: draft.sourceApp ?? draft.senderDisplay,
+        rawText: draft.rawText,
+        autoLogged: true,
+        confidence: draft.confidence,
+        reviewStatus: "confirmed",
+    };
 
-  // 4. Route to transactions or review queue.
-  if (draft.confidence >= settings.minConfidenceForAutoSave && !settings.askBeforeSaving) {
-    const existing = await loadTransactions();
-    await saveTransactions([...existing, tx]);
-  } else {
-    await appendReviewItem({ id: tx.id, draft, businessId, createdAt: new Date().toISOString() });
-  }
+    // 4. Route to transactions or review queue.
+    if (draft.confidence >= settings.minConfidenceForAutoSave && !settings.askBeforeSaving) {
+        const existing = await loadTransactions();
+        await saveTransactions([...existing, tx]);
+    } else {
+        await appendReviewItem({
+            id: tx.id,
+            draft,
+            businessId,
+            createdAt: new Date().toISOString(),
+        });
+    }
 }
 ```
 
@@ -458,13 +466,13 @@ Prevent double logging when the same payment arrives via SMS + bank app notifica
 
 - Header + back button that mirrors `SecuritySettingsScreen`.
 - List of `ReviewItemCard`s, each showing:
-  - Amount + currency symbol (via `getCurrencySymbol(defaultBusiness.currency)`).
-  - Detected merchant / category.
-  - Small "SMS" or "Notification" source chip using theme tokens.
-  - Raw text preview (truncated) in `textSecondary`.
+    - Amount + currency symbol (via `getCurrencySymbol(defaultBusiness.currency)`).
+    - Detected merchant / category.
+    - Small "SMS" or "Notification" source chip using theme tokens.
+    - Raw text preview (truncated) in `textSecondary`.
 - Tap a card → inline editor (amount, category from the existing picker, merchant/description) and two actions:
-  - **Confirm** — moves it into transactions via `saveTransactions`; removes from queue.
-  - **Reject** — removes from queue and records the merchant + text into a simple `@autolog_rejects` list to downweight similar events in future.
+    - **Confirm** — moves it into transactions via `saveTransactions`; removes from queue.
+    - **Reject** — removes from queue and records the merchant + text into a simple `@autolog_rejects` list to downweight similar events in future.
 - Empty state: friendly illustration + "Nothing to review" copy.
 
 Add a small pending-count badge on the Settings "Review Queue" row, and optionally on the Dashboard (deferred — not MVP).
@@ -481,14 +489,14 @@ Add a small pending-count badge on the Settings "Review Queue" row, and optional
 
 ## Error & Recovery Handling
 
-| Failure | Behavior |
-|---|---|
-| SMS permission denied | `enabled=false`, settings screen shows a recovery banner with "Grant permission" button. |
-| Notification access revoked | Same as above; detected on foreground. |
-| Parse failure | Event is discarded (not saved), incrementing a local counter used only for telemetry toggles; nothing surfaces to the user. |
-| Duplicate conflict | Silently collapsed per the dedupe rules. |
-| AsyncStorage write failure | Retry once; if still failing, leave the event in the native queue so it's re-drained next foreground. Never crash the capture path. |
-| OS kills the listener service | User re-enable path is a single "Re-enable" tap on the Settings screen. |
+| Failure                       | Behavior                                                                                                                            |
+| ----------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- |
+| SMS permission denied         | `enabled=false`, settings screen shows a recovery banner with "Grant permission" button.                                            |
+| Notification access revoked   | Same as above; detected on foreground.                                                                                              |
+| Parse failure                 | Event is discarded (not saved), incrementing a local counter used only for telemetry toggles; nothing surfaces to the user.         |
+| Duplicate conflict            | Silently collapsed per the dedupe rules.                                                                                            |
+| AsyncStorage write failure    | Retry once; if still failing, leave the event in the native queue so it's re-drained next foreground. Never crash the capture path. |
+| OS kills the listener service | User re-enable path is a single "Re-enable" tap on the Settings screen.                                                             |
 
 ---
 
@@ -549,8 +557,8 @@ Before calling this feature done, run the existing project checklist from `CLAUD
 2. Scan for hardcoded secrets, keys, tokens — there should be none; nothing server-side here.
 3. Scan for `hardcoded colors` — all new UI uses `useTheme()` tokens.
 4. Input validation at two boundaries:
-   - User input in Auto-Log Settings (minimum confidence must be 0–1; default cashbook must exist).
-   - Native event payloads (cap `body` / `title` / `rawText` lengths; reject malformed JSON from the native queue).
+    - User input in Auto-Log Settings (minimum confidence must be 0–1; default cashbook must exist).
+    - Native event payloads (cap `body` / `title` / `rawText` lengths; reject malformed JSON from the native queue).
 5. Permissions audit — the app only asks for SMS and notification listener, documented and justified.
 6. Read new code with fresh eyes for subtle bugs (race conditions around drain + manual save is the main risk — ensure the async mutex is actually there).
 
@@ -571,15 +579,18 @@ Before calling this feature done, run the existing project checklist from `CLAUD
 Each commit is small, reviewable on its own, and leaves the app in a working state. Every commit runs `npx tsc -b` green before merging.
 
 ### Commit 1 — Types & persistence scaffolding (invisible)
+
 **Goal:** introduce types and AsyncStorage-backed persistence primitives, without touching any UI.
 
 Created:
+
 - `src/features/autoLogging/types/index.ts` — `RawEvent`, `ParsedDraft`, `SenderMapping`, `ReviewItem`, `AutoLogSettings`.
 - `src/features/autoLogging/services/persistence/settings.ts` — `loadAutoLogSettings()`, `saveAutoLogSettings()`, default settings (enabled=false).
 - `src/features/autoLogging/services/persistence/senderMappings.ts` — `loadSenderMappings()`, `saveSenderMappings()`, `appendSenderMapping()`.
 - `src/features/autoLogging/services/persistence/reviewQueue.ts` — `loadReviewQueue()`, `saveReviewQueue()`, `appendReviewItem()`, `removeReviewItem()`.
 
 Modified:
+
 - `src/types.ts` — add optional fields to `Transaction`: `source`, `sourceApp`, `rawText`, `autoLogged`, `confidence`, `reviewStatus`.
 - `src/utils/storage.ts` — add new storage keys (`@autolog_settings`, `@autolog_sender_mappings`, `@autolog_review_queue`) to the existing `STORAGE_KEYS` constant. Extend `AppBackup.data` to round-trip sender mappings and review queue through export/import. Bump `AppBackup.version` to `3` and handle v2 backups gracefully on import.
 
@@ -588,9 +599,11 @@ Tests: none yet (no logic).
 ---
 
 ### Commit 2 — Sender routing (pure logic, no UI)
+
 **Goal:** implement sender normalization, mapping lookup, and cashbook auto-create as pure testable functions.
 
 Created:
+
 - `src/features/autoLogging/services/routing/normalizeSender.ts` — `normalizeSender(source, rawId)` → `senderKey`.
 - `src/features/autoLogging/services/routing/senderAliases.ts` — seed alias table (`mtnmomo` → `mtn`, `com.mtn.momo` → `mtn`, etc.) + `applyAliases(senderKey)`.
 - `src/features/autoLogging/services/routing/resolveBusiness.ts` — `resolveBusiness(draft, settings, businesses, mappings, now?)` → `{ businessId, newBusiness?, newMapping? }`.
@@ -603,9 +616,11 @@ Modified: nothing else.
 ---
 
 ### Commit 3 — Parser pipeline (pure logic, no UI)
+
 **Goal:** convert a `RawEvent` + `senderKey/senderDisplay` context into a `ParsedDraft`.
 
 Created:
+
 - `src/features/autoLogging/services/parser/amount.ts` — regex for `GHS|USD|EUR|GBP|$|€|£|₵` prefixes and suffixes.
 - `src/features/autoLogging/services/parser/merchant.ts` — `at X`, `to X`, `from X`, `@ X`.
 - `src/features/autoLogging/services/parser/type.ts` — expense / income / transfer heuristics.
@@ -624,9 +639,11 @@ Modified: `package.json` — add `test` script + jest config block.
 ---
 
 ### Commit 4 — Settings UI & Sender Mappings screen (still no capture)
+
 **Goal:** users can browse, toggle, and edit — but since capture is not wired yet, nothing populates.
 
 Created:
+
 - `src/features/autoLogging/hooks/useAutoLogSettings.ts` — load/save settings, provide update helpers.
 - `src/features/autoLogging/hooks/useSenderMappings.ts` — load/save mappings, provide rename / remap / delete helpers.
 - `src/features/autoLogging/components/AutoLogToggleRow.tsx` — themed toggle row.
@@ -637,6 +654,7 @@ Created:
 - `src/features/autoLogging/screens/SenderMappingsScreen.tsx` — list + editor host.
 
 Modified:
+
 - `src/screens/SettingsScreen.tsx` — add the new "Automatic Logging" row inside the **Features** section, plus `showAutoLog` state, cleanup `useFocusEffect`, and BackHandler branch matching the existing pattern.
 
 Tests: a quick snapshot of `AutoLogSettingsScreen` default state. Nothing deeper.
@@ -644,9 +662,11 @@ Tests: a quick snapshot of `AutoLogSettingsScreen` default state. Nothing deeper
 ---
 
 ### Commit 5 — Review Queue screen + manual seeding (still no capture)
+
 **Goal:** the full post-capture UX is reviewable end-to-end via a dev-only "seed sample events" button, without any native code.
 
 Created:
+
 - `src/features/autoLogging/hooks/useAutoLogQueue.ts` — expose `reviewItems`, `confirm(id, edits)`, `reject(id)`.
 - `src/features/autoLogging/components/ReviewItemCard.tsx` — card with source chip + inline editor trigger.
 - `src/features/autoLogging/screens/ReviewQueueScreen.tsx` — list + confirm/reject flow.
@@ -654,6 +674,7 @@ Created:
 - `src/features/autoLogging/services/ingestion/devSeed.ts` — `__DEV__`-guarded helper that injects canned `RawEvent`s through the real pipeline, so QA can exercise routing and review without Android.
 
 Modified:
+
 - `src/features/autoLogging/screens/AutoLogSettingsScreen.tsx` — wire the "Review Queue" row to open `ReviewQueueScreen` and show pending count badge. Add a dev-only "Seed sample events" row guarded by `__DEV__`.
 
 Tests: `__tests__/autoLogging/saveDraft.test.ts` — happy path (auto-save), low-confidence path (queue), dedupe path (collapse), new-cashbook path (auto-create fires).
@@ -661,9 +682,11 @@ Tests: `__tests__/autoLogging/saveDraft.test.ts` — happy path (auto-save), low
 ---
 
 ### Commit 6 — Native Android capture (Kotlin + manifest)
+
 **Goal:** actual SMS + notification capture on-device, gated entirely behind the `enabled` setting.
 
 Created:
+
 - `android/app/src/main/java/com/patrickackom/financetracker/autolog/SmsReceiver.kt`.
 - `android/app/src/main/java/com/patrickackom/financetracker/autolog/NotificationListener.kt`.
 - `android/app/src/main/java/com/patrickackom/financetracker/autolog/AutoLogQueue.kt` — shared event queue (file-backed JSON in app-internal storage).
@@ -674,6 +697,7 @@ Created:
 - `src/features/autoLogging/screens/AutoLogOnboardingScreen.tsx` — the permissions walkthrough.
 
 Modified:
+
 - `android/app/src/main/AndroidManifest.xml` — add permissions + receiver + service declarations.
 - `android/app/src/main/java/com/patrickackom/financetracker/MainApplication.kt` (or `.java`) — register `AutoLogPackage`.
 - `app.json` — no change needed (prebuilt android is already in the repo).
@@ -684,13 +708,16 @@ Tests: manual-only (real device). Add `docs/android-autolog-qa.md` with the mini
 ---
 
 ### Commit 7 — Drain & foreground integration
+
 **Goal:** hand events from native to JS cleanly, with no race conditions against the UI.
 
 Created:
+
 - `src/features/autoLogging/services/ingestion/drainNativeQueue.ts` — drains queue, parses each event, calls `saveDraft` for each, then clears the drained IDs in native.
 - `src/features/autoLogging/services/ingestion/mutex.ts` — small keyed async mutex.
 
 Modified:
+
 - `App.tsx` — inside the existing `AppState` listener, call `drainNativeQueue()` on transition to `active`, followed by `refreshData()`. Also subscribe to `DeviceEventEmitter` for live events while foregrounded. Guard both with `Platform.OS === "android"` and the `enabled` setting.
 - `src/features/autoLogging/services/ingestion/saveDraft.ts` — route all AsyncStorage writes through the mutex.
 - `src/components/TransactionItem.tsx` — optional render of a small "Auto" chip when `tx.autoLogged === true`, using theme tokens.
@@ -701,14 +728,17 @@ Tests: `__tests__/autoLogging/drain.test.ts` with a mocked `AutoLogModule`, asse
 ---
 
 ### Commit 8 — Polish, privacy, store disclosure
+
 **Goal:** production-ready release checklist.
 
 Created:
+
 - `docs/privacy-policy-autolog.md` — copy block to merge into the public privacy policy.
 - `docs/play-store-sms-permission-declaration.md` — text answers for the Play Console Permissions Declaration form.
 - `docs/android-autolog-qa.md` — finalized QA matrix (from Commit 6).
 
 Modified:
+
 - `app.json` — version bump.
 - `src/features/autoLogging/screens/AutoLogSettingsScreen.tsx` — "Privacy" row linking to the in-app privacy modal; local metrics display (`@autolog_stats`).
 - `src/features/autoLogging/services/persistence/settings.ts` — add a one-time migration that sets `defaultCurrency` to the currency of the user's most-used cashbook at first enable.
