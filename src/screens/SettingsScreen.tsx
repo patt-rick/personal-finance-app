@@ -287,6 +287,7 @@ export default function SettingsScreen({
             <AutoLogSettingsScreen
                 businesses={businesses}
                 onBack={() => setShowAutoLog(false)}
+                onDataChanged={onDataImported}
             />
         );
     }

@@ -14,6 +14,7 @@ import {
     Bell,
     ChevronRight,
     Eye,
+    FlaskConical,
     Inbox,
     MessageSquare,
     Radio,
@@ -27,7 +28,10 @@ import { Business } from "../../../types";
 import AutoLogToggleRow from "../components/AutoLogToggleRow";
 import AllowedAppsSelector from "../components/AllowedAppsSelector";
 import { useAutoLogSettings } from "../hooks/useAutoLogSettings";
+import { loadReviewQueue } from "../services/persistence/reviewQueue";
+import { seedSampleEvents } from "../services/ingestion/devSeed";
 import SenderMappingsScreen from "./SenderMappingsScreen";
+import ReviewQueueScreen from "./ReviewQueueScreen";
 
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
@@ -39,22 +43,38 @@ const CURRENCIES = [
 interface Props {
     businesses: Business[];
     onBack: () => void;
+    onDataChanged?: () => Promise<void> | void;
 }
 
-export default function AutoLogSettingsScreen({ businesses, onBack }: Props) {
+export default function AutoLogSettingsScreen({ businesses, onBack, onDataChanged }: Props) {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     const { settings, loading, update } = useAutoLogSettings();
     const [showMappings, setShowMappings] = useState(false);
+    const [showReview, setShowReview] = useState(false);
     const [showPackages, setShowPackages] = useState(false);
     const [showSenders, setShowSenders] = useState(false);
+    const [pendingCount, setPendingCount] = useState(0);
+
+    const refreshPendingCount = useCallback(async () => {
+        const queue = await loadReviewQueue();
+        setPendingCount(queue.length);
+    }, []);
+
+    useEffect(() => {
+        refreshPendingCount();
+    }, [refreshPendingCount, showReview]);
 
     useEffect(() => {
         const sub = BackHandler.addEventListener("hardwareBackPress", () => {
             if (showMappings) {
                 setShowMappings(false);
+                return true;
+            }
+            if (showReview) {
+                setShowReview(false);
                 return true;
             }
             if (showPackages || showSenders) {
@@ -66,7 +86,17 @@ export default function AutoLogSettingsScreen({ businesses, onBack }: Props) {
             return true;
         });
         return () => sub.remove();
-    }, [showMappings, showPackages, showSenders, onBack]);
+    }, [showMappings, showReview, showPackages, showSenders, onBack]);
+
+    const handleSeed = useCallback(async () => {
+        const result = await seedSampleEvents(settings);
+        await refreshPendingCount();
+        await onDataChanged?.();
+        Alert.alert(
+            "Seeded sample events",
+            `Attempted ${result.attempted}. Saved ${result.saved}, queued ${result.queued}, dropped ${result.dropped}.`,
+        );
+    }, [settings, refreshPendingCount, onDataChanged]);
 
     const handleToggleEnabled = useCallback(
         async (next: boolean) => {
@@ -86,11 +116,23 @@ export default function AutoLogSettingsScreen({ businesses, onBack }: Props) {
         return <SenderMappingsScreen businesses={businesses} onBack={() => setShowMappings(false)} />;
     }
 
+    if (showReview) {
+        return (
+            <ReviewQueueScreen
+                businesses={businesses}
+                onBack={() => setShowReview(false)}
+                onConfirmed={() => {
+                    refreshPendingCount();
+                    onDataChanged?.();
+                }}
+            />
+        );
+    }
+
     if (loading) {
         return <View style={styles.container} />;
     }
 
-    const pendingReviewCount = 0;
     const mappingSubtitle = "Rename, reroute, merge";
 
     return (
@@ -205,21 +247,34 @@ export default function AutoLogSettingsScreen({ businesses, onBack }: Props) {
                         iconBg={theme.colors.incomeBg}
                         title="Review Queue"
                         subtitle={
-                            pendingReviewCount === 0
+                            pendingCount === 0
                                 ? "Nothing pending"
-                                : `${pendingReviewCount} waiting`
+                                : `${pendingCount} waiting`
                         }
-                        onPress={() =>
-                            Alert.alert(
-                                "Coming soon",
-                                "The review queue UI lands in the next update — pending items will appear here once captures are flowing.",
-                            )
-                        }
+                        onPress={() => setShowReview(true)}
                         styles={styles}
                         theme={theme}
                         last
                     />
                 </View>
+
+                {__DEV__ ? (
+                    <>
+                        <SectionLabel label="Developer" styles={styles} />
+                        <View style={styles.groupCard}>
+                            <NavRow
+                                icon={<FlaskConical size={18} color={theme.colors.primary} />}
+                                iconBg={theme.colors.incomeBg}
+                                title="Seed sample events"
+                                subtitle="Runs 4 canned SMS/notification events through the pipeline"
+                                onPress={handleSeed}
+                                styles={styles}
+                                theme={theme}
+                                last
+                            />
+                        </View>
+                    </>
+                ) : null}
 
                 <SectionLabel label="Privacy" styles={styles} />
                 <View style={[styles.groupCard, styles.privacyCard]}>
