@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     Alert,
     BackHandler,
+    Platform,
     ScrollView,
     StyleSheet,
     Text,
@@ -34,8 +35,10 @@ import {
     ensureNotificationListenerAccess,
     ensureSmsPermission,
 } from "../services/permissions/android";
+import { autoLogNative } from "../services/ingestion/nativeBridge";
 import SenderMappingsScreen from "./SenderMappingsScreen";
 import ReviewQueueScreen from "./ReviewQueueScreen";
+import AutoLogOnboardingScreen from "./AutoLogOnboardingScreen";
 import { FLOATING_TAB_HEIGHT } from "../../../components/FloatingTabBar";
 
 const CURRENCIES = [
@@ -61,6 +64,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     const [showReview, setShowReview] = useState(false);
     const [showPackages, setShowPackages] = useState(false);
     const [showSenders, setShowSenders] = useState(false);
+    const [showOnboarding, setShowOnboarding] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
 
     const refreshPendingCount = useCallback(async () => {
@@ -74,6 +78,10 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
 
     useEffect(() => {
         const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+            if (showOnboarding) {
+                setShowOnboarding(false);
+                return true;
+            }
             if (showMappings) {
                 setShowMappings(false);
                 return true;
@@ -91,7 +99,31 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
             return true;
         });
         return () => sub.remove();
-    }, [showMappings, showReview, showPackages, showSenders, onBack]);
+    }, [showMappings, showReview, showPackages, showSenders, showOnboarding, onBack]);
+
+    useEffect(() => {
+        if (loading || !settings.enabled || Platform.OS !== "android" || !autoLogNative.isAvailable()) {
+            return;
+        }
+        autoLogNative.setAllowedPackages(settings.allowedPackages).catch(() => {});
+        autoLogNative.setAllowedSenders(settings.allowedSenders).catch(() => {});
+    }, [loading, settings.enabled, settings.allowedPackages, settings.allowedSenders]);
+
+    useEffect(() => {
+        if (loading || Platform.OS !== "android" || !autoLogNative.isAvailable()) return;
+        const reconcile = async () => {
+            try {
+                await autoLogNative.setEnabled(settings.enabled);
+                await autoLogNative.setCaptureSms(settings.enabled && settings.captureSms);
+                await autoLogNative.setCaptureNotifications(
+                    settings.enabled && settings.captureNotifications,
+                );
+            } catch {
+                // native bridge will surface errors to callers via promise rejection
+            }
+        };
+        reconcile();
+    }, [loading, settings.enabled, settings.captureSms, settings.captureNotifications]);
 
     const handleCaptureSms = useCallback(
         async (next: boolean) => {
@@ -115,6 +147,24 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         [update],
     );
 
+    const handleOnboardingDone = useCallback(
+        async (granted: { sms: boolean; notifications: boolean }) => {
+            try {
+                await autoLogNative.setAllowedPackages(settings.allowedPackages);
+                await autoLogNative.setAllowedSenders(settings.allowedSenders);
+            } catch {
+                // ignore — reconcile effect will retry on next render
+            }
+            await update({
+                enabled: true,
+                captureSms: granted.sms,
+                captureNotifications: granted.notifications,
+            });
+            setShowOnboarding(false);
+        },
+        [update, settings.allowedPackages, settings.allowedSenders],
+    );
+
     const handleSeed = useCallback(async () => {
         const result = await seedSampleEvents(settings);
         await refreshPendingCount();
@@ -128,16 +178,29 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     const handleToggleEnabled = useCallback(
         async (next: boolean) => {
             if (next) {
-                Alert.alert(
-                    "Coming soon",
-                    "Automatic logging needs the native capture modules that land in the next update. You can configure routing, currencies and review behavior now so it's ready on day one.",
-                    [{ text: "OK" }],
-                );
+                if (Platform.OS !== "android" || !autoLogNative.isAvailable()) {
+                    Alert.alert(
+                        "Android only",
+                        "Automatic logging is currently available on Android. iOS support is on the roadmap.",
+                    );
+                    return;
+                }
+                setShowOnboarding(true);
+                return;
             }
-            await update({ enabled: next });
+            await update({ enabled: false });
         },
         [update],
     );
+
+    if (showOnboarding) {
+        return (
+            <AutoLogOnboardingScreen
+                onDone={handleOnboardingDone}
+                onCancel={() => setShowOnboarding(false)}
+            />
+        );
+    }
 
     if (showMappings) {
         return <SenderMappingsScreen businesses={businesses} onBack={() => setShowMappings(false)} />;
