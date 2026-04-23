@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "../../../../utils/storage";
+import { STORAGE_KEYS } from "../../../../utils/storageKeys";
 import { SenderMapping } from "../../types";
 
 export const loadSenderMappings = async (): Promise<SenderMapping[]> => {

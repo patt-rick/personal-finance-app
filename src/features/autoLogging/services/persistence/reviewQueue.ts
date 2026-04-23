@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { STORAGE_KEYS } from "../../../../utils/storage";
+import { STORAGE_KEYS } from "../../../../utils/storageKeys";
 import { ReviewItem } from "../../types";
 
 export const loadReviewQueue = async (): Promise<ReviewItem[]> => {

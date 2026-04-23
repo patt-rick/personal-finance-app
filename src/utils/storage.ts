@@ -4,19 +4,9 @@ import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import { Business, Transaction, UserProfile, Category, Budget, RecurringTransaction, Debt } from "../types";
 import { AutoLogSettings, SenderMapping, ReviewItem } from "../features/autoLogging/types";
+import { STORAGE_KEYS } from "./storageKeys";
 
-export const STORAGE_KEYS = {
-    BUSINESSES: "@businesses",
-    TRANSACTIONS: "@transactions",
-    USER_PROFILE: "@user_profile",
-    CATEGORIES: "@categories",
-    BUDGETS: "@budgets",
-    RECURRING_TRANSACTIONS: "@recurring_transactions",
-    DEBTS: "@debts",
-    AUTO_LOG_SETTINGS: "@autolog_settings",
-    AUTO_LOG_SENDER_MAPPINGS: "@autolog_sender_mappings",
-    AUTO_LOG_REVIEW_QUEUE: "@autolog_review_queue",
-};
+export { STORAGE_KEYS };
 
 const DEFAULT_CATEGORIES: Category[] = [
     { id: "1", name: "Salary", type: "income", isDefault: true },
