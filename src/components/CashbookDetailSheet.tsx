@@ -27,6 +27,13 @@ import { getCurrencySymbol } from "../utils/_helpers";
 import WeeklyBarChart from "./dashboard/WeeklyBarChart";
 import { LinearGradient } from "expo-linear-gradient";
 
+const CURRENCIES = [
+    { label: "US Dollar", value: "USD", symbol: "$" },
+    { label: "Ghana Cedi", value: "GHS", symbol: "₵" },
+    { label: "Euro", value: "EUR", symbol: "€" },
+    { label: "British Pound", value: "GBP", symbol: "£" },
+];
+
 interface CashbookDetailSheetProps {
     business: Business | null;
     transactions: Transaction[];
@@ -34,6 +41,7 @@ interface CashbookDetailSheetProps {
     onOpenCashbook: (business: Business) => void;
     onDelete: (businessId: string) => void;
     onRename: (businessId: string, newName: string) => void;
+    onUpdateCurrency: (businessId: string, newCurrency: string) => void;
 }
 
 export default function CashbookDetailSheet({
@@ -43,12 +51,14 @@ export default function CashbookDetailSheet({
     onOpenCashbook,
     onDelete,
     onRename,
+    onUpdateCurrency,
 }: CashbookDetailSheetProps) {
     const theme = useTheme();
     const s = useMemo(() => createStyles(theme), [theme]);
 
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState("");
+    const [currencyValue, setCurrencyValue] = useState("USD");
 
     const sheetData = useMemo(() => {
         if (!business) return null;
@@ -117,9 +127,15 @@ export default function CashbookDetailSheet({
         };
     }, [business, transactions, theme]);
 
-    const handleRename = () => {
+    const handleSaveEdits = () => {
         if (!business || !renameValue.trim()) return;
-        onRename(business.id, renameValue.trim());
+        const trimmedName = renameValue.trim();
+        if (trimmedName !== business.name) {
+            onRename(business.id, trimmedName);
+        }
+        if (currencyValue !== (business.currency ?? "USD")) {
+            onUpdateCurrency(business.id, currencyValue);
+        }
         setIsRenaming(false);
     };
 
@@ -129,11 +145,11 @@ export default function CashbookDetailSheet({
         onOpenCashbook(business);
     };
 
-    // Reset rename state when the sheet opens for a new business
     React.useEffect(() => {
         if (business) {
             setIsRenaming(false);
             setRenameValue(business.name);
+            setCurrencyValue(business.currency ?? "USD");
         }
     }, [business]);
 
@@ -169,7 +185,9 @@ export default function CashbookDetailSheet({
                                         isRenaming={isRenaming}
                                         renameValue={renameValue}
                                         setRenameValue={setRenameValue}
-                                        handleRename={handleRename}
+                                        currencyValue={currencyValue}
+                                        setCurrencyValue={setCurrencyValue}
+                                        handleSaveEdits={handleSaveEdits}
                                         setIsRenaming={setIsRenaming}
                                         theme={theme}
                                         s={s}
@@ -206,6 +224,7 @@ export default function CashbookDetailSheet({
                                             ]}
                                             onPress={() => {
                                                 setRenameValue(business.name);
+                                                setCurrencyValue(business.currency ?? "USD");
                                                 setIsRenaming(true);
                                             }}
                                         >
@@ -237,14 +256,16 @@ function SheetHeader({
     isRenaming,
     renameValue,
     setRenameValue,
-    handleRename,
+    currencyValue,
+    setCurrencyValue,
+    handleSaveEdits,
     setIsRenaming,
     theme,
     s,
 }: any) {
     if (isRenaming) {
         return (
-            <View style={s.header}>
+            <View style={s.editContainer}>
                 <View style={s.renameRow}>
                     <TextInput
                         style={[
@@ -254,11 +275,11 @@ function SheetHeader({
                         value={renameValue}
                         onChangeText={setRenameValue}
                         autoFocus
-                        onSubmitEditing={handleRename}
+                        onSubmitEditing={handleSaveEdits}
                         returnKeyType="done"
                     />
                     <TouchableOpacity
-                        onPress={handleRename}
+                        onPress={handleSaveEdits}
                         style={[s.renameSave, { backgroundColor: theme.colors.primary }]}
                     >
                         <Text style={{ color: theme.colors.textInverse, fontWeight: "700", fontSize: 13 }}>Save</Text>
@@ -266,6 +287,48 @@ function SheetHeader({
                     <TouchableOpacity onPress={() => setIsRenaming(false)} style={s.renameCancel}>
                         <X size={18} color={theme.colors.textSecondary} />
                     </TouchableOpacity>
+                </View>
+
+                <Text style={[s.editFieldLabel, { color: theme.colors.textSecondary }]}>
+                    Currency
+                </Text>
+                <View style={s.currencyGrid}>
+                    {CURRENCIES.map((curr) => {
+                        const isSelected = currencyValue === curr.value;
+                        return (
+                            <TouchableOpacity
+                                key={curr.value}
+                                style={[
+                                    s.currencyCard,
+                                    { backgroundColor: theme.colors.surface },
+                                    isSelected && {
+                                        backgroundColor: theme.colors.primary,
+                                        borderColor: theme.colors.primary,
+                                    },
+                                ]}
+                                onPress={() => setCurrencyValue(curr.value)}
+                            >
+                                <Text
+                                    style={[
+                                        s.currSym,
+                                        { color: theme.colors.text },
+                                        isSelected && { color: theme.colors.textInverse },
+                                    ]}
+                                >
+                                    {curr.symbol}
+                                </Text>
+                                <Text
+                                    style={[
+                                        s.currCode,
+                                        { color: theme.colors.textSecondary },
+                                        isSelected && { color: theme.colors.textInverse },
+                                    ]}
+                                >
+                                    {curr.value}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
                 </View>
             </View>
         );
@@ -437,7 +500,8 @@ const createStyles = (theme: any) =>
         currencyBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
         currencyBadgeText: { fontSize: 12, fontWeight: "700" },
 
-        renameRow: { flexDirection: "row", alignItems: "center", flex: 1, gap: 8 },
+        editContainer: { marginBottom: 16 },
+        renameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
         renameInput: {
             flex: 1,
             height: 40,
@@ -455,6 +519,26 @@ const createStyles = (theme: any) =>
             justifyContent: "center",
         },
         renameCancel: { padding: 8 },
+        editFieldLabel: {
+            fontSize: 11,
+            fontWeight: "700",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginTop: 14,
+            marginBottom: 8,
+        },
+        currencyGrid: { flexDirection: "row", gap: 8 },
+        currencyCard: {
+            flex: 1,
+            height: 56,
+            borderRadius: 12,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: "transparent",
+        },
+        currSym: { fontSize: 18, fontWeight: "700" },
+        currCode: { fontSize: 10, fontWeight: "600", marginTop: 2 },
 
         balanceCard: { borderRadius: 16, padding: 18, marginBottom: 14, overflow: "hidden" },
         balanceLabel: {

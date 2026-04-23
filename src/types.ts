@@ -25,6 +25,12 @@ export interface Transaction {
     subCategory?: string;
     paymentMode?: string;
     remark?: string;
+    source?: "manual" | "recurring" | "sms" | "notification";
+    sourceApp?: string;
+    rawText?: string;
+    autoLogged?: boolean;
+    confidence?: number;
+    reviewStatus?: "pending" | "confirmed" | "rejected";
 }
 
 export interface Category {

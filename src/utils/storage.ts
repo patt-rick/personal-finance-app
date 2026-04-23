@@ -3,8 +3,9 @@ import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
 import { Business, Transaction, UserProfile, Category, Budget, RecurringTransaction, Debt } from "../types";
+import { AutoLogSettings, SenderMapping, ReviewItem } from "../features/autoLogging/types";
 
-const STORAGE_KEYS = {
+export const STORAGE_KEYS = {
     BUSINESSES: "@businesses",
     TRANSACTIONS: "@transactions",
     USER_PROFILE: "@user_profile",
@@ -12,6 +13,9 @@ const STORAGE_KEYS = {
     BUDGETS: "@budgets",
     RECURRING_TRANSACTIONS: "@recurring_transactions",
     DEBTS: "@debts",
+    AUTO_LOG_SETTINGS: "@autolog_settings",
+    AUTO_LOG_SENDER_MAPPINGS: "@autolog_sender_mappings",
+    AUTO_LOG_REVIEW_QUEUE: "@autolog_review_queue",
 };
 
 const DEFAULT_CATEGORIES: Category[] = [
@@ -219,23 +223,42 @@ export const saveDebts = async (debts: Debt[]): Promise<boolean> => {
 
 // Full Data Export/Import
 
+interface AppBackupV2Data {
+    businesses: Business[];
+    transactions: Transaction[];
+    userProfile: UserProfile | null;
+    categories: Category[];
+    budgets: Budget[];
+    recurringTransactions: RecurringTransaction[];
+    debts: Debt[];
+}
+
+interface AppBackupV3Data extends AppBackupV2Data {
+    autoLogSettings: AutoLogSettings | null;
+    senderMappings: SenderMapping[];
+    reviewQueue: ReviewItem[];
+}
+
 interface AppBackup {
-    version: 2;
+    version: 2 | 3;
     exportedAt: string;
-    data: {
-        businesses: Business[];
-        transactions: Transaction[];
-        userProfile: UserProfile | null;
-        categories: Category[];
-        budgets: Budget[];
-        recurringTransactions: RecurringTransaction[];
-        debts: Debt[];
-    };
+    data: AppBackupV2Data | AppBackupV3Data;
 }
 
 export const exportAllData = async (): Promise<boolean> => {
     try {
-        const [businesses, transactions, userProfile, categories, budgets, recurringTransactions, debts] = await Promise.all([
+        const [
+            businesses,
+            transactions,
+            userProfile,
+            categories,
+            budgets,
+            recurringTransactions,
+            debts,
+            autoLogSettingsRaw,
+            senderMappingsRaw,
+            reviewQueueRaw,
+        ] = await Promise.all([
             loadBusinesses(),
             loadTransactions(),
             loadUserProfile(),
@@ -243,12 +266,30 @@ export const exportAllData = async (): Promise<boolean> => {
             loadBudgets(),
             loadRecurringTransactions(),
             loadDebts(),
+            AsyncStorage.getItem(STORAGE_KEYS.AUTO_LOG_SETTINGS),
+            AsyncStorage.getItem(STORAGE_KEYS.AUTO_LOG_SENDER_MAPPINGS),
+            AsyncStorage.getItem(STORAGE_KEYS.AUTO_LOG_REVIEW_QUEUE),
         ]);
 
+        const autoLogSettings: AutoLogSettings | null = autoLogSettingsRaw ? JSON.parse(autoLogSettingsRaw) : null;
+        const senderMappings: SenderMapping[] = senderMappingsRaw ? JSON.parse(senderMappingsRaw) : [];
+        const reviewQueue: ReviewItem[] = reviewQueueRaw ? JSON.parse(reviewQueueRaw) : [];
+
         const backup: AppBackup = {
-            version: 2,
+            version: 3,
             exportedAt: new Date().toISOString(),
-            data: { businesses, transactions, userProfile, categories, budgets, recurringTransactions, debts },
+            data: {
+                businesses,
+                transactions,
+                userProfile,
+                categories,
+                budgets,
+                recurringTransactions,
+                debts,
+                autoLogSettings,
+                senderMappings,
+                reviewQueue,
+            },
         };
 
         const fileName = `finance_tracker_backup_${Date.now()}.json`;
@@ -295,6 +336,9 @@ export const importAllData = async (): Promise<boolean> => {
         if (!backup.version || !backup.data) {
             throw new Error("Invalid backup file format");
         }
+        if (backup.version !== 2 && backup.version !== 3) {
+            throw new Error(`Unsupported backup version: ${backup.version}`);
+        }
 
         const { businesses, transactions, userProfile, categories, budgets, recurringTransactions, debts } = backup.data;
 
@@ -302,7 +346,7 @@ export const importAllData = async (): Promise<boolean> => {
             throw new Error("Invalid backup data structure");
         }
 
-        await Promise.all([
+        const writes: Promise<unknown>[] = [
             saveBusinesses(businesses),
             saveTransactions(transactions),
             userProfile ? saveUserProfile(userProfile) : Promise.resolve(true),
@@ -310,7 +354,26 @@ export const importAllData = async (): Promise<boolean> => {
             saveBudgets(budgets || []),
             saveRecurringTransactions(recurringTransactions || []),
             saveDebts(debts || []),
-        ]);
+        ];
+
+        if (backup.version === 3) {
+            const v3 = backup.data as AppBackupV3Data;
+            writes.push(
+                v3.autoLogSettings
+                    ? AsyncStorage.setItem(STORAGE_KEYS.AUTO_LOG_SETTINGS, JSON.stringify(v3.autoLogSettings))
+                    : AsyncStorage.removeItem(STORAGE_KEYS.AUTO_LOG_SETTINGS),
+                AsyncStorage.setItem(STORAGE_KEYS.AUTO_LOG_SENDER_MAPPINGS, JSON.stringify(v3.senderMappings || [])),
+                AsyncStorage.setItem(STORAGE_KEYS.AUTO_LOG_REVIEW_QUEUE, JSON.stringify(v3.reviewQueue || [])),
+            );
+        } else {
+            writes.push(
+                AsyncStorage.removeItem(STORAGE_KEYS.AUTO_LOG_SETTINGS),
+                AsyncStorage.setItem(STORAGE_KEYS.AUTO_LOG_SENDER_MAPPINGS, JSON.stringify([])),
+                AsyncStorage.setItem(STORAGE_KEYS.AUTO_LOG_REVIEW_QUEUE, JSON.stringify([])),
+            );
+        }
+
+        await Promise.all(writes);
 
         return true;
     } catch (error) {
