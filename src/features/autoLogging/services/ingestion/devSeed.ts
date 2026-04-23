@@ -1,6 +1,7 @@
 import { loadCategories } from "../../../../utils/storage";
 import { AutoLogSettings, RawEvent } from "../../types";
 import { parse } from "../parser/parse";
+import { isAllowedEvent } from "../filter/isAllowedEvent";
 import { saveDraft } from "./applyPlan";
 
 const SAMPLE_EVENTS: RawEvent[] = [
@@ -39,13 +40,18 @@ const SAMPLE_EVENTS: RawEvent[] = [
     },
 ];
 
-export async function seedSampleEvents(settings: AutoLogSettings): Promise<{ attempted: number; saved: number; queued: number; dropped: number }> {
+export async function seedSampleEvents(settings: AutoLogSettings): Promise<{ attempted: number; saved: number; queued: number; filtered: number; dropped: number }> {
     const categories = await loadCategories();
     let saved = 0;
     let queued = 0;
+    let filtered = 0;
     let dropped = 0;
 
     for (const event of SAMPLE_EVENTS) {
+        if (!isAllowedEvent(event, settings)) {
+            filtered++;
+            continue;
+        }
         const draft = parse(event, categories);
         if (!draft) {
             dropped++;
@@ -57,5 +63,5 @@ export async function seedSampleEvents(settings: AutoLogSettings): Promise<{ att
         else dropped++;
     }
 
-    return { attempted: SAMPLE_EVENTS.length, saved, queued, dropped };
+    return { attempted: SAMPLE_EVENTS.length, saved, queued, filtered, dropped };
 }

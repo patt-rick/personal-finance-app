@@ -121,7 +121,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         await onDataChanged?.();
         Alert.alert(
             "Seeded sample events",
-            `Attempted ${result.attempted}. Saved ${result.saved}, queued ${result.queued}, dropped ${result.dropped}.`,
+            `Attempted ${result.attempted}. Saved ${result.saved}, queued ${result.queued}, filtered ${result.filtered}, dropped ${result.dropped}.`,
         );
     }, [settings, refreshPendingCount, onDataChanged]);
 
