@@ -14,6 +14,11 @@ import {
     Trash,
     MessageSquare,
     Pencil,
+    Sparkles,
+    Radio,
+    Bell,
+    Gauge,
+    FileText,
 } from "lucide-react-native";
 import { Transaction } from "../types";
 import { useTheme } from "../theme/theme";
@@ -126,6 +131,63 @@ export default function TransactionDetailModal({
                                 ) : null}
                             </View>
 
+                            {transaction.autoLogged ? (
+                                <View style={[styles.txDetailInfoSection, { marginTop: 12 }]}>
+                                    <View style={s.sourceHeader}>
+                                        <Sparkles size={14} color={theme.colors.primary} />
+                                        <Text style={[s.sourceHeaderText, { color: theme.colors.primary }]}>
+                                            Source details
+                                        </Text>
+                                    </View>
+                                    {transaction.source ? (
+                                        <DetailRow
+                                            icon={
+                                                transaction.source === "sms" ? (
+                                                    <Radio size={18} color={theme.colors.textSecondary} />
+                                                ) : (
+                                                    <Bell size={18} color={theme.colors.textSecondary} />
+                                                )
+                                            }
+                                            label="Source"
+                                            value={transaction.source === "sms" ? "SMS" : transaction.source === "notification" ? "Notification" : transaction.source}
+                                            styles={styles}
+                                        />
+                                    ) : null}
+                                    {transaction.sourceApp ? (
+                                        <DetailRow
+                                            icon={<Info size={18} color={theme.colors.textSecondary} />}
+                                            label="From"
+                                            value={transaction.sourceApp}
+                                            styles={styles}
+                                        />
+                                    ) : null}
+                                    {typeof transaction.confidence === "number" ? (
+                                        <DetailRow
+                                            icon={<Gauge size={18} color={theme.colors.textSecondary} />}
+                                            label="Confidence"
+                                            value={`${Math.round(transaction.confidence * 100)}%`}
+                                            styles={styles}
+                                        />
+                                    ) : null}
+                                    {transaction.rawText ? (
+                                        <View style={[styles.txDetailRow, { alignItems: "flex-start" }]}>
+                                            <View style={s.iconLabel}>
+                                                <FileText size={18} color={theme.colors.textSecondary} />
+                                                <Text style={styles.txDetailLabel}>Original</Text>
+                                            </View>
+                                            <Text
+                                                style={[
+                                                    styles.txDetailValue,
+                                                    { flex: 1, textAlign: "right", marginLeft: 20 },
+                                                ]}
+                                            >
+                                                {transaction.rawText}
+                                            </Text>
+                                        </View>
+                                    ) : null}
+                                </View>
+                            ) : null}
+
                             <View style={styles.txDetailActions}>
                                 <TouchableOpacity
                                     style={styles.txDetailDeleteBtn}
@@ -178,5 +240,17 @@ const s = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
+    },
+    sourceHeader: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 8,
+    },
+    sourceHeaderText: {
+        fontSize: 11,
+        fontWeight: "700",
+        letterSpacing: 0.6,
+        textTransform: "uppercase",
     },
 });

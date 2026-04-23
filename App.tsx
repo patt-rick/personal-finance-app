@@ -36,6 +36,8 @@ import {
     getBiometricType,
     authenticateWithBiometrics,
 } from "./src/utils/security";
+import { drainNativeQueue } from "./src/features/autoLogging/services/ingestion/drainNativeQueue";
+import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nativeBridge";
 
 const Tab = createBottomTabNavigator();
 
@@ -225,6 +227,48 @@ function MainApp() {
     }, []);
 
     const handleDataImported = refreshData;
+
+    const drainingRef = useRef(false);
+    const drainPendingRef = useRef(false);
+
+    const runDrain = useCallback(async () => {
+        if (Platform.OS !== "android" || !autoLogNative.isAvailable()) return;
+        if (drainingRef.current) {
+            drainPendingRef.current = true;
+            return;
+        }
+        drainingRef.current = true;
+        try {
+            do {
+                drainPendingRef.current = false;
+                try {
+                    const result = await drainNativeQueue();
+                    if (result.saved > 0 || result.queued > 0) {
+                        await refreshData();
+                    }
+                } catch {
+                    // swallow — drain errors must not crash the UI
+                }
+            } while (drainPendingRef.current);
+        } finally {
+            drainingRef.current = false;
+        }
+    }, [refreshData]);
+
+    useEffect(() => {
+        if (isLoading || Platform.OS !== "android" || !autoLogNative.isAvailable()) return;
+        runDrain();
+        const stateSub = AppState.addEventListener("change", (next) => {
+            if (next === "active") runDrain();
+        });
+        const liveSub = autoLogNative.subscribe(() => {
+            runDrain();
+        });
+        return () => {
+            stateSub.remove();
+            liveSub.remove();
+        };
+    }, [isLoading, runDrain]);
 
     if (isLoading) {
         return <SplashScreen />;

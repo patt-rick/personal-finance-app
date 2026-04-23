@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, StyleSheet } from 'react-native';
 import { createGlobalStyles } from '../styles/globalStyles';
 import { Transaction, Business } from '../types';
 import { useTheme } from '../theme/theme';
@@ -16,9 +16,16 @@ export default function TransactionItem({ transaction, business }: TransactionIt
   return (
     <View style={styles.transactionItem}>
       <View style={styles.transactionLeft}>
-        <Text style={styles.transactionDescription}>
-          {transaction.description}
-        </Text>
+        <View style={localStyles.titleRow}>
+          <Text style={styles.transactionDescription} numberOfLines={1}>
+            {transaction.description}
+          </Text>
+          {transaction.autoLogged ? (
+            <View style={[localStyles.autoChip, { backgroundColor: theme.colors.incomeBg }]}>
+              <Text style={[localStyles.autoChipText, { color: theme.colors.primary }]}>Auto</Text>
+            </View>
+          ) : null}
+        </View>
         <Text style={styles.transactionMeta}>
           {business?.name} • {new Date(transaction.date).toLocaleDateString()}
         </Text>
@@ -35,3 +42,22 @@ export default function TransactionItem({ transaction, business }: TransactionIt
     </View>
   );
 }
+
+const localStyles = StyleSheet.create({
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    flexShrink: 1,
+  },
+  autoChip: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  autoChipText: {
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+});
