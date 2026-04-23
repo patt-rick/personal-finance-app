@@ -11,8 +11,10 @@ import {
     TouchableWithoutFeedback,
     View,
 } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Plus, X } from "lucide-react-native";
 import { useTheme } from "../../../theme/theme";
+import { FLOATING_TAB_HEIGHT } from "../../../components/FloatingTabBar";
 
 interface Props {
     visible: boolean;
@@ -32,7 +34,9 @@ export default function AllowedAppsSelector({
     onChange,
 }: Props) {
     const theme = useTheme();
-    const styles = useMemo(() => createStyles(theme), [theme]);
+    const insets = useSafeAreaInsets();
+    const bottomInset = Math.max(insets.bottom, 12);
+    const styles = useMemo(() => createStyles(theme, bottomInset), [theme, bottomInset]);
     const [draft, setDraft] = useState("");
 
     const handleAdd = () => {
@@ -106,7 +110,7 @@ export default function AllowedAppsSelector({
     );
 }
 
-const createStyles = (theme: any) =>
+const createStyles = (theme: any, bottomInset: number) =>
     StyleSheet.create({
         overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
         sheet: {
@@ -114,8 +118,8 @@ const createStyles = (theme: any) =>
             borderTopLeftRadius: 24,
             borderTopRightRadius: 24,
             paddingHorizontal: 20,
-            paddingBottom: 32,
-            maxHeight: "80%",
+            paddingBottom: bottomInset + FLOATING_TAB_HEIGHT + 12,
+            maxHeight: "85%",
         },
         handle: { alignItems: "center", paddingTop: 10, paddingBottom: 6 },
         handleBar: { width: 36, height: 4, borderRadius: 2, backgroundColor: theme.colors.border },

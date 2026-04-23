@@ -30,8 +30,13 @@ import AllowedAppsSelector from "../components/AllowedAppsSelector";
 import { useAutoLogSettings } from "../hooks/useAutoLogSettings";
 import { loadReviewQueue } from "../services/persistence/reviewQueue";
 import { seedSampleEvents } from "../services/ingestion/devSeed";
+import {
+    ensureNotificationListenerAccess,
+    ensureSmsPermission,
+} from "../services/permissions/android";
 import SenderMappingsScreen from "./SenderMappingsScreen";
 import ReviewQueueScreen from "./ReviewQueueScreen";
+import { FLOATING_TAB_HEIGHT } from "../../../components/FloatingTabBar";
 
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
@@ -87,6 +92,28 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         });
         return () => sub.remove();
     }, [showMappings, showReview, showPackages, showSenders, onBack]);
+
+    const handleCaptureSms = useCallback(
+        async (next: boolean) => {
+            if (next) {
+                const granted = await ensureSmsPermission();
+                if (!granted) return;
+            }
+            await update({ captureSms: next });
+        },
+        [update],
+    );
+
+    const handleCaptureNotifications = useCallback(
+        async (next: boolean) => {
+            if (next) {
+                const granted = await ensureNotificationListenerAccess();
+                if (!granted) return;
+            }
+            await update({ captureNotifications: next });
+        },
+        [update],
+    );
 
     const handleSeed = useCallback(async () => {
         const result = await seedSampleEvents(settings);
@@ -145,7 +172,10 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
             </View>
 
             <ScrollView
-                contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40, paddingHorizontal: 20 }}
+                contentContainerStyle={{
+                    paddingBottom: Math.max(insets.bottom, 20) + FLOATING_TAB_HEIGHT + 24,
+                    paddingHorizontal: 20,
+                }}
                 showsVerticalScrollIndicator={false}
             >
                 <StatusCard
@@ -163,7 +193,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         title="SMS"
                         subtitle="Read financial SMS messages"
                         value={settings.captureSms}
-                        onValueChange={(v) => update({ captureSms: v })}
+                        onValueChange={handleCaptureSms}
                         disabled={!settings.enabled}
                     />
                     <AutoLogToggleRow
@@ -172,7 +202,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         title="Notifications"
                         subtitle="Capture posted notifications"
                         value={settings.captureNotifications}
-                        onValueChange={(v) => update({ captureNotifications: v })}
+                        onValueChange={handleCaptureNotifications}
                         disabled={!settings.enabled}
                         last
                     />
@@ -201,7 +231,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         title="Allowed Apps"
                         subtitle={
                             settings.allowedPackages.length === 0
-                                ? "All financial apps"
+                                ? "No apps added"
                                 : `${settings.allowedPackages.length} app${settings.allowedPackages.length === 1 ? "" : "s"}`
                         }
                         onPress={() => setShowPackages(true)}
@@ -214,7 +244,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         title="Allowed SMS Senders"
                         subtitle={
                             settings.allowedSenders.length === 0
-                                ? "All senders"
+                                ? "No senders added"
                                 : `${settings.allowedSenders.length} sender${settings.allowedSenders.length === 1 ? "" : "s"}`
                         }
                         onPress={() => setShowSenders(true)}

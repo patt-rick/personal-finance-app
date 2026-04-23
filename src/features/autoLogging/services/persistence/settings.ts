@@ -4,12 +4,12 @@ import { AutoLogSettings } from "../../types";
 
 export const DEFAULT_AUTO_LOG_SETTINGS: AutoLogSettings = {
     enabled: false,
-    captureSms: true,
-    captureNotifications: true,
+    captureSms: false,
+    captureNotifications: false,
     defaultCurrency: "GHS",
     allowedPackages: [],
     allowedSenders: [],
-    reviewLowConfidenceOnly: true,
+    reviewLowConfidenceOnly: false,
     askBeforeSaving: false,
     minConfidenceForAutoSave: 0.75,
 };
