@@ -39,6 +39,7 @@ import {
     Settings as SettingsIcon,
     Database,
     Sparkles,
+    Zap,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
@@ -51,6 +52,7 @@ import SecuritySettingsScreen from "./SecuritySettingsScreen";
 import RecurringTransactionsScreen from "./RecurringTransactionsScreen";
 import DebtTrackerScreen from "./DebtTrackerScreen";
 import ReportsScreen from "./ReportsScreen";
+import AutoLogSettingsScreen from "../features/autoLogging/screens/AutoLogSettingsScreen";
 import TourOverlay from "../components/TourOverlay";
 
 const APP_VERSION = require("../../app.json").expo.version;
@@ -93,6 +95,7 @@ export default function SettingsScreen({
     const [showRecurring, setShowRecurring] = useState(false);
     const [showDebts, setShowDebts] = useState(false);
     const [showReports, setShowReports] = useState(false);
+    const [showAutoLog, setShowAutoLog] = useState(false);
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [showExportVerify, setShowExportVerify] = useState(false);
@@ -105,6 +108,7 @@ export default function SettingsScreen({
                 setShowRecurring(false);
                 setShowDebts(false);
                 setShowReports(false);
+                setShowAutoLog(false);
                 setShowExportVerify(false);
             };
         }, [])
@@ -137,11 +141,15 @@ export default function SettingsScreen({
                     setShowReports(false);
                     return true;
                 }
+                if (showAutoLog) {
+                    setShowAutoLog(false);
+                    return true;
+                }
                 return false;
             };
             const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
             return () => subscription.remove();
-        }, [showCategories, showSecurity, showExportVerify, showRecurring, showDebts, showReports])
+        }, [showCategories, showSecurity, showExportVerify, showRecurring, showDebts, showReports, showAutoLog])
     );
 
     const initials = (name || "U")
@@ -270,6 +278,15 @@ export default function SettingsScreen({
                 businesses={businesses}
                 transactions={transactions}
                 onBack={() => setShowReports(false)}
+            />
+        );
+    }
+
+    if (showAutoLog) {
+        return (
+            <AutoLogSettingsScreen
+                businesses={businesses}
+                onBack={() => setShowAutoLog(false)}
             />
         );
     }
@@ -433,7 +450,7 @@ export default function SettingsScreen({
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
                             <TouchableOpacity
-                                style={[styles.row, { borderBottomWidth: 0 }]}
+                                style={styles.row}
                                 onPress={() => setShowDebts(true)}
                             >
                                 <View style={[styles.iconCircle, { backgroundColor: theme.colors.expenseBg }]}>
@@ -442,6 +459,19 @@ export default function SettingsScreen({
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Debts & Loans</Text>
                                     <Text style={styles.rowSubText}>Track money owed & owing</Text>
+                                </View>
+                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                            </TouchableOpacity>
+                            <TouchableOpacity
+                                style={[styles.row, { borderBottomWidth: 0 }]}
+                                onPress={() => setShowAutoLog(true)}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
+                                    <Zap size={18} color={theme.colors.primary} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Automatic Logging</Text>
+                                    <Text style={styles.rowSubText}>Capture from SMS & notifications</Text>
                                 </View>
                                 <ChevronRight size={18} color={theme.colors.textSecondary} />
                             </TouchableOpacity>
