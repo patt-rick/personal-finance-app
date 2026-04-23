@@ -593,14 +593,10 @@ Tests: none yet (no logic).
 Created:
 - `src/features/autoLogging/services/routing/normalizeSender.ts` — `normalizeSender(source, rawId)` → `senderKey`.
 - `src/features/autoLogging/services/routing/senderAliases.ts` — seed alias table (`mtnmomo` → `mtn`, `com.mtn.momo` → `mtn`, etc.) + `applyAliases(senderKey)`.
-- `src/features/autoLogging/services/routing/resolveBusiness.ts` — `resolveBusiness(draft, settings, businesses, mappings)` → `{ businessId, newBusiness?, newMapping? }`.
+- `src/features/autoLogging/services/routing/resolveBusiness.ts` — `resolveBusiness(draft, settings, businesses, mappings, now?)` → `{ businessId, newBusiness?, newMapping? }`.
 - `src/features/autoLogging/services/routing/displayName.ts` — derive friendly display from raw sender / package name.
-- Tests under `__tests__/autoLogging/routing.test.ts`:
-  - normalize collapses variants to one key
-  - lookup returns existing mapping
-  - missing mapping creates a `Business` and `SenderMapping`
-  - new cashbook's currency is taken from the parsed draft, falling back to `settings.defaultCurrency`
-  - alphanumeric senders don't collide with phone-number senders
+
+Tests: deferred to Commit 3 where Jest is installed and configured. Routing is pure so all five cases (variant collapse, existing mapping hit, auto-create path, currency fallback, phone vs alphanumeric) are covered there.
 
 Modified: nothing else.
 
@@ -618,7 +614,8 @@ Created:
 - `src/features/autoLogging/services/parser/parse.ts` — orchestrator returning `ParsedDraft | null`.
 - `src/features/autoLogging/services/dedupe/hash.ts` — `dedupeKey(amount, merchant, timestamp)`.
 - `src/features/autoLogging/services/dedupe/match.ts` — find near-duplicates in the last 24h of transactions + review queue.
-- Tests under `__tests__/autoLogging/parser.test.ts` covering the main lexicons, bilingual GHS / USD / EUR cases, spam rejection, and dedupe hits.
+- Tests under `__tests__/autoLogging/parser.test.ts` covering the main lexicons, multi-currency (GHS / USD / EUR) cases, spam rejection, and dedupe hits.
+- Tests under `__tests__/autoLogging/routing.test.ts` (deferred from Commit 2) covering variant collapse, existing-mapping hit, auto-create path, currency fallback, phone-vs-alphanumeric disambiguation.
 
 Dev dependency added: `jest`, `@types/jest`, `ts-jest` (or reuse if already present) — minimal config.
 
