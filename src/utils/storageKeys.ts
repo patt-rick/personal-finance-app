@@ -9,4 +9,5 @@ export const STORAGE_KEYS = {
     AUTO_LOG_SETTINGS: "@autolog_settings",
     AUTO_LOG_SENDER_MAPPINGS: "@autolog_sender_mappings",
     AUTO_LOG_REVIEW_QUEUE: "@autolog_review_queue",
+    AUTO_LOG_STATS: "@autolog_stats",
 };

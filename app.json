@@ -2,7 +2,7 @@
   "expo": {
     "name": "Finance Tracker",
     "slug": "finance-tracker",
-    "version": "1.0.1",
+    "version": "1.1.0",
     "orientation": "default",
     "icon": "./src/icon.png",
     "userInterfaceStyle": "automatic",

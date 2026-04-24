@@ -67,6 +67,7 @@ function makeDeps(overrides: Partial<DrainDeps> = {}): {
     filterMock: jest.Mock;
     parseMock: jest.Mock;
     saveMock: jest.Mock;
+    statsMock: jest.Mock;
 } {
     const calls: string[] = [];
     const drainMock = jest.fn(async () => {
@@ -88,17 +89,19 @@ function makeDeps(overrides: Partial<DrainDeps> = {}): {
         calls.push("save");
         return makePlan("save");
     });
+    const statsMock = jest.fn(async () => {});
     const deps: DrainDeps = {
         drainQueue: drainMock,
         clearQueue: clearMock,
         applyFilter: filterMock,
         runParse: parseMock,
         runSave: saveMock,
+        writeStats: statsMock,
         loadCategories: async () => categories,
         loadSettings: async () => enabledSettings,
         ...overrides,
     };
-    return { deps, calls, drainMock, clearMock, filterMock, parseMock, saveMock };
+    return { deps, calls, drainMock, clearMock, filterMock, parseMock, saveMock, statsMock };
 }
 
 describe("drainNativeQueue — happy path", () => {
@@ -168,6 +171,54 @@ describe("drainNativeQueue — filtering", () => {
         const result = await drainNativeQueue(deps);
         expect(result.dropped).toBe(1);
         expect(clearMock).toHaveBeenCalledWith(["evt-1"]);
+    });
+});
+
+describe("drainNativeQueue — stats", () => {
+    it("increments captured counts by source and autoSaved on successful save", async () => {
+        const events = [
+            makeEvent({ id: "s1", source: "sms" }),
+            makeEvent({ id: "n1", source: "notification", packageName: "com.mtn.momo" }),
+        ];
+        const { deps, statsMock } = makeDeps({
+            drainQueue: async () => events,
+        });
+        await drainNativeQueue(deps);
+        expect(statsMock).toHaveBeenCalledTimes(1);
+        expect(statsMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                capturedSms: 1,
+                capturedNotifications: 1,
+                autoSaved: 2,
+                parseFailures: 0,
+            }),
+        );
+    });
+
+    it("counts parseFailures separately from dedupeHits", async () => {
+        const { deps, statsMock } = makeDeps({
+            drainQueue: async () => [makeEvent({ id: "x" }), makeEvent({ id: "y" })],
+            runParse: (ev) => (ev.id === "x" ? null : makeDraft()),
+            runSave: async () => makePlan("drop"),
+        });
+        await drainNativeQueue(deps);
+        expect(statsMock).toHaveBeenCalledWith(
+            expect.objectContaining({
+                parseFailures: 1,
+                dedupeHits: 1,
+                autoSaved: 0,
+            }),
+        );
+    });
+
+    it("counts a replace as both autoSaved and dedupeHit", async () => {
+        const { deps, statsMock } = makeDeps({
+            runSave: async () => makePlan("replace"),
+        });
+        await drainNativeQueue(deps);
+        expect(statsMock).toHaveBeenCalledWith(
+            expect.objectContaining({ autoSaved: 1, dedupeHits: 1 }),
+        );
     });
 });
 

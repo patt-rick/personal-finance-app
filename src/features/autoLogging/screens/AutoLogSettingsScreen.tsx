@@ -17,6 +17,7 @@ import {
     Eye,
     FlaskConical,
     Inbox,
+    Lock,
     MessageSquare,
     Radio,
     ShieldCheck,
@@ -28,14 +29,19 @@ import { useTheme } from "../../../theme/theme";
 import { Business } from "../../../types";
 import AutoLogToggleRow from "../components/AutoLogToggleRow";
 import AllowedAppsSelector from "../components/AllowedAppsSelector";
+import AutoLogStatsCard from "../components/AutoLogStatsCard";
+import PrivacyModal from "../components/PrivacyModal";
 import { useAutoLogSettings } from "../hooks/useAutoLogSettings";
 import { loadReviewQueue } from "../services/persistence/reviewQueue";
+import { loadAutoLogStats, resetAutoLogStats } from "../services/persistence/stats";
 import { seedSampleEvents } from "../services/ingestion/devSeed";
+import { migrateDefaultCurrencyIfNeeded } from "../services/migration/defaultCurrency";
 import {
     ensureNotificationListenerAccess,
     ensureSmsPermission,
 } from "../services/permissions/android";
 import { autoLogNative } from "../services/ingestion/nativeBridge";
+import { AutoLogStats } from "../types";
 import SenderMappingsScreen from "./SenderMappingsScreen";
 import ReviewQueueScreen from "./ReviewQueueScreen";
 import AutoLogOnboardingScreen from "./AutoLogOnboardingScreen";
@@ -59,27 +65,39 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     const insets = useSafeAreaInsets();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
-    const { settings, loading, update } = useAutoLogSettings();
+    const { settings, loading, update, reload } = useAutoLogSettings();
     const [showMappings, setShowMappings] = useState(false);
     const [showReview, setShowReview] = useState(false);
     const [showPackages, setShowPackages] = useState(false);
     const [showSenders, setShowSenders] = useState(false);
     const [showOnboarding, setShowOnboarding] = useState(false);
+    const [showPrivacy, setShowPrivacy] = useState(false);
     const [pendingCount, setPendingCount] = useState(0);
+    const [stats, setStats] = useState<AutoLogStats | null>(null);
 
     const refreshPendingCount = useCallback(async () => {
         const queue = await loadReviewQueue();
         setPendingCount(queue.length);
     }, []);
 
+    const refreshStats = useCallback(async () => {
+        const s = await loadAutoLogStats();
+        setStats(s);
+    }, []);
+
     useEffect(() => {
         refreshPendingCount();
-    }, [refreshPendingCount, showReview]);
+        refreshStats();
+    }, [refreshPendingCount, refreshStats, showReview]);
 
     useEffect(() => {
         const sub = BackHandler.addEventListener("hardwareBackPress", () => {
             if (showOnboarding) {
                 setShowOnboarding(false);
+                return true;
+            }
+            if (showPrivacy) {
+                setShowPrivacy(false);
                 return true;
             }
             if (showMappings) {
@@ -99,7 +117,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
             return true;
         });
         return () => sub.remove();
-    }, [showMappings, showReview, showPackages, showSenders, showOnboarding, onBack]);
+    }, [showMappings, showReview, showPackages, showSenders, showOnboarding, showPrivacy, onBack]);
 
     useEffect(() => {
         if (loading || !settings.enabled || Platform.OS !== "android" || !autoLogNative.isAvailable()) {
@@ -165,15 +183,21 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         [update, settings.allowedPackages, settings.allowedSenders],
     );
 
+    const handleResetStats = useCallback(async () => {
+        await resetAutoLogStats();
+        await refreshStats();
+    }, [refreshStats]);
+
     const handleSeed = useCallback(async () => {
         const result = await seedSampleEvents(settings);
         await refreshPendingCount();
+        await refreshStats();
         await onDataChanged?.();
         Alert.alert(
             "Seeded sample events",
             `Attempted ${result.attempted}. Saved ${result.saved}, queued ${result.queued}, filtered ${result.filtered}, dropped ${result.dropped}.`,
         );
-    }, [settings, refreshPendingCount, onDataChanged]);
+    }, [settings, refreshPendingCount, refreshStats, onDataChanged]);
 
     const handleToggleEnabled = useCallback(
         async (next: boolean) => {
@@ -185,12 +209,18 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                     );
                     return;
                 }
+                try {
+                    await migrateDefaultCurrencyIfNeeded(businesses);
+                    await reload();
+                } catch {
+                    // migration is best-effort; don't block enable
+                }
                 setShowOnboarding(true);
                 return;
             }
             await update({ enabled: false });
         },
-        [update],
+        [update, reload, businesses],
     );
 
     if (showOnboarding) {
@@ -369,15 +399,25 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                     </>
                 ) : null}
 
+                <SectionLabel label="Insights" styles={styles} />
+                <AutoLogStatsCard stats={stats} onReset={handleResetStats} />
+
                 <SectionLabel label="Privacy" styles={styles} />
-                <View style={[styles.groupCard, styles.privacyCard]}>
-                    <Text style={styles.privacyTitle}>Everything stays on this device.</Text>
-                    <Text style={styles.privacyBody}>
-                        Captured SMS and notification text is parsed locally and stored alongside your transactions. No
-                        messages are uploaded.
-                    </Text>
+                <View style={styles.groupCard}>
+                    <NavRow
+                        icon={<Lock size={18} color={theme.colors.primary} />}
+                        iconBg={theme.colors.incomeBg}
+                        title="How your data stays private"
+                        subtitle="What is captured, stored, and never uploaded"
+                        onPress={() => setShowPrivacy(true)}
+                        styles={styles}
+                        theme={theme}
+                        last
+                    />
                 </View>
             </ScrollView>
+
+            <PrivacyModal visible={showPrivacy} onClose={() => setShowPrivacy(false)} />
 
             <AllowedAppsSelector
                 visible={showPackages}

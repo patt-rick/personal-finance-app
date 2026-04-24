@@ -12,6 +12,7 @@ export const DEFAULT_AUTO_LOG_SETTINGS: AutoLogSettings = {
     reviewLowConfidenceOnly: false,
     askBeforeSaving: false,
     minConfidenceForAutoSave: 0.75,
+    defaultCurrencyMigrated: false,
 };
 
 export const loadAutoLogSettings = async (): Promise<AutoLogSettings> => {

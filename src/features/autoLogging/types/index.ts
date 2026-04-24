@@ -51,4 +51,15 @@ export interface AutoLogSettings {
     reviewLowConfidenceOnly: boolean;
     askBeforeSaving: boolean;
     minConfidenceForAutoSave: number;
+    defaultCurrencyMigrated: boolean;
+}
+
+export interface AutoLogStats {
+    capturedSms: number;
+    capturedNotifications: number;
+    autoSaved: number;
+    queuedForReview: number;
+    dedupeHits: number;
+    parseFailures: number;
+    lastUpdated: string | null;
 }
