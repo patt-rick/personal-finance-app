@@ -10,6 +10,7 @@ import {
     KeyboardAvoidingView,
     Platform,
     Keyboard,
+    StyleSheet,
 } from "react-native";
 import { X } from "lucide-react-native";
 import { Transaction, Category } from "../types";
@@ -44,21 +45,40 @@ export default function TransactionEntryModal({
     const theme = useTheme();
     const styles = React.useMemo(() => createDashboardStyles(theme), [theme]);
 
+    const defaultCategoryForType = (t: "income" | "expense") =>
+        t === "income" ? "Other Income" : "Other Expense";
+
     const [amount, setAmount] = useState("");
     const [remark, setRemark] = useState("");
-    const [selectedCategory, setSelectedCategory] = useState("Others");
+    const [selectedCategory, setSelectedCategory] = useState(
+        defaultCategoryForType(entryType),
+    );
+    const [currentType, setCurrentType] = useState<"income" | "expense">(entryType);
 
     useEffect(() => {
         if (editingTx) {
             setAmount(editingTx.amount.toString());
-            setSelectedCategory(editingTx.category || "Others");
+            setSelectedCategory(
+                editingTx.category || defaultCategoryForType(editingTx.type),
+            );
             setRemark(editingTx.remark || "");
+            setCurrentType(editingTx.type);
         } else {
             setAmount("");
             setRemark("");
-            setSelectedCategory("Others");
+            setSelectedCategory(defaultCategoryForType(entryType));
+            setCurrentType(entryType);
         }
-    }, [editingTx, visible]);
+    }, [editingTx, visible, entryType]);
+
+    const handleTypeChange = (next: "income" | "expense") => {
+        if (next === currentType) return;
+        setCurrentType(next);
+        const stillValid = categories.some(
+            (c) => c.type === next && c.name === selectedCategory,
+        );
+        if (!stillValid) setSelectedCategory(defaultCategoryForType(next));
+    };
 
     const handleSubmit = () => {
         if (!amount || isNaN(parseFloat(amount))) {
@@ -69,7 +89,7 @@ export default function TransactionEntryModal({
             amount: parseFloat(amount),
             category: selectedCategory,
             remark,
-            entryType,
+            entryType: currentType,
             editingTxId: editingTx?.id ?? null,
         });
         Keyboard.dismiss();
@@ -105,6 +125,49 @@ export default function TransactionEntryModal({
                                 </TouchableOpacity>
                             </View>
 
+                            {editingTx ? (
+                                <View style={s.typeToggleRow}>
+                                    {(["income", "expense"] as const).map((t) => {
+                                        const active = currentType === t;
+                                        const accent =
+                                            t === "income"
+                                                ? theme.colors.income
+                                                : theme.colors.expense;
+                                        return (
+                                            <TouchableOpacity
+                                                key={t}
+                                                onPress={() => handleTypeChange(t)}
+                                                style={[
+                                                    s.typeToggleBtn,
+                                                    {
+                                                        backgroundColor: active
+                                                            ? accent
+                                                            : theme.colors.surface,
+                                                        borderColor: active
+                                                            ? accent
+                                                            : theme.colors.border,
+                                                    },
+                                                ]}
+                                            >
+                                                <Text
+                                                    style={[
+                                                        s.typeToggleText,
+                                                        {
+                                                            color: active
+                                                                ? theme.colors.textInverse
+                                                                : theme.colors.textSecondary,
+                                                            fontWeight: active ? "700" : "500",
+                                                        },
+                                                    ]}
+                                                >
+                                                    {t === "income" ? "Income" : "Expense"}
+                                                </Text>
+                                            </TouchableOpacity>
+                                        );
+                                    })}
+                                </View>
+                            ) : null}
+
                             <Text style={styles.inputLabelModern}>Amount ({symbol})</Text>
                             <TextInput
                                 style={styles.modalInputLargeModern}
@@ -124,7 +187,7 @@ export default function TransactionEntryModal({
                                 keyboardShouldPersistTaps="always"
                             >
                                 {categories
-                                    .filter((c) => c.type === entryType)
+                                    .filter((c) => c.type === currentType)
                                     .map((cat) => (
                                         <TouchableOpacity
                                             key={cat.id}
@@ -161,7 +224,7 @@ export default function TransactionEntryModal({
                                     styles.submitBtnModern,
                                     {
                                         backgroundColor:
-                                            entryType === "income"
+                                            currentType === "income"
                                                 ? theme.colors.income
                                                 : theme.colors.expense,
                                     },
@@ -176,3 +239,22 @@ export default function TransactionEntryModal({
         </Modal>
     );
 }
+
+const s = StyleSheet.create({
+    typeToggleRow: {
+        flexDirection: "row",
+        gap: 8,
+        marginBottom: 16,
+    },
+    typeToggleBtn: {
+        flex: 1,
+        height: 44,
+        borderRadius: 12,
+        borderWidth: 1,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    typeToggleText: {
+        fontSize: 14,
+    },
+});

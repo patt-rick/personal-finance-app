@@ -308,6 +308,27 @@ function DashboardHome({
         }));
     }, [businesses, transactions]);
 
+    const sortedBusinesses = useMemo(() => {
+        const latestTxByBiz: Record<string, number> = {};
+        for (const t of transactions) {
+            const ts = new Date(t.date).getTime();
+            if (!Number.isFinite(ts)) continue;
+            const prev = latestTxByBiz[t.businessId];
+            if (prev === undefined || ts > prev) latestTxByBiz[t.businessId] = ts;
+        }
+        const effectiveTime = (b: Business) => {
+            const txTime = latestTxByBiz[b.id];
+            if (txTime !== undefined) return txTime;
+            const created = new Date(b.createdAt).getTime();
+            return Number.isFinite(created) ? created : 0;
+        };
+        return [...businesses].sort((a, b) => {
+            const diff = effectiveTime(b) - effectiveTime(a);
+            if (diff !== 0) return diff;
+            return (a.name || "").localeCompare(b.name || "");
+        });
+    }, [businesses, transactions]);
+
     const [activeCurrencyIndex, setActiveCurrencyIndex] = useState(0);
     const activeCurrency = currencyBalances[activeCurrencyIndex] ?? currencyBalances[0];
 
@@ -414,7 +435,7 @@ function DashboardHome({
                 </View>
 
                 <View style={styles.cashbooksList}>
-                    {businesses.map((business, index) => (
+                    {sortedBusinesses.map((business, index) => (
                         <AnimatedCashbookItem
                             key={business.id}
                             business={business}

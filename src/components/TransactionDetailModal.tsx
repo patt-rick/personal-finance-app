@@ -5,6 +5,7 @@ import {
     TouchableOpacity,
     Modal,
     StyleSheet,
+    ScrollView,
 } from "react-native";
 import {
     X,
@@ -47,7 +48,7 @@ export default function TransactionDetailModal({
     return (
         <Modal visible={visible} animationType="slide" transparent>
             <View style={styles.modalOverlay}>
-                <View style={styles.txDetailCard}>
+                <View style={[styles.txDetailCard, s.cardBounded]}>
                     <TouchableOpacity
                         style={{ alignSelf: "flex-end", padding: 10, marginTop: -10 }}
                         onPress={onClose}
@@ -57,6 +58,11 @@ export default function TransactionDetailModal({
 
                     {transaction && (
                         <>
+                            <ScrollView
+                                style={s.scrollArea}
+                                contentContainerStyle={s.scrollContent}
+                                showsVerticalScrollIndicator={false}
+                            >
                             <View style={styles.txDetailHeader}>
                                 <View
                                     style={[
@@ -187,6 +193,7 @@ export default function TransactionDetailModal({
                                     ) : null}
                                 </View>
                             ) : null}
+                            </ScrollView>
 
                             <View style={styles.txDetailActions}>
                                 <TouchableOpacity
@@ -252,5 +259,14 @@ const s = StyleSheet.create({
         fontWeight: "700",
         letterSpacing: 0.6,
         textTransform: "uppercase",
+    },
+    cardBounded: {
+        maxHeight: "90%",
+    },
+    scrollArea: {
+        flexShrink: 1,
+    },
+    scrollContent: {
+        paddingBottom: 8,
     },
 });

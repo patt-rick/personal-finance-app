@@ -271,7 +271,6 @@ export default function BusinessDetailView({
                     return {
                         ...t,
                         amount: data.amount,
-                        description: data.entryType === "income" ? "Cash In" : "Cash Out",
                         type: data.entryType,
                         category: data.category,
                         remark: data.remark,
@@ -591,7 +590,11 @@ export default function BusinessDetailView({
                                             )}
                                         </View>
                                         <View style={styles.txInfo}>
-                                            <Text style={styles.txTitle}>
+                                            <Text
+                                                style={styles.txTitle}
+                                                numberOfLines={1}
+                                                ellipsizeMode="tail"
+                                            >
                                                 {t.remark || t.description}
                                             </Text>
                                             <Text style={styles.txSubTitle}>
