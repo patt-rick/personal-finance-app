@@ -29,11 +29,14 @@ interface NativeRawEvent {
     rawHash: string;
 }
 
-const nativeModule: NativeAutoLogModule | null =
-    Platform.OS === "android" ? (NativeModules.AutoLogModule ?? null) : null;
+let cachedModule: NativeAutoLogModule | null = null;
 
 function requireModule(): NativeAutoLogModule | null {
-    return nativeModule;
+    if (Platform.OS !== "android") return null;
+    if (cachedModule) return cachedModule;
+    const resolved = (NativeModules.AutoLogModule as NativeAutoLogModule | undefined) ?? null;
+    if (resolved) cachedModule = resolved;
+    return resolved;
 }
 
 function toRawEvent(ev: NativeRawEvent): RawEvent {
@@ -51,7 +54,7 @@ function toRawEvent(ev: NativeRawEvent): RawEvent {
 
 export const autoLogNative = {
     isAvailable(): boolean {
-        return nativeModule !== null;
+        return requireModule() !== null;
     },
 
     async isEnabled(): Promise<boolean> {

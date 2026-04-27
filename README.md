@@ -126,4 +126,5 @@ _Built with ❤️ for better financial management._
 
 ```bash
 eas build --platform android --profile production
+eas build --platform android --profile preview
 ```

@@ -9,6 +9,8 @@ export const EMPTY_STATS: AutoLogStats = {
     queuedForReview: 0,
     dedupeHits: 0,
     parseFailures: 0,
+    templatesMatched: 0,
+    referencesCaptured: 0,
     lastUpdated: null,
 };
 
@@ -41,6 +43,8 @@ export async function incrementAutoLogStats(deltas: Partial<AutoLogStats>): Prom
         queuedForReview: current.queuedForReview + (deltas.queuedForReview ?? 0),
         dedupeHits: current.dedupeHits + (deltas.dedupeHits ?? 0),
         parseFailures: current.parseFailures + (deltas.parseFailures ?? 0),
+        templatesMatched: current.templatesMatched + (deltas.templatesMatched ?? 0),
+        referencesCaptured: current.referencesCaptured + (deltas.referencesCaptured ?? 0),
         lastUpdated: new Date().toISOString(),
     };
     await saveAutoLogStats(next);

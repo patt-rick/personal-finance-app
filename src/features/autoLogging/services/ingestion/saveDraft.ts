@@ -2,6 +2,8 @@ import { Business, Transaction } from "../../../../types";
 import { AutoLogSettings, ParsedDraft, ReviewItem, SenderMapping } from "../../types";
 import { resolveBusiness } from "../routing/resolveBusiness";
 import { findDuplicate } from "../dedupe/match";
+import { fingerprint } from "../dedupe/fingerprint";
+import { RawHistoryLookup } from "../persistence/rawEvents";
 
 export type PlanOutcome = "save" | "review" | "replace" | "drop";
 
@@ -11,6 +13,8 @@ export interface PlanInput {
     businesses: Business[];
     transactions: Transaction[];
     mappings: SenderMapping[];
+    rawHistory?: RawHistoryLookup;
+    rawHash?: string;
     now?: Date;
     idGenerator?: () => string;
 }
@@ -22,6 +26,7 @@ export interface Plan {
     transaction?: Transaction;
     reviewItem?: ReviewItem;
     replaceTransactionId?: string;
+    fingerprint?: string;
 }
 
 const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
@@ -29,6 +34,11 @@ const DEDUPE_WINDOW_MS = 24 * 60 * 60 * 1000;
 export function planSaveDraft(input: PlanInput): Plan {
     const now = input.now ?? new Date();
     const idGen = input.idGenerator ?? (() => now.getTime().toString() + Math.floor(Math.random() * 1000));
+
+    const draftFp = fingerprint(input.draft);
+
+    const historyHit = checkRawHistory(input, draftFp);
+    if (historyHit && historyHit.outcome === "drop") return { ...historyHit, fingerprint: draftFp };
 
     const resolve = resolveBusiness(
         input.draft,
@@ -39,6 +49,17 @@ export function planSaveDraft(input: PlanInput): Plan {
     );
 
     const transaction = draftToTransaction(input.draft, resolve.businessId, idGen());
+
+    if (historyHit && historyHit.outcome === "replace" && historyHit.replaceTransactionId) {
+        return {
+            outcome: "replace",
+            newBusiness: resolve.newBusiness,
+            newMapping: resolve.newMapping,
+            transaction,
+            replaceTransactionId: historyHit.replaceTransactionId,
+            fingerprint: draftFp,
+        };
+    }
 
     const draftTimeMs = new Date(input.draft.occurredAt).getTime();
     const candidates: Array<{
@@ -70,9 +91,10 @@ export function planSaveDraft(input: PlanInput): Plan {
                 newMapping: resolve.newMapping,
                 transaction,
                 replaceTransactionId: candidates[hit.index].txId,
+                fingerprint: draftFp,
             };
         }
-        return { outcome: "drop" };
+        return { outcome: "drop", fingerprint: draftFp };
     }
 
     const { settings } = input;
@@ -91,6 +113,7 @@ export function planSaveDraft(input: PlanInput): Plan {
             newBusiness: resolve.newBusiness,
             newMapping: resolve.newMapping,
             reviewItem,
+            fingerprint: draftFp,
         };
     }
 
@@ -99,7 +122,25 @@ export function planSaveDraft(input: PlanInput): Plan {
         newBusiness: resolve.newBusiness,
         newMapping: resolve.newMapping,
         transaction,
+        fingerprint: draftFp,
     };
+}
+
+function checkRawHistory(input: PlanInput, draftFp: string): Plan | null {
+    const lookup = input.rawHistory;
+    if (!lookup) return null;
+
+    if (input.rawHash) {
+        const byHash = lookup.byRawHash.get(input.rawHash);
+        if (byHash) return { outcome: "drop" };
+    }
+
+    const byFp = lookup.byFingerprint.get(draftFp);
+    if (!byFp) return null;
+    if (input.draft.confidence > (byFp.confidence ?? 0) && byFp.txId) {
+        return { outcome: "replace", replaceTransactionId: byFp.txId };
+    }
+    return { outcome: "drop" };
 }
 
 function draftToTransaction(draft: ParsedDraft, businessId: string, id: string): Transaction {

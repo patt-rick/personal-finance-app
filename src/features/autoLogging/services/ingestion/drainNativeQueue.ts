@@ -4,7 +4,7 @@ import { loadCategories } from "../../../../utils/storage";
 import { loadAutoLogSettings } from "../persistence/settings";
 import { incrementAutoLogStats } from "../persistence/stats";
 import { isAllowedEvent } from "../filter/isAllowedEvent";
-import { parse } from "../parser/parse";
+import { parseEvent } from "../parser/engine";
 import { saveDraft } from "./applyPlan";
 import { autoLogNative } from "./nativeBridge";
 import { Plan } from "./saveDraft";
@@ -24,7 +24,7 @@ export interface DrainDeps {
     loadSettings?: () => Promise<AutoLogSettings>;
     applyFilter?: (event: RawEvent, settings: AutoLogSettings) => boolean;
     runParse?: (event: RawEvent, categories: Category[]) => ParsedDraft | null;
-    runSave?: (draft: ParsedDraft, settings: AutoLogSettings) => Promise<Plan>;
+    runSave?: (draft: ParsedDraft, settings: AutoLogSettings, event: RawEvent) => Promise<Plan>;
     writeStats?: (deltas: Partial<AutoLogStats>) => Promise<void>;
 }
 
@@ -36,8 +36,11 @@ export async function drainNativeQueue(deps: DrainDeps = {}): Promise<DrainResul
     const doLoadSettings = deps.loadSettings ?? loadAutoLogSettings;
     const doLoadCategories = deps.loadCategories ?? loadCategories;
     const doFilter = deps.applyFilter ?? isAllowedEvent;
-    const doParse = deps.runParse ?? parse;
-    const doSave = deps.runSave ?? saveDraft;
+    const doParse = deps.runParse ?? parseEvent;
+    const doSave =
+        deps.runSave ??
+        ((draft: ParsedDraft, settings: AutoLogSettings, event: RawEvent) =>
+            saveDraft(draft, settings, event));
     const doWriteStats =
         deps.writeStats ?? (async (d: Partial<AutoLogStats>) => {
             await incrementAutoLogStats(d);
@@ -63,6 +66,8 @@ export async function drainNativeQueue(deps: DrainDeps = {}): Promise<DrainResul
         queuedForReview: 0,
         dedupeHits: 0,
         parseFailures: 0,
+        templatesMatched: 0,
+        referencesCaptured: 0,
     };
 
     for (const event of events) {
@@ -83,9 +88,15 @@ export async function drainNativeQueue(deps: DrainDeps = {}): Promise<DrainResul
             deltas.parseFailures = (deltas.parseFailures ?? 0) + 1;
             continue;
         }
+        if (draft.providerId) {
+            deltas.templatesMatched = (deltas.templatesMatched ?? 0) + 1;
+        }
+        if (draft.reference) {
+            deltas.referencesCaptured = (deltas.referencesCaptured ?? 0) + 1;
+        }
 
         try {
-            const plan = await doSave(draft, settings);
+            const plan = await doSave(draft, settings, event);
             if (plan.outcome === "save" || plan.outcome === "replace") {
                 result.saved++;
                 deltas.autoSaved = (deltas.autoSaved ?? 0) + 1;

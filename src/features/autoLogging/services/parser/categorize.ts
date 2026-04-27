@@ -1,4 +1,5 @@
 import { Category } from "../../../../types";
+import { SemanticType } from "../../types";
 
 interface Rule {
     keywords: string[];
@@ -27,10 +28,16 @@ export function categorize(
     rawText: string,
     type: "expense" | "income" | "transfer",
     categories: Category[],
+    semanticType?: SemanticType,
 ): { category: string; confident: boolean } {
     const haystack = `${merchant ?? ""} ${rawText}`.toLowerCase();
     const rules = type === "income" ? INCOME_RULES : EXPENSE_RULES;
     const availableNames = new Set(categories.map((c) => c.name));
+
+    if ((semanticType === "bill" || semanticType === "subscription") && availableNames.has("Utilities")) {
+        const matched = rules.find((r) => r.keywords.some((kw) => haystack.includes(kw)));
+        if (!matched) return { category: "Utilities", confident: true };
+    }
 
     for (const rule of rules) {
         if (rule.keywords.some((kw) => haystack.includes(kw))) {

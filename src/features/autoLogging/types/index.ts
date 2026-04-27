@@ -9,6 +9,14 @@ export interface RawEvent {
     rawHash: string;
 }
 
+export type SemanticType =
+    | "expense"
+    | "income"
+    | "transfer"
+    | "bill"
+    | "subscription"
+    | "refund";
+
 export interface ParsedDraft {
     amount: number;
     currencyCode: string | null;
@@ -23,6 +31,9 @@ export interface ParsedDraft {
     senderKey: string;
     senderDisplay: string;
     rawText: string;
+    reference?: string;
+    semanticType?: SemanticType;
+    providerId?: string;
 }
 
 export interface SenderMapping {
@@ -61,5 +72,7 @@ export interface AutoLogStats {
     queuedForReview: number;
     dedupeHits: number;
     parseFailures: number;
+    templatesMatched: number;
+    referencesCaptured: number;
     lastUpdated: string | null;
 }
