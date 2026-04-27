@@ -13,6 +13,7 @@ const SYMBOL_TO_CODE: Record<string, string> = {
     "₵": "GHS",
     "gh₵": "GHS",
     "gh¢": "GHS",
+    "₦": "NGN",
 };
 
 const CURRENCY_CODES = ["GHS", "USD", "EUR", "GBP", "NGN", "KES"] as const;
@@ -37,7 +38,7 @@ export function lowerKey(input: string): string {
 }
 
 const NUMBER_BODY = String.raw`\d{1,3}(?:[,\s]\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?`;
-const SYMBOL_GROUP = String.raw`GH₵|GH¢|US\$|[$€£₵]`;
+const SYMBOL_GROUP = String.raw`GH₵|GH¢|US\$|[$€£₵₦]`;
 const CODE_GROUP = String.raw`GHS|GHC|USD|EUR|GBP|NGN|KES`;
 const MAGNITUDE = String.raw`(?:\s*([kKmM])\b)?`;
 

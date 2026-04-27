@@ -20,6 +20,7 @@ const CURRENCIES = [
     { label: "Ghana Cedi", value: "GHS", symbol: "₵" },
     { label: "Euro", value: "EUR", symbol: "€" },
     { label: "British Pound", value: "GBP", symbol: "£" },
+    { label: "Nigerian Naira", value: "NGN", symbol: "₦" },
 ];
 
 interface CreateCashbookModalProps {

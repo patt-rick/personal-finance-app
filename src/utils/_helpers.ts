@@ -20,6 +20,7 @@ export const getCurrencySymbol = (code: string | undefined) => {
         case 'GHS': return '₵';
         case 'EUR': return '€';
         case 'GBP': return '£';
+        case 'NGN': return '₦';
         default: return '$';
     }
 }

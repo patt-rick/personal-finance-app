@@ -34,7 +34,7 @@ interface DebtEntryModalProps {
     }) => void;
 }
 
-const CURRENCIES = ["USD", "GHS", "EUR", "GBP"] as const;
+const CURRENCIES = ["USD", "GHS", "EUR", "GBP", "NGN"] as const;
 
 export default function DebtEntryModal({
     visible,
