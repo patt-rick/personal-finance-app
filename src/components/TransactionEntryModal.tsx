@@ -5,17 +5,14 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
-    Modal,
     Alert,
-    KeyboardAvoidingView,
-    Platform,
     Keyboard,
     StyleSheet,
 } from "react-native";
-import { X } from "lucide-react-native";
 import { Transaction, Category } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
+import AppModal from "./AppModal";
 
 interface TransactionEntryModalProps {
     visible: boolean;
@@ -104,139 +101,123 @@ export default function TransactionEntryModal({
         onClose();
     };
 
+    const title = editingTx
+        ? "Edit Transaction"
+        : entryType === "income"
+        ? "New Income"
+        : "New Expense";
+
     return (
-        <Modal visible={visible} animationType="slide" transparent>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={{ flex: 1 }}
-            >
-                    <View style={styles.modalOverlay}>
-                        <View style={styles.modalContentModern}>
-                            <View style={styles.modalHeaderModern}>
-                                <Text style={styles.modalTitleModern}>
-                                    {editingTx
-                                        ? "Edit Transaction"
-                                        : entryType === "income"
-                                          ? "New Income"
-                                          : "New Expense"}
-                                </Text>
-                                <TouchableOpacity onPress={handleClose}>
-                                    <X size={24} color={theme.colors.text} />
-                                </TouchableOpacity>
-                            </View>
-
-                            {editingTx ? (
-                                <View style={s.typeToggleRow}>
-                                    {(["income", "expense"] as const).map((t) => {
-                                        const active = currentType === t;
-                                        const accent =
-                                            t === "income"
-                                                ? theme.colors.income
-                                                : theme.colors.expense;
-                                        return (
-                                            <TouchableOpacity
-                                                key={t}
-                                                onPress={() => handleTypeChange(t)}
-                                                style={[
-                                                    s.typeToggleBtn,
-                                                    {
-                                                        backgroundColor: active
-                                                            ? accent
-                                                            : theme.colors.surface,
-                                                        borderColor: active
-                                                            ? accent
-                                                            : theme.colors.border,
-                                                    },
-                                                ]}
-                                            >
-                                                <Text
-                                                    style={[
-                                                        s.typeToggleText,
-                                                        {
-                                                            color: active
-                                                                ? theme.colors.textInverse
-                                                                : theme.colors.textSecondary,
-                                                            fontWeight: active ? "700" : "500",
-                                                        },
-                                                    ]}
-                                                >
-                                                    {t === "income" ? "Income" : "Expense"}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        );
-                                    })}
-                                </View>
-                            ) : null}
-
-                            <Text style={styles.inputLabelModern}>Amount ({symbol})</Text>
-                            <TextInput
-                                style={styles.modalInputLargeModern}
-                                placeholder="0.00"
-                                placeholderTextColor={theme.colors.placeholder}
-                                keyboardType="decimal-pad"
-                                value={amount}
-                                onChangeText={setAmount}
-                                autoFocus
-                            />
-
-                            <Text style={styles.inputLabelModern}>Category</Text>
-                            <ScrollView
-                                horizontal
-                                showsHorizontalScrollIndicator={false}
-                                style={styles.categoryPicker}
-                                keyboardShouldPersistTaps="always"
-                            >
-                                {categories
-                                    .filter((c) => c.type === currentType)
-                                    .map((cat) => (
-                                        <TouchableOpacity
-                                            key={cat.id}
-                                            style={[
-                                                styles.categoryChip,
-                                                selectedCategory === cat.name && styles.categoryChipActive,
-                                            ]}
-                                            onPress={() => setSelectedCategory(cat.name)}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.categoryChipText,
-                                                    selectedCategory === cat.name &&
-                                                        styles.categoryChipTextActive,
-                                                ]}
-                                            >
-                                                {cat.name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                            </ScrollView>
-
-                            <Text style={styles.inputLabelModern}>Remark</Text>
-                            <TextInput
-                                style={styles.modalInputModern}
-                                placeholder="What was this for?"
-                                placeholderTextColor={theme.colors.placeholder}
-                                value={remark}
-                                onChangeText={setRemark}
-                            />
-
+        <AppModal
+            visible={visible}
+            onClose={handleClose}
+            title={title}
+            showHandle={false}
+            scrollable
+        >
+            {editingTx ? (
+                <View style={s.typeToggleRow}>
+                    {(["income", "expense"] as const).map((t) => {
+                        const active = currentType === t;
+                        const accent =
+                            t === "income" ? theme.colors.income : theme.colors.expense;
+                        return (
                             <TouchableOpacity
+                                key={t}
+                                onPress={() => handleTypeChange(t)}
                                 style={[
-                                    styles.submitBtnModern,
+                                    s.typeToggleBtn,
                                     {
-                                        backgroundColor:
-                                            currentType === "income"
-                                                ? theme.colors.income
-                                                : theme.colors.expense,
+                                        backgroundColor: active ? accent : theme.colors.surface,
+                                        borderColor: active ? accent : theme.colors.border,
                                     },
                                 ]}
-                                onPress={handleSubmit}
                             >
-                                <Text style={styles.submitBtnTextModern}>Save Entry</Text>
+                                <Text
+                                    style={[
+                                        s.typeToggleText,
+                                        {
+                                            color: active
+                                                ? theme.colors.textInverse
+                                                : theme.colors.textSecondary,
+                                            fontWeight: active ? "700" : "500",
+                                        },
+                                    ]}
+                                >
+                                    {t === "income" ? "Income" : "Expense"}
+                                </Text>
                             </TouchableOpacity>
-                        </View>
-                    </View>
-            </KeyboardAvoidingView>
-        </Modal>
+                        );
+                    })}
+                </View>
+            ) : null}
+
+            <Text style={styles.inputLabelModern}>Amount ({symbol})</Text>
+            <TextInput
+                style={styles.modalInputLargeModern}
+                placeholder="0.00"
+                placeholderTextColor={theme.colors.placeholder}
+                keyboardType="decimal-pad"
+                value={amount}
+                onChangeText={setAmount}
+                autoFocus
+            />
+
+            <Text style={styles.inputLabelModern}>Category</Text>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.categoryPicker}
+                keyboardShouldPersistTaps="always"
+            >
+                {categories
+                    .filter((c) => c.type === currentType)
+                    .map((cat) => (
+                        <TouchableOpacity
+                            key={cat.id}
+                            style={[
+                                styles.categoryChip,
+                                selectedCategory === cat.name && styles.categoryChipActive,
+                            ]}
+                            onPress={() => setSelectedCategory(cat.name)}
+                        >
+                            <Text
+                                style={[
+                                    styles.categoryChipText,
+                                    selectedCategory === cat.name &&
+                                        styles.categoryChipTextActive,
+                                ]}
+                            >
+                                {cat.name}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+            </ScrollView>
+
+            <Text style={styles.inputLabelModern}>Remark</Text>
+            <TextInput
+                style={styles.modalInputModern}
+                placeholder="What was this for?"
+                placeholderTextColor={theme.colors.placeholder}
+                value={remark}
+                onChangeText={setRemark}
+            />
+
+            <TouchableOpacity
+                style={[
+                    styles.submitBtnModern,
+                    {
+                        backgroundColor:
+                            currentType === "income"
+                                ? theme.colors.income
+                                : theme.colors.expense,
+                    },
+                ]}
+                onPress={handleSubmit}
+            >
+                <Text style={styles.submitBtnTextModern}>Save Entry</Text>
+            </TouchableOpacity>
+        </AppModal>
     );
 }
 

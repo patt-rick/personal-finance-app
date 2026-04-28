@@ -5,18 +5,15 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
-    Modal,
     Alert,
-    KeyboardAvoidingView,
     Platform,
-    TouchableWithoutFeedback,
-    Keyboard,
 } from "react-native";
 import { X, Calendar } from "lucide-react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { RecurringTransaction, RecurrenceFrequency, Business, Category } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
+import AppModal from "./AppModal";
 
 interface RecurringTransactionModalProps {
     visible: boolean;
@@ -224,28 +221,13 @@ export default function RecurringTransactionModal({
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
-            <KeyboardAvoidingView
-                behavior={Platform.OS === "ios" ? "padding" : "height"}
-                style={{ flex: 1 }}
-            >
-                <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-                    <View style={styles.modalOverlay}>
-                        <ScrollView
-                            style={{ maxHeight: "90%" }}
-                            contentContainerStyle={{ flexGrow: 1, justifyContent: "flex-end" }}
-                            keyboardShouldPersistTaps="handled"
-                        >
-                            <View style={styles.modalContentModern}>
-                                <View style={styles.modalHeaderModern}>
-                                    <Text style={styles.modalTitleModern}>
-                                        {editingItem ? "Edit Recurring" : "New Recurring"}
-                                    </Text>
-                                    <TouchableOpacity onPress={handleClose}>
-                                        <X size={24} color={theme.colors.text} />
-                                    </TouchableOpacity>
-                                </View>
-
+        <AppModal
+            visible={visible}
+            onClose={handleClose}
+            title={editingItem ? "Edit Recurring" : "New Recurring"}
+            showHandle={false}
+            scrollable
+        >
                                 <Text style={styles.inputLabelModern}>Type</Text>
                                 <ScrollView
                                     horizontal
@@ -644,11 +626,6 @@ export default function RecurringTransactionModal({
                                         {editingItem ? "Update" : "Create"}
                                     </Text>
                                 </TouchableOpacity>
-                            </View>
-                        </ScrollView>
-                    </View>
-                </TouchableWithoutFeedback>
-            </KeyboardAvoidingView>
-        </Modal>
+        </AppModal>
     );
 }

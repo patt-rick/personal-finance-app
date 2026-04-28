@@ -11,10 +11,10 @@ import {
     ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
-    Modal,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ArrowLeft, Save, Wallet, Plus, X, Trash } from "lucide-react-native";
+import { ArrowLeft, Save, Wallet, Plus, Trash } from "lucide-react-native";
+import AppModal from "../components/AppModal";
 import { useTheme } from "../theme/theme";
 import { Business, Budget, Category } from "../types";
 import { loadCategories } from "../utils/storage";
@@ -488,62 +488,40 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            {/* Category Picker Modal */}
-            <Modal
+            <AppModal
                 visible={showCategoryPicker}
-                transparent={true}
-                animationType="slide"
-                onRequestClose={() => setShowCategoryPicker(false)}
+                onClose={() => setShowCategoryPicker(false)}
+                title="Add Category"
+                showHandle={false}
+                scrollable
             >
-                <View style={styles.modalOverlay}>
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
-                        <View
-                            style={[styles.modalHeader, { borderBottomColor: theme.colors.border }]}
+                {availableCategories.length === 0 ? (
+                    <Text
+                        style={[
+                            styles.noCategoriesText,
+                            { color: theme.colors.textSecondary },
+                        ]}
+                    >
+                        All categories selected
+                    </Text>
+                ) : (
+                    availableCategories.map((cat) => (
+                        <TouchableOpacity
+                            key={cat.id}
+                            style={[
+                                styles.modalItem,
+                                { borderBottomColor: theme.colors.borderLight },
+                            ]}
+                            onPress={() => addCategory(cat.id)}
                         >
-                            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-                                Add Category
+                            <Text style={[styles.modalItemText, { color: theme.colors.text }]}>
+                                {cat.name}
                             </Text>
-                            <TouchableOpacity onPress={() => setShowCategoryPicker(false)}>
-                                <X size={24} color={theme.colors.text} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView style={styles.modalList}>
-                            {availableCategories.length === 0 ? (
-                                <Text
-                                    style={[
-                                        styles.noCategoriesText,
-                                        { color: theme.colors.textSecondary },
-                                    ]}
-                                >
-                                    All categories selected
-                                </Text>
-                            ) : (
-                                availableCategories.map((cat) => (
-                                    <TouchableOpacity
-                                        key={cat.id}
-                                        style={[
-                                            styles.modalItem,
-                                            { borderBottomColor: theme.colors.borderLight },
-                                        ]}
-                                        onPress={() => addCategory(cat.id)}
-                                    >
-                                        <Text
-                                            style={[
-                                                styles.modalItemText,
-                                                { color: theme.colors.text },
-                                            ]}
-                                        >
-                                            {cat.name}
-                                        </Text>
-                                        <Plus size={20} color={theme.colors.primary} />
-                                    </TouchableOpacity>
-                                ))
-                            )}
-                        </ScrollView>
-                    </View>
-                </View>
-            </Modal>
+                            <Plus size={20} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                    ))
+                )}
+            </AppModal>
         </SafeAreaView>
     );
 }
@@ -731,32 +709,6 @@ const styles = StyleSheet.create({
         fontSize: 16,
         fontWeight: "600",
         fontFamily: "Inter",
-    },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "flex-end",
-    },
-    modalContent: {
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        maxHeight: "80%",
-        paddingBottom: 40,
-    },
-    modalHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        padding: 20,
-        borderBottomWidth: 1,
-    },
-    modalTitle: {
-        fontSize: 18,
-        fontWeight: "600",
-        fontFamily: "Inter",
-    },
-    modalList: {
-        padding: 20,
     },
     modalItem: {
         flexDirection: "row",

@@ -1,20 +1,16 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
-    KeyboardAvoidingView,
-    Modal,
-    Platform,
-    ScrollView,
     StyleSheet,
     Text,
     TextInput,
     TouchableOpacity,
-    TouchableWithoutFeedback,
     View,
 } from "react-native";
-import { Check, Trash2, X } from "lucide-react-native";
+import { Check, Trash2 } from "lucide-react-native";
 import { useTheme } from "../../../theme/theme";
 import { Business } from "../../../types";
 import { SenderMapping } from "../types";
+import AppModal from "../../../components/AppModal";
 
 interface Props {
     visible: boolean;
@@ -55,74 +51,52 @@ export default function SenderMappingEditor({
     };
 
     return (
-        <Modal visible={visible} transparent animationType="slide" statusBarTranslucent onRequestClose={onClose}>
-            <View style={styles.overlay}>
-                <TouchableWithoutFeedback onPress={onClose}>
-                    <View style={{ flex: 1 }} />
-                </TouchableWithoutFeedback>
-                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
-                    <View style={styles.sheet}>
-                        <View style={styles.handle}>
-                            <View style={styles.handleBar} />
-                        </View>
+        <AppModal visible={visible} onClose={onClose} title="Edit Sender" scrollable>
+            <Text style={styles.fieldLabel}>Display Name</Text>
+            <TextInput
+                style={styles.input}
+                value={displayName}
+                onChangeText={setDisplayName}
+                placeholder="e.g. MTN MoMo"
+                placeholderTextColor={theme.colors.placeholder}
+            />
 
-                        <View style={styles.header}>
-                            <Text style={styles.title}>Edit Sender</Text>
-                            <TouchableOpacity onPress={onClose} hitSlop={12}>
-                                <X size={22} color={theme.colors.textSecondary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <ScrollView showsVerticalScrollIndicator={false}>
-                            <Text style={styles.fieldLabel}>Display Name</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={displayName}
-                                onChangeText={setDisplayName}
-                                placeholder="e.g. MTN MoMo"
-                                placeholderTextColor={theme.colors.placeholder}
-                            />
-
-                            <View style={styles.senderKeyPill}>
-                                <Text style={styles.senderKeyLabel}>Sender key</Text>
-                                <Text style={styles.senderKeyValue}>{mapping.senderKey}</Text>
-                            </View>
-
-                            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Route To Cashbook</Text>
-                            <View style={styles.businessList}>
-                                <BusinessOption
-                                    label="Unassigned — auto-create per message"
-                                    selected={businessId === null}
-                                    onPress={() => setBusinessId(null)}
-                                    styles={styles}
-                                />
-                                {businesses.map((b) => (
-                                    <BusinessOption
-                                        key={b.id}
-                                        label={b.name}
-                                        sub={b.currency}
-                                        selected={businessId === b.id}
-                                        onPress={() => setBusinessId(b.id)}
-                                        styles={styles}
-                                    />
-                                ))}
-                            </View>
-
-                            <View style={styles.actions}>
-                                <TouchableOpacity style={styles.deleteBtn} onPress={onDelete}>
-                                    <Trash2 size={16} color={theme.colors.error} />
-                                    <Text style={[styles.deleteText, { color: theme.colors.error }]}>Delete</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                                    <Check size={16} color={theme.colors.textInverse} />
-                                    <Text style={styles.saveText}>Save</Text>
-                                </TouchableOpacity>
-                            </View>
-                        </ScrollView>
-                    </View>
-                </KeyboardAvoidingView>
+            <View style={styles.senderKeyPill}>
+                <Text style={styles.senderKeyLabel}>Sender key</Text>
+                <Text style={styles.senderKeyValue}>{mapping.senderKey}</Text>
             </View>
-        </Modal>
+
+            <Text style={[styles.fieldLabel, { marginTop: 18 }]}>Route To Cashbook</Text>
+            <View style={styles.businessList}>
+                <BusinessOption
+                    label="Unassigned — auto-create per message"
+                    selected={businessId === null}
+                    onPress={() => setBusinessId(null)}
+                    styles={styles}
+                />
+                {businesses.map((b) => (
+                    <BusinessOption
+                        key={b.id}
+                        label={b.name}
+                        sub={b.currency}
+                        selected={businessId === b.id}
+                        onPress={() => setBusinessId(b.id)}
+                        styles={styles}
+                    />
+                ))}
+            </View>
+
+            <View style={styles.actions}>
+                <TouchableOpacity style={styles.deleteBtn} onPress={onDelete}>
+                    <Trash2 size={16} color={theme.colors.error} />
+                    <Text style={[styles.deleteText, { color: theme.colors.error }]}>Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
+                    <Check size={16} color={theme.colors.textInverse} />
+                    <Text style={styles.saveText}>Save</Text>
+                </TouchableOpacity>
+            </View>
+        </AppModal>
     );
 }
 
@@ -152,29 +126,6 @@ function BusinessOption({
 
 const createStyles = (theme: any) =>
     StyleSheet.create({
-        overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
-        sheet: {
-            backgroundColor: theme.colors.card,
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingHorizontal: 20,
-            paddingBottom: 32,
-            maxHeight: "85%",
-        },
-        handle: { alignItems: "center", paddingTop: 10, paddingBottom: 6 },
-        handleBar: { width: 36, height: 4, borderRadius: 2, backgroundColor: theme.colors.border },
-        header: {
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: 16,
-        },
-        title: {
-            fontSize: 20,
-            fontWeight: "800",
-            letterSpacing: -0.3,
-            color: theme.colors.text,
-        },
         fieldLabel: {
             fontSize: 11,
             fontWeight: "700",

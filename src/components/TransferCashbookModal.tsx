@@ -4,14 +4,13 @@ import {
     Text,
     TouchableOpacity,
     ScrollView,
-    Modal,
     StyleSheet,
-    TouchableWithoutFeedback,
 } from "react-native";
 import { ArrowRightLeft, Wallet, Check } from "lucide-react-native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
 import { getCurrencySymbol } from "../utils/_helpers";
+import AppModal from "./AppModal";
 
 interface TransferCashbookModalProps {
     visible: boolean;
@@ -57,163 +56,116 @@ export default function TransferCashbookModal({
     };
 
     return (
-        <Modal
-            visible={visible}
-            animationType="slide"
-            transparent
-            statusBarTranslucent
-            onRequestClose={handleClose}
-        >
-            <View style={s.overlay}>
-                <TouchableWithoutFeedback onPress={handleClose}>
-                    <View style={{ flex: 1 }} />
-                </TouchableWithoutFeedback>
-                <View style={[s.content, { backgroundColor: theme.colors.card }]}>
-                    <View style={s.handle}>
-                        <View style={[s.handleBar, { backgroundColor: theme.colors.border }]} />
-                    </View>
-
-                    <View style={s.header}>
-                        <View style={[s.iconBadge, { backgroundColor: theme.colors.incomeBg }]}>
-                            <ArrowRightLeft size={20} color={theme.colors.primary} />
-                        </View>
-                        <View style={{ flex: 1 }}>
-                            <Text style={[s.title, { color: theme.colors.text }]}>
-                                Transfer Transactions
-                            </Text>
-                            <Text style={[s.subtitle, { color: theme.colors.textSecondary }]}>
-                                {transferCount} transaction{transferCount !== 1 ? "s" : ""} will be
-                                transferred
-                            </Text>
-                        </View>
-                    </View>
-
-                    <Text style={[s.sectionLabel, { color: theme.colors.textSecondary }]}>
-                        Select destination
+        <AppModal visible={visible} onClose={handleClose} maxHeight="75%">
+            <View style={s.header}>
+                <View style={[s.iconBadge, { backgroundColor: theme.colors.incomeBg }]}>
+                    <ArrowRightLeft size={20} color={theme.colors.primary} />
+                </View>
+                <View style={{ flex: 1 }}>
+                    <Text style={[s.title, { color: theme.colors.text }]}>
+                        Transfer Transactions
                     </Text>
-
-                    <ScrollView
-                        style={s.list}
-                        showsVerticalScrollIndicator={false}
-                        bounces={false}
-                    >
-                        {availableBusinesses.map((biz) => {
-                            const bizTxCount = transactions.filter(
-                                (t) => t.businessId === biz.id,
-                            ).length;
-                            const isSelected = selectedId === biz.id;
-                            const symbol = getCurrencySymbol(biz.currency);
-
-                            return (
-                                <TouchableOpacity
-                                    key={biz.id}
-                                    style={[
-                                        s.card,
-                                        { backgroundColor: theme.colors.surface },
-                                        isSelected && {
-                                            backgroundColor: theme.colors.incomeBg,
-                                            borderColor: theme.colors.primary,
-                                        },
-                                    ]}
-                                    onPress={() => setSelectedId(biz.id)}
-                                    activeOpacity={0.7}
-                                >
-                                    <View
-                                        style={[
-                                            s.cardIcon,
-                                            {
-                                                backgroundColor: isSelected
-                                                    ? theme.colors.primary
-                                                    : theme.colors.card,
-                                            },
-                                        ]}
-                                    >
-                                        <Wallet
-                                            size={16}
-                                            color={isSelected ? theme.colors.textInverse : theme.colors.primary}
-                                        />
-                                    </View>
-                                    <View style={{ flex: 1 }}>
-                                        <Text style={[s.cardName, { color: theme.colors.text }]}>
-                                            {biz.name}
-                                        </Text>
-                                        <Text
-                                            style={[
-                                                s.cardMeta,
-                                                { color: theme.colors.textSecondary },
-                                            ]}
-                                        >
-                                            {symbol} {biz.currency || "USD"} · {bizTxCount}{" "}
-                                            transaction{bizTxCount !== 1 ? "s" : ""}
-                                        </Text>
-                                    </View>
-                                    <View
-                                        style={[
-                                            s.radio,
-                                            { borderColor: theme.colors.border },
-                                            isSelected && {
-                                                borderColor: theme.colors.primary,
-                                                backgroundColor: theme.colors.primary,
-                                            },
-                                        ]}
-                                    >
-                                        {isSelected && <Check size={12} color={theme.colors.textInverse} />}
-                                    </View>
-                                </TouchableOpacity>
-                            );
-                        })}
-                    </ScrollView>
-
-                    <View style={s.actions}>
-                        <TouchableOpacity
-                            style={[
-                                s.transferBtn,
-                                { backgroundColor: theme.colors.primary },
-                                !selectedId && { opacity: 0.4 },
-                            ]}
-                            onPress={handleTransfer}
-                            disabled={!selectedId}
-                        >
-                            <ArrowRightLeft size={16} color={theme.colors.textInverse} />
-                            <Text style={s.transferBtnText}>Transfer & Delete</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity style={s.cancelBtn} onPress={handleClose}>
-                            <Text
-                                style={[s.cancelBtnText, { color: theme.colors.textSecondary }]}
-                            >
-                                Cancel
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
+                    <Text style={[s.subtitle, { color: theme.colors.textSecondary }]}>
+                        {transferCount} transaction{transferCount !== 1 ? "s" : ""} will be transferred
+                    </Text>
                 </View>
             </View>
-        </Modal>
+
+            <Text style={[s.sectionLabel, { color: theme.colors.textSecondary }]}>
+                Select destination
+            </Text>
+
+            <ScrollView style={s.list} showsVerticalScrollIndicator={false} bounces={false}>
+                {availableBusinesses.map((biz) => {
+                    const bizTxCount = transactions.filter((t) => t.businessId === biz.id).length;
+                    const isSelected = selectedId === biz.id;
+                    const symbol = getCurrencySymbol(biz.currency);
+
+                    return (
+                        <TouchableOpacity
+                            key={biz.id}
+                            style={[
+                                s.card,
+                                { backgroundColor: theme.colors.surface },
+                                isSelected && {
+                                    backgroundColor: theme.colors.incomeBg,
+                                    borderColor: theme.colors.primary,
+                                },
+                            ]}
+                            onPress={() => setSelectedId(biz.id)}
+                            activeOpacity={0.7}
+                        >
+                            <View
+                                style={[
+                                    s.cardIcon,
+                                    {
+                                        backgroundColor: isSelected
+                                            ? theme.colors.primary
+                                            : theme.colors.card,
+                                    },
+                                ]}
+                            >
+                                <Wallet
+                                    size={16}
+                                    color={isSelected ? theme.colors.textInverse : theme.colors.primary}
+                                />
+                            </View>
+                            <View style={{ flex: 1 }}>
+                                <Text style={[s.cardName, { color: theme.colors.text }]}>
+                                    {biz.name}
+                                </Text>
+                                <Text style={[s.cardMeta, { color: theme.colors.textSecondary }]}>
+                                    {symbol} {biz.currency || "USD"} · {bizTxCount}{" "}
+                                    transaction{bizTxCount !== 1 ? "s" : ""}
+                                </Text>
+                            </View>
+                            <View
+                                style={[
+                                    s.radio,
+                                    { borderColor: theme.colors.border },
+                                    isSelected && {
+                                        borderColor: theme.colors.primary,
+                                        backgroundColor: theme.colors.primary,
+                                    },
+                                ]}
+                            >
+                                {isSelected && <Check size={12} color={theme.colors.textInverse} />}
+                            </View>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
+
+            <View style={s.actions}>
+                <TouchableOpacity
+                    style={[
+                        s.transferBtn,
+                        { backgroundColor: theme.colors.primary },
+                        !selectedId && { opacity: 0.4 },
+                    ]}
+                    onPress={handleTransfer}
+                    disabled={!selectedId}
+                >
+                    <ArrowRightLeft size={16} color={theme.colors.textInverse} />
+                    <Text style={s.transferBtnText}>Transfer & Delete</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={s.cancelBtn} onPress={handleClose}>
+                    <Text style={[s.cancelBtnText, { color: theme.colors.textSecondary }]}>
+                        Cancel
+                    </Text>
+                </TouchableOpacity>
+            </View>
+        </AppModal>
     );
 }
 
 const createStyles = (theme: any) =>
     StyleSheet.create({
-        overlay: {
-            flex: 1,
-            backgroundColor: "rgba(0,0,0,0.45)",
-            justifyContent: "flex-end",
-        },
-        content: {
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingHorizontal: 20,
-            paddingBottom: 40,
-            maxHeight: "75%",
-        },
-        handle: { alignItems: "center", paddingTop: 10, paddingBottom: 6 },
-        handleBar: { width: 36, height: 4, borderRadius: 2 },
-
         header: {
             flexDirection: "row",
             alignItems: "center",
             gap: 14,
             marginBottom: 20,
-            marginTop: 4,
         },
         iconBadge: {
             width: 44,

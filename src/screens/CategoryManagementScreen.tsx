@@ -6,18 +6,16 @@ import {
     StyleSheet,
     TouchableOpacity,
     FlatList,
-    Modal,
     TextInput,
     Alert,
-    KeyboardAvoidingView,
-    Platform,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Plus, Edit2, Trash2, X, Check, Menu } from "lucide-react-native";
+import { ArrowLeft, Plus, Edit2, Trash2, Check, Menu } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { Category } from "../types";
 import { loadCategories, saveCategories } from "../utils/storage";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
+import AppModal from "../components/AppModal";
 
 export default function CategoryManagementScreen({ onBack }: { onBack?: () => void }) {
     const theme = useTheme();
@@ -217,46 +215,37 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
                 <Plus size={24} color={theme.colors.textInverse} />
             </TouchableOpacity>
 
-            <Modal visible={modalVisible} transparent animationType="fade">
-                <KeyboardAvoidingView
-                    behavior={Platform.OS === "ios" ? "padding" : "height"}
-                    style={styles.modalOverlay}
+            <AppModal
+                visible={modalVisible}
+                onClose={() => setModalVisible(false)}
+                title={editingCategory ? "Edit Category" : "New Category"}
+                variant="center"
+            >
+                <TextInput
+                    style={[
+                        styles.input,
+                        {
+                            backgroundColor: theme.colors.background,
+                            color: theme.colors.text,
+                            borderColor: theme.colors.border,
+                        },
+                    ]}
+                    placeholder="Category Name"
+                    placeholderTextColor={theme.colors.placeholder}
+                    value={categoryName}
+                    onChangeText={setCategoryName}
+                    autoFocus
+                />
+
+                <TouchableOpacity
+                    style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
+                    onPress={handleSave}
                 >
-                    <View style={[styles.modalContent, { backgroundColor: theme.colors.card }]}>
-                        <View style={styles.modalHeader}>
-                            <Text style={[styles.modalTitle, { color: theme.colors.text }]}>
-                                {editingCategory ? "Edit Category" : "New Category"}
-                            </Text>
-                            <TouchableOpacity onPress={() => setModalVisible(false)}>
-                                <X size={24} color={theme.colors.textSecondary} />
-                            </TouchableOpacity>
-                        </View>
-
-                        <TextInput
-                            style={[
-                                styles.input,
-                                {
-                                    backgroundColor: theme.colors.background,
-                                    color: theme.colors.text,
-                                    borderColor: theme.colors.border,
-                                },
-                            ]}
-                            placeholder="Category Name"
-                            placeholderTextColor={theme.colors.placeholder}
-                            value={categoryName}
-                            onChangeText={setCategoryName}
-                            autoFocus
-                        />
-
-                        <TouchableOpacity
-                            style={[styles.saveButton, { backgroundColor: theme.colors.primary }]}
-                            onPress={handleSave}
-                        >
-                            <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>Save</Text>
-                        </TouchableOpacity>
-                    </View>
-                </KeyboardAvoidingView>
-            </Modal>
+                    <Text style={[styles.saveButtonText, { color: theme.colors.textInverse }]}>
+                        Save
+                    </Text>
+                </TouchableOpacity>
+            </AppModal>
         </View>
     );
 }
@@ -311,23 +300,6 @@ const styles = StyleSheet.create({
         shadowOpacity: 0.3,
         shadowRadius: 4.65,
     },
-    modalOverlay: {
-        flex: 1,
-        backgroundColor: "rgba(0,0,0,0.5)",
-        justifyContent: "center",
-        padding: 20,
-    },
-    modalContent: {
-        borderRadius: 24,
-        padding: 24,
-    },
-    modalHeader: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 24,
-    },
-    modalTitle: { fontSize: 20, fontWeight: "bold" },
     input: {
         height: 50,
         borderWidth: 1,

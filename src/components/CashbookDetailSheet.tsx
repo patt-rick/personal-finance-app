@@ -4,12 +4,7 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    ScrollView,
-    Modal,
     StyleSheet,
-    KeyboardAvoidingView,
-    Platform,
-    TouchableWithoutFeedback,
 } from "react-native";
 import {
     X,
@@ -26,6 +21,7 @@ import { useTheme } from "../theme/theme";
 import { getCurrencySymbol } from "../utils/_helpers";
 import WeeklyBarChart from "./dashboard/WeeklyBarChart";
 import { LinearGradient } from "expo-linear-gradient";
+import AppModal from "./AppModal";
 
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
@@ -155,99 +151,64 @@ export default function CashbookDetailSheet({
     }, [business]);
 
     return (
-        <Modal
-            visible={!!business}
-            animationType="slide"
-            transparent
-            statusBarTranslucent
-            onRequestClose={onClose}
-        >
-            <View style={s.overlay}>
-                <TouchableWithoutFeedback onPress={onClose}>
-                    <View style={{ flex: 1 }} />
-                </TouchableWithoutFeedback>
-                <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : undefined}>
-                    <View style={[s.content, { backgroundColor: theme.colors.card }]}>
-                        {business && sheetData && (
-                            <>
-                                <View style={s.handle}>
-                                    <View
-                                        style={[
-                                            s.handleBar,
-                                            { backgroundColor: theme.colors.border },
-                                        ]}
-                                    />
-                                </View>
+        <AppModal visible={!!business} onClose={onClose} scrollable showCloseButton={false}>
+            {business && sheetData && (
+                <>
+                    <SheetHeader
+                        business={business}
+                        sheetData={sheetData}
+                        isRenaming={isRenaming}
+                        renameValue={renameValue}
+                        setRenameValue={setRenameValue}
+                        currencyValue={currencyValue}
+                        setCurrencyValue={setCurrencyValue}
+                        handleSaveEdits={handleSaveEdits}
+                        setIsRenaming={setIsRenaming}
+                        theme={theme}
+                        s={s}
+                    />
 
-                                <ScrollView showsVerticalScrollIndicator={false} bounces={false}>
-                                    <SheetHeader
-                                        business={business}
-                                        sheetData={sheetData}
-                                        isRenaming={isRenaming}
-                                        renameValue={renameValue}
-                                        setRenameValue={setRenameValue}
-                                        currencyValue={currencyValue}
-                                        setCurrencyValue={setCurrencyValue}
-                                        handleSaveEdits={handleSaveEdits}
-                                        setIsRenaming={setIsRenaming}
-                                        theme={theme}
-                                        s={s}
-                                    />
+                    <BalanceCard sheetData={sheetData} theme={theme} s={s} />
 
-                                    <BalanceCard sheetData={sheetData} theme={theme} s={s} />
+                    <StatsGrid sheetData={sheetData} theme={theme} s={s} />
 
-                                    <StatsGrid sheetData={sheetData} theme={theme} s={s} />
+                    {sheetData.topCategories.length > 0 && (
+                        <TopCategories
+                            categories={sheetData.topCategories}
+                            symbol={sheetData.symbol}
+                            theme={theme}
+                            s={s}
+                        />
+                    )}
 
-                                    {sheetData.topCategories.length > 0 && (
-                                        <TopCategories
-                                            categories={sheetData.topCategories}
-                                            symbol={sheetData.symbol}
-                                            theme={theme}
-                                            s={s}
-                                        />
-                                    )}
-
-                                    <View style={s.actions}>
-                                        <TouchableOpacity
-                                            style={[
-                                                s.actionMain,
-                                                { backgroundColor: theme.colors.primary },
-                                            ]}
-                                            onPress={handleOpen}
-                                        >
-                                            <ExternalLink size={18} color={theme.colors.textInverse} />
-                                            <Text style={s.actionMainText}>Open Cashbook</Text>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[
-                                                s.actionIcon,
-                                                { backgroundColor: theme.colors.surface },
-                                            ]}
-                                            onPress={() => {
-                                                setRenameValue(business.name);
-                                                setCurrencyValue(business.currency ?? "USD");
-                                                setIsRenaming(true);
-                                            }}
-                                        >
-                                            <Pencil size={18} color={theme.colors.primary} />
-                                        </TouchableOpacity>
-                                        <TouchableOpacity
-                                            style={[
-                                                s.actionIcon,
-                                                { backgroundColor: theme.colors.surface },
-                                            ]}
-                                            onPress={() => onDelete(business.id)}
-                                        >
-                                            <Trash2 size={18} color={theme.colors.error} />
-                                        </TouchableOpacity>
-                                    </View>
-                                </ScrollView>
-                            </>
-                        )}
+                    <View style={s.actions}>
+                        <TouchableOpacity
+                            style={[s.actionMain, { backgroundColor: theme.colors.primary }]}
+                            onPress={handleOpen}
+                        >
+                            <ExternalLink size={18} color={theme.colors.textInverse} />
+                            <Text style={s.actionMainText}>Open Cashbook</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[s.actionIcon, { backgroundColor: theme.colors.surface }]}
+                            onPress={() => {
+                                setRenameValue(business.name);
+                                setCurrencyValue(business.currency ?? "USD");
+                                setIsRenaming(true);
+                            }}
+                        >
+                            <Pencil size={18} color={theme.colors.primary} />
+                        </TouchableOpacity>
+                        <TouchableOpacity
+                            style={[s.actionIcon, { backgroundColor: theme.colors.surface }]}
+                            onPress={() => onDelete(business.id)}
+                        >
+                            <Trash2 size={18} color={theme.colors.error} />
+                        </TouchableOpacity>
                     </View>
-                </KeyboardAvoidingView>
-            </View>
-        </Modal>
+                </>
+            )}
+        </AppModal>
     );
 }
 
@@ -480,16 +441,6 @@ function TopCategories({ categories, symbol, theme, s }: any) {
 
 const createStyles = (theme: any) =>
     StyleSheet.create({
-        overlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
-        content: {
-            borderTopLeftRadius: 24,
-            borderTopRightRadius: 24,
-            paddingHorizontal: 20,
-            paddingBottom: 40,
-        },
-        handle: { alignItems: "center", paddingTop: 10, paddingBottom: 6 },
-        handleBar: { width: 36, height: 4, borderRadius: 2 },
-
         header: {
             flexDirection: "row",
             alignItems: "center",

@@ -1,18 +1,11 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-    View,
-    Text,
-    TouchableOpacity,
-    Modal,
-    Platform,
-    StyleSheet,
-} from "react-native";
-import { X, Calendar } from "lucide-react-native";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, Platform, StyleSheet } from "react-native";
+import { Calendar } from "lucide-react-native";
 import DateTimePicker, {
     DateTimePickerEvent,
 } from "@react-native-community/datetimepicker";
 import { useTheme } from "../theme/theme";
-import { createDashboardStyles } from "../styles/dashboardStyles";
+import AppModal from "./AppModal";
 
 interface DateRangePickerModalProps {
     visible: boolean;
@@ -30,7 +23,6 @@ export default function DateRangePickerModal({
     onClose,
 }: DateRangePickerModalProps) {
     const theme = useTheme();
-    const dashStyles = useMemo(() => createDashboardStyles(theme), [theme]);
 
     const [localStart, setLocalStart] = useState(startDate);
     const [localEnd, setLocalEnd] = useState(endDate);
@@ -44,10 +36,7 @@ export default function DateRangePickerModal({
         }
     }, [visible, startDate, endDate]);
 
-    const handleDateChange = (
-        event: DateTimePickerEvent,
-        selectedDate?: Date,
-    ) => {
+    const handleDateChange = (event: DateTimePickerEvent, selectedDate?: Date) => {
         if (Platform.OS === "android") {
             setShowPicker(null);
         }
@@ -86,78 +75,62 @@ export default function DateRangePickerModal({
             localEnd.getFullYear(),
             localEnd.getMonth(),
             localEnd.getDate(),
-            23, 59, 59, 999,
+            23,
+            59,
+            59,
+            999,
         );
         onApply(start, end);
     };
 
     return (
-        <Modal visible={visible} animationType="slide" transparent>
-            <View style={dashStyles.modalOverlay}>
-                <View style={dashStyles.modalContentModern}>
-                    <View style={dashStyles.modalHeaderModern}>
-                        <Text style={dashStyles.modalTitleModern}>
-                            Select Date Range
-                        </Text>
-                        <TouchableOpacity onPress={onClose}>
-                            <X size={24} color={theme.colors.text} />
-                        </TouchableOpacity>
-                    </View>
-
-                    <View style={styles.dateFieldsRow}>
-                        <DateField
-                            label="From"
-                            date={localStart}
-                            isActive={showPicker === "start"}
-                            onPress={() =>
-                                setShowPicker(
-                                    showPicker === "start" ? null : "start",
-                                )
-                            }
-                            formatDate={formatDate}
-                            theme={theme}
-                        />
-                        <DateField
-                            label="To"
-                            date={localEnd}
-                            isActive={showPicker === "end"}
-                            onPress={() =>
-                                setShowPicker(
-                                    showPicker === "end" ? null : "end",
-                                )
-                            }
-                            formatDate={formatDate}
-                            theme={theme}
-                        />
-                    </View>
-
-                    {showPicker && (
-                        <DateTimePicker
-                            value={
-                                showPicker === "start" ? localStart : localEnd
-                            }
-                            mode="date"
-                            display={
-                                Platform.OS === "ios" ? "inline" : "default"
-                            }
-                            onChange={handleDateChange}
-                            maximumDate={new Date()}
-                            themeVariant="dark"
-                        />
-                    )}
-
-                    <TouchableOpacity
-                        style={[
-                            styles.applyBtn,
-                            { backgroundColor: theme.colors.primary },
-                        ]}
-                        onPress={handleApply}
-                    >
-                        <Text style={[styles.applyBtnText, { color: theme.colors.textInverse }]}>Apply</Text>
-                    </TouchableOpacity>
-                </View>
+        <AppModal
+            visible={visible}
+            onClose={onClose}
+            title="Select Date Range"
+            showHandle={false}
+        >
+            <View style={styles.dateFieldsRow}>
+                <DateField
+                    label="From"
+                    date={localStart}
+                    isActive={showPicker === "start"}
+                    onPress={() =>
+                        setShowPicker(showPicker === "start" ? null : "start")
+                    }
+                    formatDate={formatDate}
+                    theme={theme}
+                />
+                <DateField
+                    label="To"
+                    date={localEnd}
+                    isActive={showPicker === "end"}
+                    onPress={() => setShowPicker(showPicker === "end" ? null : "end")}
+                    formatDate={formatDate}
+                    theme={theme}
+                />
             </View>
-        </Modal>
+
+            {showPicker && (
+                <DateTimePicker
+                    value={showPicker === "start" ? localStart : localEnd}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "inline" : "default"}
+                    onChange={handleDateChange}
+                    maximumDate={new Date()}
+                    themeVariant="dark"
+                />
+            )}
+
+            <TouchableOpacity
+                style={[styles.applyBtn, { backgroundColor: theme.colors.primary }]}
+                onPress={handleApply}
+            >
+                <Text style={[styles.applyBtnText, { color: theme.colors.textInverse }]}>
+                    Apply
+                </Text>
+            </TouchableOpacity>
+        </AppModal>
     );
 }
 
@@ -178,9 +151,7 @@ function DateField({
 }) {
     return (
         <View style={styles.dateFieldContainer}>
-            <Text
-                style={[styles.dateFieldLabel, { color: theme.colors.textSecondary }]}
-            >
+            <Text style={[styles.dateFieldLabel, { color: theme.colors.textSecondary }]}>
                 {label}
             </Text>
             <TouchableOpacity
@@ -197,20 +168,12 @@ function DateField({
             >
                 <Calendar
                     size={16}
-                    color={
-                        isActive
-                            ? theme.colors.primary
-                            : theme.colors.textSecondary
-                    }
+                    color={isActive ? theme.colors.primary : theme.colors.textSecondary}
                 />
                 <Text
                     style={[
                         styles.dateFieldText,
-                        {
-                            color: isActive
-                                ? theme.colors.primary
-                                : theme.colors.text,
-                        },
+                        { color: isActive ? theme.colors.primary : theme.colors.text },
                     ]}
                 >
                     {formatDate(date)}
