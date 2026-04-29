@@ -1,57 +1,70 @@
 import { Category } from "../../../../types";
 import { ParsedDraft, RawEvent, SemanticType } from "../../types";
-import { extractAmount, extractMerchant, extractReference, lowerKey, normalizeText } from "./normalize";
+import { extractAmount, extractMerchant, extractReference, normalizeText } from "./normalize";
 import { applyAliases } from "../routing/senderAliases";
 import { normalizeSender } from "../routing/normalizeSender";
 import { deriveDisplayName } from "../routing/displayName";
 import { categorize } from "./categorize";
 import { scoreConfidence } from "./confidence";
 
-const FINANCIAL_KEYWORDS = [
-    "debit",
-    "credit",
-    "paid",
-    "sent",
-    "received",
-    "transfer",
-    "charged",
-    "purchase",
-    "withdrawal",
-    "withdrawn",
-    "deposit",
-    "salary",
-    "refund",
-    "bought",
-    "deducted",
-    "spent",
-    "payout",
-    "reversal",
+const FINANCIAL_PATTERNS: RegExp[] = [
+    /\bdebit(?:ed)?\b/i,
+    /\bcredit(?:ed)?\b/i,
+    /\b(?:paid|spent)\b[^.!?\n]{0,40}\b(?:to|at|via|on|towards?)\b/i,
+    /\bamount\s+(?:paid|spent|debited|credited)\b/i,
+    /\bsuccessfully\s+(?:paid|sent|received|transferred)\b/i,
+    /\b(?:received|deposited)\b[^.!?\n]{0,40}\bfrom\b/i,
+    /\bpayment\s+(?:received|sent|to|from|made|of)\b/i,
+    /\b(?:you\s+have\s+)?(?:sent|received|paid|spent)\s+(?:GHS|GHC|USD|EUR|GBP|NGN|KES)\b/i,
+    /\btransfer(?:r?ed)?\b/i,
+    /\bcharged\b/i,
+    /\bpurchase[ds]?\b/i,
+    /\bwithdraw(?:al|n|ed)?\b/i,
+    /\bdeposit(?:ed)?\b/i,
+    /\bsalary\b/i,
+    /\brefund(?:ed)?\b/i,
+    /\bbought\b/i,
+    /\bdeducted\b/i,
+    /\bpayout\b/i,
+    /\breversal\b/i,
+    /\bcash[\s-]*(?:in|out)\b/i,
 ];
 
-const SPAM_KEYWORDS = [
-    "won",
-    "winner",
-    "promo",
-    "offer",
-    "reward",
-    "discount",
-    "congratulations",
-    "lottery",
-    "click here",
-    "claim now",
-    "free gift",
+const SPAM_PATTERNS: RegExp[] = [
+    /\b(?:congratulations|congrats)\b/i,
+    /\b(?:you\s+won|winner)\b/i,
+    /\b(?:promo|promotion|promotional)\b/i,
+    /\boffer\b/i,
+    /\breward\b/i,
+    /\bdiscount\b/i,
+    /\blottery\b/i,
+    /\bclick\s+here\b/i,
+    /\bclaim\s+now\b/i,
+    /\bfree\s+gift\b/i,
+    /\b(?:get|getting|gets|got)\s+paid\b/i,
+    /\byou(?:'|')?ll?\s+get\s+paid\b/i,
+    /\bpaid\s+for\s+testing\b/i,
+    /\bdrop\s+your\b/i,
+    /\bbefore\s+(?:it(?:'|')?s\s+)?too\s+late\b/i,
+    /\bget\s+in\s+now\b/i,
+    /\b(?:dm|pm)\s+me\b/i,
+    /\b(?:airdrop|presale|whitelist|giveaway)\b/i,
+    /\b(?:sol|solana|btc|bitcoin|eth|ethereum|usdt|usdc)\s+(?:address|wallet)\b/i,
+    /\bwallet\s+address\b/i,
+    /\btest\s+the\s+app\b/i,
+    /\b(?:t\.me|bit\.ly|tinyurl|t\.co)\//i,
 ];
 
 const EXPENSE_PATTERNS: RegExp[] = [
     /\bdebit/i,
-    /\bpaid\b/i,
-    /\bpayment\b/i,
+    /\b(?:paid|spent)\b[^.!?\n]{0,40}\b(?:to|at|via|on|towards?)\b/i,
+    /\bamount\s+(?:paid|spent)\b/i,
+    /\bpayment\s+(?:to|sent|made|of)\b/i,
     /\bcharged\b/i,
     /\bpurchase[ds]?\b/i,
     /\bwithdraw(al|n)?\b/i,
     /\bbought\b/i,
     /\bdeducted\b/i,
-    /\bspent\b/i,
     /\bcash\s*out\b/i,
 ];
 
@@ -105,11 +118,10 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
     const text = normalizeText(event.body ?? "");
     if (!text) return null;
 
-    const lower = lowerKey(text);
-    const financialHits = FINANCIAL_KEYWORDS.filter((kw) => lower.includes(kw)).length;
-    const spamHits = SPAM_KEYWORDS.filter((kw) => lower.includes(kw)).length;
+    const financialHits = countMatches(text, FINANCIAL_PATTERNS);
+    const spamHits = countMatches(text, SPAM_PATTERNS);
     if (financialHits === 0) return null;
-    if (spamHits > financialHits) return null;
+    if (spamHits > 0 && financialHits <= spamHits) return null;
 
     const amountResult = extractAmount(text);
     if (amountResult.amount === null) return null;

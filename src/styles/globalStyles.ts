@@ -183,26 +183,6 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     shadowRadius: 4,
   },
   
-  // Modal
-  modalOverlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'flex-end',
-  },
-  modalContent: {
-    backgroundColor: theme.colors.background,
-    borderTopLeftRadius: theme.borderRadius.l,
-    borderTopRightRadius: theme.borderRadius.l,
-    padding: theme.spacing.xl,
-    paddingBottom: 40,
-  },
-  modalTitle: {
-    fontSize: 20,
-    fontWeight: '600',
-    marginBottom: theme.spacing.xl,
-    color: theme.colors.text,
-  },
-  
   // Type Selector
   typeSelector: {
     flexDirection: 'row',

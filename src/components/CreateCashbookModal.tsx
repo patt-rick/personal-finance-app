@@ -1,12 +1,5 @@
 import React, { useState } from "react";
-import {
-    View,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    StyleSheet,
-    Alert,
-} from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useTheme } from "../theme/theme";
 import AppModal from "./AppModal";
 
@@ -44,10 +37,8 @@ export default function CreateCashbookModal({
     };
 
     return (
-        <AppModal visible={visible} onClose={onClose} title="New Cashbook">
-            <Text style={[s.inputLabel, { color: theme.colors.textSecondary }]}>
-                Cashbook Name
-            </Text>
+        <AppModal visible={visible} onClose={onClose} title="New Cashbook" scrollable>
+            <Text style={[s.inputLabel, { color: theme.colors.textSecondary }]}>Cashbook Name</Text>
             <TextInput
                 style={[s.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
                 placeholder="e.g. My Shop, Personal Expenses"
@@ -75,7 +66,9 @@ export default function CreateCashbookModal({
                             style={[
                                 s.currSym,
                                 { color: theme.colors.text },
-                                selectedCurrency === curr.value && { color: theme.colors.textInverse },
+                                selectedCurrency === curr.value && {
+                                    color: theme.colors.textInverse,
+                                },
                             ]}
                         >
                             {curr.symbol}
@@ -84,7 +77,9 @@ export default function CreateCashbookModal({
                             style={[
                                 s.currCode,
                                 { color: theme.colors.textSecondary },
-                                selectedCurrency === curr.value && { color: theme.colors.textInverse },
+                                selectedCurrency === curr.value && {
+                                    color: theme.colors.textInverse,
+                                },
                             ]}
                         >
                             {curr.value}

@@ -374,27 +374,6 @@ export const createDashboardStyles = (theme: any) =>
             letterSpacing: 0.5,
         },
 
-        // Modal Modern
-        modalOverlay: { flex: 1, backgroundColor: "rgba(0,0,0,0.45)", justifyContent: "flex-end" },
-        modalContentModern: {
-            backgroundColor: theme.colors.card,
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
-            padding: 24,
-            paddingBottom: 40,
-        },
-        modalHeaderModern: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 24,
-        },
-        modalTitleModern: {
-            fontSize: 20,
-            fontWeight: "700",
-            color: theme.colors.text,
-            letterSpacing: -0.2,
-        },
         inputLabelModern: {
             fontSize: 12,
             color: theme.colors.textSecondary,
