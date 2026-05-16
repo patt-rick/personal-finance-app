@@ -67,7 +67,7 @@ function buildDraft(
 ): ParsedDraft {
     const senderDisplay = deriveDisplayName(event.source, rawSenderId);
     const persistedType = output.type;
-    const category = categorize(output.merchant, event.body ?? "", persistedType, categories, output.semanticType);
+    const category = categorize(output.merchant, event.body ?? "", persistedType, categories, output.semanticType, output.reference);
 
     const confidence = scoreConfidence({
         hasAmount: true,

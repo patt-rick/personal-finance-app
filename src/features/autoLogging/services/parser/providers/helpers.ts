@@ -58,8 +58,11 @@ function buildBase(input: ParseInput, opts: Required<Pick<BaseDebitOpts, "type" 
     if (amount.amount === null) return null;
     const merchant = extractMerchant(input.text, opts.merchantHint);
     const reference = extractReference(input.text) ?? undefined;
+    const finalAmount = (opts.type === "expense" || opts.type === "transfer")
+        ? amount.amount + (amount.fee ?? 0)
+        : amount.amount;
     return {
-        amount: amount.amount,
+        amount: finalAmount,
         currencyCode: amount.currencyCode,
         merchant,
         reference,

@@ -131,7 +131,11 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
     const cls = classify(text);
     if (!cls) return null;
 
-    const category = categorize(merchant, text, cls.type, categories);
+    const finalAmount = (cls.type === "expense" || cls.type === "transfer")
+        ? amountResult.amount + (amountResult.fee ?? 0)
+        : amountResult.amount;
+
+    const category = categorize(merchant, text, cls.type, categories, undefined, reference);
 
     const rawConfidence = scoreConfidence({
         hasAmount: true,
@@ -148,7 +152,7 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
     const senderDisplay = deriveDisplayName(event.source, rawSenderId);
 
     return {
-        amount: amountResult.amount,
+        amount: finalAmount,
         currencyCode: amountResult.currencyCode,
         merchant,
         type: cls.type,

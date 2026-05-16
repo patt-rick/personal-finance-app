@@ -1,6 +1,7 @@
 export interface AmountResult {
     amount: number | null;
     currencyCode: string | null;
+    fee?: number;
 }
 
 const NO_AMOUNT: AmountResult = { amount: null, currencyCode: null };
@@ -53,6 +54,7 @@ const SUFFIX_RE = new RegExp(
 
 const BALANCE_HINT_RE = /\b(bal(?:ance)?|avail(?:able)?|new\s+bal|remaining)\b/i;
 const ACCOUNT_NUMBER_HINT_RE = /\b(acc(?:t|ount)?(?:\s*(?:no|number))?|a\/c)\b\s*[:#]?\s*$/i;
+const FEE_HINT_RE = /\b(fee|fees|commission|levy|surcharge|stamp\s*duty|vat|service\s*charge|transaction\s*charge)\b/i;
 
 interface AmountCandidate {
     amount: number;
@@ -61,6 +63,7 @@ interface AmountCandidate {
     matchLength: number;
     suspectedBalance: boolean;
     suspectedAccount: boolean;
+    suspectedFee: boolean;
 }
 
 export function extractAmount(rawText: string): AmountResult {
@@ -75,6 +78,17 @@ export function extractAmount(rawText: string): AmountResult {
 
     const filtered = candidates.filter((c) => !c.suspectedAccount);
     const pool = filtered.length > 0 ? filtered : candidates;
+
+    const primary = pool.filter((c) => !c.suspectedBalance && !c.suspectedFee);
+    if (primary.length > 0) {
+        const last = primary[primary.length - 1];
+        const feeCandidate = pool.find((c) => c.suspectedFee && c.currencyCode === last.currencyCode);
+        return {
+            amount: last.amount,
+            currencyCode: last.currencyCode,
+            fee: feeCandidate?.amount,
+        };
+    }
 
     const nonBalance = pool.filter((c) => !c.suspectedBalance);
     if (nonBalance.length > 0) {
@@ -100,6 +114,7 @@ function walkPrefix(text: string, out: AmountCandidate[]): void {
             matchLength: whole.length,
             suspectedBalance: looksLikeBalance(text, match.index),
             suspectedAccount: looksLikeAccountNumber(numberToken, magnitudeToken),
+            suspectedFee: looksLikeFee(text, match.index),
         });
     }
 }
@@ -118,6 +133,7 @@ function walkSuffix(text: string, out: AmountCandidate[]): void {
             matchLength: whole.length,
             suspectedBalance: looksLikeBalance(text, match.index),
             suspectedAccount: looksLikeAccountNumber(numberToken, magnitudeToken),
+            suspectedFee: looksLikeFee(text, match.index),
         });
     }
 }
@@ -125,6 +141,11 @@ function walkSuffix(text: string, out: AmountCandidate[]): void {
 function looksLikeBalance(text: string, index: number): boolean {
     const start = Math.max(0, index - 24);
     return BALANCE_HINT_RE.test(text.slice(start, index));
+}
+
+function looksLikeFee(text: string, index: number): boolean {
+    const start = Math.max(0, index - 24);
+    return FEE_HINT_RE.test(text.slice(start, index));
 }
 
 function looksLikeAccountNumber(numberToken: string, magnitudeToken: string | undefined): boolean {
@@ -159,14 +180,17 @@ function toCode(raw: string): string | null {
 }
 
 const REFERENCE_PATTERNS: RegExp[] = [
-    /\btxn\s*id[:#\s-]*([A-Z0-9]{4,})\b/i,
-    /\btransaction\s*id[:#\s-]*([A-Z0-9]{4,})\b/i,
-    /\btrans\s*id[:#\s-]*([A-Z0-9]{4,})\b/i,
-    /\b(?:reference|ref(?:erence)?\.?|ref no\.?|ref#)[:#\s-]*([A-Z0-9]{4,})\b/i,
-    /\breceipt\s*(?:no\.?|number|#)?[:#\s-]*([A-Z0-9]{4,})\b/i,
-    /\btoken[:#\s-]*([A-Z0-9]{4,})\b/i,
-    /\bid[:#\s-]+([A-Z0-9]{6,})\b/i,
+    /\btxn\s*id[:#\s-]*(.+)/i,
+    /\btransaction\s*id[:#\s-]*(.+)/i,
+    /\btrans\s*id[:#\s-]*(.+)/i,
+    /\b(?:reference|ref(?:erence)?\.?|ref\s*no\.?|ref#|sender\s*reference|beneficiary\s*reference)[:#\s-]*(.+)/i,
+    /\b(?:narration|remark|memo|particulars|description)[:#\s-]*(.+)/i,
+    /\breceipt\s*(?:no\.?|number|#)?[:#\s-]*(.+)/i,
+    /\btoken[:#\s-]*(.+)/i,
+    /\bid[:#\s-]+([A-Z0-9]{6,}[A-Za-z0-9 .\-/_]*)/i,
 ];
+
+const REFERENCE_BOUNDARY_RE = /\b(?:from|to|for|via|balance|bal|avail(?:able)?|amount|fee|fees|commission|levy|surcharge|vat|new\s+bal|current\s+bal(?:ance)?)\b/i;
 
 export function extractReference(rawText: string): string | null {
     const text = normalizeText(rawText);
@@ -174,10 +198,37 @@ export function extractReference(rawText: string): string | null {
     for (const pattern of REFERENCE_PATTERNS) {
         const match = pattern.exec(text);
         if (!match) continue;
-        const value = match[1].trim();
-        if (value.length >= 4) return value;
+        const cleaned = cleanReferenceValue(match[1]);
+        if (cleaned) return cleaned;
     }
     return null;
+}
+
+function cleanReferenceValue(raw: string): string | null {
+    let value = raw.trim();
+
+    const sentenceMatch = /\.\s+[A-Z]/.exec(value);
+    if (sentenceMatch && sentenceMatch.index > 0) {
+        value = value.slice(0, sentenceMatch.index);
+    }
+
+    const boundaryMatch = REFERENCE_BOUNDARY_RE.exec(value);
+    if (boundaryMatch && boundaryMatch.index > 0) {
+        value = value.slice(0, boundaryMatch.index);
+    }
+
+    const trailingWordMatch = /\s+[a-z]+(?:\s|$)/.exec(value);
+    if (trailingWordMatch && trailingWordMatch.index > 0) {
+        value = value.slice(0, trailingWordMatch.index);
+    }
+
+    value = value.trim().replace(/[.,;:!?]+$/, "").trim();
+    if (value.length > 60) value = value.slice(0, 60).trim();
+
+    const alphanumericCount = (value.match(/[A-Za-z0-9]/g) ?? []).length;
+    if (alphanumericCount < 4) return null;
+
+    return value;
 }
 
 const MERCHANT_PATTERNS: RegExp[] = [
