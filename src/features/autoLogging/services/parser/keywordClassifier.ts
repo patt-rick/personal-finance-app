@@ -53,6 +53,14 @@ const SPAM_PATTERNS: RegExp[] = [
     /\bwallet\s+address\b/i,
     /\btest\s+the\s+app\b/i,
     /\b(?:t\.me|bit\.ly|tinyurl|t\.co)\//i,
+    /\b(?:bullish|bearish)\b/i,
+    /\bmoney\s+printer\b/i,
+    /\bt-?bill(?:s|\s+purchases?)?\b/i,
+    /\b(?:fed|federal\s+reserve)\s+(?:will|is|injects?|injecting|continues?|continuing|prints?|printing|raises?|cuts?)\b/i,
+    /\bmarkets?\s+(?:open|close|crash|rall(?:y|ies)|tomorrow|today)\b/i,
+    /\b(?:stock|crypto)\s+market\b/i,
+    /\bwall\s+street\b/i,
+    /(?:^|[^A-Za-z0-9])(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\//i,
 ];
 
 const EXPENSE_PATTERNS: RegExp[] = [
@@ -87,6 +95,7 @@ const TRANSFER_PATTERNS: RegExp[] = [
 ];
 
 const MAX_FALLBACK_CONFIDENCE = 0.5;
+const MAX_PLAUSIBLE_AMOUNT = 1_000_000_000;
 
 interface ClassifyResult {
     type: ParsedDraft["type"];
@@ -125,6 +134,7 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
 
     const amountResult = extractAmount(text);
     if (amountResult.amount === null) return null;
+    if (amountResult.amount > MAX_PLAUSIBLE_AMOUNT) return null;
 
     const merchant = extractMerchant(text);
     const reference = extractReference(text) ?? undefined;

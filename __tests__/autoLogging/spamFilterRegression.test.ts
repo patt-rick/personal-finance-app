@@ -48,6 +48,25 @@ describe("regression — spam SMS must not be parsed as transactions", () => {
         expect(parseEvent(ev("UNKNOWN", body), CATEGORIES)).toBeNull();
     });
 
+    it("macro / market hype with absurd amount is rejected", () => {
+        const body =
+            "FED WILL INJECT $6,576,000,000.00 INTO THE MARKETS TOMORROW AT 9 AM ET, " +
+            "RIGHT BEFORE THE MARKET OPEN! KEVIN WARSH IS OFFICIALLY CONTINUING T-BILL " +
+            "PURCHASES AND TURNING THE MONEY PRINTER BACK ON! GIGA BULLISH FOR MARKETS! " +
+            "https://x.com/DefWimar/status/2059366309201055969";
+        expect(parseEvent(ev("UNKNOWN", body), CATEGORIES)).toBeNull();
+    });
+
+    it("market hype without spam-word match is still rejected due to absurd amount", () => {
+        const body = "We purchased securities worth $5,000,000,000.00 this quarter.";
+        expect(parseEvent(ev("UNKNOWN", body), CATEGORIES)).toBeNull();
+    });
+
+    it("bullish / money-printer hype copy is rejected even at plausible amounts", () => {
+        const body = "Bullish! Money printer go brrr — $250 incoming, transfer to your account.";
+        expect(parseEvent(ev("UNKNOWN", body), CATEGORIES)).toBeNull();
+    });
+
     it("legitimate debit alert from an unknown sender still parses", () => {
         const draft = parseEvent(
             ev("RANDOM-NEW", "Your account has been debited GHS 25 at Melcom"),

@@ -2,3 +2,5 @@
 env
 .expo
 /ios
+/credentials
+@patt-rick__finance-tracker.bak.jks
