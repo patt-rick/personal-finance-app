@@ -20,12 +20,12 @@
       "package": "com.patrickackom.financetracker",
       "adaptiveIcon": {
         "foregroundImage": "./src/icon.png",
-        "backgroundColor": "#6366F1"
+        "backgroundColor": "#BFAAF5"
       }
     },
     "splash": {
       "image": "./src/icon.png",
-      "backgroundColor": "#6366F1",
+      "backgroundColor": "#BFAAF5",
       "resizeMode": "contain"
     },
     "extra": {
