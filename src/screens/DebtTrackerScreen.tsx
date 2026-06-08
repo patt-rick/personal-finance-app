@@ -23,6 +23,7 @@ import { Debt, DebtPayment } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import DebtEntryModal from "../components/DebtEntryModal";
 import DebtPaymentModal from "../components/DebtPaymentModal";
+import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
 
 interface DebtTrackerScreenProps {
     onBack: () => void;
@@ -332,6 +333,7 @@ export default function DebtTrackerScreen({
 
     return (
         <View style={styles.container}>
+            <HeaderBackdrop height={insets.top + 200} />
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity
                     style={styles.backBtn}
@@ -373,6 +375,7 @@ export default function DebtTrackerScreen({
                         activeDebts.map(renderDebtCard)
                     ) : (
                         <View style={styles.emptyState}>
+                            <EmptyScene variant="debt" size={220} />
                             <Text style={styles.emptyText}>
                                 No active debts. Tap + to add one.
                             </Text>

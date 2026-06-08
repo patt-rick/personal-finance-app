@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo } from "react";
 import { BackHandler, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { ArrowLeft, Inbox } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
+import { EmptyScene } from "../../../components/illustrations";
 import { useTheme } from "../../../theme/theme";
 import { Business } from "../../../types";
 import { useAutoLogQueue } from "../hooks/useAutoLogQueue";
@@ -48,9 +49,7 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
             >
                 {loading ? null : items.length === 0 ? (
                     <View style={styles.emptyCard}>
-                        <View style={styles.emptyIconCircle}>
-                            <Inbox size={22} color={theme.colors.onPrimaryContainer} />
-                        </View>
+                        <EmptyScene variant="transactions" size={200} />
                         <Text style={styles.emptyTitle}>Nothing to review</Text>
                         <Text style={styles.emptyBody}>
                             High-confidence captures save straight to your cashbooks. Anything uncertain shows up here.
@@ -115,15 +114,6 @@ const createStyles = (theme: any) =>
             marginTop: 8,
             ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-        },
-        emptyIconCircle: {
-            width: 56,
-            height: 56,
-            borderRadius: theme.shape.full,
-            backgroundColor: theme.colors.primaryContainer,
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 12,
         },
         emptyTitle: {
             fontSize: 16,

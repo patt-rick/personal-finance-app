@@ -35,6 +35,7 @@ import {
 import { getCurrencySymbol } from "../utils/_helpers";
 import BudgetSetupScreen from "./BudgetSetupScreen";
 import TourOverlay from "../components/TourOverlay";
+import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
 
 interface BudgetDashboardScreenProps {
     businesses: Business[];
@@ -290,7 +291,7 @@ export default function BudgetDashboardScreen({
     if (businesses.length === 0) {
         return (
             <View style={styles.container}>
-                <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
+                <HeaderBackdrop height={insets.top + 200} />
                 <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
                     <View>
                         <Text style={styles.greetingText}>Financial focus,</Text>
@@ -298,11 +299,7 @@ export default function BudgetDashboardScreen({
                     </View>
                 </View>
                 <View style={s.emptyCenter}>
-                    <View style={[s.emptyIconOuter, { backgroundColor: theme.colors.secondaryContainer }]}>
-                        <View style={[s.emptyIconInner, { backgroundColor: theme.colors.primaryContainer }]}>
-                            <PiggyBank size={32} color={theme.colors.onPrimaryContainer} />
-                        </View>
-                    </View>
+                    <EmptyScene variant="budget" size={224} />
                     <Text style={[s.emptyTitle, { color: theme.colors.onSurface }]}>
                         No cashbooks yet
                     </Text>
@@ -330,7 +327,7 @@ export default function BudgetDashboardScreen({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
+            <HeaderBackdrop height={insets.top + 200} />
 
             <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
                 <View>
@@ -392,11 +389,7 @@ export default function BudgetDashboardScreen({
                 ) : !budget ? (
                     <View style={s.noBudgetContainer}>
                         <View style={[s.noBudgetCard, { backgroundColor: theme.colors.surfaceContainerLow }]}>
-                            <View style={[s.emptyIconOuter, { backgroundColor: theme.colors.secondaryContainer }]}>
-                                <View style={[s.emptyIconInner, { backgroundColor: theme.colors.primaryContainer }]}>
-                                    <PiggyBank size={32} color={theme.colors.onPrimaryContainer} />
-                                </View>
-                            </View>
+                            <EmptyScene variant="budget" size={224} />
                             <Text style={[s.noBudgetTitle, { color: theme.colors.onSurface }]}>
                                 No Budget Set
                             </Text>

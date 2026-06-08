@@ -28,6 +28,7 @@ import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import BalanceCard, { CurrencyBalance } from "../components/dashboard/BalanceCard";
 import TourOverlay from "../components/TourOverlay";
+import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
 import { maybeRequestReview } from "../utils/storeReview";
 
 function getGreeting(): string {
@@ -378,6 +379,7 @@ function DashboardHome({
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <HeaderBackdrop height={Math.max(insets.top, 40) + 220} />
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <View>
                     <Text style={[styles.greeting, { color: theme.colors.textSecondary }]}>
@@ -449,21 +451,7 @@ function DashboardHome({
                     ))}
                     {businesses.length === 0 && (
                         <View style={styles.emptyContainer}>
-                            <View
-                                style={[
-                                    styles.emptyIconOuter,
-                                    { backgroundColor: theme.colors.secondaryContainer },
-                                ]}
-                            >
-                                <View
-                                    style={[
-                                        styles.emptyIconInner,
-                                        { backgroundColor: theme.colors.primaryContainer },
-                                    ]}
-                                >
-                                    <Wallet size={32} color={theme.colors.onPrimaryContainer} />
-                                </View>
-                            </View>
+                            <EmptyScene variant="cashbooks" size={224} />
                             <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
                                 Start tracking your finances
                             </Text>
@@ -498,18 +486,21 @@ function DashboardHome({
                     {
                         title: "Your Financial Overview",
                         icon: <LayoutGrid size={24} color={theme.colors.primary} />,
+                        illustration: "reports",
                         description:
                             "This is your dashboard — a snapshot of all your finances across every cashbook, grouped by currency.",
                     },
                     {
                         title: "Balance & Growth",
                         icon: <Wallet size={24} color={theme.colors.primary} />,
+                        illustration: "cashbooks",
                         description:
                             "The balance card shows your total income, expenses, and net balance. Swipe to see balances in different currencies.",
                     },
                     {
                         title: "Your Cashbooks",
                         icon: <Users size={24} color={theme.colors.primary} />,
+                        illustration: "transactions",
                         description:
                             "All your cashbooks are listed here with their balances. Tap any cashbook to view its transactions in detail.",
                     },

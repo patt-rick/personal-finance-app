@@ -8,11 +8,13 @@ import {
 } from "react-native";
 import { useTheme } from "../theme/theme";
 import { TourPage, isTourCompleted, markTourCompleted } from "../utils/tourStorage";
+import { EmptyScene, EmptySceneVariant } from "./illustrations";
 
 export interface TourStep {
     title: string;
     description: string;
     icon: React.ReactNode;
+    illustration?: EmptySceneVariant;
 }
 
 interface TourOverlayProps {
@@ -180,9 +182,15 @@ export default function TourOverlay({ page, steps, delay = 600, onComplete }: To
                     </View>
 
                     <Animated.View style={[styles.contentArea, { opacity: contentOpacity }]}>
-                        <View style={styles.iconContainer}>
-                            {step.icon}
-                        </View>
+                        {step.illustration ? (
+                            <View style={styles.illustration}>
+                                <EmptyScene variant={step.illustration} size={208} />
+                            </View>
+                        ) : (
+                            <View style={styles.iconContainer}>
+                                {step.icon}
+                            </View>
+                        )}
                         <Text style={styles.title}>
                             {step.title}
                         </Text>
@@ -254,6 +262,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             justifyContent: "center",
             marginBottom: 14,
             backgroundColor: theme.colors.primaryContainer,
+        },
+        illustration: {
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 8,
         },
         title: {
             fontSize: 17,

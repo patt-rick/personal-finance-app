@@ -14,6 +14,7 @@ import { useTheme } from "../theme/theme";
 import { RecurringTransaction, RecurrenceFrequency, Business, Category } from "../types";
 import { loadCategories } from "../utils/storage";
 import RecurringTransactionModal from "../components/RecurringTransactionModal";
+import { EmptyScene } from "../components/illustrations";
 
 interface RecurringTransactionsScreenProps {
     onBack: () => void;
@@ -252,9 +253,7 @@ export default function RecurringTransactionsScreen({
             >
                 {isEmpty ? (
                     <View style={styles.emptyState}>
-                        <View style={styles.emptyIcon}>
-                            <Repeat size={32} color={theme.colors.onSecondaryContainer} />
-                        </View>
+                        <EmptyScene variant="recurring" size={220} />
                         <Text style={styles.emptyTitle}>No Recurring Transactions</Text>
                         <Text style={styles.emptySubtitle}>
                             Automate repeated income or expenses by tapping the + button below.

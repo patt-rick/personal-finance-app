@@ -45,6 +45,7 @@ import DonutChart from "../components/dashboard/DonutChart";
 import TransactionEntryModal from "../components/TransactionEntryModal";
 import TransactionDetailModal from "../components/TransactionDetailModal";
 import DateRangePickerModal from "../components/DateRangePickerModal";
+import { EmptyScene } from "../components/illustrations";
 
 function getChartColors(theme: any): string[] {
     return [
@@ -635,7 +636,8 @@ export default function BusinessDetailView({
                         ))}
 
                         {groupedTransactions.length === 0 && (
-                            <View style={styles.emptyState}>
+                            <View style={[styles.emptyState, { alignItems: "center" }]}>
+                                <EmptyScene variant="transactions" size={200} />
                                 <Text style={styles.emptyText}>No transactions found</Text>
                             </View>
                         )}

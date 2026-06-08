@@ -54,6 +54,7 @@ import DebtTrackerScreen from "./DebtTrackerScreen";
 import ReportsScreen from "./ReportsScreen";
 import AutoLogSettingsScreen from "../features/autoLogging/screens/AutoLogSettingsScreen";
 import TourOverlay from "../components/TourOverlay";
+import { HeaderBackdrop } from "../components/illustrations";
 
 const APP_VERSION = require("../../app.json").expo.version;
 
@@ -300,6 +301,7 @@ export default function SettingsScreen({
 
     return (
         <View style={styles.container}>
+            <HeaderBackdrop height={240} />
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <Text style={styles.headerTitle}>Settings</Text>
             </View>

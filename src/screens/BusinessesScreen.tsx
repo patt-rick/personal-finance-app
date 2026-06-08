@@ -29,6 +29,7 @@ import CashbookDetailSheet from "../components/CashbookDetailSheet";
 import CreateCashbookModal from "../components/CreateCashbookModal";
 import TransferCashbookModal from "../components/TransferCashbookModal";
 import TourOverlay from "../components/TourOverlay";
+import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
 
 interface BusinessesScreenProps {
     businesses: Business[];
@@ -388,6 +389,7 @@ export default function BusinessesScreen({
 
     return (
         <View style={styles.container}>
+            <HeaderBackdrop height={insets.top + 200} />
             <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
 
             <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
@@ -485,21 +487,7 @@ export default function BusinessesScreen({
                 })}
                 {businesses.length === 0 && (
                     <View style={s.empty}>
-                        <View
-                            style={[
-                                s.emptyIconOuter,
-                                { backgroundColor: theme.colors.secondaryContainer },
-                            ]}
-                        >
-                            <View
-                                style={[
-                                    s.emptyIconInner,
-                                    { backgroundColor: theme.colors.primaryContainer },
-                                ]}
-                            >
-                                <Wallet size={32} color={theme.colors.onPrimaryContainer} />
-                            </View>
-                        </View>
+                        <EmptyScene variant="cashbooks" size={224} />
                         <Text style={[s.emptyTitle, { color: theme.colors.onSurface }]}>
                             Create your first cashbook
                         </Text>

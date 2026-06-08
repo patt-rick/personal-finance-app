@@ -16,6 +16,7 @@ import { Category } from "../types";
 import { loadCategories, saveCategories } from "../utils/storage";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
 import AppModal from "../components/AppModal";
+import { EmptyScene } from "../components/illustrations";
 
 export default function CategoryManagementScreen({ onBack }: { onBack?: () => void }) {
     const theme = useTheme();
@@ -183,7 +184,10 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
                 renderItem={renderItem}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={
-                    <Text style={styles.emptyText}>No categories found.</Text>
+                    <View style={{ alignItems: "center", marginTop: 40 }}>
+                        <EmptyScene variant="transactions" size={200} />
+                        <Text style={styles.emptyText}>No categories found.</Text>
+                    </View>
                 }
             />
 

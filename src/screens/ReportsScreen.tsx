@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useCallback, useEffect } from "react";
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View, BackHandler } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TrendingUp, TrendingDown, FileText, ArrowLeft } from "lucide-react-native";
+import { TrendingUp, TrendingDown, ArrowLeft } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
@@ -15,6 +15,7 @@ import {
 import PairedBarChart from "../components/dashboard/PairedBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import ChartCarousel from "../components/ChartCarousel";
+import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
 
 interface ReportsScreenProps {
     businesses: Business[];
@@ -162,6 +163,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
 
     return (
         <View style={styles.container}>
+            <HeaderBackdrop height={240} />
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 {onBack && (
                     <TouchableOpacity
@@ -246,9 +248,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
 
                 {!hasData ? (
                     <View style={styles.emptyContainer}>
-                        <View style={styles.emptyIcon}>
-                            <FileText size={40} color={theme.colors.onSurfaceVariant} />
-                        </View>
+                        <EmptyScene variant="reports" size={220} />
                         <Text style={styles.emptyText}>
                             No transactions found for this period
                         </Text>
@@ -440,15 +440,6 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
         emptyContainer: {
             padding: 60,
             alignItems: "center" as const,
-        },
-        emptyIcon: {
-            width: 80,
-            height: 80,
-            borderRadius: theme.shape.full,
-            backgroundColor: theme.colors.surfaceContainerHigh,
-            alignItems: "center" as const,
-            justifyContent: "center" as const,
-            marginBottom: 16,
         },
         emptyText: {
             textAlign: "center" as const,
