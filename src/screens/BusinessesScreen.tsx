@@ -75,7 +75,7 @@ function ActivityDots({ transactions, theme }: { transactions: Transaction[]; th
                     borderRadius: 2.5,
                     backgroundColor: hasActivity
                         ? theme.colors.primary
-                        : theme.colors.borderLight,
+                        : theme.colors.outlineVariant,
                 }}
             />,
         );
@@ -185,31 +185,31 @@ function SummaryStrip({
     if (!totals || businesses.length === 0) return null;
 
     return (
-        <View style={[summaryStyles.strip, { backgroundColor: theme.colors.card }]}>
+        <View style={[summaryStyles.strip, { backgroundColor: theme.colors.surfaceContainerLow }]}>
             <View style={summaryStyles.item}>
                 <View style={[summaryStyles.dot, { backgroundColor: theme.colors.income }]} />
                 <View>
-                    <Text style={[summaryStyles.label, { color: theme.colors.textSecondary }]}>
+                    <Text style={[summaryStyles.label, { color: theme.colors.onSurfaceVariant }]}>
                         Income
                     </Text>
-                    <Text style={[summaryStyles.value, { color: theme.colors.text }]}>
+                    <Text style={[summaryStyles.value, { color: theme.colors.onSurface }]}>
                         {totals.income}
                     </Text>
                 </View>
             </View>
-            <View style={[summaryStyles.divider, { backgroundColor: theme.colors.borderLight }]} />
+            <View style={[summaryStyles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
             <View style={summaryStyles.item}>
                 <View style={[summaryStyles.dot, { backgroundColor: theme.colors.expense }]} />
                 <View>
-                    <Text style={[summaryStyles.label, { color: theme.colors.textSecondary }]}>
+                    <Text style={[summaryStyles.label, { color: theme.colors.onSurfaceVariant }]}>
                         Expense
                     </Text>
-                    <Text style={[summaryStyles.value, { color: theme.colors.text }]}>
+                    <Text style={[summaryStyles.value, { color: theme.colors.onSurface }]}>
                         {totals.expense}
                     </Text>
                 </View>
             </View>
-            <View style={[summaryStyles.divider, { backgroundColor: theme.colors.borderLight }]} />
+            <View style={[summaryStyles.divider, { backgroundColor: theme.colors.outlineVariant }]} />
             <View style={summaryStyles.item}>
                 <View
                     style={[
@@ -217,13 +217,13 @@ function SummaryStrip({
                         {
                             backgroundColor:
                                 totals.balance >= 0
-                                    ? theme.colors.success
+                                    ? theme.colors.income
                                     : theme.colors.error,
                         },
                     ]}
                 />
                 <View>
-                    <Text style={[summaryStyles.label, { color: theme.colors.textSecondary }]}>
+                    <Text style={[summaryStyles.label, { color: theme.colors.onSurfaceVariant }]}>
                         Net
                     </Text>
                     <Text
@@ -232,7 +232,7 @@ function SummaryStrip({
                             {
                                 color:
                                     totals.balance >= 0
-                                        ? theme.colors.success
+                                        ? theme.colors.income
                                         : theme.colors.error,
                             },
                         ]}
@@ -252,14 +252,11 @@ const createSummaryStyles = (theme: any) => StyleSheet.create({
         alignItems: "center",
         marginHorizontal: 20,
         marginBottom: 20,
-        borderRadius: 16,
+        borderRadius: theme.shape.large,
         paddingVertical: 14,
         paddingHorizontal: 16,
-        elevation: 1,
+        ...theme.elevation.level1,
         shadowColor: theme.colors.shadow,
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.03,
-        shadowRadius: 4,
     },
     item: {
         flex: 1,
@@ -429,7 +426,7 @@ export default function BusinessesScreen({
                     return (
                         <AnimatedCard key={biz.id} index={index}>
                             <TouchableOpacity
-                                style={[s.card, { backgroundColor: theme.colors.card }]}
+                                style={s.card}
                                 onPress={() => setSheetBusiness(biz)}
                                 activeOpacity={0.7}
                             >
@@ -440,8 +437,8 @@ export default function BusinessesScreen({
                                             {
                                                 backgroundColor:
                                                     balance >= 0
-                                                        ? theme.colors.incomeBg
-                                                        : theme.colors.expenseBg,
+                                                        ? theme.colors.incomeContainer
+                                                        : theme.colors.expenseContainer,
                                             },
                                         ]}
                                     >
@@ -449,23 +446,16 @@ export default function BusinessesScreen({
                                             size={18}
                                             color={
                                                 balance >= 0
-                                                    ? theme.colors.income
-                                                    : theme.colors.expense
+                                                    ? theme.colors.onIncomeContainer
+                                                    : theme.colors.onExpenseContainer
                                             }
                                         />
                                     </View>
                                     <View style={{ flex: 1 }}>
-                                        <Text
-                                            style={[s.cardName, { color: theme.colors.text }]}
-                                        >
+                                        <Text style={[s.cardName, { color: theme.colors.onSurface }]}>
                                             {biz.name}
                                         </Text>
-                                        <Text
-                                            style={[
-                                                s.cardMeta,
-                                                { color: theme.colors.textSecondary },
-                                            ]}
-                                        >
+                                        <Text style={[s.cardMeta, { color: theme.colors.onSurfaceVariant }]}>
                                             {bizTx.length} txn{bizTx.length !== 1 ? "s" : ""}{" "}
                                             · {lastDate} · {biz.currency || "USD"}
                                         </Text>
@@ -477,7 +467,7 @@ export default function BusinessesScreen({
                                                 {
                                                     color:
                                                         balance >= 0
-                                                            ? theme.colors.success
+                                                            ? theme.colors.income
                                                             : theme.colors.error,
                                                 },
                                             ]}
@@ -498,22 +488,22 @@ export default function BusinessesScreen({
                         <View
                             style={[
                                 s.emptyIconOuter,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.secondaryContainer },
                             ]}
                         >
                             <View
                                 style={[
                                     s.emptyIconInner,
-                                    { backgroundColor: theme.colors.incomeBg },
+                                    { backgroundColor: theme.colors.primaryContainer },
                                 ]}
                             >
-                                <Wallet size={32} color={theme.colors.primary} />
+                                <Wallet size={32} color={theme.colors.onPrimaryContainer} />
                             </View>
                         </View>
-                        <Text style={[s.emptyTitle, { color: theme.colors.text }]}>
+                        <Text style={[s.emptyTitle, { color: theme.colors.onSurface }]}>
                             Create your first cashbook
                         </Text>
-                        <Text style={[s.emptyText, { color: theme.colors.textSecondary }]}>
+                        <Text style={[s.emptyText, { color: theme.colors.onSurfaceVariant }]}>
                             Cashbooks help you track finances for different businesses or
                             accounts separately
                         </Text>
@@ -522,7 +512,7 @@ export default function BusinessesScreen({
                             onPress={() => setCreateModalVisible(true)}
                             activeOpacity={0.8}
                         >
-                            <Plus size={18} color={theme.colors.textInverse} />
+                            <Plus size={18} color={theme.colors.onPrimary} />
                             <Text style={s.emptyBtnText}>New Cashbook</Text>
                         </TouchableOpacity>
                     </View>
@@ -530,11 +520,11 @@ export default function BusinessesScreen({
             </ScrollView>
 
             <TouchableOpacity
-                style={[s.fab, { backgroundColor: theme.colors.primary }]}
+                style={s.fab}
                 onPress={() => setCreateModalVisible(true)}
                 activeOpacity={0.85}
             >
-                <Plus size={22} color={theme.colors.textInverse} />
+                <Plus size={22} color={theme.colors.onPrimaryContainer} />
             </TouchableOpacity>
 
             <CashbookDetailSheet
@@ -597,14 +587,12 @@ const createLocalStyles = (theme: any) =>
         list: { flex: 1, paddingHorizontal: 20 },
 
         card: {
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.largeIncreased,
             marginBottom: 10,
             padding: 14,
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.03,
-            shadowRadius: 4,
         },
         cardTop: {
             flexDirection: "row",
@@ -613,7 +601,7 @@ const createLocalStyles = (theme: any) =>
         cardIcon: {
             width: 42,
             height: 42,
-            borderRadius: 13,
+            borderRadius: 21,
             alignItems: "center",
             justifyContent: "center",
             marginRight: 14,
@@ -629,7 +617,7 @@ const createLocalStyles = (theme: any) =>
         emptyIconOuter: {
             width: 96,
             height: 96,
-            borderRadius: 28,
+            borderRadius: theme.shape.extraLarge,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
@@ -637,7 +625,7 @@ const createLocalStyles = (theme: any) =>
         emptyIconInner: {
             width: 64,
             height: 64,
-            borderRadius: 20,
+            borderRadius: theme.shape.large,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -657,18 +645,16 @@ const createLocalStyles = (theme: any) =>
         emptyBtn: {
             flexDirection: "row",
             alignItems: "center",
-            paddingVertical: 13,
+            paddingVertical: 14,
             paddingHorizontal: 28,
-            borderRadius: 14,
+            borderRadius: theme.shape.full,
             gap: 8,
-            elevation: 2,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
+            minHeight: 52,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         emptyBtnText: {
-            color: theme.colors.textInverse,
+            color: theme.colors.onPrimary,
             fontSize: 15,
             fontWeight: "700",
         },
@@ -677,15 +663,13 @@ const createLocalStyles = (theme: any) =>
             position: "absolute",
             right: 20,
             bottom: 100,
-            width: 54,
-            height: 54,
-            borderRadius: 16,
+            width: 56,
+            height: 56,
+            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
-            elevation: 6,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 10,
+            ...theme.elevation.level3,
+            shadowColor: theme.colors.shadow,
         },
     });

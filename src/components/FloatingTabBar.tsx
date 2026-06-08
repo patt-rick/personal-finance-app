@@ -6,7 +6,6 @@ import {
     StyleSheet,
     Animated,
     Dimensions,
-    Platform,
     useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -21,9 +20,9 @@ const TAB_COUNT = 4;
 const BAR_H_MARGIN = 20;
 const BAR_WIDTH = SCREEN_WIDTH - BAR_H_MARGIN * 2;
 const TAB_WIDTH = BAR_WIDTH / TAB_COUNT;
-const INDICATOR_WIDTH = 65;
+const INDICATOR_WIDTH = 60;
 const INDICATOR_OFFSET = (TAB_WIDTH - INDICATOR_WIDTH) / 2;
-const BAR_HEIGHT = 62;
+const BAR_HEIGHT = 64;
 
 export const FLOATING_TAB_HEIGHT = BAR_HEIGHT + 24;
 
@@ -68,12 +67,12 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
             <View
                 style={[
                     styles.bar,
+                    theme.elevation.level2,
                     {
-                        backgroundColor: theme.colors.card,
-                        borderColor: isDark ? theme.colors.border : theme.colors.borderLight,
-                        ...(isDark
-                            ? { shadowColor: theme.colors.shadow, shadowOpacity: 0.3 }
-                            : { shadowColor: theme.colors.shadow, shadowOpacity: 0.08 }),
+                        backgroundColor: theme.colors.surfaceContainer,
+                        borderColor: theme.colors.outlineVariant,
+                        borderWidth: isDark ? 0 : StyleSheet.hairlineWidth,
+                        shadowColor: theme.colors.shadow,
                     },
                 ]}
             >
@@ -81,7 +80,7 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                     style={[
                         styles.indicator,
                         {
-                            backgroundColor: theme.colors.primary,
+                            backgroundColor: theme.colors.secondaryContainer,
                             transform: [{ translateX: indicatorX }],
                         },
                     ]}
@@ -125,12 +124,12 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                                             }),
                                         }}
                                     >
-                                        <Icon size={20} color={theme.colors.textSecondary} />
+                                        <Icon size={22} color={theme.colors.onSurfaceVariant} />
                                     </Animated.View>
                                     <Animated.View
                                         style={[StyleSheet.absoluteFill, { opacity: focusAnim }]}
                                     >
-                                        <Icon size={20} color={theme.colors.textInverse} />
+                                        <Icon size={22} color={theme.colors.onSecondaryContainer} />
                                     </Animated.View>
                                 </View>
                                 <Animated.View
@@ -144,7 +143,7 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                                     <Text
                                         style={[
                                             styles.label,
-                                            { color: theme.colors.textSecondary },
+                                            { color: theme.colors.onSurfaceVariant },
                                         ]}
                                     >
                                         {label}
@@ -153,7 +152,7 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                                 <Animated.View
                                     style={[styles.labelAbsolute, { opacity: focusAnim }]}
                                 >
-                                    <Text style={[styles.label, { color: theme.colors.textInverse }]}>
+                                    <Text style={[styles.label, styles.labelActive, { color: theme.colors.onSecondaryContainer }]}>
                                         {label}
                                     </Text>
                                 </Animated.View>
@@ -181,22 +180,13 @@ const styles = StyleSheet.create({
         height: BAR_HEIGHT,
         borderRadius: BAR_HEIGHT / 2,
         alignItems: "center",
-        borderWidth: 1,
-        ...Platform.select({
-            ios: {
-                shadowOffset: { width: 0, height: 4 },
-                shadowRadius: 16,
-            },
-            android: {
-                elevation: 8,
-            },
-        }),
     },
     indicator: {
         position: "absolute",
+        top: (BAR_HEIGHT - 40) / 2,
         width: INDICATOR_WIDTH,
-        height: 42,
-        borderRadius: 21,
+        height: 40,
+        borderRadius: 20,
     },
     tab: {
         flex: 1,
@@ -209,9 +199,12 @@ const styles = StyleSheet.create({
         gap: 3,
     },
     label: {
-        fontSize: 10,
-        fontWeight: "600",
-        letterSpacing: 0.2,
+        fontSize: 11,
+        fontWeight: "500",
+        letterSpacing: 0.5,
+    },
+    labelActive: {
+        fontWeight: "700",
     },
     labelAbsolute: {
         position: "absolute",

@@ -58,7 +58,7 @@ export default function SenderMappingEditor({
                 value={displayName}
                 onChangeText={setDisplayName}
                 placeholder="e.g. MTN MoMo"
-                placeholderTextColor={theme.colors.placeholder}
+                placeholderTextColor={theme.colors.onSurfaceVariant}
             />
 
             <View style={styles.senderKeyPill}>
@@ -73,6 +73,7 @@ export default function SenderMappingEditor({
                     selected={businessId === null}
                     onPress={() => setBusinessId(null)}
                     styles={styles}
+                    theme={theme}
                 />
                 {businesses.map((b) => (
                     <BusinessOption
@@ -82,6 +83,7 @@ export default function SenderMappingEditor({
                         selected={businessId === b.id}
                         onPress={() => setBusinessId(b.id)}
                         styles={styles}
+                        theme={theme}
                     />
                 ))}
             </View>
@@ -92,7 +94,7 @@ export default function SenderMappingEditor({
                     <Text style={[styles.deleteText, { color: theme.colors.error }]}>Delete</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-                    <Check size={16} color={theme.colors.textInverse} />
+                    <Check size={16} color={theme.colors.onPrimary} />
                     <Text style={styles.saveText}>Save</Text>
                 </TouchableOpacity>
             </View>
@@ -106,12 +108,14 @@ function BusinessOption({
     selected,
     onPress,
     styles,
+    theme,
 }: {
     label: string;
     sub?: string;
     selected: boolean;
     onPress: () => void;
     styles: ReturnType<typeof createStyles>;
+    theme: ReturnType<typeof useTheme>;
 }) {
     return (
         <TouchableOpacity style={[styles.bizOption, selected && styles.bizOptionSelected]} onPress={onPress}>
@@ -119,12 +123,12 @@ function BusinessOption({
                 <Text style={[styles.bizOptionLabel, selected && styles.bizOptionLabelSelected]}>{label}</Text>
                 {sub ? <Text style={styles.bizOptionSub}>{sub}</Text> : null}
             </View>
-            {selected ? <Check size={18} color={styles.checkColor.color} /> : null}
+            {selected ? <Check size={18} color={theme.colors.primary} /> : null}
         </TouchableOpacity>
     );
 }
 
-const createStyles = (theme: any) =>
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         fieldLabel: {
             fontSize: 11,
@@ -132,24 +136,24 @@ const createStyles = (theme: any) =>
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 8,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
         },
         input: {
-            height: 48,
-            borderRadius: 12,
+            height: 52,
+            borderRadius: theme.shape.medium,
             borderWidth: 1,
-            borderColor: theme.colors.borderLight,
+            borderColor: theme.colors.outline,
             paddingHorizontal: 14,
             fontSize: 15,
-            color: theme.colors.text,
-            backgroundColor: theme.colors.surface,
+            color: theme.colors.onSurface,
+            backgroundColor: theme.colors.surfaceContainerHighest,
         },
         senderKeyPill: {
             marginTop: 8,
             paddingHorizontal: 12,
-            paddingVertical: 8,
-            backgroundColor: theme.colors.surface,
-            borderRadius: 10,
+            paddingVertical: 10,
+            backgroundColor: theme.colors.surfaceContainerHigh,
+            borderRadius: theme.shape.medium,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "space-between",
@@ -159,7 +163,7 @@ const createStyles = (theme: any) =>
             fontWeight: "700",
             textTransform: "uppercase",
             letterSpacing: 0.5,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
         },
         senderKeyValue: {
             fontSize: 13,
@@ -172,27 +176,27 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             paddingHorizontal: 14,
             paddingVertical: 14,
-            borderRadius: 12,
-            backgroundColor: theme.colors.surface,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             borderWidth: 1.5,
             borderColor: "transparent",
         },
         bizOptionSelected: {
             borderColor: theme.colors.primary,
-            backgroundColor: theme.colors.incomeBg,
+            backgroundColor: theme.colors.secondaryContainer,
         },
         bizOptionLabel: {
             fontSize: 14,
             fontWeight: "600",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
         bizOptionLabelSelected: {
-            color: theme.colors.primary,
+            color: theme.colors.onSecondaryContainer,
         },
         bizOptionSub: {
             fontSize: 11,
             fontWeight: "500",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 2,
         },
         actions: {
@@ -202,9 +206,11 @@ const createStyles = (theme: any) =>
         },
         deleteBtn: {
             flex: 1,
-            height: 48,
-            borderRadius: 14,
-            backgroundColor: theme.colors.surface,
+            height: 52,
+            borderRadius: theme.shape.full,
+            borderWidth: 1,
+            borderColor: theme.colors.error,
+            backgroundColor: "transparent",
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
@@ -216,18 +222,19 @@ const createStyles = (theme: any) =>
         },
         saveBtn: {
             flex: 1,
-            height: 48,
-            borderRadius: 14,
+            height: 52,
+            borderRadius: theme.shape.full,
             backgroundColor: theme.colors.primary,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         saveText: {
             fontSize: 14,
             fontWeight: "700",
-            color: theme.colors.textInverse,
+            color: theme.colors.onPrimary,
         },
-        checkColor: { color: theme.colors.primary },
     });

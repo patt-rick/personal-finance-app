@@ -58,20 +58,20 @@ export default function TransferCashbookModal({
     return (
         <AppModal visible={visible} onClose={handleClose} maxHeight="75%">
             <View style={s.header}>
-                <View style={[s.iconBadge, { backgroundColor: theme.colors.incomeBg }]}>
-                    <ArrowRightLeft size={20} color={theme.colors.primary} />
+                <View style={[s.iconBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <ArrowRightLeft size={20} color={theme.colors.onPrimaryContainer} />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <Text style={[s.title, { color: theme.colors.text }]}>
+                    <Text style={[s.title, { color: theme.colors.onSurface }]}>
                         Transfer Transactions
                     </Text>
-                    <Text style={[s.subtitle, { color: theme.colors.textSecondary }]}>
+                    <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>
                         {transferCount} transaction{transferCount !== 1 ? "s" : ""} will be transferred
                     </Text>
                 </View>
             </View>
 
-            <Text style={[s.sectionLabel, { color: theme.colors.textSecondary }]}>
+            <Text style={[s.sectionLabel, { color: theme.colors.onSurfaceVariant }]}>
                 Select destination
             </Text>
 
@@ -86,10 +86,10 @@ export default function TransferCashbookModal({
                             key={biz.id}
                             style={[
                                 s.card,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.surfaceContainerHigh },
                                 isSelected && {
-                                    backgroundColor: theme.colors.incomeBg,
-                                    borderColor: theme.colors.primary,
+                                    backgroundColor: theme.colors.secondaryContainer,
+                                    borderColor: theme.colors.secondary,
                                 },
                             ]}
                             onPress={() => setSelectedId(biz.id)}
@@ -101,20 +101,28 @@ export default function TransferCashbookModal({
                                     {
                                         backgroundColor: isSelected
                                             ? theme.colors.primary
-                                            : theme.colors.card,
+                                            : theme.colors.surfaceContainerLowest,
                                     },
                                 ]}
                             >
                                 <Wallet
                                     size={16}
-                                    color={isSelected ? theme.colors.textInverse : theme.colors.primary}
+                                    color={isSelected ? theme.colors.onPrimary : theme.colors.primary}
                                 />
                             </View>
                             <View style={{ flex: 1 }}>
-                                <Text style={[s.cardName, { color: theme.colors.text }]}>
+                                <Text style={[s.cardName, {
+                                    color: isSelected
+                                        ? theme.colors.onSecondaryContainer
+                                        : theme.colors.onSurface,
+                                }]}>
                                     {biz.name}
                                 </Text>
-                                <Text style={[s.cardMeta, { color: theme.colors.textSecondary }]}>
+                                <Text style={[s.cardMeta, {
+                                    color: isSelected
+                                        ? theme.colors.onSecondaryContainer
+                                        : theme.colors.onSurfaceVariant,
+                                }]}>
                                     {symbol} {biz.currency || "USD"} · {bizTxCount}{" "}
                                     transaction{bizTxCount !== 1 ? "s" : ""}
                                 </Text>
@@ -122,14 +130,14 @@ export default function TransferCashbookModal({
                             <View
                                 style={[
                                     s.radio,
-                                    { borderColor: theme.colors.border },
+                                    { borderColor: theme.colors.outline },
                                     isSelected && {
                                         borderColor: theme.colors.primary,
                                         backgroundColor: theme.colors.primary,
                                     },
                                 ]}
                             >
-                                {isSelected && <Check size={12} color={theme.colors.textInverse} />}
+                                {isSelected && <Check size={12} color={theme.colors.onPrimary} />}
                             </View>
                         </TouchableOpacity>
                     );
@@ -146,11 +154,11 @@ export default function TransferCashbookModal({
                     onPress={handleTransfer}
                     disabled={!selectedId}
                 >
-                    <ArrowRightLeft size={16} color={theme.colors.textInverse} />
+                    <ArrowRightLeft size={16} color={theme.colors.onPrimary} />
                     <Text style={s.transferBtnText}>Transfer & Delete</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={s.cancelBtn} onPress={handleClose}>
-                    <Text style={[s.cancelBtnText, { color: theme.colors.textSecondary }]}>
+                    <Text style={[s.cancelBtnText, { color: theme.colors.onSurfaceVariant }]}>
                         Cancel
                     </Text>
                 </TouchableOpacity>
@@ -170,11 +178,11 @@ const createStyles = (theme: any) =>
         iconBadge: {
             width: 44,
             height: 44,
-            borderRadius: 12,
+            borderRadius: theme.shape.medium,
             alignItems: "center",
             justifyContent: "center",
         },
-        title: { fontSize: 18, fontWeight: "800", letterSpacing: -0.3 },
+        title: { fontSize: 18, fontWeight: "700", letterSpacing: -0.3 },
         subtitle: { fontSize: 12, fontWeight: "500", marginTop: 2 },
 
         sectionLabel: {
@@ -191,7 +199,7 @@ const createStyles = (theme: any) =>
             flexDirection: "row",
             alignItems: "center",
             padding: 14,
-            borderRadius: 14,
+            borderRadius: theme.shape.large,
             marginBottom: 8,
             borderWidth: 1.5,
             borderColor: "transparent",
@@ -199,7 +207,7 @@ const createStyles = (theme: any) =>
         cardIcon: {
             width: 36,
             height: 36,
-            borderRadius: 10,
+            borderRadius: 18,
             alignItems: "center",
             justifyContent: "center",
             marginRight: 12,
@@ -219,14 +227,16 @@ const createStyles = (theme: any) =>
 
         actions: { marginTop: 16, gap: 10 },
         transferBtn: {
-            height: 50,
-            borderRadius: 14,
+            height: 52,
+            borderRadius: theme.shape.full,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
-        transferBtnText: { color: theme.colors.textInverse, fontWeight: "700", fontSize: 15 },
+        transferBtnText: { color: theme.colors.onPrimary, fontWeight: "700", fontSize: 15 },
         cancelBtn: { alignItems: "center", paddingVertical: 8 },
         cancelBtnText: { fontSize: 14, fontWeight: "600" },
     });

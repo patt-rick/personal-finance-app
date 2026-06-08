@@ -221,7 +221,8 @@ export default function DebtTrackerScreen({
         const symbol = getCurrencySymbol(debt.currency);
         const isOwedToMe = debt.type === "owed_to_me";
         const accentColor = isOwedToMe ? theme.colors.income : theme.colors.expense;
-        const bgTint = isOwedToMe ? theme.colors.incomeBg : theme.colors.expenseBg;
+        const badgeBg = isOwedToMe ? theme.colors.incomeContainer : theme.colors.expenseContainer;
+        const badgeText = isOwedToMe ? theme.colors.onIncomeContainer : theme.colors.onExpenseContainer;
 
         return (
             <View key={debt.id} style={styles.debtCard}>
@@ -233,18 +234,13 @@ export default function DebtTrackerScreen({
                     <View style={{ flex: 1 }}>
                         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
                             <Text style={styles.personName}>{debt.personName}</Text>
-                            <View
-                                style={[
-                                    styles.typeBadge,
-                                    { backgroundColor: bgTint },
-                                ]}
-                            >
-                                <Text style={[styles.typeBadgeText, { color: accentColor }]}>
+                            <View style={[styles.typeBadge, { backgroundColor: badgeBg }]}>
+                                <Text style={[styles.typeBadgeText, { color: badgeText }]}>
                                     {isOwedToMe ? "Owed to me" : "I owe"}
                                 </Text>
                             </View>
                         </View>
-                        <Text style={styles.debtAmount}>
+                        <Text style={[styles.debtAmount, { color: accentColor }]}>
                             {symbol}{debt.amount.toFixed(2)}
                         </Text>
                         <View style={styles.progressContainer}>
@@ -253,21 +249,21 @@ export default function DebtTrackerScreen({
                                     style={[
                                         styles.progressFill,
                                         {
-                                            width: `${progress * 100}%`,
-                                            backgroundColor: accentColor,
+                                            width: `${progress * 100}%` as any,
+                                            backgroundColor: theme.colors.primary,
                                         },
                                     ]}
                                 />
                             </View>
                             <Text style={styles.progressText}>
-                                {symbol}{totalPaid.toFixed(2)} / {symbol}{debt.amount.toFixed(2)}
+                                {symbol}{totalPaid.toFixed(2)} paid · {symbol}{remaining.toFixed(2)} remaining
                             </Text>
                         </View>
                     </View>
                     {isExpanded ? (
-                        <ChevronDown size={20} color={theme.colors.textSecondary} />
+                        <ChevronDown size={20} color={theme.colors.onSurfaceVariant} />
                     ) : (
-                        <ChevronRight size={20} color={theme.colors.textSecondary} />
+                        <ChevronRight size={20} color={theme.colors.onSurfaceVariant} />
                     )}
                 </TouchableOpacity>
 
@@ -306,19 +302,19 @@ export default function DebtTrackerScreen({
                                     <Text style={styles.actionBtnText}>Record Payment</Text>
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[styles.actionBtnSmall, { borderColor: theme.colors.border }]}
+                                    style={[styles.actionBtnSmall, { borderColor: theme.colors.outline }]}
                                     onPress={() => {
                                         setEditingDebt(debt);
                                         setShowEntryModal(true);
                                     }}
                                 >
-                                    <Edit3 size={16} color={theme.colors.text} />
+                                    <Edit3 size={16} color={theme.colors.onSurface} />
                                 </TouchableOpacity>
                                 <TouchableOpacity
-                                    style={[styles.actionBtnSmall, { borderColor: theme.colors.success }]}
+                                    style={[styles.actionBtnSmall, { borderColor: theme.colors.income }]}
                                     onPress={() => handleMarkSettled(debt.id)}
                                 >
-                                    <CheckCircle size={16} color={theme.colors.success} />
+                                    <CheckCircle size={16} color={theme.colors.income} />
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                     style={[styles.actionBtnSmall, { borderColor: theme.colors.error }]}
@@ -336,15 +332,13 @@ export default function DebtTrackerScreen({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.headerDecoration, { height: 180 + insets.top }]} />
-
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity
                     style={styles.backBtn}
                     onPress={onBack}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Debts & Loans</Text>
             </View>
@@ -354,18 +348,20 @@ export default function DebtTrackerScreen({
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.summaryRow}>
-                    <View style={[styles.summaryCard, { backgroundColor: theme.colors.incomeBg }]}>
-                        <Text style={[styles.summaryLabel, { color: theme.colors.income }]}>
-                            Owed to Me
-                        </Text>
+                    <View style={[styles.summaryCard, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                        <View style={[styles.summaryIconWrap, { backgroundColor: theme.colors.incomeContainer }]}>
+                            <Text style={[styles.summaryIconText, { color: theme.colors.onIncomeContainer }]}>↑</Text>
+                        </View>
+                        <Text style={styles.summaryLabel}>Owed to Me</Text>
                         <Text style={[styles.summaryValue, { color: theme.colors.income }]}>
                             {formatSummary(summaryTotals.owedToMe)}
                         </Text>
                     </View>
-                    <View style={[styles.summaryCard, { backgroundColor: theme.colors.expenseBg }]}>
-                        <Text style={[styles.summaryLabel, { color: theme.colors.expense }]}>
-                            I Owe
-                        </Text>
+                    <View style={[styles.summaryCard, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                        <View style={[styles.summaryIconWrap, { backgroundColor: theme.colors.expenseContainer }]}>
+                            <Text style={[styles.summaryIconText, { color: theme.colors.onExpenseContainer }]}>↓</Text>
+                        </View>
+                        <Text style={styles.summaryLabel}>I Owe</Text>
                         <Text style={[styles.summaryValue, { color: theme.colors.expense }]}>
                             {formatSummary(summaryTotals.iOwe)}
                         </Text>
@@ -394,9 +390,9 @@ export default function DebtTrackerScreen({
                                 Settled ({settledDebts.length})
                             </Text>
                             {showSettled ? (
-                                <ChevronDown size={18} color={theme.colors.textSecondary} />
+                                <ChevronDown size={18} color={theme.colors.onSurfaceVariant} />
                             ) : (
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             )}
                         </TouchableOpacity>
                         {showSettled && settledDebts.map(renderDebtCard)}
@@ -411,7 +407,7 @@ export default function DebtTrackerScreen({
                     setShowEntryModal(true);
                 }}
             >
-                <Plus size={24} color={theme.colors.textInverse} />
+                <Plus size={24} color={theme.colors.onPrimaryContainer} />
             </TouchableOpacity>
 
             <DebtEntryModal
@@ -440,16 +436,6 @@ export default function DebtTrackerScreen({
 const createStyles = (theme: any) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
-        headerDecoration: {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: theme.colors.incomeBg,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            opacity: 0.6,
-        },
         header: {
             flexDirection: "row",
             alignItems: "center",
@@ -458,23 +444,18 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "800",
-            color: theme.colors.text,
-            letterSpacing: -0.3,
+            ...theme.typescale.headlineSmall,
+            color: theme.colors.onSurface,
         },
         summaryRow: {
             flexDirection: "row",
@@ -485,23 +466,33 @@ const createStyles = (theme: any) =>
         summaryCard: {
             flex: 1,
             padding: 16,
-            borderRadius: 16,
-            elevation: 1,
+            borderRadius: theme.shape.large,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.02,
-            shadowRadius: 3,
+        },
+        summaryIconWrap: {
+            width: 32,
+            height: 32,
+            borderRadius: theme.shape.full,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 10,
+        },
+        summaryIconText: {
+            fontSize: 16,
+            fontWeight: "700",
         },
         summaryLabel: {
             fontSize: 12,
-            fontWeight: "700",
+            fontWeight: "600",
             textTransform: "uppercase",
             letterSpacing: 0.5,
-            marginBottom: 6,
+            marginBottom: 4,
+            color: theme.colors.onSurfaceVariant,
         },
         summaryValue: {
             fontSize: 18,
-            fontWeight: "800",
+            fontWeight: "700",
             letterSpacing: -0.3,
         },
         section: {
@@ -509,15 +500,12 @@ const createStyles = (theme: any) =>
             paddingHorizontal: 20,
         },
         debtCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             marginBottom: 12,
             overflow: "hidden",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         debtCardHeader: {
             flexDirection: "row",
@@ -527,13 +515,13 @@ const createStyles = (theme: any) =>
         personName: {
             fontSize: 15,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
         typeBadge: {
             paddingHorizontal: 8,
             paddingVertical: 3,
-            borderRadius: 8,
+            borderRadius: theme.shape.full,
         },
         typeBadgeText: {
             fontSize: 11,
@@ -542,17 +530,16 @@ const createStyles = (theme: any) =>
         debtAmount: {
             fontSize: 16,
             fontWeight: "700",
-            color: theme.colors.text,
             marginTop: 4,
             letterSpacing: -0.2,
         },
         progressContainer: {
-            marginTop: 8,
+            marginTop: 10,
         },
         progressBar: {
             height: 6,
             borderRadius: 3,
-            backgroundColor: theme.colors.surface,
+            backgroundColor: theme.colors.surfaceContainerHighest,
             overflow: "hidden",
         },
         progressFill: {
@@ -561,7 +548,7 @@ const createStyles = (theme: any) =>
         },
         progressText: {
             fontSize: 11,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 4,
             fontWeight: "500",
         },
@@ -569,16 +556,16 @@ const createStyles = (theme: any) =>
             paddingHorizontal: 16,
             paddingBottom: 16,
             borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: theme.colors.borderLight,
+            borderTopColor: theme.colors.outlineVariant,
         },
         debtDescription: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 12,
         },
         debtDueDate: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 4,
             fontWeight: "500",
         },
@@ -588,7 +575,7 @@ const createStyles = (theme: any) =>
         paymentHistoryTitle: {
             fontSize: 12,
             fontWeight: "700",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 8,
@@ -602,11 +589,11 @@ const createStyles = (theme: any) =>
         paymentAmount: {
             fontSize: 14,
             fontWeight: "600",
-            color: theme.colors.text,
+            color: theme.colors.income,
         },
         paymentDate: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             flex: 1,
         },
         actionRow: {
@@ -617,19 +604,19 @@ const createStyles = (theme: any) =>
         actionBtn: {
             flex: 1,
             height: 40,
-            borderRadius: 10,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
         actionBtnText: {
-            color: theme.colors.textInverse,
+            color: theme.colors.onPrimary,
             fontSize: 13,
             fontWeight: "700",
         },
         actionBtnSmall: {
             width: 40,
             height: 40,
-            borderRadius: 10,
+            borderRadius: theme.shape.medium,
             borderWidth: 1.5,
             alignItems: "center",
             justifyContent: "center",
@@ -643,7 +630,7 @@ const createStyles = (theme: any) =>
         settledHeaderText: {
             fontSize: 15,
             fontWeight: "700",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             letterSpacing: -0.1,
         },
         fab: {
@@ -651,22 +638,19 @@ const createStyles = (theme: any) =>
             right: 20,
             width: 56,
             height: 56,
-            borderRadius: 16,
-            backgroundColor: theme.colors.primary,
+            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
-            elevation: 4,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
+            ...theme.elevation.level3,
+            shadowColor: theme.colors.shadow,
         },
         emptyState: {
             padding: 40,
             alignItems: "center",
         },
         emptyText: {
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textAlign: "center",
             fontSize: 14,
             lineHeight: 20,

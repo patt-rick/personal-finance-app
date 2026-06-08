@@ -38,36 +38,41 @@ export default function CreateCashbookModal({
 
     return (
         <AppModal visible={visible} onClose={onClose} title="New Cashbook" scrollable>
-            <Text style={[s.inputLabel, { color: theme.colors.textSecondary }]}>Cashbook Name</Text>
+            <Text style={[s.inputLabel, { color: theme.colors.onSurfaceVariant }]}>Cashbook Name</Text>
             <TextInput
-                style={[s.input, { color: theme.colors.text, borderColor: theme.colors.border }]}
+                style={[s.input, {
+                    color: theme.colors.onSurface,
+                    borderColor: theme.colors.outline,
+                    backgroundColor: theme.colors.surfaceContainerHighest,
+                }]}
                 placeholder="e.g. My Shop, Personal Expenses"
                 value={businessName}
                 onChangeText={setBusinessName}
-                placeholderTextColor={theme.colors.placeholder}
+                placeholderTextColor={theme.colors.onSurfaceVariant}
             />
 
-            <Text style={[s.inputLabel, { color: theme.colors.textSecondary }]}>Currency</Text>
+            <Text style={[s.inputLabel, { color: theme.colors.onSurfaceVariant }]}>Currency</Text>
             <View style={s.currencyGrid}>
                 {CURRENCIES.map((curr) => (
                     <TouchableOpacity
                         key={curr.value}
                         style={[
                             s.currencyCard,
-                            { backgroundColor: theme.colors.surface },
+                            { backgroundColor: theme.colors.surfaceContainerHigh },
                             selectedCurrency === curr.value && {
-                                backgroundColor: theme.colors.primary,
-                                borderColor: theme.colors.primary,
+                                backgroundColor: theme.colors.secondaryContainer,
+                                borderColor: theme.colors.secondaryContainer,
                             },
                         ]}
                         onPress={() => setSelectedCurrency(curr.value)}
+                        activeOpacity={0.7}
                     >
                         <Text
                             style={[
                                 s.currSym,
-                                { color: theme.colors.text },
+                                { color: theme.colors.onSurface },
                                 selectedCurrency === curr.value && {
-                                    color: theme.colors.textInverse,
+                                    color: theme.colors.onSecondaryContainer,
                                 },
                             ]}
                         >
@@ -76,9 +81,9 @@ export default function CreateCashbookModal({
                         <Text
                             style={[
                                 s.currCode,
-                                { color: theme.colors.textSecondary },
+                                { color: theme.colors.onSurfaceVariant },
                                 selectedCurrency === curr.value && {
-                                    color: theme.colors.textInverse,
+                                    color: theme.colors.onSecondaryContainer,
                                 },
                             ]}
                         >
@@ -91,8 +96,9 @@ export default function CreateCashbookModal({
             <TouchableOpacity
                 style={[s.submitBtn, { backgroundColor: theme.colors.primary }]}
                 onPress={handleSubmit}
+                activeOpacity={0.85}
             >
-                <Text style={[s.submitText, { color: theme.colors.textInverse }]}>
+                <Text style={[s.submitText, { color: theme.colors.onPrimary }]}>
                     Create Cashbook
                 </Text>
             </TouchableOpacity>
@@ -110,7 +116,7 @@ const s = StyleSheet.create({
         marginTop: 12,
     },
     input: {
-        height: 48,
+        height: 52,
         borderRadius: 12,
         borderWidth: 1,
         paddingHorizontal: 14,
@@ -129,6 +135,6 @@ const s = StyleSheet.create({
     },
     currSym: { fontSize: 20, fontWeight: "700" },
     currCode: { fontSize: 10, fontWeight: "600", marginTop: 2 },
-    submitBtn: { height: 52, borderRadius: 14, alignItems: "center", justifyContent: "center" },
+    submitBtn: { height: 52, borderRadius: 999, alignItems: "center", justifyContent: "center" },
     submitText: { fontWeight: "700", fontSize: 15 },
 });

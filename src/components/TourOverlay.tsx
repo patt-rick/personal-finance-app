@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import {
     View,
     Text,
@@ -19,10 +19,12 @@ interface TourOverlayProps {
     page: TourPage;
     steps: TourStep[];
     delay?: number;
+    onComplete?: () => void;
 }
 
-export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayProps) {
+export default function TourOverlay({ page, steps, delay = 600, onComplete }: TourOverlayProps) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const [visible, setVisible] = useState(false);
     const [currentStep, setCurrentStep] = useState(0);
     const backdropOpacity = useRef(new Animated.Value(0)).current;
@@ -107,7 +109,7 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
         if (currentStep < steps.length - 1) {
             animateStepTransition(currentStep + 1);
         } else {
-            dismiss();
+            finish();
         }
     }, [currentStep, steps.length]);
 
@@ -115,6 +117,14 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
         markTourCompleted(page);
         animateOut(() => setVisible(false));
     }, [page]);
+
+    const finish = useCallback(() => {
+        markTourCompleted(page);
+        animateOut(() => {
+            setVisible(false);
+            onComplete?.();
+        });
+    }, [page, onComplete]);
 
     if (!visible || steps.length === 0) return null;
 
@@ -148,10 +158,7 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
                 pointerEvents="box-none"
             >
                 <View
-                    style={[
-                        styles.card,
-                        { backgroundColor: theme.colors.card, shadowColor: theme.colors.shadow },
-                    ]}
+                    style={styles.card}
                     pointerEvents="auto"
                 >
                     <View style={styles.stepIndicatorRow}>
@@ -164,7 +171,7 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
                                         backgroundColor:
                                             i === currentStep
                                                 ? theme.colors.primary
-                                                : theme.colors.border,
+                                                : theme.colors.outlineVariant,
                                         width: i === currentStep ? 20 : 6,
                                     },
                                 ]}
@@ -173,36 +180,28 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
                     </View>
 
                     <Animated.View style={[styles.contentArea, { opacity: contentOpacity }]}>
-                        <View
-                            style={[
-                                styles.iconContainer,
-                                { backgroundColor: theme.colors.primary + "14" },
-                            ]}
-                        >
+                        <View style={styles.iconContainer}>
                             {step.icon}
                         </View>
-                        <Text style={[styles.title, { color: theme.colors.text }]}>
+                        <Text style={styles.title}>
                             {step.title}
                         </Text>
-                        <Text style={[styles.description, { color: theme.colors.textSecondary }]}>
+                        <Text style={styles.description}>
                             {step.description}
                         </Text>
                     </Animated.View>
 
                     <View style={styles.footer}>
                         <TouchableOpacity onPress={dismiss} style={styles.skipBtn}>
-                            <Text style={[styles.skipText, { color: theme.colors.textSecondary }]}>
+                            <Text style={styles.skipText}>
                                 Skip
                             </Text>
                         </TouchableOpacity>
                         <TouchableOpacity
                             onPress={handleNext}
-                            style={[
-                                styles.nextBtn,
-                                { backgroundColor: theme.colors.primary },
-                            ]}
+                            style={styles.nextBtn}
                         >
-                            <Text style={[styles.nextText, { color: theme.colors.textInverse }]}>
+                            <Text style={styles.nextText}>
                                 {isLast ? "Got it" : "Next"}
                             </Text>
                         </TouchableOpacity>
@@ -213,81 +212,92 @@ export default function TourOverlay({ page, steps, delay = 600 }: TourOverlayPro
     );
 }
 
-const styles = StyleSheet.create({
-    backdrop: {
-        ...StyleSheet.absoluteFillObject,
-        backgroundColor: "rgba(0,0,0,0.4)",
-    },
-    cardContainer: {
-        position: "absolute",
-        bottom: 100,
-        left: 20,
-        right: 20,
-    },
-    card: {
-        borderRadius: 20,
-        padding: 24,
-        elevation: 12,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.15,
-        shadowRadius: 24,
-    },
-    stepIndicatorRow: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        gap: 5,
-        marginBottom: 20,
-    },
-    stepDot: {
-        height: 6,
-        borderRadius: 3,
-    },
-    contentArea: {
-        alignItems: "center",
-        marginBottom: 24,
-    },
-    iconContainer: {
-        width: 52,
-        height: 52,
-        borderRadius: 16,
-        alignItems: "center",
-        justifyContent: "center",
-        marginBottom: 14,
-    },
-    title: {
-        fontSize: 17,
-        fontWeight: "700",
-        letterSpacing: -0.2,
-        marginBottom: 6,
-        textAlign: "center",
-    },
-    description: {
-        fontSize: 14,
-        lineHeight: 20,
-        textAlign: "center",
-        paddingHorizontal: 4,
-    },
-    footer: {
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "space-between",
-    },
-    skipBtn: {
-        paddingVertical: 10,
-        paddingHorizontal: 16,
-    },
-    skipText: {
-        fontSize: 14,
-        fontWeight: "600",
-    },
-    nextBtn: {
-        paddingVertical: 10,
-        paddingHorizontal: 24,
-        borderRadius: 12,
-    },
-    nextText: {
-        fontSize: 14,
-        fontWeight: "700",
-    },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        backdrop: {
+            ...StyleSheet.absoluteFillObject,
+            backgroundColor: "rgba(0,0,0,0.6)",
+        },
+        cardContainer: {
+            position: "absolute",
+            bottom: 100,
+            left: 20,
+            right: 20,
+        },
+        card: {
+            borderRadius: theme.shape.extraLarge,
+            padding: 24,
+            backgroundColor: theme.colors.surfaceContainerHigh,
+            ...theme.elevation.level3,
+            shadowColor: theme.colors.shadow,
+        },
+        stepIndicatorRow: {
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            gap: 5,
+            marginBottom: 20,
+        },
+        stepDot: {
+            height: 6,
+            borderRadius: 3,
+        },
+        contentArea: {
+            alignItems: "center",
+            marginBottom: 24,
+        },
+        iconContainer: {
+            width: 52,
+            height: 52,
+            borderRadius: 26,
+            alignItems: "center",
+            justifyContent: "center",
+            marginBottom: 14,
+            backgroundColor: theme.colors.primaryContainer,
+        },
+        title: {
+            fontSize: 17,
+            fontWeight: "700",
+            letterSpacing: -0.2,
+            marginBottom: 6,
+            textAlign: "center",
+            color: theme.colors.onSurface,
+        },
+        description: {
+            fontSize: 14,
+            lineHeight: 20,
+            textAlign: "center",
+            paddingHorizontal: 4,
+            color: theme.colors.onSurfaceVariant,
+        },
+        footer: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
+        },
+        skipBtn: {
+            paddingVertical: 10,
+            paddingHorizontal: 16,
+        },
+        skipText: {
+            fontSize: 14,
+            fontWeight: "600",
+            color: theme.colors.onSurfaceVariant,
+        },
+        nextBtn: {
+            paddingVertical: 12,
+            paddingHorizontal: 28,
+            borderRadius: theme.shape.full,
+            minHeight: 44,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.primary,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
+        },
+        nextText: {
+            fontSize: 14,
+            fontWeight: "700",
+            color: theme.colors.onPrimary,
+        },
+    });

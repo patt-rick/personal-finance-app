@@ -162,13 +162,15 @@ export default function RecurringTransactionsScreen({
 
     const renderItem = (item: RecurringTransaction) => {
         const isIncome = item.type === "income";
-        const color = isIncome ? theme.colors.income : theme.colors.expense;
+        const amountColor = isIncome ? theme.colors.income : theme.colors.expense;
+        const iconBg = isIncome ? theme.colors.incomeContainer : theme.colors.expenseContainer;
+        const iconColor = isIncome ? theme.colors.onIncomeContainer : theme.colors.onExpenseContainer;
 
         return (
             <View key={item.id} style={styles.itemCard}>
                 <View style={styles.itemRow}>
-                    <View style={[styles.itemIcon, { backgroundColor: isIncome ? theme.colors.incomeBg : theme.colors.expenseBg }]}>
-                        <Repeat size={18} color={color} />
+                    <View style={[styles.itemIcon, { backgroundColor: iconBg }]}>
+                        <Repeat size={18} color={iconColor} />
                     </View>
                     <View style={styles.itemInfo}>
                         <Text style={styles.itemTitle} numberOfLines={1}>
@@ -180,11 +182,11 @@ export default function RecurringTransactionsScreen({
                         </Text>
                     </View>
                     <View style={styles.itemRight}>
-                        <Text style={[styles.itemAmount, { color }]}>
+                        <Text style={[styles.itemAmount, { color: amountColor }]}>
                             {isIncome ? "+" : "-"}
                             {item.amount.toLocaleString()}
                         </Text>
-                        <View style={[styles.freqBadge, { backgroundColor: theme.colors.surface }]}>
+                        <View style={styles.freqBadge}>
                             <Text style={styles.freqBadgeText}>
                                 {FREQUENCY_LABELS[item.frequency]}
                             </Text>
@@ -201,21 +203,21 @@ export default function RecurringTransactionsScreen({
                             onPress={() => handleEdit(item)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                            <Pencil size={15} color={theme.colors.textSecondary} />
+                            <Pencil size={15} color={theme.colors.onSurfaceVariant} />
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.actionBtn}
+                            style={[styles.actionBtn, item.isActive ? styles.actionBtnPause : styles.actionBtnPlay]}
                             onPress={() => handleToggleActive(item)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
                             {item.isActive ? (
-                                <Pause size={15} color={theme.colors.textSecondary} />
+                                <Pause size={15} color={theme.colors.onSurfaceVariant} />
                             ) : (
-                                <Play size={15} color={theme.colors.income} />
+                                <Play size={15} color={theme.colors.onIncomeContainer} />
                             )}
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={styles.actionBtn}
+                            style={[styles.actionBtn, styles.actionBtnDelete]}
                             onPress={() => handleDelete(item)}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
@@ -231,15 +233,13 @@ export default function RecurringTransactionsScreen({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.headerDecoration, { height: 180 + insets.top }]} />
-
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity
                     style={styles.backBtn}
                     onPress={onBack}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Recurring</Text>
             </View>
@@ -253,7 +253,7 @@ export default function RecurringTransactionsScreen({
                 {isEmpty ? (
                     <View style={styles.emptyState}>
                         <View style={styles.emptyIcon}>
-                            <Repeat size={32} color={theme.colors.textSecondary} />
+                            <Repeat size={32} color={theme.colors.onSecondaryContainer} />
                         </View>
                         <Text style={styles.emptyTitle}>No Recurring Transactions</Text>
                         <Text style={styles.emptySubtitle}>
@@ -283,7 +283,7 @@ export default function RecurringTransactionsScreen({
                 onPress={handleAdd}
                 activeOpacity={0.8}
             >
-                <Plus size={24} color={theme.colors.textInverse} />
+                <Plus size={24} color={theme.colors.onPrimaryContainer} />
             </TouchableOpacity>
 
             <RecurringTransactionModal
@@ -304,16 +304,6 @@ export default function RecurringTransactionsScreen({
 const createStyles = (theme: any) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
-        headerDecoration: {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: theme.colors.incomeBg,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            opacity: 0.6,
-        },
         header: {
             flexDirection: "row",
             alignItems: "center",
@@ -322,22 +312,19 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.3,
         },
         section: {
@@ -346,7 +333,7 @@ const createStyles = (theme: any) =>
         },
         sectionLabel: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginBottom: 10,
             marginLeft: 4,
@@ -354,24 +341,21 @@ const createStyles = (theme: any) =>
             letterSpacing: 0.8,
         },
         itemCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             padding: 14,
             marginBottom: 10,
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         itemRow: {
             flexDirection: "row",
             alignItems: "center",
         },
         itemIcon: {
-            width: 42,
-            height: 42,
-            borderRadius: 12,
+            width: 44,
+            height: 44,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -382,12 +366,12 @@ const createStyles = (theme: any) =>
         itemTitle: {
             fontSize: 15,
             fontWeight: "600",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
         itemMeta: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 2,
         },
         itemRight: {
@@ -401,13 +385,14 @@ const createStyles = (theme: any) =>
         freqBadge: {
             paddingHorizontal: 8,
             paddingVertical: 3,
-            borderRadius: 8,
+            borderRadius: theme.shape.full,
             marginTop: 4,
+            backgroundColor: theme.colors.secondaryContainer,
         },
         freqBadgeText: {
             fontSize: 10,
             fontWeight: "600",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSecondaryContainer,
             textTransform: "uppercase",
             letterSpacing: 0.3,
         },
@@ -418,24 +403,33 @@ const createStyles = (theme: any) =>
             marginTop: 10,
             paddingTop: 10,
             borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: theme.colors.borderLight,
+            borderTopColor: theme.colors.outlineVariant,
         },
         nextDueText: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             fontWeight: "500",
         },
         itemActions: {
             flexDirection: "row",
-            gap: 12,
+            gap: 8,
         },
         actionBtn: {
-            width: 30,
-            height: 30,
-            borderRadius: 8,
-            backgroundColor: theme.colors.surface,
+            width: 32,
+            height: 32,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             alignItems: "center",
             justifyContent: "center",
+        },
+        actionBtnPause: {
+            backgroundColor: theme.colors.surfaceContainerHigh,
+        },
+        actionBtnPlay: {
+            backgroundColor: theme.colors.incomeContainer,
+        },
+        actionBtnDelete: {
+            backgroundColor: theme.colors.errorContainer,
         },
         emptyState: {
             alignItems: "center",
@@ -445,8 +439,8 @@ const createStyles = (theme: any) =>
         emptyIcon: {
             width: 80,
             height: 80,
-            borderRadius: 40,
-            backgroundColor: theme.colors.surface,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.secondaryContainer,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 16,
@@ -454,12 +448,12 @@ const createStyles = (theme: any) =>
         emptyTitle: {
             fontSize: 17,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             marginBottom: 8,
         },
         emptySubtitle: {
             fontSize: 14,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textAlign: "center",
             lineHeight: 20,
         },
@@ -468,14 +462,11 @@ const createStyles = (theme: any) =>
             right: 20,
             width: 56,
             height: 56,
-            borderRadius: 16,
-            backgroundColor: theme.colors.primary,
+            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
-            elevation: 4,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.3,
-            shadowRadius: 8,
+            ...theme.elevation.level3,
+            shadowColor: theme.colors.shadow,
         },
     });

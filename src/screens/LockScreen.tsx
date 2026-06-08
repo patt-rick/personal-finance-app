@@ -47,12 +47,8 @@ interface LockScreenProps {
 }
 
 function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string }) {
-    const primaryLight = isDark
-        ? "rgba(45, 106, 79, 0.12)"
-        : "rgba(45, 106, 79, 0.07)";
-    const primaryMedium = isDark
-        ? "rgba(45, 106, 79, 0.2)"
-        : "rgba(45, 106, 79, 0.10)";
+    const theme = useTheme();
+    const primaryContainer = theme.colors.primaryContainer;
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -74,7 +70,8 @@ function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string 
                         C${width * 0.5},${height * 0.05} ${width * 1.1},${height * 0.12} ${width},${height * 0.22}
                         L${width},${height * 0.15}
                         C${width * 0.9},${height * 0.08} ${width * 0.55},${height * 0.03} ${width * 0.82},0 Z`}
-                    fill={primaryMedium}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.3 : 0.5}
                 />
                 <Path
                     d={`M0,${height * 0.82}
@@ -89,7 +86,8 @@ function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string 
                         C${width * 0.08},${height * 0.85} ${width * 0.12},${height * 0.93} ${width * 0.3},${height * 0.92}
                         C${width * 0.38},${height * 0.915} ${width * 0.35},${height * 0.97} ${width * 0.42},${height}
                         L0,${height} Z`}
-                    fill={primaryLight}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.2 : 0.35}
                 />
             </Svg>
         </View>
@@ -101,7 +99,6 @@ function PinDot({
     error,
     shakeAnim,
     theme,
-    isDark,
 }: {
     filled: boolean;
     error: boolean;
@@ -146,13 +143,11 @@ function PinDot({
 
     const dotColor = error ? theme.colors.error : theme.colors.primary;
     const glowColor = error
-        ? "rgba(196, 69, 58, 0.35)"
-        : "rgba(45, 106, 79, 0.35)";
-    const ringColor = error
-        ? "rgba(196, 69, 58, 0.5)"
-        : isDark
-            ? "rgba(255, 255, 255, 0.15)"
-            : "rgba(0, 0, 0, 0.12)";
+        ? theme.colors.errorContainer
+        : theme.colors.primaryContainer;
+    const ringBorderColor = error
+        ? theme.colors.error
+        : theme.colors.outlineVariant;
 
     return (
         <Animated.View
@@ -167,7 +162,7 @@ function PinDot({
                     { backgroundColor: glowColor, opacity: glowOpacity },
                 ]}
             />
-            <View style={[dotStyles.ring, { borderColor: ringColor }]}>
+            <View style={[dotStyles.ring, { borderColor: ringBorderColor }]}>
                 <Animated.View
                     style={[
                         dotStyles.fill,
@@ -184,7 +179,6 @@ function NumKey({
     onPress,
     disabled,
     theme,
-    isDark,
 }: {
     label: string;
     onPress: () => void;
@@ -226,23 +220,15 @@ function NumKey({
                     {
                         transform: [{ scale: pressAnim }],
                         opacity: disabled ? 0.3 : 1,
-                        backgroundColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.03)",
-                        borderColor: isDark
-                            ? "rgba(255, 255, 255, 0.08)"
-                            : "rgba(0, 0, 0, 0.06)",
+                        backgroundColor: theme.colors.surfaceContainerHigh,
+                        borderColor: theme.colors.outlineVariant,
                     },
                 ]}
             >
                 <Text
                     style={[
                         keypadStyles.label,
-                        {
-                            color: isDark
-                                ? "rgba(255, 255, 255, 0.85)"
-                                : theme.colors.text,
-                        },
+                        { color: theme.colors.onSurface },
                     ]}
                 >
                     {label}
@@ -352,10 +338,12 @@ export default function LockScreen({
 
     const keys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
     const BiometricIcon = biometricType === "Face ID" ? ScanFace : Fingerprint;
-    const iconColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)";
-    const iconDisabledColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.1)";
-    const deleteColor =
-        isLockedOut || pin.length === 0 ? iconDisabledColor : iconColor;
+    const deleteIconColor = isLockedOut || pin.length === 0
+        ? theme.colors.outlineVariant
+        : theme.colors.onSurfaceVariant;
+    const biometricIconColor = isLockedOut
+        ? theme.colors.outlineVariant
+        : theme.colors.onSurfaceVariant;
 
     if (showRecovery) {
         return (
@@ -385,14 +373,9 @@ export default function LockScreen({
                         style={[
                             styles.logoContainer,
                             {
-                                backgroundColor: isDark
-                                    ? "rgba(45, 106, 79, 0.12)"
-                                    : theme.colors.card,
-                                shadowColor: theme.colors.primary,
-                                shadowOffset: { width: 0, height: 4 },
-                                shadowOpacity: isDark ? 0.25 : 0.1,
-                                shadowRadius: 16,
-                                elevation: 8,
+                                backgroundColor: theme.colors.surfaceContainerLow,
+                                ...theme.elevation.level2,
+                                shadowColor: theme.colors.shadow,
                             },
                         ]}
                     >
@@ -405,7 +388,7 @@ export default function LockScreen({
                     <Text
                         style={[
                             styles.title,
-                            { color: theme.colors.text },
+                            { color: theme.colors.onSurface },
                         ]}
                     >
                         {isLockedOut ? "Too Many Attempts" : "Enter PIN"}
@@ -425,11 +408,7 @@ export default function LockScreen({
                         <View
                             style={[
                                 styles.lockoutBar,
-                                {
-                                    backgroundColor: isDark
-                                        ? "rgba(255, 255, 255, 0.06)"
-                                        : "rgba(0, 0, 0, 0.05)",
-                                },
+                                { backgroundColor: theme.colors.surfaceContainerHighest },
                             ]}
                         >
                             <View
@@ -494,7 +473,7 @@ export default function LockScreen({
                             >
                                 <BiometricIcon
                                     size={26}
-                                    color={isLockedOut ? iconDisabledColor : iconColor}
+                                    color={biometricIconColor}
                                 />
                             </TouchableOpacity>
                         ) : (
@@ -514,7 +493,7 @@ export default function LockScreen({
                             onPress={handleDelete}
                             disabled={isLockedOut || pin.length === 0}
                         >
-                            <Delete size={24} color={deleteColor} />
+                            <Delete size={24} color={deleteIconColor} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -568,8 +547,6 @@ function PinRecoveryScreen({
     const [confirmPin, setConfirmPin] = useState("");
     const [pinError, setPinError] = useState("");
     const shakeAnim = useRef(new Animated.Value(0)).current;
-
-    const iconColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)";
 
     useEffect(() => {
         getSecurityQuestions().then((qs) => {
@@ -690,25 +667,14 @@ function PinRecoveryScreen({
                     style={[
                         styles.backButton,
                         {
-                            backgroundColor: isDark
-                                ? "rgba(255, 255, 255, 0.06)"
-                                : "rgba(0, 0, 0, 0.04)",
-                            borderColor: isDark
-                                ? "rgba(255, 255, 255, 0.08)"
-                                : "rgba(0, 0, 0, 0.06)",
+                            backgroundColor: theme.colors.surfaceContainerHigh,
+                            borderColor: theme.colors.outlineVariant,
                         },
                     ]}
                     onPress={onBack}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                    <ArrowLeft
-                        size={22}
-                        color={
-                            isDark
-                                ? "rgba(255, 255, 255, 0.7)"
-                                : "rgba(0, 0, 0, 0.5)"
-                        }
-                    />
+                    <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
                 </TouchableOpacity>
                 <KeyboardAvoidingView
                     style={{ flex: 1 }}
@@ -723,19 +689,15 @@ function PinRecoveryScreen({
                         <View
                             style={[
                                 recoveryStyles.iconCircle,
-                                {
-                                    backgroundColor: isDark
-                                        ? "rgba(45, 106, 79, 0.15)"
-                                        : "rgba(45, 106, 79, 0.1)",
-                                },
+                                { backgroundColor: theme.colors.primaryContainer },
                             ]}
                         >
-                            <Shield size={28} color={theme.colors.primary} />
+                            <Shield size={28} color={theme.colors.onPrimaryContainer} />
                         </View>
                         <Text
                             style={[
                                 recoveryStyles.title,
-                                { color: theme.colors.text },
+                                { color: theme.colors.onSurface },
                             ]}
                         >
                             Recover Your PIN
@@ -743,7 +705,7 @@ function PinRecoveryScreen({
                         <Text
                             style={[
                                 recoveryStyles.subtitle,
-                                { color: theme.colors.textSecondary },
+                                { color: theme.colors.onSurfaceVariant },
                             ]}
                         >
                             Answer your security questions to reset your PIN
@@ -753,7 +715,7 @@ function PinRecoveryScreen({
                             <Text
                                 style={[
                                     recoveryStyles.label,
-                                    { color: theme.colors.textSecondary },
+                                    { color: theme.colors.onSurfaceVariant },
                                 ]}
                             >
                                 {questions.q1}
@@ -762,21 +724,13 @@ function PinRecoveryScreen({
                                 style={[
                                     recoveryStyles.input,
                                     {
-                                        backgroundColor: isDark
-                                            ? "rgba(255, 255, 255, 0.06)"
-                                            : "rgba(0, 0, 0, 0.03)",
-                                        borderColor: isDark
-                                            ? "rgba(255, 255, 255, 0.08)"
-                                            : "rgba(0, 0, 0, 0.08)",
-                                        color: theme.colors.text,
+                                        backgroundColor: theme.colors.surfaceContainerHighest,
+                                        borderColor: theme.colors.outline,
+                                        color: theme.colors.onSurface,
                                     },
                                 ]}
                                 placeholder="Your answer"
-                                placeholderTextColor={
-                                    isDark
-                                        ? "rgba(255,255,255,0.25)"
-                                        : "rgba(0,0,0,0.25)"
-                                }
+                                placeholderTextColor={theme.colors.onSurfaceVariant}
                                 value={a1}
                                 onChangeText={(t) => {
                                     setA1(t);
@@ -803,7 +757,7 @@ function PinRecoveryScreen({
                             <Text
                                 style={[
                                     recoveryStyles.label,
-                                    { color: theme.colors.textSecondary },
+                                    { color: theme.colors.onSurfaceVariant },
                                 ]}
                             >
                                 {questions.q2}
@@ -812,21 +766,13 @@ function PinRecoveryScreen({
                                 style={[
                                     recoveryStyles.input,
                                     {
-                                        backgroundColor: isDark
-                                            ? "rgba(255, 255, 255, 0.06)"
-                                            : "rgba(0, 0, 0, 0.03)",
-                                        borderColor: isDark
-                                            ? "rgba(255, 255, 255, 0.08)"
-                                            : "rgba(0, 0, 0, 0.08)",
-                                        color: theme.colors.text,
+                                        backgroundColor: theme.colors.surfaceContainerHighest,
+                                        borderColor: theme.colors.outline,
+                                        color: theme.colors.onSurface,
                                     },
                                 ]}
                                 placeholder="Your answer"
-                                placeholderTextColor={
-                                    isDark
-                                        ? "rgba(255,255,255,0.25)"
-                                        : "rgba(0,0,0,0.25)"
-                                }
+                                placeholderTextColor={theme.colors.onSurfaceVariant}
                                 value={a2}
                                 onChangeText={(t) => {
                                     setA2(t);
@@ -861,9 +807,7 @@ function PinRecoveryScreen({
                                 {
                                     backgroundColor:
                                         !canSubmit || verifying
-                                            ? isDark
-                                                ? "rgba(45, 106, 79, 0.25)"
-                                                : "rgba(45, 106, 79, 0.3)"
+                                            ? theme.colors.surfaceContainerHighest
                                             : theme.colors.primary,
                                 },
                             ]}
@@ -876,10 +820,8 @@ function PinRecoveryScreen({
                                     {
                                         color:
                                             !canSubmit || verifying
-                                                ? isDark
-                                                    ? "rgba(255, 255, 255, 0.4)"
-                                                    : "rgba(255, 255, 255, 0.6)"
-                                                : theme.colors.textInverse,
+                                                ? theme.colors.onSurfaceVariant
+                                                : theme.colors.onPrimary,
                                     },
                                 ]}
                             >
@@ -899,6 +841,9 @@ function PinRecoveryScreen({
             ? "Choose a new 4-digit PIN"
             : "Re-enter your new PIN";
     const pinKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
+    const deleteIconColor = currentPin.length === 0
+        ? theme.colors.outlineVariant
+        : theme.colors.onSurfaceVariant;
 
     return (
         <View
@@ -917,12 +862,8 @@ function PinRecoveryScreen({
                 style={[
                     styles.backButton,
                     {
-                        backgroundColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.04)",
-                        borderColor: isDark
-                            ? "rgba(255, 255, 255, 0.08)"
-                            : "rgba(0, 0, 0, 0.06)",
+                        backgroundColor: theme.colors.surfaceContainerHigh,
+                        borderColor: theme.colors.outlineVariant,
                     },
                 ]}
                 onPress={() => {
@@ -938,24 +879,17 @@ function PinRecoveryScreen({
                 }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft
-                    size={22}
-                    color={
-                        isDark
-                            ? "rgba(255, 255, 255, 0.7)"
-                            : "rgba(0, 0, 0, 0.5)"
-                    }
-                />
+                <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
             </TouchableOpacity>
 
             <View style={styles.content}>
-                <Text style={[styles.title, { color: theme.colors.text }]}>
+                <Text style={[styles.title, { color: theme.colors.onSurface }]}>
                     {pinTitle}
                 </Text>
                 <Text
                     style={[
                         recoveryStyles.pinSubtitle,
-                        { color: theme.colors.textSecondary },
+                        { color: theme.colors.onSurfaceVariant },
                     ]}
                 >
                     {pinSub}
@@ -975,9 +909,7 @@ function PinRecoveryScreen({
                                 {
                                     borderColor: pinError
                                         ? theme.colors.error
-                                        : isDark
-                                            ? "rgba(255, 255, 255, 0.2)"
-                                            : "rgba(0, 0, 0, 0.15)",
+                                        : theme.colors.outlineVariant,
                                 },
                                 i < currentPin.length && {
                                     backgroundColor: pinError
@@ -1030,16 +962,7 @@ function PinRecoveryScreen({
                             onPress={handlePinDelete}
                             disabled={currentPin.length === 0}
                         >
-                            <Delete
-                                size={24}
-                                color={
-                                    currentPin.length === 0
-                                        ? isDark
-                                            ? "rgba(255,255,255,0.15)"
-                                            : "rgba(0,0,0,0.1)"
-                                        : iconColor
-                                }
-                            />
+                            <Delete size={24} color={deleteIconColor} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -1207,7 +1130,7 @@ const recoveryStyles = StyleSheet.create({
     iconCircle: {
         width: 64,
         height: 64,
-        borderRadius: 20,
+        borderRadius: 32,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 20,
@@ -1237,7 +1160,7 @@ const recoveryStyles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         paddingHorizontal: 16,
-        height: 48,
+        height: 52,
         fontSize: 14,
     },
     error: {
@@ -1249,7 +1172,7 @@ const recoveryStyles = StyleSheet.create({
     submitBtn: {
         width: "100%",
         height: 52,
-        borderRadius: 14,
+        borderRadius: 999,
         alignItems: "center",
         justifyContent: "center",
         marginTop: 12,

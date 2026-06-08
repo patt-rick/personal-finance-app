@@ -7,6 +7,7 @@ import {
     ScrollView,
     Alert,
     Platform,
+    StyleSheet,
 } from "react-native";
 import { X, Calendar } from "lucide-react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
@@ -40,7 +41,8 @@ export default function DebtEntryModal({
     onSubmit,
 }: DebtEntryModalProps) {
     const theme = useTheme();
-    const styles = React.useMemo(() => createDashboardStyles(theme), [theme]);
+    const dashStyles = React.useMemo(() => createDashboardStyles(theme), [theme]);
+    const styles = React.useMemo(() => createStyles(theme), [theme]);
 
     const [personName, setPersonName] = useState("");
     const [amount, setAmount] = useState("");
@@ -114,7 +116,6 @@ export default function DebtEntryModal({
     };
 
     const isOwedToMe = type === "owed_to_me";
-    const accentColor = isOwedToMe ? theme.colors.income : theme.colors.expense;
 
     return (
         <AppModal
@@ -124,9 +125,9 @@ export default function DebtEntryModal({
             showHandle={false}
             scrollable
         >
-            <Text style={styles.inputLabelModern}>Person Name</Text>
+            <Text style={dashStyles.inputLabelModern}>Person Name</Text>
             <TextInput
-                style={styles.modalInputModern}
+                style={dashStyles.modalInputModern}
                 placeholder="Who is this debt with?"
                 placeholderTextColor={theme.colors.placeholder}
                 value={personName}
@@ -134,11 +135,11 @@ export default function DebtEntryModal({
                 autoFocus
             />
 
-            <Text style={styles.inputLabelModern}>
+            <Text style={dashStyles.inputLabelModern}>
                 Amount ({getCurrencySymbol(currency)})
             </Text>
             <TextInput
-                style={styles.modalInputLargeModern}
+                style={dashStyles.modalInputLargeModern}
                 placeholder="0.00"
                 placeholderTextColor={theme.colors.placeholder}
                 keyboardType="decimal-pad"
@@ -146,85 +147,65 @@ export default function DebtEntryModal({
                 onChangeText={setAmount}
             />
 
-            <Text style={styles.inputLabelModern}>Type</Text>
-            <View style={{ flexDirection: "row", gap: 10, marginBottom: 24 }}>
+            <Text style={dashStyles.inputLabelModern}>Type</Text>
+            <View style={styles.typeRow}>
                 <TouchableOpacity
-                    style={{
-                        flex: 1,
-                        paddingVertical: 10,
-                        borderRadius: 10,
-                        alignItems: "center",
-                        backgroundColor: isOwedToMe
-                            ? theme.colors.incomeBg
-                            : theme.colors.surface,
-                        borderWidth: 1.5,
-                        borderColor: isOwedToMe
-                            ? theme.colors.income
-                            : theme.colors.border,
-                    }}
+                    style={[
+                        styles.typeBtn,
+                        isOwedToMe
+                            ? styles.typeBtnActiveIncome
+                            : styles.typeBtnInactive,
+                    ]}
                     onPress={() => setType("owed_to_me")}
                 >
                     <Text
-                        style={{
-                            fontSize: 13,
-                            fontWeight: "600",
-                            color: isOwedToMe
-                                ? theme.colors.income
-                                : theme.colors.textSecondary,
-                        }}
+                        style={[
+                            styles.typeBtnText,
+                            { color: isOwedToMe ? theme.colors.onIncomeContainer : theme.colors.onSurfaceVariant },
+                        ]}
                     >
                         Owed to Me
                     </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
-                    style={{
-                        flex: 1,
-                        paddingVertical: 10,
-                        borderRadius: 10,
-                        alignItems: "center",
-                        backgroundColor: !isOwedToMe
-                            ? theme.colors.expenseBg
-                            : theme.colors.surface,
-                        borderWidth: 1.5,
-                        borderColor: !isOwedToMe
-                            ? theme.colors.expense
-                            : theme.colors.border,
-                    }}
+                    style={[
+                        styles.typeBtn,
+                        !isOwedToMe
+                            ? styles.typeBtnActiveExpense
+                            : styles.typeBtnInactive,
+                    ]}
                     onPress={() => setType("i_owe")}
                 >
                     <Text
-                        style={{
-                            fontSize: 13,
-                            fontWeight: "600",
-                            color: !isOwedToMe
-                                ? theme.colors.expense
-                                : theme.colors.textSecondary,
-                        }}
+                        style={[
+                            styles.typeBtnText,
+                            { color: !isOwedToMe ? theme.colors.onExpenseContainer : theme.colors.onSurfaceVariant },
+                        ]}
                     >
                         I Owe
                     </Text>
                 </TouchableOpacity>
             </View>
 
-            <Text style={styles.inputLabelModern}>Currency</Text>
+            <Text style={dashStyles.inputLabelModern}>Currency</Text>
             <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                style={styles.categoryPicker}
+                style={dashStyles.categoryPicker}
             >
                 {CURRENCIES.map((c) => (
                     <TouchableOpacity
                         key={c}
                         style={[
-                            styles.categoryChip,
-                            currency === c && styles.categoryChipActive,
+                            dashStyles.categoryChip,
+                            currency === c && dashStyles.categoryChipActive,
                         ]}
                         onPress={() => setCurrency(c)}
                     >
                         <Text
                             style={[
-                                styles.categoryChipText,
-                                currency === c && styles.categoryChipTextActive,
+                                dashStyles.categoryChipText,
+                                currency === c && dashStyles.categoryChipTextActive,
                             ]}
                         >
                             {getCurrencySymbol(c)} {c}
@@ -233,45 +214,39 @@ export default function DebtEntryModal({
                 ))}
             </ScrollView>
 
-            <Text style={styles.inputLabelModern}>Description (Optional)</Text>
+            <Text style={dashStyles.inputLabelModern}>Description (Optional)</Text>
             <TextInput
-                style={styles.modalInputModern}
+                style={dashStyles.modalInputModern}
                 placeholder="What is this debt for?"
                 placeholderTextColor={theme.colors.placeholder}
                 value={description}
                 onChangeText={setDescription}
             />
 
-            <Text style={styles.inputLabelModern}>Due Date (Optional)</Text>
-            <View style={{ marginBottom: 24 }}>
-                <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+            <Text style={dashStyles.inputLabelModern}>Due Date (Optional)</Text>
+            <View style={styles.dateFieldWrap}>
+                <View style={styles.dateRow}>
                     <TouchableOpacity
-                        style={{
-                            flex: 1,
-                            flexDirection: "row",
-                            alignItems: "center",
-                            gap: 10,
-                            height: 48,
-                            borderRadius: 12,
-                            borderWidth: 1,
-                            borderColor: showDatePicker
-                                ? theme.colors.primary
-                                : theme.colors.border,
-                            backgroundColor: theme.colors.background,
-                            paddingHorizontal: 16,
-                        }}
+                        style={[
+                            styles.dateBtn,
+                            {
+                                borderColor: showDatePicker
+                                    ? theme.colors.primary
+                                    : theme.colors.outline,
+                                backgroundColor: theme.colors.surfaceContainerHighest,
+                            },
+                        ]}
                         onPress={() => setShowDatePicker(!showDatePicker)}
                     >
                         <Calendar
                             size={16}
-                            color={dueDate ? theme.colors.primary : theme.colors.textSecondary}
+                            color={dueDate ? theme.colors.primary : theme.colors.onSurfaceVariant}
                         />
                         <Text
-                            style={{
-                                fontSize: 14,
-                                color: dueDate ? theme.colors.text : theme.colors.placeholder,
-                                fontWeight: dueDate ? "600" : "400",
-                            }}
+                            style={[
+                                styles.dateBtnText,
+                                { color: dueDate ? theme.colors.onSurface : theme.colors.placeholder },
+                            ]}
                         >
                             {dueDate ? formatDueDate(dueDate) : "No due date"}
                         </Text>
@@ -284,7 +259,7 @@ export default function DebtEntryModal({
                             }}
                             hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                         >
-                            <X size={20} color={theme.colors.textSecondary} />
+                            <X size={20} color={theme.colors.onSurfaceVariant} />
                         </TouchableOpacity>
                     )}
                 </View>
@@ -299,11 +274,65 @@ export default function DebtEntryModal({
             </View>
 
             <TouchableOpacity
-                style={[styles.submitBtnModern, { backgroundColor: accentColor }]}
+                style={dashStyles.submitBtnModern}
                 onPress={handleSubmit}
             >
-                <Text style={styles.submitBtnTextModern}>Save Debt</Text>
+                <Text style={dashStyles.submitBtnTextModern}>Save Debt</Text>
             </TouchableOpacity>
         </AppModal>
     );
 }
+
+const createStyles = (theme: any) =>
+    StyleSheet.create({
+        typeRow: {
+            flexDirection: "row",
+            gap: 10,
+            marginBottom: 24,
+        },
+        typeBtn: {
+            flex: 1,
+            paddingVertical: 12,
+            borderRadius: theme.shape.small,
+            alignItems: "center",
+            borderWidth: 1.5,
+        },
+        typeBtnInactive: {
+            backgroundColor: "transparent",
+            borderColor: theme.colors.outlineVariant,
+        },
+        typeBtnActiveIncome: {
+            backgroundColor: theme.colors.incomeContainer,
+            borderColor: theme.colors.incomeContainer,
+        },
+        typeBtnActiveExpense: {
+            backgroundColor: theme.colors.expenseContainer,
+            borderColor: theme.colors.expenseContainer,
+        },
+        typeBtnText: {
+            fontSize: 13,
+            fontWeight: "600",
+        },
+        dateFieldWrap: {
+            marginBottom: 24,
+        },
+        dateRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+        },
+        dateBtn: {
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            height: 52,
+            borderRadius: theme.shape.medium,
+            borderWidth: 1,
+            paddingHorizontal: 16,
+        },
+        dateBtnText: {
+            fontSize: 14,
+            fontWeight: "500",
+        },
+    });

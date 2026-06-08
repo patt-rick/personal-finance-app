@@ -240,7 +240,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         <View style={styles.container}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity style={styles.backBtn} onPress={onBack} hitSlop={12}>
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Automatic Logging</Text>
             </View>
@@ -256,16 +256,16 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                 <SectionLabel label="Capture Sources" styles={styles} />
                 <View style={styles.groupCard}>
                     <AutoLogToggleRow
-                        icon={<MessageSquare size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<MessageSquare size={18} color={theme.colors.onPrimaryContainer} />}
+                        iconBg={theme.colors.primaryContainer}
                         title="SMS"
                         subtitle="Read financial SMS messages"
                         value={settings.captureSms}
                         onValueChange={handleCaptureSms}
                     />
                     <AutoLogToggleRow
-                        icon={<Bell size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Bell size={18} color={theme.colors.onPrimaryContainer} />}
+                        iconBg={theme.colors.primaryContainer}
                         title="Notifications"
                         subtitle="Capture posted notifications"
                         value={settings.captureNotifications}
@@ -277,8 +277,8 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                 <SectionLabel label="Routing" styles={styles} />
                 <View style={styles.groupCard}>
                     <NavRow
-                        icon={<Radio size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Radio size={18} color={theme.colors.onSecondaryContainer} />}
+                        iconBg={theme.colors.secondaryContainer}
                         title="Sender Mappings"
                         subtitle={mappingSubtitle}
                         onPress={() => setShowMappings(true)}
@@ -292,8 +292,8 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         theme={theme}
                     />
                     <NavRow
-                        icon={<Zap size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Zap size={18} color={theme.colors.onSecondaryContainer} />}
+                        iconBg={theme.colors.secondaryContainer}
                         title="Allowed Apps"
                         subtitle={
                             settings.allowedPackages.length === 0
@@ -305,8 +305,8 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         theme={theme}
                     />
                     <NavRow
-                        icon={<ShieldCheck size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<ShieldCheck size={18} color={theme.colors.onSecondaryContainer} />}
+                        iconBg={theme.colors.secondaryContainer}
                         title="Allowed SMS Senders"
                         subtitle={
                             settings.allowedSenders.length === 0
@@ -323,24 +323,24 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                 <SectionLabel label="Review" styles={styles} />
                 <View style={styles.groupCard}>
                     <AutoLogToggleRow
-                        icon={<Eye size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Eye size={18} color={theme.colors.onPrimaryContainer} />}
+                        iconBg={theme.colors.primaryContainer}
                         title="Review low-confidence only"
                         subtitle="High-confidence entries save silently"
                         value={settings.reviewLowConfidenceOnly}
                         onValueChange={(v) => update({ reviewLowConfidenceOnly: v })}
                     />
                     <AutoLogToggleRow
-                        icon={<Sparkles size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Sparkles size={18} color={theme.colors.onPrimaryContainer} />}
+                        iconBg={theme.colors.primaryContainer}
                         title="Always review first"
                         subtitle="Nothing is saved without your tap"
                         value={settings.askBeforeSaving}
                         onValueChange={(v) => update({ askBeforeSaving: v })}
                     />
                     <NavRow
-                        icon={<Inbox size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Inbox size={18} color={theme.colors.onSecondaryContainer} />}
+                        iconBg={theme.colors.secondaryContainer}
                         title="Review Queue"
                         subtitle={
                             pendingCount === 0
@@ -359,8 +359,8 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         <SectionLabel label="Developer" styles={styles} />
                         <View style={styles.groupCard}>
                             <NavRow
-                                icon={<FlaskConical size={18} color={theme.colors.primary} />}
-                                iconBg={theme.colors.incomeBg}
+                                icon={<FlaskConical size={18} color={theme.colors.onTertiaryContainer} />}
+                                iconBg={theme.colors.tertiaryContainer}
                                 title="Seed sample events"
                                 subtitle="Runs 4 canned SMS/notification events through the pipeline"
                                 onPress={handleSeed}
@@ -378,8 +378,8 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                 <SectionLabel label="Privacy" styles={styles} />
                 <View style={styles.groupCard}>
                     <NavRow
-                        icon={<Lock size={18} color={theme.colors.primary} />}
-                        iconBg={theme.colors.incomeBg}
+                        icon={<Lock size={18} color={theme.colors.onSecondaryContainer} />}
+                        iconBg={theme.colors.secondaryContainer}
                         title="How your data stays private"
                         subtitle="What is captured, stored, and never uploaded"
                         onPress={() => setShowPrivacy(true)}
@@ -440,17 +440,17 @@ function NavRow({
         <TouchableOpacity
             style={[
                 styles.navRow,
-                { borderBottomColor: theme.colors.borderLight },
+                { borderBottomColor: theme.colors.outlineVariant },
                 last && { borderBottomWidth: 0 },
             ]}
             onPress={onPress}
         >
             <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>{icon}</View>
             <View style={{ flex: 1 }}>
-                <Text style={[styles.navTitle, { color: theme.colors.text }]}>{title}</Text>
-                <Text style={[styles.navSubtitle, { color: theme.colors.textSecondary }]}>{subtitle}</Text>
+                <Text style={[styles.navTitle, { color: theme.colors.onSurface }]}>{title}</Text>
+                <Text style={[styles.navSubtitle, { color: theme.colors.onSurfaceVariant }]}>{subtitle}</Text>
             </View>
-            <ChevronRight size={18} color={theme.colors.textSecondary} />
+            <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
         </TouchableOpacity>
     );
 }
@@ -467,14 +467,14 @@ function CurrencyRow({
     theme: any;
 }) {
     return (
-        <View style={[styles.currencyRow, { borderBottomColor: theme.colors.borderLight }]}>
+        <View style={[styles.currencyRow, { borderBottomColor: theme.colors.outlineVariant }]}>
             <View style={styles.currencyHeader}>
-                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                    <Wallet size={18} color={theme.colors.primary} />
+                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                    <Wallet size={18} color={theme.colors.onSecondaryContainer} />
                 </View>
                 <View style={{ flex: 1 }}>
-                    <Text style={[styles.navTitle, { color: theme.colors.text }]}>Default Currency</Text>
-                    <Text style={[styles.navSubtitle, { color: theme.colors.textSecondary }]}>
+                    <Text style={[styles.navTitle, { color: theme.colors.onSurface }]}>Default Currency</Text>
+                    <Text style={[styles.navSubtitle, { color: theme.colors.onSurfaceVariant }]}>
                         For auto-created cashbooks
                     </Text>
                 </View>
@@ -487,7 +487,7 @@ function CurrencyRow({
                             key={c.value}
                             style={[
                                 styles.currencyCard,
-                                { backgroundColor: theme.colors.surface },
+                                { backgroundColor: theme.colors.surfaceContainerHighest },
                                 selected && { backgroundColor: theme.colors.primary },
                             ]}
                             onPress={() => onChange(c.value)}
@@ -495,8 +495,8 @@ function CurrencyRow({
                             <Text
                                 style={[
                                     styles.currencySymbol,
-                                    { color: theme.colors.text },
-                                    selected && { color: theme.colors.textInverse },
+                                    { color: theme.colors.onSurface },
+                                    selected && { color: theme.colors.onPrimary },
                                 ]}
                             >
                                 {c.symbol}
@@ -504,8 +504,8 @@ function CurrencyRow({
                             <Text
                                 style={[
                                     styles.currencyCode,
-                                    { color: theme.colors.textSecondary },
-                                    selected && { color: theme.colors.textInverse },
+                                    { color: theme.colors.onSurfaceVariant },
+                                    selected && { color: theme.colors.onPrimary },
                                 ]}
                             >
                                 {c.value}
@@ -529,22 +529,24 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
             letterSpacing: -0.3,
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
         sectionLabel: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginTop: 24,
             marginBottom: 10,
@@ -553,14 +555,11 @@ const createStyles = (theme: any) =>
             letterSpacing: 0.8,
         },
         groupCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             overflow: "hidden",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         navRow: {
             flexDirection: "row",
@@ -570,9 +569,9 @@ const createStyles = (theme: any) =>
             borderBottomWidth: StyleSheet.hairlineWidth,
         },
         iconCircle: {
-            width: 36,
-            height: 36,
-            borderRadius: 10,
+            width: 38,
+            height: 38,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
             marginRight: 14,
@@ -604,7 +603,7 @@ const createStyles = (theme: any) =>
         currencyCard: {
             flex: 1,
             height: 56,
-            borderRadius: 12,
+            borderRadius: theme.shape.medium,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -623,12 +622,12 @@ const createStyles = (theme: any) =>
         privacyTitle: {
             fontSize: 14,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             marginBottom: 4,
         },
         privacyBody: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             lineHeight: 18,
         },
     });

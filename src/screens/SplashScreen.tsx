@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useMemo } from "react";
 import {
     View,
     Text,
@@ -18,8 +18,7 @@ const { width, height } = Dimensions.get("window");
 function WaveBackground({ isDark }: { isDark: boolean }) {
     const theme = useTheme();
     const primary = theme.colors.primary;
-    const primaryLight = isDark ? "rgba(45, 106, 79, 0.15)" : "rgba(45, 106, 79, 0.08)";
-    const primaryMedium = isDark ? "rgba(45, 106, 79, 0.25)" : "rgba(45, 106, 79, 0.12)";
+    const primaryContainer = theme.colors.primaryContainer;
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -41,7 +40,8 @@ function WaveBackground({ isDark }: { isDark: boolean }) {
                         C${width * 0.5},${height * 0.06} ${width * 1.15},${height * 0.15} ${width},${height * 0.28}
                         L${width},${height * 0.18}
                         C${width * 0.95},${height * 0.1} ${width * 0.55},${height * 0.04} ${width * 0.85},0 Z`}
-                    fill={primaryMedium}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.3 : 0.6}
                 />
                 <Path
                     d={`M0,${height * 0.7}
@@ -56,7 +56,8 @@ function WaveBackground({ isDark }: { isDark: boolean }) {
                         C${width * 0.1},${height * 0.74} ${width * 0.15},${height * 0.88} ${width * 0.4},${height * 0.85}
                         C${width * 0.5},${height * 0.84} ${width * 0.45},${height * 0.95} ${width * 0.55},${height}
                         L0,${height} Z`}
-                    fill={primaryLight}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.25 : 0.45}
                 />
                 <Path
                     d={`M${width},${height * 0.55}
@@ -65,7 +66,8 @@ function WaveBackground({ isDark }: { isDark: boolean }) {
                         L${width * 0.65},${height * 0.46}
                         C${width * 0.78},${height * 0.44} ${width * 0.72},${height * 0.53} ${width * 0.85},${height * 0.52}
                         C${width * 0.92},${height * 0.515} ${width * 0.88},${height * 0.56} ${width},${height * 0.58} Z`}
-                    fill={primaryMedium}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.2 : 0.35}
                 />
             </Svg>
         </View>
@@ -121,6 +123,7 @@ function LoadingDots() {
 
 export default function SplashScreen() {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const { themeMode } = useThemeContext();
     const systemColorScheme = useColorScheme();
     const isDark =
@@ -199,12 +202,7 @@ export default function SplashScreen() {
     ]);
 
     return (
-        <View
-            style={[
-                styles.container,
-                { backgroundColor: theme.colors.background },
-            ]}
-        >
+        <View style={styles.container}>
             <StatusBar
                 style={isDark ? "light" : "dark"}
                 backgroundColor={theme.colors.background}
@@ -222,21 +220,7 @@ export default function SplashScreen() {
                         },
                     ]}
                 >
-                    <View
-                        style={[
-                            styles.logoContainer,
-                            {
-                                backgroundColor: isDark
-                                    ? "rgba(45, 106, 79, 0.15)"
-                                    : theme.colors.card,
-                                shadowColor: theme.colors.primary,
-                                shadowOffset: { width: 0, height: 8 },
-                                shadowOpacity: isDark ? 0.3 : 0.15,
-                                shadowRadius: 24,
-                                elevation: 12,
-                            },
-                        ]}
-                    >
+                    <View style={styles.logoContainer}>
                         <Image
                             source={require("../icon.png")}
                             style={styles.logoImage}
@@ -249,7 +233,6 @@ export default function SplashScreen() {
                     style={[
                         styles.title,
                         {
-                            color: theme.colors.text,
                             opacity: titleOpacity,
                             transform: [{ translateY: titleTranslateY }],
                         },
@@ -262,7 +245,6 @@ export default function SplashScreen() {
                     style={[
                         styles.subtitle,
                         {
-                            color: theme.colors.textSecondary,
                             opacity: subtitleOpacity,
                             transform: [{ translateY: subtitleTranslateY }],
                         },
@@ -277,26 +259,8 @@ export default function SplashScreen() {
             </View>
 
             <Animated.View style={[styles.footer, { opacity: footerOpacity }]}>
-                <View
-                    style={[
-                        styles.footerDivider,
-                        {
-                            backgroundColor: isDark
-                                ? "rgba(255, 255, 255, 0.1)"
-                                : "rgba(0, 0, 0, 0.08)",
-                        },
-                    ]}
-                />
-                <Text
-                    style={[
-                        styles.footerText,
-                        {
-                            color: isDark
-                                ? "rgba(255, 255, 255, 0.3)"
-                                : "rgba(0, 0, 0, 0.25)",
-                        },
-                    ]}
-                >
+                <View style={styles.footerDivider} />
+                <Text style={styles.footerText}>
                     SECURE {"  "}·{"  "} PRIVATE {"  "}·{"  "} FAST
                 </Text>
             </Animated.View>
@@ -317,55 +281,64 @@ const loadingStyles = StyleSheet.create({
     },
 });
 
-const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    content: {
-        alignItems: "center",
-        paddingBottom: 40,
-    },
-    logoWrapper: {
-        marginBottom: 32,
-    },
-    logoContainer: {
-        width: 120,
-        height: 120,
-        borderRadius: 32,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    logoImage: {
-        width: 72,
-        height: 72,
-    },
-    title: {
-        fontSize: 30,
-        fontWeight: "700",
-        letterSpacing: 1,
-    },
-    subtitle: {
-        fontSize: 14,
-        fontWeight: "400",
-        letterSpacing: 3,
-        textTransform: "uppercase",
-        marginTop: 10,
-    },
-    footer: {
-        position: "absolute",
-        bottom: 56,
-        alignItems: "center",
-    },
-    footerDivider: {
-        width: 32,
-        height: 1,
-        marginBottom: 16,
-    },
-    footerText: {
-        fontSize: 11,
-        letterSpacing: 4,
-        fontWeight: "300",
-    },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        container: {
+            flex: 1,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.background,
+        },
+        content: {
+            alignItems: "center",
+            paddingBottom: 40,
+        },
+        logoWrapper: {
+            marginBottom: 32,
+        },
+        logoContainer: {
+            width: 120,
+            height: 120,
+            borderRadius: theme.shape.extraLarge,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.surfaceContainerLow,
+            ...theme.elevation.level2,
+            shadowColor: theme.colors.shadow,
+        },
+        logoImage: {
+            width: 72,
+            height: 72,
+        },
+        title: {
+            fontSize: 30,
+            fontWeight: "700",
+            letterSpacing: 1,
+            color: theme.colors.onSurface,
+        },
+        subtitle: {
+            fontSize: 14,
+            fontWeight: "400",
+            letterSpacing: 3,
+            textTransform: "uppercase",
+            marginTop: 10,
+            color: theme.colors.onSurfaceVariant,
+        },
+        footer: {
+            position: "absolute",
+            bottom: 56,
+            alignItems: "center",
+        },
+        footerDivider: {
+            width: 32,
+            height: 1,
+            marginBottom: 16,
+            backgroundColor: theme.colors.outlineVariant,
+        },
+        footerText: {
+            fontSize: 11,
+            letterSpacing: 4,
+            fontWeight: "300",
+            color: theme.colors.onSurfaceVariant,
+        },
+    });

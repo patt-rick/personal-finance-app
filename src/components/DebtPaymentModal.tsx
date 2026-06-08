@@ -71,9 +71,8 @@ export default function DebtPaymentModal({
         >
             <Text
                 style={{
-                    fontSize: 14,
-                    color: theme.colors.textSecondary,
-                    fontWeight: "500",
+                    ...theme.typescale.bodyMedium,
+                    color: theme.colors.onSurfaceVariant,
                     marginBottom: 20,
                 }}
             >
@@ -102,7 +101,7 @@ export default function DebtPaymentModal({
             />
 
             <TouchableOpacity
-                style={[styles.submitBtnModern, { backgroundColor: theme.colors.primary }]}
+                style={styles.submitBtnModern}
                 onPress={handleSubmit}
             >
                 <Text style={styles.submitBtnTextModern}>Record Payment</Text>

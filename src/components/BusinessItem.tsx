@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import { Business } from '../types';
@@ -13,62 +13,73 @@ interface BusinessItemProps {
 
 export default function BusinessItem({ business, isActive, onPress, onDelete }: BusinessItemProps) {
   const theme = useTheme();
+  const styles = useMemo(() => createStyles(theme), [theme]);
 
   return (
     <TouchableOpacity
       style={[
-        styles.businessItem, 
-        { backgroundColor: theme.colors.card },
-        isActive && { backgroundColor: theme.colors.primary }
+        styles.businessItem,
+        isActive && styles.businessItemActive,
       ]}
       onPress={onPress}
+      activeOpacity={0.7}
     >
       <View style={{ flex: 1 }}>
         <Text style={[
-          styles.businessName, 
-          { color: theme.colors.text },
-          isActive && { color: 'white' }
+          styles.businessName,
+          isActive && styles.businessNameActive,
         ]}>
           {business.name}
         </Text>
         <Text style={[
-          styles.businessMeta, 
-          { color: theme.colors.textSecondary },
-          isActive && { color: 'rgba(255,255,255,0.7)' }
+          styles.businessMeta,
+          isActive && styles.businessMetaActive,
         ]}>
           Created {new Date(business.createdAt).toLocaleDateString()}
         </Text>
       </View>
       <TouchableOpacity style={styles.deleteButton} onPress={onDelete}>
-        <Trash2 size={20} color={isActive ? 'white' : theme.colors.textSecondary} />
+        <Trash2
+          size={20}
+          color={isActive ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant}
+        />
       </TouchableOpacity>
     </TouchableOpacity>
   );
 }
 
-const styles = StyleSheet.create({
+const createStyles = (theme: any) => StyleSheet.create({
   businessItem: {
-    padding: 16,
-    borderRadius: 16,
-    marginBottom: 12,
+    padding: theme.spacing.l,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.shape.large,
+    marginBottom: theme.spacing.m,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.1,
-    shadowRadius: 2,
+    ...theme.elevation.level1,
+    shadowColor: theme.colors.shadow,
+  },
+  businessItemActive: {
+    backgroundColor: theme.colors.secondaryContainer,
   },
   businessName: {
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
+    color: theme.colors.onSurface,
+  },
+  businessNameActive: {
+    color: theme.colors.onSecondaryContainer,
   },
   businessMeta: {
     fontSize: 12,
-    marginTop: 4,
+    marginTop: theme.spacing.xs,
+    color: theme.colors.onSurfaceVariant,
+  },
+  businessMetaActive: {
+    color: theme.colors.onSecondaryContainer,
   },
   deleteButton: {
-    padding: 8,
+    padding: theme.spacing.s,
   },
 });

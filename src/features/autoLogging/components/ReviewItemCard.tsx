@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Check, Trash2, MessageSquare, Bell } from "lucide-react-native";
 import { useTheme } from "../../../theme/theme";
@@ -16,6 +16,7 @@ interface Props {
 
 export default function ReviewItemCard({ item, business, onConfirm, onReject }: Props) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const [expanded, setExpanded] = useState(false);
     const [amount, setAmount] = useState(item.draft.amount.toString());
     const [description, setDescription] = useState(item.draft.merchant ?? "");
@@ -34,24 +35,24 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
     const confidencePercent = Math.round(item.draft.confidence * 100);
 
     return (
-        <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
+        <View style={styles.card}>
             <TouchableOpacity style={styles.top} onPress={() => setExpanded((v) => !v)} activeOpacity={0.7}>
-                <View style={[styles.sourceChip, { backgroundColor: theme.colors.incomeBg }]}>
-                    <SourceIcon size={12} color={theme.colors.primary} />
-                    <Text style={[styles.sourceChipText, { color: theme.colors.primary }]}>
+                <View style={styles.sourceChip}>
+                    <SourceIcon size={12} color={theme.colors.onPrimaryContainer} />
+                    <Text style={styles.sourceChipText}>
                         {item.draft.senderDisplay}
                     </Text>
                 </View>
                 <View style={{ flex: 1 }} />
-                <Text style={[styles.confidence, { color: theme.colors.textSecondary }]}>{confidencePercent}%</Text>
+                <Text style={styles.confidence}>{confidencePercent}%</Text>
             </TouchableOpacity>
 
             <View style={styles.headRow}>
                 <View style={{ flex: 1 }}>
-                    <Text style={[styles.merchant, { color: theme.colors.text }]}>
+                    <Text style={styles.merchant}>
                         {item.draft.merchant ?? "No merchant"}
                     </Text>
-                    <Text style={[styles.meta, { color: theme.colors.textSecondary }]}>
+                    <Text style={styles.meta}>
                         {item.draft.category} • {item.draft.type} • routes to {business?.name ?? "—"}
                     </Text>
                 </View>
@@ -59,7 +60,7 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                     style={[
                         styles.amount,
                         {
-                            color: item.draft.type === "income" ? theme.colors.success : theme.colors.text,
+                            color: item.draft.type === "income" ? theme.colors.income : theme.colors.onSurface,
                         },
                     ]}
                 >
@@ -69,152 +70,170 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
 
             {expanded ? (
                 <View style={styles.editArea}>
-                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Amount</Text>
+                    <Text style={styles.label}>Amount</Text>
                     <TextInput
-                        style={[styles.input, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}
+                        style={styles.input}
                         value={amount}
                         onChangeText={setAmount}
                         keyboardType="decimal-pad"
+                        placeholderTextColor={theme.colors.onSurfaceVariant}
                     />
-                    <Text style={[styles.label, { color: theme.colors.textSecondary }]}>Description</Text>
+                    <Text style={styles.label}>Description</Text>
                     <TextInput
-                        style={[styles.input, { color: theme.colors.text, backgroundColor: theme.colors.surface, borderColor: theme.colors.borderLight }]}
+                        style={styles.input}
                         value={description}
                         onChangeText={setDescription}
                         placeholder="Merchant or counterparty"
-                        placeholderTextColor={theme.colors.placeholder}
+                        placeholderTextColor={theme.colors.onSurfaceVariant}
                     />
-                    <Text style={[styles.label, { color: theme.colors.textSecondary, marginTop: 10 }]}>Original message</Text>
-                    <Text style={[styles.rawText, { color: theme.colors.textSecondary, backgroundColor: theme.colors.surface }]}>
+                    <Text style={[styles.label, { marginTop: 10 }]}>Original message</Text>
+                    <Text style={styles.rawText}>
                         {item.draft.rawText}
                     </Text>
                 </View>
             ) : null}
 
             <View style={styles.actions}>
-                <TouchableOpacity
-                    style={[styles.rejectBtn, { backgroundColor: theme.colors.surface }]}
-                    onPress={onReject}
-                >
+                <TouchableOpacity style={styles.rejectBtn} onPress={onReject}>
                     <Trash2 size={14} color={theme.colors.error} />
-                    <Text style={[styles.rejectText, { color: theme.colors.error }]}>Reject</Text>
+                    <Text style={styles.rejectText}>Reject</Text>
                 </TouchableOpacity>
-                <TouchableOpacity
-                    style={[styles.confirmBtn, { backgroundColor: theme.colors.primary }]}
-                    onPress={handleConfirm}
-                >
-                    <Check size={14} color={theme.colors.textInverse} />
-                    <Text style={[styles.confirmText, { color: theme.colors.textInverse }]}>Confirm</Text>
+                <TouchableOpacity style={styles.confirmBtn} onPress={handleConfirm}>
+                    <Check size={14} color={theme.colors.onPrimary} />
+                    <Text style={styles.confirmText}>Confirm</Text>
                 </TouchableOpacity>
             </View>
         </View>
     );
 }
 
-const styles = StyleSheet.create({
-    card: {
-        padding: 14,
-        borderRadius: 16,
-        marginBottom: 12,
-    },
-    top: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 10,
-    },
-    sourceChip: {
-        flexDirection: "row",
-        alignItems: "center",
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 8,
-        gap: 4,
-    },
-    sourceChipText: {
-        fontSize: 11,
-        fontWeight: "700",
-        letterSpacing: 0.3,
-    },
-    confidence: {
-        fontSize: 11,
-        fontWeight: "700",
-    },
-    headRow: {
-        flexDirection: "row",
-        alignItems: "center",
-        marginBottom: 6,
-    },
-    merchant: {
-        fontSize: 16,
-        fontWeight: "700",
-        letterSpacing: -0.2,
-    },
-    meta: {
-        fontSize: 11,
-        fontWeight: "500",
-        marginTop: 2,
-    },
-    amount: {
-        fontSize: 18,
-        fontWeight: "800",
-        letterSpacing: -0.3,
-    },
-    editArea: {
-        marginTop: 10,
-        paddingTop: 10,
-        borderTopWidth: StyleSheet.hairlineWidth,
-        borderTopColor: "transparent",
-    },
-    label: {
-        fontSize: 10,
-        fontWeight: "700",
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-        marginBottom: 6,
-        marginTop: 8,
-    },
-    input: {
-        height: 42,
-        borderRadius: 10,
-        borderWidth: 1,
-        paddingHorizontal: 12,
-        fontSize: 14,
-    },
-    rawText: {
-        padding: 10,
-        borderRadius: 10,
-        fontSize: 12,
-        lineHeight: 17,
-    },
-    actions: {
-        flexDirection: "row",
-        gap: 8,
-        marginTop: 12,
-    },
-    rejectBtn: {
-        flex: 1,
-        height: 40,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        borderRadius: 10,
-    },
-    rejectText: {
-        fontSize: 13,
-        fontWeight: "700",
-    },
-    confirmBtn: {
-        flex: 1,
-        height: 40,
-        flexDirection: "row",
-        alignItems: "center",
-        justifyContent: "center",
-        gap: 6,
-        borderRadius: 10,
-    },
-    confirmText: {
-        fontSize: 13,
-        fontWeight: "700",
-    },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        card: {
+            padding: 14,
+            borderRadius: theme.shape.large,
+            marginBottom: theme.spacing.m,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
+        },
+        top: {
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 10,
+        },
+        sourceChip: {
+            flexDirection: "row",
+            alignItems: "center",
+            paddingHorizontal: 8,
+            paddingVertical: 4,
+            borderRadius: theme.shape.small,
+            backgroundColor: theme.colors.primaryContainer,
+            gap: 4,
+        },
+        sourceChipText: {
+            fontSize: 11,
+            fontWeight: "700",
+            letterSpacing: 0.3,
+            color: theme.colors.onPrimaryContainer,
+        },
+        confidence: {
+            fontSize: 11,
+            fontWeight: "700",
+            color: theme.colors.onSurfaceVariant,
+        },
+        headRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            marginBottom: 6,
+        },
+        merchant: {
+            fontSize: 16,
+            fontWeight: "700",
+            letterSpacing: -0.2,
+            color: theme.colors.onSurface,
+        },
+        meta: {
+            fontSize: 11,
+            fontWeight: "500",
+            marginTop: 2,
+            color: theme.colors.onSurfaceVariant,
+        },
+        amount: {
+            fontSize: 18,
+            fontWeight: "800",
+            letterSpacing: -0.3,
+        },
+        editArea: {
+            marginTop: 10,
+            paddingTop: 10,
+            borderTopWidth: StyleSheet.hairlineWidth,
+            borderTopColor: theme.colors.outlineVariant,
+        },
+        label: {
+            fontSize: 10,
+            fontWeight: "700",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 6,
+            marginTop: 8,
+            color: theme.colors.onSurfaceVariant,
+        },
+        input: {
+            height: 48,
+            borderRadius: theme.shape.medium,
+            borderWidth: 1,
+            borderColor: theme.colors.outline,
+            paddingHorizontal: 14,
+            fontSize: 14,
+            color: theme.colors.onSurface,
+            backgroundColor: theme.colors.surfaceContainerHighest,
+        },
+        rawText: {
+            padding: 10,
+            borderRadius: theme.shape.medium,
+            fontSize: 12,
+            lineHeight: 17,
+            color: theme.colors.onSurfaceVariant,
+            backgroundColor: theme.colors.surfaceContainerHighest,
+        },
+        actions: {
+            flexDirection: "row",
+            gap: 8,
+            marginTop: 12,
+        },
+        rejectBtn: {
+            flex: 1,
+            height: 44,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            borderRadius: theme.shape.full,
+            borderWidth: 1,
+            borderColor: theme.colors.error,
+            backgroundColor: "transparent",
+        },
+        rejectText: {
+            fontSize: 13,
+            fontWeight: "700",
+            color: theme.colors.error,
+        },
+        confirmBtn: {
+            flex: 1,
+            height: 44,
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.primary,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
+        },
+        confirmText: {
+            fontSize: 13,
+            fontWeight: "700",
+            color: theme.colors.onPrimary,
+        },
+    });

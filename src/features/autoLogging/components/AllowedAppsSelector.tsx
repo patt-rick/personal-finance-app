@@ -55,14 +55,14 @@ export default function AllowedAppsSelector({
                     value={draft}
                     onChangeText={setDraft}
                     placeholder={placeholder}
-                    placeholderTextColor={theme.colors.placeholder}
+                    placeholderTextColor={theme.colors.onSurfaceVariant}
                     autoCapitalize="none"
                     autoCorrect={false}
                     onSubmitEditing={handleAdd}
                     returnKeyType="done"
                 />
                 <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-                    <Plus size={18} color={theme.colors.textInverse} />
+                    <Plus size={18} color={theme.colors.onPrimary} />
                 </TouchableOpacity>
             </View>
 
@@ -74,7 +74,7 @@ export default function AllowedAppsSelector({
                         <View key={value} style={styles.chip}>
                             <Text style={styles.chipText}>{value}</Text>
                             <TouchableOpacity onPress={() => handleRemove(value)} hitSlop={8}>
-                                <X size={14} color={theme.colors.textSecondary} />
+                                <X size={14} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
                         </View>
                     ))
@@ -84,7 +84,7 @@ export default function AllowedAppsSelector({
     );
 }
 
-const createStyles = (theme: any) =>
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         inputRow: {
             flexDirection: "row",
@@ -93,29 +93,31 @@ const createStyles = (theme: any) =>
         },
         input: {
             flex: 1,
-            height: 48,
-            borderRadius: 12,
+            height: 52,
+            borderRadius: theme.shape.medium,
             borderWidth: 1,
-            borderColor: theme.colors.borderLight,
+            borderColor: theme.colors.outline,
             paddingHorizontal: 14,
             fontSize: 15,
-            color: theme.colors.text,
-            backgroundColor: theme.colors.surface,
+            color: theme.colors.onSurface,
+            backgroundColor: theme.colors.surfaceContainerHighest,
         },
         addBtn: {
-            width: 48,
-            height: 48,
-            borderRadius: 12,
+            width: 52,
+            height: 52,
+            borderRadius: theme.shape.full,
             backgroundColor: theme.colors.primary,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         list: {
             maxHeight: 320,
         },
         empty: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             fontStyle: "italic",
             textAlign: "center",
             paddingVertical: 24,
@@ -126,14 +128,16 @@ const createStyles = (theme: any) =>
             justifyContent: "space-between",
             paddingHorizontal: 14,
             paddingVertical: 12,
-            borderRadius: 12,
-            backgroundColor: theme.colors.surface,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             marginBottom: 8,
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
         },
         chipText: {
             fontSize: 14,
             fontWeight: "600",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             flex: 1,
         },
     });

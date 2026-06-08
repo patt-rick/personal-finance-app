@@ -32,7 +32,7 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
         <View style={styles.container}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity style={styles.backBtn} onPress={onBack} hitSlop={12}>
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <View style={{ flex: 1 }}>
                     <Text style={styles.headerTitle}>Review Queue</Text>
@@ -49,7 +49,7 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
                 {loading ? null : items.length === 0 ? (
                     <View style={styles.emptyCard}>
                         <View style={styles.emptyIconCircle}>
-                            <Inbox size={22} color={theme.colors.primary} />
+                            <Inbox size={22} color={theme.colors.onPrimaryContainer} />
                         </View>
                         <Text style={styles.emptyTitle}>Nothing to review</Text>
                         <Text style={styles.emptyBody}>
@@ -86,37 +86,41 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
             letterSpacing: -0.3,
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
         headerSubtitle: {
             fontSize: 12,
             fontWeight: "600",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 2,
         },
         emptyCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             padding: 24,
             alignItems: "center",
             marginTop: 8,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         emptyIconCircle: {
             width: 56,
             height: 56,
-            borderRadius: 16,
-            backgroundColor: theme.colors.incomeBg,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 12,
@@ -124,12 +128,12 @@ const createStyles = (theme: any) =>
         emptyTitle: {
             fontSize: 16,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             marginBottom: 4,
         },
         emptyBody: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textAlign: "center",
             lineHeight: 18,
         },

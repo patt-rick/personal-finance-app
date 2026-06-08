@@ -54,7 +54,7 @@ export default function SenderMappingsScreen({ businesses, onBack }: Props) {
         <View style={styles.container}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity style={styles.backBtn} onPress={onBack} hitSlop={12}>
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Sender Mappings</Text>
             </View>
@@ -114,7 +114,7 @@ function EmptyState({
     return (
         <View style={styles.emptyCard}>
             <View style={styles.emptyIconCircle}>
-                <Radio size={22} color={theme.colors.primary} />
+                <Radio size={22} color={theme.colors.onPrimaryContainer} />
             </View>
             <Text style={styles.emptyTitle}>No senders yet</Text>
             <Text style={styles.emptyBody}>
@@ -135,28 +135,32 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
             letterSpacing: -0.3,
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
         groupCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             overflow: "hidden",
             marginTop: 8,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         explainer: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             lineHeight: 18,
             marginTop: 16,
             marginHorizontal: 4,
@@ -164,29 +168,31 @@ const createStyles = (theme: any) =>
         refreshBtn: {
             marginTop: 16,
             alignSelf: "flex-start",
-            paddingHorizontal: 14,
+            paddingHorizontal: 16,
             paddingVertical: 8,
-            borderRadius: 10,
-            backgroundColor: theme.colors.surface,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.secondaryContainer,
         },
         refreshText: {
             fontSize: 12,
             fontWeight: "700",
-            color: theme.colors.primary,
+            color: theme.colors.onSecondaryContainer,
             letterSpacing: 0.4,
         },
         emptyCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             padding: 24,
             alignItems: "center",
             marginTop: 8,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         emptyIconCircle: {
             width: 56,
             height: 56,
-            borderRadius: 16,
-            backgroundColor: theme.colors.incomeBg,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 12,
@@ -194,12 +200,12 @@ const createStyles = (theme: any) =>
         emptyTitle: {
             fontSize: 16,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             marginBottom: 4,
         },
         emptyBody: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textAlign: "center",
             lineHeight: 18,
         },

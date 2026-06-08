@@ -186,24 +186,24 @@ export default function CashbookDetailSheet({
                             style={[s.actionMain, { backgroundColor: theme.colors.primary }]}
                             onPress={handleOpen}
                         >
-                            <ExternalLink size={18} color={theme.colors.textInverse} />
+                            <ExternalLink size={18} color={theme.colors.onPrimary} />
                             <Text style={s.actionMainText}>Open Cashbook</Text>
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[s.actionIcon, { backgroundColor: theme.colors.surface }]}
+                            style={[s.actionIcon, { backgroundColor: theme.colors.secondaryContainer }]}
                             onPress={() => {
                                 setRenameValue(business.name);
                                 setCurrencyValue(business.currency ?? "USD");
                                 setIsRenaming(true);
                             }}
                         >
-                            <Pencil size={18} color={theme.colors.primary} />
+                            <Pencil size={18} color={theme.colors.onSecondaryContainer} />
                         </TouchableOpacity>
                         <TouchableOpacity
-                            style={[s.actionIcon, { backgroundColor: theme.colors.surface }]}
+                            style={[s.actionIcon, { backgroundColor: theme.colors.errorContainer }]}
                             onPress={() => onDelete(business.id)}
                         >
-                            <Trash2 size={18} color={theme.colors.error} />
+                            <Trash2 size={18} color={theme.colors.onErrorContainer} />
                         </TouchableOpacity>
                     </View>
                 </>
@@ -232,7 +232,7 @@ function SheetHeader({
                     <TextInput
                         style={[
                             s.renameInput,
-                            { color: theme.colors.text, borderColor: theme.colors.primary },
+                            { color: theme.colors.onSurface, borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceContainerHighest },
                         ]}
                         value={renameValue}
                         onChangeText={setRenameValue}
@@ -244,14 +244,14 @@ function SheetHeader({
                         onPress={handleSaveEdits}
                         style={[s.renameSave, { backgroundColor: theme.colors.primary }]}
                     >
-                        <Text style={{ color: theme.colors.textInverse, fontWeight: "700", fontSize: 13 }}>Save</Text>
+                        <Text style={{ color: theme.colors.onPrimary, fontWeight: "700", fontSize: 13 }}>Save</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setIsRenaming(false)} style={s.renameCancel}>
-                        <X size={18} color={theme.colors.textSecondary} />
+                        <X size={18} color={theme.colors.onSurfaceVariant} />
                     </TouchableOpacity>
                 </View>
 
-                <Text style={[s.editFieldLabel, { color: theme.colors.textSecondary }]}>
+                <Text style={[s.editFieldLabel, { color: theme.colors.onSurfaceVariant }]}>
                     Currency
                 </Text>
                 <View style={s.currencyGrid}>
@@ -262,10 +262,10 @@ function SheetHeader({
                                 key={curr.value}
                                 style={[
                                     s.currencyCard,
-                                    { backgroundColor: theme.colors.surface },
+                                    { backgroundColor: theme.colors.surfaceContainerHigh },
                                     isSelected && {
-                                        backgroundColor: theme.colors.primary,
-                                        borderColor: theme.colors.primary,
+                                        backgroundColor: theme.colors.secondaryContainer,
+                                        borderColor: theme.colors.secondaryContainer,
                                     },
                                 ]}
                                 onPress={() => setCurrencyValue(curr.value)}
@@ -273,8 +273,8 @@ function SheetHeader({
                                 <Text
                                     style={[
                                         s.currSym,
-                                        { color: theme.colors.text },
-                                        isSelected && { color: theme.colors.textInverse },
+                                        { color: theme.colors.onSurface },
+                                        isSelected && { color: theme.colors.onSecondaryContainer },
                                     ]}
                                 >
                                     {curr.symbol}
@@ -282,8 +282,8 @@ function SheetHeader({
                                 <Text
                                     style={[
                                         s.currCode,
-                                        { color: theme.colors.textSecondary },
-                                        isSelected && { color: theme.colors.textInverse },
+                                        { color: theme.colors.onSurfaceVariant },
+                                        isSelected && { color: theme.colors.onSecondaryContainer },
                                     ]}
                                 >
                                     {curr.value}
@@ -299,8 +299,8 @@ function SheetHeader({
     return (
         <View style={s.header}>
             <View style={{ flex: 1 }}>
-                <Text style={[s.title, { color: theme.colors.text }]}>{business.name}</Text>
-                <Text style={[s.subtitle, { color: theme.colors.textSecondary }]}>
+                <Text style={[s.title, { color: theme.colors.onSurface }]}>{business.name}</Text>
+                <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>
                     Created{" "}
                     {new Date(business.createdAt).toLocaleDateString(undefined, {
                         month: "short",
@@ -309,8 +309,8 @@ function SheetHeader({
                     })}
                 </Text>
             </View>
-            <View style={[s.currencyBadge, { backgroundColor: theme.colors.surface }]}>
-                <Text style={[s.currencyBadgeText, { color: theme.colors.primary }]}>
+            <View style={[s.currencyBadge, { backgroundColor: theme.colors.primaryContainer }]}>
+                <Text style={[s.currencyBadgeText, { color: theme.colors.onPrimaryContainer }]}>
                     {sheetData.symbol} {business.currency}
                 </Text>
             </View>
@@ -337,7 +337,7 @@ function BalanceCard({ sheetData, theme, s }: any) {
             </Text>
             <View style={s.balanceRow}>
                 <View style={s.balanceMini}>
-                    <TrendingUp size={12} color={theme.colors.success} />
+                    <TrendingUp size={12} color="rgba(255,255,255,0.85)" />
                     <Text style={s.balanceMiniText}>
                         {sheetData.symbol}
                         {sheetData.income.toLocaleString()}
@@ -358,29 +358,29 @@ function BalanceCard({ sheetData, theme, s }: any) {
 function StatsGrid({ sheetData, theme, s }: any) {
     return (
         <View style={s.statsGrid}>
-            <View style={[s.statBox, { backgroundColor: theme.colors.surface }]}>
+            <View style={[s.statBox, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
                 <Hash size={16} color={theme.colors.primary} />
-                <Text style={[s.statNum, { color: theme.colors.text }]}>{sheetData.count}</Text>
-                <Text style={[s.statLbl, { color: theme.colors.textSecondary }]}>Transactions</Text>
+                <Text style={[s.statNum, { color: theme.colors.onSurface }]}>{sheetData.count}</Text>
+                <Text style={[s.statLbl, { color: theme.colors.onSurfaceVariant }]}>Transactions</Text>
             </View>
-            <View style={[s.statBox, { backgroundColor: theme.colors.surface }]}>
+            <View style={[s.statBox, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
                 <BarChart3 size={16} color={theme.colors.primary} />
-                <Text style={[s.statNum, { color: theme.colors.text }]}>
+                <Text style={[s.statNum, { color: theme.colors.onSurface }]}>
                     {sheetData.symbol}
                     {sheetData.avg.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                 </Text>
-                <Text style={[s.statLbl, { color: theme.colors.textSecondary }]}>Avg / txn</Text>
+                <Text style={[s.statLbl, { color: theme.colors.onSurfaceVariant }]}>Avg / txn</Text>
             </View>
-            <View style={[s.statBox, { backgroundColor: theme.colors.surface }]}>
-                <TrendingUp size={16} color={theme.colors.success} />
-                <Text style={[s.statNum, { color: theme.colors.text }]}>
+            <View style={[s.statBox, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
+                <TrendingUp size={16} color={theme.colors.income} />
+                <Text style={[s.statNum, { color: theme.colors.onSurface }]}>
                     {sheetData.count > 0
                         ? sheetData.income > sheetData.expense
                             ? "Profit"
                             : "Loss"
                         : "---"}
                 </Text>
-                <Text style={[s.statLbl, { color: theme.colors.textSecondary }]}>Status</Text>
+                <Text style={[s.statLbl, { color: theme.colors.onSurfaceVariant }]}>Status</Text>
             </View>
         </View>
     );
@@ -390,23 +390,23 @@ function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: an
     return (
         <View style={s.chartSection}>
             <View style={s.chartHeaderRow}>
-                <Text style={[s.chartSectionTitle, { color: theme.colors.text }]}>
+                <Text style={[s.chartSectionTitle, { color: theme.colors.onSurface }]}>
                     7-Day Activity
                 </Text>
                 <View style={s.chartLegend}>
                     <View style={s.legendItem}>
                         <View style={[s.legendDot, { backgroundColor: theme.colors.income }]} />
-                        <Text style={[s.legendLbl, { color: theme.colors.textSecondary }]}>In</Text>
+                        <Text style={[s.legendLbl, { color: theme.colors.onSurfaceVariant }]}>In</Text>
                     </View>
                     <View style={s.legendItem}>
                         <View style={[s.legendDot, { backgroundColor: theme.colors.expense }]} />
-                        <Text style={[s.legendLbl, { color: theme.colors.textSecondary }]}>
+                        <Text style={[s.legendLbl, { color: theme.colors.onSurfaceVariant }]}>
                             Out
                         </Text>
                     </View>
                 </View>
             </View>
-            <View style={[s.chartBox, { backgroundColor: theme.colors.surface }]}>
+            <View style={[s.chartBox, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
                 <WeeklyBarChart
                     labels={labels}
                     incomeData={incomeData}
@@ -423,12 +423,12 @@ function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: an
 function TopCategories({ categories, symbol, theme, s }: any) {
     return (
         <View style={s.topCatSection}>
-            <Text style={[s.chartSectionTitle, { color: theme.colors.text }]}>Top Expenses</Text>
+            <Text style={[s.chartSectionTitle, { color: theme.colors.onSurface }]}>Top Expenses</Text>
             <View style={s.topCatRow}>
                 {categories.map(([name, amount]: [string, number], i: number) => (
-                    <View key={i} style={[s.topCatChip, { backgroundColor: theme.colors.surface }]}>
-                        <Text style={[s.topCatName, { color: theme.colors.text }]}>{name}</Text>
-                        <Text style={[s.topCatAmt, { color: theme.colors.textSecondary }]}>
+                    <View key={i} style={[s.topCatChip, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
+                        <Text style={[s.topCatName, { color: theme.colors.onSurface }]}>{name}</Text>
+                        <Text style={[s.topCatAmt, { color: theme.colors.onSurfaceVariant }]}>
                             {symbol}
                             {amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                         </Text>
@@ -447,33 +447,37 @@ const createStyles = (theme: any) =>
             justifyContent: "space-between",
             marginBottom: 16,
         },
-        title: { fontSize: 20, fontWeight: "800", letterSpacing: -0.3 },
+        title: { fontSize: 20, fontWeight: "700", letterSpacing: -0.3 },
         subtitle: { fontSize: 12, marginTop: 2, fontWeight: "500" },
-        currencyBadge: { paddingHorizontal: 10, paddingVertical: 5, borderRadius: 8 },
+        currencyBadge: {
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            borderRadius: theme.shape.small,
+        },
         currencyBadgeText: { fontSize: 12, fontWeight: "700" },
 
         editContainer: { marginBottom: 16 },
         renameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
         renameInput: {
             flex: 1,
-            height: 40,
-            borderWidth: 2,
-            borderRadius: 10,
+            height: 48,
+            borderWidth: 1,
+            borderRadius: theme.shape.medium,
             paddingHorizontal: 12,
             fontSize: 15,
             fontWeight: "600",
         },
         renameSave: {
-            height: 40,
-            paddingHorizontal: 14,
-            borderRadius: 10,
+            height: 48,
+            paddingHorizontal: 16,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
         renameCancel: { padding: 8 },
         editFieldLabel: {
             fontSize: 11,
-            fontWeight: "700",
+            fontWeight: "600",
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginTop: 14,
@@ -483,7 +487,7 @@ const createStyles = (theme: any) =>
         currencyCard: {
             flex: 1,
             height: 56,
-            borderRadius: 12,
+            borderRadius: theme.shape.medium,
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 1,
@@ -492,17 +496,22 @@ const createStyles = (theme: any) =>
         currSym: { fontSize: 18, fontWeight: "700" },
         currCode: { fontSize: 10, fontWeight: "600", marginTop: 2 },
 
-        balanceCard: { borderRadius: 16, padding: 18, marginBottom: 14, overflow: "hidden" },
+        balanceCard: {
+            borderRadius: theme.shape.large,
+            padding: 18,
+            marginBottom: 14,
+            overflow: "hidden",
+        },
         balanceLabel: {
             fontSize: 11,
-            color: "rgba(255,255,255,0.5)",
+            color: "rgba(255,255,255,0.7)",
             fontWeight: "600",
             letterSpacing: 0.5,
         },
         balanceValue: {
             fontSize: 28,
             fontWeight: "800",
-            color: theme.colors.textInverse,
+            color: "#FFFFFF",
             letterSpacing: -0.5,
             marginTop: 2,
         },
@@ -511,7 +520,13 @@ const createStyles = (theme: any) =>
         balanceMiniText: { fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "600" },
 
         statsGrid: { flexDirection: "row", gap: 10, marginBottom: 14 },
-        statBox: { flex: 1, borderRadius: 12, padding: 12, alignItems: "center", gap: 4 },
+        statBox: {
+            flex: 1,
+            borderRadius: theme.shape.medium,
+            padding: 12,
+            alignItems: "center",
+            gap: 4,
+        },
         statNum: { fontSize: 15, fontWeight: "700" },
         statLbl: { fontSize: 10, fontWeight: "500" },
 
@@ -527,11 +542,20 @@ const createStyles = (theme: any) =>
         legendItem: { flexDirection: "row", alignItems: "center", gap: 3 },
         legendDot: { width: 6, height: 6, borderRadius: 3 },
         legendLbl: { fontSize: 9, fontWeight: "500" },
-        chartBox: { borderRadius: 12, padding: 12, paddingRight: 4 },
+        chartBox: {
+            borderRadius: theme.shape.medium,
+            padding: 12,
+            paddingRight: 4,
+        },
 
         topCatSection: { marginBottom: 16 },
         topCatRow: { flexDirection: "row", gap: 8, marginTop: 8 },
-        topCatChip: { flex: 1, borderRadius: 10, padding: 10, alignItems: "center" },
+        topCatChip: {
+            flex: 1,
+            borderRadius: theme.shape.medium,
+            padding: 10,
+            alignItems: "center",
+        },
         topCatName: { fontSize: 12, fontWeight: "600" },
         topCatAmt: { fontSize: 10, marginTop: 2 },
 
@@ -542,14 +566,16 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            height: 48,
-            borderRadius: 12,
+            height: 52,
+            borderRadius: theme.shape.full,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
-        actionMainText: { color: theme.colors.textInverse, fontSize: 14, fontWeight: "700" },
+        actionMainText: { color: theme.colors.onPrimary, fontSize: 14, fontWeight: "700" },
         actionIcon: {
-            width: 48,
-            height: 48,
-            borderRadius: 12,
+            width: 52,
+            height: 52,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },

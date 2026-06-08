@@ -28,8 +28,8 @@ export default function WeeklyBarChart({
     expenseColor,
 }: WeeklyBarChartProps) {
     const theme = useTheme();
-    const resolvedIncomeColor = incomeColor ?? theme.colors.primary;
-    const resolvedExpenseColor = expenseColor ?? theme.colors.secondary;
+    const resolvedIncomeColor = incomeColor ?? theme.colors.income;
+    const resolvedExpenseColor = expenseColor ?? theme.colors.expense;
     const [tooltip, setTooltip] = useState<{ index: number; type: "income" | "expense" } | null>(
         null,
     );
@@ -69,17 +69,17 @@ export default function WeeklyBarChart({
                     style={[
                         styles.tooltip,
                         {
-                            backgroundColor: theme.colors.text,
+                            backgroundColor: theme.colors.inverseSurface,
                             left: tooltipX + H_PADDING - 40,
                             top: -4,
                         },
                     ]}
                 >
-                    <Text style={[styles.tooltipText, { color: theme.colors.card }]}>
+                    <Text style={[styles.tooltipText, { color: theme.colors.inverseOnSurface }]}>
                         {currencySymbol}
                         {tooltipValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </Text>
-                    <View style={[styles.tooltipArrow, { borderTopColor: theme.colors.text }]} />
+                    <View style={[styles.tooltipArrow, { borderTopColor: theme.colors.inverseSurface }]} />
                 </View>
             )}
 
@@ -93,7 +93,7 @@ export default function WeeklyBarChart({
                     y1={dashY}
                     x2={totalWidth}
                     y2={dashY}
-                    stroke={theme.colors.border}
+                    stroke={theme.colors.outlineVariant}
                     strokeWidth={1}
                     strokeDasharray="4,4"
                 />
@@ -151,7 +151,7 @@ export default function WeeklyBarChart({
                         style={[
                             styles.dayLabel,
                             {
-                                color: theme.colors.textSecondary,
+                                color: theme.colors.onSurfaceVariant,
                                 left: getPairX(i) + pairWidth / 2 - 12,
                             },
                         ]}

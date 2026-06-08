@@ -163,7 +163,7 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                     onPress={onBack}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Security</Text>
             </View>
@@ -176,8 +176,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                     <Text style={styles.sectionLabel}>App Lock</Text>
                     <View style={styles.groupCard}>
                         <View style={styles.row}>
-                            <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                <Lock size={18} color={theme.colors.primary} />
+                            <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                                <Lock size={18} color={theme.colors.onPrimaryContainer} />
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={styles.rowText}>PIN Lock</Text>
@@ -188,15 +188,18 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                             <Switch
                                 value={pinEnabled}
                                 onValueChange={handleTogglePin}
-                                trackColor={{ false: theme.colors.surface, true: theme.colors.primary }}
-                                thumbColor={theme.colors.textInverse}
+                                trackColor={{
+                                    false: theme.colors.surfaceContainerHighest,
+                                    true: theme.colors.primary,
+                                }}
+                                thumbColor={theme.colors.onPrimary}
                             />
                         </View>
 
                         {pinEnabled && biometricsAvailable && (
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <BiometricIcon size={18} color={theme.colors.success} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <BiometricIcon size={18} color={theme.colors.onSecondaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>{biometricType}</Text>
@@ -207,8 +210,11 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 <Switch
                                     value={biometricsOn}
                                     onValueChange={handleToggleBiometrics}
-                                    trackColor={{ false: theme.colors.surface, true: theme.colors.success }}
-                                    thumbColor={theme.colors.textInverse}
+                                    trackColor={{
+                                        false: theme.colors.surfaceContainerHighest,
+                                        true: theme.colors.primary,
+                                    }}
+                                    thumbColor={theme.colors.onPrimary}
                                 />
                             </View>
                         )}
@@ -218,8 +224,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleChangePin}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.expenseBg }]}>
-                                    <Lock size={18} color={theme.colors.secondary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                                    <Lock size={18} color={theme.colors.onTertiaryContainer} />
                                 </View>
                                 <Text style={styles.rowText}>Change PIN</Text>
                             </TouchableOpacity>
@@ -234,8 +240,8 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleTogglePin}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: `${theme.colors.error}1A` }]}>
-                                    <Trash2 size={18} color={theme.colors.error} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.errorContainer }]}>
+                                    <Trash2 size={18} color={theme.colors.onErrorContainer} />
                                 </View>
                                 <Text style={[styles.rowText, { color: theme.colors.error }]}>Remove PIN</Text>
                             </TouchableOpacity>
@@ -252,7 +258,7 @@ function PinVerifyScreen({
     onVerified,
     onBack,
 }: {
-    theme: any;
+    theme: ReturnType<typeof useTheme>;
     onVerified: () => void;
     onBack: () => void;
 }) {
@@ -320,14 +326,14 @@ function PinVerifyScreen({
                     style={verifyStyles.backBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={verifyStyles.headerTitle}>Verify PIN</Text>
             </View>
 
             <View style={verifyStyles.content}>
                 <View style={verifyStyles.lockIconCircle}>
-                    <Lock size={28} color={theme.colors.primary} />
+                    <Lock size={28} color={theme.colors.onPrimaryContainer} />
                 </View>
                 <Text style={verifyStyles.subtitle}>Enter your current PIN to remove it</Text>
 
@@ -361,7 +367,11 @@ function PinVerifyScreen({
                                 >
                                     <Delete
                                         size={22}
-                                        color={pin.length === 0 || error ? theme.colors.border : theme.colors.text}
+                                        color={
+                                            pin.length === 0 || error
+                                                ? theme.colors.outlineVariant
+                                                : theme.colors.onSurfaceVariant
+                                        }
                                     />
                                 </TouchableOpacity>
                             );
@@ -383,7 +393,7 @@ function PinVerifyScreen({
     );
 }
 
-const createVerifyStyles = (theme: any) =>
+const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
         header: {
@@ -396,15 +406,17 @@ const createVerifyStyles = (theme: any) =>
         backBtn: {
             width: 36,
             height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         headerTitle: {
             fontSize: 26,
-            fontWeight: "800",
-            color: theme.colors.text,
+            fontWeight: "700",
+            color: theme.colors.onSurface,
             letterSpacing: -0.3,
         },
         content: {
@@ -415,15 +427,15 @@ const createVerifyStyles = (theme: any) =>
         lockIconCircle: {
             width: 64,
             height: 64,
-            borderRadius: 20,
-            backgroundColor: theme.colors.incomeBg,
+            borderRadius: 32,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
         },
         subtitle: {
             fontSize: 15,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             fontWeight: "500",
             marginBottom: 32,
         },
@@ -437,7 +449,7 @@ const createVerifyStyles = (theme: any) =>
             height: 14,
             borderRadius: 7,
             borderWidth: 2,
-            borderColor: theme.colors.border,
+            borderColor: theme.colors.outlineVariant,
         },
         dotFilled: {
             backgroundColor: theme.colors.primary,
@@ -465,18 +477,18 @@ const createVerifyStyles = (theme: any) =>
             width: 68,
             height: 68,
             borderRadius: 34,
-            backgroundColor: theme.colors.card,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             alignItems: "center",
             justifyContent: "center",
         },
         keyText: {
             fontSize: 24,
             fontWeight: "400",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
     });
 
-const createStyles = (theme: any) =>
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
         headerDecoration: {
@@ -484,10 +496,10 @@ const createStyles = (theme: any) =>
             top: 0,
             left: 0,
             right: 0,
-            backgroundColor: theme.colors.incomeBg,
+            backgroundColor: theme.colors.primaryContainer,
             borderBottomLeftRadius: 40,
             borderBottomRightRadius: 40,
-            opacity: 0.6,
+            opacity: 0.5,
         },
         header: {
             flexDirection: "row",
@@ -499,20 +511,17 @@ const createStyles = (theme: any) =>
         backBtn: {
             width: 36,
             height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         headerTitle: {
             fontSize: 26,
-            fontWeight: "800",
-            color: theme.colors.text,
+            fontWeight: "700",
+            color: theme.colors.onSurface,
             letterSpacing: -0.3,
         },
         section: {
@@ -521,7 +530,7 @@ const createStyles = (theme: any) =>
         },
         sectionLabel: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginBottom: 10,
             marginLeft: 4,
@@ -529,14 +538,11 @@ const createStyles = (theme: any) =>
             letterSpacing: 0.8,
         },
         groupCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             overflow: "hidden",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
         },
         row: {
             flexDirection: "row",
@@ -544,12 +550,12 @@ const createStyles = (theme: any) =>
             paddingHorizontal: 16,
             paddingVertical: 14,
             borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: theme.colors.borderLight,
+            borderBottomColor: theme.colors.outlineVariant,
         },
         iconCircle: {
             width: 36,
             height: 36,
-            borderRadius: 10,
+            borderRadius: 18,
             alignItems: "center",
             justifyContent: "center",
             marginRight: 14,
@@ -558,12 +564,12 @@ const createStyles = (theme: any) =>
             flex: 1,
             fontSize: 15,
             fontWeight: "600",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
         rowSubText: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 1,
         },
     });

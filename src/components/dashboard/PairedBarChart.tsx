@@ -65,17 +65,17 @@ export default function PairedBarChart({
                     style={[
                         styles.tooltip,
                         {
-                            backgroundColor: theme.colors.text,
+                            backgroundColor: theme.colors.inverseSurface,
                             left: tooltipX + H_PADDING - 40,
                             top: -4,
                         },
                     ]}
                 >
-                    <Text style={[styles.tooltipText, { color: theme.colors.card }]}>
+                    <Text style={[styles.tooltipText, { color: theme.colors.inverseOnSurface }]}>
                         {currencySymbol}
                         {tooltipValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                     </Text>
-                    <View style={[styles.tooltipArrow, { borderTopColor: theme.colors.text }]} />
+                    <View style={[styles.tooltipArrow, { borderTopColor: theme.colors.inverseSurface }]} />
                 </View>
             )}
 
@@ -85,7 +85,7 @@ export default function PairedBarChart({
                     y1={dashY}
                     x2={totalWidth}
                     y2={dashY}
-                    stroke={theme.colors.border}
+                    stroke={theme.colors.outlineVariant}
                     strokeWidth={1}
                     strokeDasharray="4,4"
                 />
@@ -143,7 +143,7 @@ export default function PairedBarChart({
                         style={[
                             styles.dayLabel,
                             {
-                                color: theme.colors.textSecondary,
+                                color: theme.colors.onSurfaceVariant,
                                 left: getPairX(i) + pairWidth / 2 - 18,
                             },
                         ]}

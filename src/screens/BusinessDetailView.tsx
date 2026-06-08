@@ -38,6 +38,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
 import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
+import { maybeRequestReview } from "../utils/storeReview";
 import ChartCarousel from "../components/ChartCarousel";
 import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
@@ -302,6 +303,15 @@ export default function BusinessDetailView({
 
         setEditingTx(null);
         setActiveModal("none");
+
+        if (!data.editingTxId) {
+            const manualCount = updatedTransactions.filter(
+                (t) => !t.autoLogged && t.source !== "recurring",
+            ).length;
+            setTimeout(() => {
+                maybeRequestReview({ kind: "transaction", totalTransactions: manualCount });
+            }, 800);
+        }
     };
 
     const handleStartEdit = () => {
@@ -381,7 +391,7 @@ export default function BusinessDetailView({
             <View style={styles.container}>
                 <View style={[styles.detailHeader, { paddingTop: Math.max(insets.top, 40) }]}>
                     <TouchableOpacity onPress={onBack} style={styles.detailBackBtn}>
-                        <ArrowLeft size={24} color={theme.colors.text} />
+                        <ArrowLeft size={24} color={theme.colors.onSurface} />
                     </TouchableOpacity>
                     <Text style={styles.detailTitle}>{business.name}</Text>
                 </View>
@@ -446,11 +456,11 @@ export default function BusinessDetailView({
                     )}
 
                     <View style={styles.detailSearchContainer}>
-                        <Search size={18} color={theme.colors.textSecondary} />
+                        <Search size={18} color={theme.colors.onSurfaceVariant} />
                         <TextInput
                             style={styles.detailSearchInput}
                             placeholder="Search transactions..."
-                            placeholderTextColor={theme.colors.placeholder}
+                            placeholderTextColor={theme.colors.onSurfaceVariant}
                             value={searchQuery}
                             onChangeText={setSearchQuery}
                         />
@@ -471,12 +481,12 @@ export default function BusinessDetailView({
                                         {
                                             backgroundColor:
                                                 filterRange === range
-                                                    ? theme.colors.primary
-                                                    : theme.colors.card,
+                                                    ? theme.colors.secondaryContainer
+                                                    : "transparent",
                                             borderColor:
                                                 filterRange === range
-                                                    ? theme.colors.primary
-                                                    : theme.colors.borderLight,
+                                                    ? theme.colors.secondaryContainer
+                                                    : theme.colors.outlineVariant,
                                         },
                                     ]}
                                 >
@@ -486,8 +496,8 @@ export default function BusinessDetailView({
                                             {
                                                 color:
                                                     filterRange === range
-                                                        ? theme.colors.textInverse
-                                                        : theme.colors.textSecondary,
+                                                        ? theme.colors.onSecondaryContainer
+                                                        : theme.colors.onSurfaceVariant,
                                             },
                                         ]}
                                     >
@@ -502,12 +512,12 @@ export default function BusinessDetailView({
                                     {
                                         backgroundColor:
                                             filterRange === "custom"
-                                                ? theme.colors.primary
-                                                : theme.colors.card,
+                                                ? theme.colors.secondaryContainer
+                                                : "transparent",
                                         borderColor:
                                             filterRange === "custom"
-                                                ? theme.colors.primary
-                                                : theme.colors.borderLight,
+                                                ? theme.colors.secondaryContainer
+                                                : theme.colors.outlineVariant,
                                         flexDirection: "row",
                                         alignItems: "center",
                                         gap: 4,
@@ -518,8 +528,8 @@ export default function BusinessDetailView({
                                     size={12}
                                     color={
                                         filterRange === "custom"
-                                            ? theme.colors.textInverse
-                                            : theme.colors.textSecondary
+                                            ? theme.colors.onSecondaryContainer
+                                            : theme.colors.onSurfaceVariant
                                     }
                                 />
                                 <Text
@@ -528,8 +538,8 @@ export default function BusinessDetailView({
                                         {
                                             color:
                                                 filterRange === "custom"
-                                                    ? theme.colors.textInverse
-                                                    : theme.colors.textSecondary,
+                                                    ? theme.colors.onSecondaryContainer
+                                                    : theme.colors.onSurfaceVariant,
                                         },
                                     ]}
                                 >
@@ -553,8 +563,8 @@ export default function BusinessDetailView({
                                 <Text
                                     style={{
                                         fontSize: 12,
-                                        fontWeight: "500",
-                                        color: theme.colors.textSecondary,
+                                        fontWeight: "600",
+                                        color: theme.colors.onSurfaceVariant,
                                         marginBottom: 10,
                                         textTransform: "uppercase",
                                         letterSpacing: 0.5,
@@ -577,16 +587,16 @@ export default function BusinessDetailView({
                                                 {
                                                     backgroundColor:
                                                         t.type === "income"
-                                                            ? theme.colors.incomeBg
-                                                            : theme.colors.expenseBg,
+                                                            ? theme.colors.incomeContainer
+                                                            : theme.colors.expenseContainer,
                                                 },
                                             ]}
                                         >
                                             {localGetCategoryIcon(
                                                 t.category,
                                                 t.type === "income"
-                                                    ? theme.colors.income
-                                                    : theme.colors.expense,
+                                                    ? theme.colors.onIncomeContainer
+                                                    : theme.colors.onExpenseContainer,
                                             )}
                                         </View>
                                         <View style={styles.txInfo}>
@@ -610,8 +620,8 @@ export default function BusinessDetailView({
                                                 style={[
                                                     styles.txAmountModern,
                                                     t.type === "income"
-                                                        ? { color: theme.colors.success }
-                                                        : { color: theme.colors.error },
+                                                        ? { color: theme.colors.income }
+                                                        : { color: theme.colors.expense },
                                                 ]}
                                             >
                                                 {t.type === "income" ? "+" : "-"}
@@ -642,7 +652,7 @@ export default function BusinessDetailView({
                     <TouchableOpacity
                         style={[
                             styles.bigActionBtnModern,
-                            { backgroundColor: theme.colors.income },
+                            { backgroundColor: theme.colors.incomeContainer },
                         ]}
                         onPress={() => {
                             setEntryType("income");
@@ -650,14 +660,14 @@ export default function BusinessDetailView({
                             setActiveModal("entry");
                         }}
                     >
-                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.textInverse }]}>
+                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.onIncomeContainer }]}>
                             CASH IN
                         </Text>
                     </TouchableOpacity>
                     <TouchableOpacity
                         style={[
                             styles.bigActionBtnModern,
-                            { backgroundColor: theme.colors.expense },
+                            { backgroundColor: theme.colors.expenseContainer },
                         ]}
                         onPress={() => {
                             setEntryType("expense");
@@ -665,7 +675,7 @@ export default function BusinessDetailView({
                             setActiveModal("entry");
                         }}
                     >
-                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.textInverse }]}>
+                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.onExpenseContainer }]}>
                             CASH OUT
                         </Text>
                     </TouchableOpacity>
@@ -766,22 +776,22 @@ function IncomeExpenseCards({
 }) {
     return (
         <View style={styles.statsContainer}>
-            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.incomeBg }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.income }]}>
-                    <Plus size={20} color={theme.colors.textInverse} />
+            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.incomeContainer }]}>
+                    <Plus size={20} color={theme.colors.onIncomeContainer} />
                 </View>
                 <Text style={styles.statLabel}>Total In</Text>
-                <Text style={styles.statValue}>
+                <Text style={[styles.statValue, { color: theme.colors.income }]}>
                     {symbol}
                     {totalIncome.toLocaleString()}
                 </Text>
             </View>
-            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.expenseBg }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.expense }]}>
-                    <MinusIcon size={20} color={theme.colors.textInverse} />
+            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.expenseContainer }]}>
+                    <MinusIcon size={20} color={theme.colors.onExpenseContainer} />
                 </View>
                 <Text style={styles.statLabel}>Total Out</Text>
-                <Text style={styles.statValue}>
+                <Text style={[styles.statValue, { color: theme.colors.expense }]}>
                     {symbol}
                     {totalExpense.toLocaleString()}
                 </Text>

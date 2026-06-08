@@ -23,13 +23,13 @@ export default function AutoLogStatsCard({ stats, onReset }: Props) {
     return (
         <View style={styles.card}>
             <View style={styles.cardHead}>
-                <View style={[styles.iconWrap, { backgroundColor: theme.colors.incomeBg }]}>
-                    <Activity size={16} color={theme.colors.primary} />
+                <View style={styles.iconWrap}>
+                    <Activity size={16} color={theme.colors.onPrimaryContainer} />
                 </View>
                 <Text style={styles.cardTitle}>Local metrics</Text>
                 {hasAny ? (
                     <TouchableOpacity onPress={onReset} hitSlop={10} style={styles.resetBtn}>
-                        <RotateCcw size={14} color={theme.colors.textSecondary} />
+                        <RotateCcw size={14} color={theme.colors.onSurfaceVariant} />
                         <Text style={styles.resetText}>Reset</Text>
                     </TouchableOpacity>
                 ) : null}
@@ -72,19 +72,21 @@ interface CellProps {
 
 function Cell({ label, value, styles, theme }: CellProps) {
     return (
-        <View style={[styles.cell, { backgroundColor: theme.colors.surface }]}>
-            <Text style={[styles.cellValue, { color: theme.colors.text }]}>{value}</Text>
-            <Text style={[styles.cellLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
+        <View style={styles.cell}>
+            <Text style={[styles.cellValue, { color: theme.colors.onSurface }]}>{value}</Text>
+            <Text style={[styles.cellLabel, { color: theme.colors.onSurfaceVariant }]}>{label}</Text>
         </View>
     );
 }
 
-const createStyles = (theme: any) =>
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         card: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
-            padding: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
+            padding: theme.spacing.l,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         cardHead: {
             flexDirection: "row",
@@ -95,7 +97,8 @@ const createStyles = (theme: any) =>
         iconWrap: {
             width: 28,
             height: 28,
-            borderRadius: 8,
+            borderRadius: theme.shape.small,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -103,7 +106,7 @@ const createStyles = (theme: any) =>
             flex: 1,
             fontSize: 14,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
         resetBtn: {
@@ -112,12 +115,13 @@ const createStyles = (theme: any) =>
             gap: 6,
             paddingHorizontal: 10,
             paddingVertical: 6,
-            borderRadius: 8,
+            borderRadius: theme.shape.small,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         resetText: {
             fontSize: 11,
             fontWeight: "600",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
         },
         grid: {
             flexDirection: "row",
@@ -129,7 +133,8 @@ const createStyles = (theme: any) =>
             minWidth: "46%",
             paddingVertical: 12,
             paddingHorizontal: 14,
-            borderRadius: 12,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         cellValue: {
             fontSize: 20,
@@ -144,12 +149,12 @@ const createStyles = (theme: any) =>
         },
         footerText: {
             fontSize: 11,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 10,
         },
         emptyText: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             lineHeight: 18,
         },
     });

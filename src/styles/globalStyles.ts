@@ -9,74 +9,81 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     backgroundColor: theme.colors.background,
     elevation: 0,
     shadowOpacity: 0,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.colors.outlineVariant,
   },
   headerTitle: {
-    fontWeight: '600',
-    fontSize: 18,
-    color: theme.colors.text,
+    fontWeight: '700',
+    fontSize: 22,
+    color: theme.colors.onSurface,
+    letterSpacing: 0,
   },
   tabBar: {
-    backgroundColor: theme.colors.background,
-    borderTopWidth: 1,
-    borderTopColor: theme.colors.borderLight,
-    height: 60,
+    backgroundColor: theme.colors.surfaceContainer,
+    borderTopWidth: 0,
+    height: 64,
     paddingBottom: theme.spacing.s,
     paddingTop: theme.spacing.s,
   },
-  
+
   // Business Selector
   businessSelector: {
     paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.l,
-    borderBottomWidth: 1,
-    borderBottomColor: theme.colors.borderLight,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: theme.colors.outlineVariant,
   },
   businessChip: {
     paddingHorizontal: theme.spacing.l,
     paddingVertical: theme.spacing.s,
-    borderRadius: theme.borderRadius.l,
-    backgroundColor: theme.colors.surface,
+    borderRadius: theme.shape.small,
+    backgroundColor: 'transparent',
+    borderWidth: 1,
+    borderColor: theme.colors.outlineVariant,
     marginRight: theme.spacing.s,
   },
   businessChipActive: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.secondaryContainer,
+    borderColor: theme.colors.secondaryContainer,
   },
   businessChipText: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     fontWeight: '500',
   },
   businessChipTextActive: {
-    color: theme.colors.textInverse,
+    color: theme.colors.onSecondaryContainer,
+    fontWeight: '600',
   },
-  
+
   // Summary Card
   summaryCard: {
     margin: theme.spacing.l,
     padding: theme.spacing.xl,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.m,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.shape.extraLarge,
     alignItems: 'center',
+    ...theme.elevation.level1,
+    shadowColor: theme.colors.shadow,
   },
   summaryLabel: {
     fontSize: 14,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginBottom: theme.spacing.s,
     fontWeight: '500',
   },
   summaryValue: {
     fontSize: 36,
     fontWeight: '700',
+    letterSpacing: -0.5,
   },
   positive: {
-    color: theme.colors.success,
+    color: theme.colors.income,
   },
   negative: {
-    color: theme.colors.error,
+    color: theme.colors.expense,
   },
-  
+
   // Stats Row
   statsRow: {
     flexDirection: 'row',
@@ -87,20 +94,22 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   statCard: {
     flex: 1,
     padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.m,
-    backgroundColor: theme.colors.card,
+    borderRadius: theme.shape.large,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    ...theme.elevation.level1,
+    shadowColor: theme.colors.shadow,
   },
   incomeCard: {
     borderLeftWidth: 3,
-    borderLeftColor: theme.colors.success,
+    borderLeftColor: theme.colors.income,
   },
   expenseCard: {
     borderLeftWidth: 3,
-    borderLeftColor: theme.colors.textSecondary,
+    borderLeftColor: theme.colors.expense,
   },
   statLabel: {
     fontSize: 12,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: theme.spacing.s,
     marginBottom: theme.spacing.xs,
     fontWeight: '500',
@@ -108,9 +117,10 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   statValue: {
     fontSize: 20,
     fontWeight: '700',
-    color: theme.colors.text,
+    color: theme.colors.onSurface,
+    letterSpacing: -0.3,
   },
-  
+
   // Sections
   section: {
     paddingHorizontal: theme.spacing.l,
@@ -118,11 +128,11 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginBottom: theme.spacing.l,
-    color: theme.colors.text,
+    color: theme.colors.onSurface,
   },
-  
+
   // Transaction Item
   transactionItem: {
     flexDirection: 'row',
@@ -130,8 +140,8 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.l,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.s,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.shape.large,
     marginBottom: theme.spacing.s,
   },
   transactionLeft: {
@@ -140,49 +150,46 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   transactionDescription: {
     fontSize: 15,
     fontWeight: '500',
-    color: theme.colors.text,
+    color: theme.colors.onSurface,
     marginBottom: theme.spacing.xs,
   },
   transactionDate: {
     fontSize: 13,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   transactionMeta: {
     fontSize: 13,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: '700',
     marginLeft: theme.spacing.m,
   },
-  
+
   // Empty State
   emptyText: {
     textAlign: 'center',
-    color: theme.colors.placeholder,
+    color: theme.colors.onSurfaceVariant,
     fontSize: 14,
     marginTop: 32,
   },
-  
-  // FAB
+
+  // FAB (Material 3: primaryContainer surface, 16dp rounded)
   fab: {
     position: 'absolute',
     right: 20,
     bottom: 20,
     width: 56,
     height: 56,
-    borderRadius: 28,
-    backgroundColor: theme.colors.primary,
+    borderRadius: theme.shape.large,
+    backgroundColor: theme.colors.primaryContainer,
     justifyContent: 'center',
     alignItems: 'center',
-    elevation: 4,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
+    ...theme.elevation.level3,
+    shadowColor: theme.colors.shadow,
   },
-  
+
   // Type Selector
   typeSelector: {
     flexDirection: 'row',
@@ -192,8 +199,8 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   typeButton: {
     flex: 1,
     paddingVertical: theme.spacing.m,
-    borderRadius: theme.borderRadius.s,
-    backgroundColor: theme.colors.surface,
+    borderRadius: theme.shape.medium,
+    backgroundColor: theme.colors.surfaceContainerHigh,
     alignItems: 'center',
   },
   typeButtonActive: {
@@ -201,25 +208,25 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   typeButtonText: {
     fontSize: 15,
-    fontWeight: '500',
-    color: theme.colors.textSecondary,
+    fontWeight: '600',
+    color: theme.colors.onSurfaceVariant,
   },
   typeButtonTextActive: {
-    color: theme.colors.textInverse,
+    color: theme.colors.onPrimary,
   },
-  
-  // Input
+
+  // Input (Material 3 filled text field)
   input: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.s,
+    borderColor: theme.colors.outline,
+    borderRadius: theme.shape.medium,
     padding: 14,
     marginBottom: theme.spacing.l,
     fontSize: 15,
-    backgroundColor: theme.colors.card,
-    color: theme.colors.text,
+    backgroundColor: theme.colors.surfaceContainerHighest,
+    color: theme.colors.onSurface,
   },
-  
+
   // Picker
   pickerContainer: {
     marginBottom: 20,
@@ -228,68 +235,72 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
     marginBottom: theme.spacing.s,
-    color: theme.colors.text,
+    color: theme.colors.onSurfaceVariant,
   },
   picker: {
     borderWidth: 1,
-    borderColor: theme.colors.border,
-    borderRadius: theme.borderRadius.s,
-    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.outline,
+    borderRadius: theme.shape.medium,
+    backgroundColor: theme.colors.surfaceContainerHighest,
   },
-  
-  // Button
+
+  // Button (Material 3 filled button)
   button: {
     backgroundColor: theme.colors.primary,
-    padding: theme.spacing.l,
-    borderRadius: theme.borderRadius.s,
+    paddingVertical: theme.spacing.l,
+    paddingHorizontal: theme.spacing.xl,
+    borderRadius: theme.shape.full,
     alignItems: 'center',
     marginBottom: theme.spacing.m,
   },
   buttonText: {
-    color: theme.colors.textInverse,
-    fontSize: 16,
-    fontWeight: '600',
+    color: theme.colors.onPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    letterSpacing: 0.1,
   },
   buttonSecondary: {
-    backgroundColor: theme.colors.surface,
+    backgroundColor: theme.colors.secondaryContainer,
   },
   buttonSecondaryText: {
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSecondaryContainer,
   },
-  
+
   // Business Item
   businessItem: {
     padding: theme.spacing.l,
-    backgroundColor: theme.colors.card,
-    borderRadius: theme.borderRadius.s,
+    backgroundColor: theme.colors.surfaceContainerLow,
+    borderRadius: theme.shape.large,
     marginBottom: theme.spacing.m,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    ...theme.elevation.level1,
+    shadowColor: theme.colors.shadow,
   },
   businessItemActive: {
-    backgroundColor: theme.colors.primary,
+    backgroundColor: theme.colors.secondaryContainer,
   },
   businessName: {
     fontSize: 16,
-    fontWeight: '500',
-    color: theme.colors.text,
+    fontWeight: '600',
+    color: theme.colors.onSurface,
   },
   businessNameActive: {
-    color: theme.colors.textInverse,
+    color: theme.colors.onSecondaryContainer,
   },
   businessMeta: {
     fontSize: 13,
-    color: theme.colors.textSecondary,
+    color: theme.colors.onSurfaceVariant,
     marginTop: theme.spacing.xs,
   },
   businessMetaActive: {
-    color: '#ccc',
+    color: theme.colors.onSecondaryContainer,
   },
   deleteButton: {
     padding: theme.spacing.s,
   },
-  
+
   // List
   transactionsList: {
     flex: 1,

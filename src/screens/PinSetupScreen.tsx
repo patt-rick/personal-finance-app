@@ -37,12 +37,8 @@ interface PinSetupScreenProps {
 }
 
 function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string }) {
-    const primaryLight = isDark
-        ? "rgba(45, 106, 79, 0.12)"
-        : "rgba(45, 106, 79, 0.07)";
-    const primaryMedium = isDark
-        ? "rgba(45, 106, 79, 0.2)"
-        : "rgba(45, 106, 79, 0.10)";
+    const theme = useTheme();
+    const primaryContainer = theme.colors.primaryContainer;
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -64,7 +60,8 @@ function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string 
                         C${width * 0.5},${height * 0.05} ${width * 1.1},${height * 0.12} ${width},${height * 0.22}
                         L${width},${height * 0.15}
                         C${width * 0.9},${height * 0.08} ${width * 0.55},${height * 0.03} ${width * 0.82},0 Z`}
-                    fill={primaryMedium}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.3 : 0.5}
                 />
                 <Path
                     d={`M0,${height * 0.82}
@@ -79,7 +76,8 @@ function WaveBackground({ isDark, primary }: { isDark: boolean; primary: string 
                         C${width * 0.08},${height * 0.85} ${width * 0.12},${height * 0.93} ${width * 0.3},${height * 0.92}
                         C${width * 0.38},${height * 0.915} ${width * 0.35},${height * 0.97} ${width * 0.42},${height}
                         L0,${height} Z`}
-                    fill={primaryLight}
+                    fill={primaryContainer}
+                    opacity={isDark ? 0.2 : 0.35}
                 />
             </Svg>
         </View>
@@ -91,7 +89,6 @@ function PinDot({
     error,
     shakeAnim,
     theme,
-    isDark,
 }: {
     filled: boolean;
     error: boolean;
@@ -135,13 +132,11 @@ function PinDot({
 
     const dotColor = error ? theme.colors.error : theme.colors.primary;
     const glowColor = error
-        ? "rgba(196, 69, 58, 0.35)"
-        : "rgba(45, 106, 79, 0.35)";
-    const ringColor = error
-        ? "rgba(196, 69, 58, 0.5)"
-        : isDark
-            ? "rgba(255, 255, 255, 0.15)"
-            : "rgba(0, 0, 0, 0.12)";
+        ? theme.colors.errorContainer
+        : theme.colors.primaryContainer;
+    const ringBorderColor = error
+        ? theme.colors.error
+        : theme.colors.outlineVariant;
 
     return (
         <Animated.View
@@ -156,7 +151,7 @@ function PinDot({
                     { backgroundColor: glowColor, opacity: glowOpacity },
                 ]}
             />
-            <View style={[dotStyles.ring, { borderColor: ringColor }]}>
+            <View style={[dotStyles.ring, { borderColor: ringBorderColor }]}>
                 <Animated.View
                     style={[
                         dotStyles.fill,
@@ -173,7 +168,6 @@ function NumKey({
     onPress,
     disabled,
     theme,
-    isDark,
 }: {
     label: string;
     onPress: () => void;
@@ -215,23 +209,15 @@ function NumKey({
                     {
                         transform: [{ scale: pressAnim }],
                         opacity: disabled ? 0.3 : 1,
-                        backgroundColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.03)",
-                        borderColor: isDark
-                            ? "rgba(255, 255, 255, 0.08)"
-                            : "rgba(0, 0, 0, 0.06)",
+                        backgroundColor: theme.colors.surfaceContainerHigh,
+                        borderColor: theme.colors.outlineVariant,
                     },
                 ]}
             >
                 <Text
                     style={[
                         keypadStyles.label,
-                        {
-                            color: isDark
-                                ? "rgba(255, 255, 255, 0.85)"
-                                : theme.colors.text,
-                        },
+                        { color: theme.colors.onSurface },
                     ]}
                 >
                     {label}
@@ -277,16 +263,6 @@ function SecurityQuestionsStep({
         }, 300);
     };
 
-    const inputBg = isDark
-        ? "rgba(255, 255, 255, 0.06)"
-        : "rgba(0, 0, 0, 0.03)";
-    const inputBorder = isDark
-        ? "rgba(255, 255, 255, 0.08)"
-        : "rgba(0, 0, 0, 0.08)";
-    const placeholderColor = isDark
-        ? "rgba(255,255,255,0.25)"
-        : "rgba(0,0,0,0.25)";
-
     return (
         <View
             style={[
@@ -304,25 +280,14 @@ function SecurityQuestionsStep({
                 style={[
                     styles.backButton,
                     {
-                        backgroundColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.04)",
-                        borderColor: isDark
-                            ? "rgba(255, 255, 255, 0.08)"
-                            : "rgba(0, 0, 0, 0.06)",
+                        backgroundColor: theme.colors.surfaceContainerHigh,
+                        borderColor: theme.colors.outlineVariant,
                     },
                 ]}
                 onPress={onQuestionsBack}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft
-                    size={22}
-                    color={
-                        isDark
-                            ? "rgba(255, 255, 255, 0.7)"
-                            : "rgba(0, 0, 0, 0.5)"
-                    }
-                />
+                <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
             </TouchableOpacity>
 
             <KeyboardAvoidingView
@@ -338,19 +303,15 @@ function SecurityQuestionsStep({
                     <View
                         style={[
                             sqStyles.iconCircle,
-                            {
-                                backgroundColor: isDark
-                                    ? "rgba(45, 106, 79, 0.15)"
-                                    : "rgba(45, 106, 79, 0.1)",
-                            },
+                            { backgroundColor: theme.colors.primaryContainer },
                         ]}
                     >
-                        <Shield size={28} color={theme.colors.primary} />
+                        <Shield size={28} color={theme.colors.onPrimaryContainer} />
                     </View>
                     <Text
                         style={[
                             sqStyles.title,
-                            { color: theme.colors.text },
+                            { color: theme.colors.onSurface },
                         ]}
                     >
                         Security Questions
@@ -358,7 +319,7 @@ function SecurityQuestionsStep({
                     <Text
                         style={[
                             sqStyles.subtitle,
-                            { color: theme.colors.textSecondary },
+                            { color: theme.colors.onSurfaceVariant },
                         ]}
                     >
                         These will help you recover your PIN if you forget it
@@ -368,7 +329,7 @@ function SecurityQuestionsStep({
                         <Text
                             style={[
                                 sqStyles.label,
-                                { color: theme.colors.textSecondary },
+                                { color: theme.colors.onSurfaceVariant },
                             ]}
                         >
                             Question 1
@@ -377,8 +338,8 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.picker,
                                 {
-                                    backgroundColor: inputBg,
-                                    borderColor: inputBorder,
+                                    backgroundColor: theme.colors.surfaceContainerHighest,
+                                    borderColor: theme.colors.outline,
                                 },
                             ]}
                             onPress={() => {
@@ -389,30 +350,21 @@ function SecurityQuestionsStep({
                             <Text
                                 style={[
                                     sqStyles.pickerText,
-                                    { color: theme.colors.text },
-                                    !q1 && {
-                                        color: placeholderColor,
-                                    },
+                                    { color: theme.colors.onSurface },
+                                    !q1 && { color: theme.colors.onSurfaceVariant },
                                 ]}
                             >
                                 {q1 || "Select a question"}
                             </Text>
-                            <ChevronDown
-                                size={18}
-                                color={theme.colors.textSecondary}
-                            />
+                            <ChevronDown size={18} color={theme.colors.onSurfaceVariant} />
                         </TouchableOpacity>
                         {showQ1Picker && (
                             <View
                                 style={[
                                     sqStyles.dropdown,
                                     {
-                                        backgroundColor: isDark
-                                            ? "rgba(30, 30, 50, 0.98)"
-                                            : "rgba(255, 255, 255, 0.98)",
-                                        borderColor: isDark
-                                            ? "rgba(255, 255, 255, 0.1)"
-                                            : "rgba(0, 0, 0, 0.08)",
+                                        backgroundColor: theme.colors.surfaceContainerLow,
+                                        borderColor: theme.colors.outlineVariant,
                                     },
                                 ]}
                             >
@@ -421,15 +373,9 @@ function SecurityQuestionsStep({
                                         key={q}
                                         style={[
                                             sqStyles.dropdownItem,
-                                            {
-                                                borderBottomColor: isDark
-                                                    ? "rgba(255, 255, 255, 0.06)"
-                                                    : "rgba(0, 0, 0, 0.05)",
-                                            },
+                                            { borderBottomColor: theme.colors.outlineVariant },
                                             q === q1 && {
-                                                backgroundColor: isDark
-                                                    ? "rgba(45, 106, 79, 0.1)"
-                                                    : "rgba(45, 106, 79, 0.06)",
+                                                backgroundColor: theme.colors.primaryContainer,
                                             },
                                         ]}
                                         onPress={() => {
@@ -441,14 +387,9 @@ function SecurityQuestionsStep({
                                         <Text
                                             style={[
                                                 sqStyles.dropdownText,
-                                                {
-                                                    color: isDark
-                                                        ? "rgba(255, 255, 255, 0.7)"
-                                                        : "rgba(0, 0, 0, 0.6)",
-                                                },
+                                                { color: theme.colors.onSurfaceVariant },
                                                 q === q1 && {
-                                                    color: theme.colors
-                                                        .primary,
+                                                    color: theme.colors.onPrimaryContainer,
                                                     fontWeight: "600",
                                                 },
                                             ]}
@@ -456,10 +397,7 @@ function SecurityQuestionsStep({
                                             {q}
                                         </Text>
                                         {q === q1 && (
-                                            <Check
-                                                size={16}
-                                                color={theme.colors.primary}
-                                            />
+                                            <Check size={16} color={theme.colors.onPrimaryContainer} />
                                         )}
                                     </TouchableOpacity>
                                 ))}
@@ -469,13 +407,13 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.input,
                                 {
-                                    backgroundColor: inputBg,
-                                    borderColor: inputBorder,
-                                    color: theme.colors.text,
+                                    backgroundColor: theme.colors.surfaceContainerHighest,
+                                    borderColor: theme.colors.outline,
+                                    color: theme.colors.onSurface,
                                 },
                             ]}
                             placeholder="Your answer"
-                            placeholderTextColor={placeholderColor}
+                            placeholderTextColor={theme.colors.onSurfaceVariant}
                             value={a1}
                             onChangeText={setA1}
                             autoCapitalize="none"
@@ -498,7 +436,7 @@ function SecurityQuestionsStep({
                         <Text
                             style={[
                                 sqStyles.label,
-                                { color: theme.colors.textSecondary },
+                                { color: theme.colors.onSurfaceVariant },
                             ]}
                         >
                             Question 2
@@ -507,8 +445,8 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.picker,
                                 {
-                                    backgroundColor: inputBg,
-                                    borderColor: inputBorder,
+                                    backgroundColor: theme.colors.surfaceContainerHighest,
+                                    borderColor: theme.colors.outline,
                                 },
                             ]}
                             onPress={() => {
@@ -519,30 +457,21 @@ function SecurityQuestionsStep({
                             <Text
                                 style={[
                                     sqStyles.pickerText,
-                                    { color: theme.colors.text },
-                                    !q2 && {
-                                        color: placeholderColor,
-                                    },
+                                    { color: theme.colors.onSurface },
+                                    !q2 && { color: theme.colors.onSurfaceVariant },
                                 ]}
                             >
                                 {q2 || "Select a question"}
                             </Text>
-                            <ChevronDown
-                                size={18}
-                                color={theme.colors.textSecondary}
-                            />
+                            <ChevronDown size={18} color={theme.colors.onSurfaceVariant} />
                         </TouchableOpacity>
                         {showQ2Picker && (
                             <View
                                 style={[
                                     sqStyles.dropdown,
                                     {
-                                        backgroundColor: isDark
-                                            ? "rgba(30, 30, 50, 0.98)"
-                                            : "rgba(255, 255, 255, 0.98)",
-                                        borderColor: isDark
-                                            ? "rgba(255, 255, 255, 0.1)"
-                                            : "rgba(0, 0, 0, 0.08)",
+                                        backgroundColor: theme.colors.surfaceContainerLow,
+                                        borderColor: theme.colors.outlineVariant,
                                     },
                                 ]}
                             >
@@ -551,15 +480,9 @@ function SecurityQuestionsStep({
                                         key={q}
                                         style={[
                                             sqStyles.dropdownItem,
-                                            {
-                                                borderBottomColor: isDark
-                                                    ? "rgba(255, 255, 255, 0.06)"
-                                                    : "rgba(0, 0, 0, 0.05)",
-                                            },
+                                            { borderBottomColor: theme.colors.outlineVariant },
                                             q === q2 && {
-                                                backgroundColor: isDark
-                                                    ? "rgba(45, 106, 79, 0.1)"
-                                                    : "rgba(45, 106, 79, 0.06)",
+                                                backgroundColor: theme.colors.primaryContainer,
                                             },
                                         ]}
                                         onPress={() => {
@@ -570,14 +493,9 @@ function SecurityQuestionsStep({
                                         <Text
                                             style={[
                                                 sqStyles.dropdownText,
-                                                {
-                                                    color: isDark
-                                                        ? "rgba(255, 255, 255, 0.7)"
-                                                        : "rgba(0, 0, 0, 0.6)",
-                                                },
+                                                { color: theme.colors.onSurfaceVariant },
                                                 q === q2 && {
-                                                    color: theme.colors
-                                                        .primary,
+                                                    color: theme.colors.onPrimaryContainer,
                                                     fontWeight: "600",
                                                 },
                                             ]}
@@ -585,10 +503,7 @@ function SecurityQuestionsStep({
                                             {q}
                                         </Text>
                                         {q === q2 && (
-                                            <Check
-                                                size={16}
-                                                color={theme.colors.primary}
-                                            />
+                                            <Check size={16} color={theme.colors.onPrimaryContainer} />
                                         )}
                                     </TouchableOpacity>
                                 ))}
@@ -598,13 +513,13 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.input,
                                 {
-                                    backgroundColor: inputBg,
-                                    borderColor: inputBorder,
-                                    color: theme.colors.text,
+                                    backgroundColor: theme.colors.surfaceContainerHighest,
+                                    borderColor: theme.colors.outline,
+                                    color: theme.colors.onSurface,
                                 },
                             ]}
                             placeholder="Your answer"
-                            placeholderTextColor={placeholderColor}
+                            placeholderTextColor={theme.colors.onSurfaceVariant}
                             value={a2}
                             onChangeText={setA2}
                             autoCapitalize="none"
@@ -629,9 +544,7 @@ function SecurityQuestionsStep({
                             {
                                 backgroundColor: canContinue
                                     ? theme.colors.primary
-                                    : isDark
-                                        ? "rgba(45, 106, 79, 0.25)"
-                                        : "rgba(45, 106, 79, 0.3)",
+                                    : theme.colors.surfaceContainerHighest,
                             },
                         ]}
                         disabled={!canContinue}
@@ -642,10 +555,8 @@ function SecurityQuestionsStep({
                                 sqStyles.continueBtnText,
                                 {
                                     color: canContinue
-                                        ? theme.colors.textInverse
-                                        : isDark
-                                            ? "rgba(255, 255, 255, 0.4)"
-                                            : "rgba(255, 255, 255, 0.6)",
+                                        ? theme.colors.onPrimary
+                                        : theme.colors.onSurfaceVariant,
                                 },
                             ]}
                         >
@@ -689,7 +600,9 @@ export default function PinSetupScreen({
     const fadeIn = useRef(new Animated.Value(0)).current;
     const stageOpacity = useRef(new Animated.Value(1)).current;
 
-    const iconColor = isDark ? "rgba(255,255,255,0.5)" : "rgba(0,0,0,0.35)";
+    const deleteIconColor = saving || pin.length === 0
+        ? theme.colors.outlineVariant
+        : theme.colors.onSurfaceVariant;
 
     useEffect(() => {
         Animated.timing(fadeIn, {
@@ -827,12 +740,8 @@ export default function PinSetupScreen({
                 style={[
                     styles.backButton,
                     {
-                        backgroundColor: isDark
-                            ? "rgba(255, 255, 255, 0.06)"
-                            : "rgba(0, 0, 0, 0.04)",
-                        borderColor: isDark
-                            ? "rgba(255, 255, 255, 0.08)"
-                            : "rgba(0, 0, 0, 0.06)",
+                        backgroundColor: theme.colors.surfaceContainerHigh,
+                        borderColor: theme.colors.outlineVariant,
                     },
                 ]}
                 onPress={() => {
@@ -845,14 +754,7 @@ export default function PinSetupScreen({
                 }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft
-                    size={22}
-                    color={
-                        isDark
-                            ? "rgba(255, 255, 255, 0.7)"
-                            : "rgba(0, 0, 0, 0.5)"
-                    }
-                />
+                <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
             </TouchableOpacity>
 
             <Animated.View style={[styles.content, { opacity: fadeIn }]}>
@@ -862,7 +764,7 @@ export default function PinSetupScreen({
                     <Text
                         style={[
                             styles.title,
-                            { color: theme.colors.text },
+                            { color: theme.colors.onSurface },
                         ]}
                     >
                         {title}
@@ -870,7 +772,7 @@ export default function PinSetupScreen({
                     <Text
                         style={[
                             styles.subtitle,
-                            { color: theme.colors.textSecondary },
+                            { color: theme.colors.onSurfaceVariant },
                         ]}
                     >
                         {subtitle}
@@ -928,16 +830,7 @@ export default function PinSetupScreen({
                             onPress={handleDelete}
                             disabled={saving || pin.length === 0}
                         >
-                            <Delete
-                                size={24}
-                                color={
-                                    saving || pin.length === 0
-                                        ? isDark
-                                            ? "rgba(255,255,255,0.15)"
-                                            : "rgba(0,0,0,0.1)"
-                                        : iconColor
-                                }
-                            />
+                            <Delete size={24} color={deleteIconColor} />
                         </TouchableOpacity>
                     </View>
                 </View>
@@ -1070,7 +963,7 @@ const sqStyles = StyleSheet.create({
     iconCircle: {
         width: 64,
         height: 64,
-        borderRadius: 20,
+        borderRadius: 32,
         alignItems: "center",
         justifyContent: "center",
         marginBottom: 20,
@@ -1105,7 +998,7 @@ const sqStyles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         paddingHorizontal: 16,
-        height: 48,
+        height: 52,
         marginBottom: 10,
     },
     pickerText: {
@@ -1133,13 +1026,13 @@ const sqStyles = StyleSheet.create({
         borderRadius: 12,
         borderWidth: 1,
         paddingHorizontal: 16,
-        height: 48,
+        height: 52,
         fontSize: 14,
     },
     continueBtn: {
         width: "100%",
         height: 52,
-        borderRadius: 14,
+        borderRadius: 999,
         alignItems: "center",
         justifyContent: "center",
         marginTop: 12,

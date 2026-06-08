@@ -5,6 +5,7 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
+    StyleSheet,
     Alert,
     Platform,
 } from "react-native";
@@ -12,7 +13,6 @@ import { X, Calendar } from "lucide-react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { RecurringTransaction, RecurrenceFrequency, Business, Category } from "../types";
 import { useTheme } from "../theme/theme";
-import { createDashboardStyles } from "../styles/dashboardStyles";
 import AppModal from "./AppModal";
 
 interface RecurringTransactionModalProps {
@@ -82,7 +82,7 @@ export default function RecurringTransactionModal({
     onSubmit,
 }: RecurringTransactionModalProps) {
     const theme = useTheme();
-    const styles = useMemo(() => createDashboardStyles(theme), [theme]);
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     const [type, setType] = useState<"income" | "expense">("expense");
     const [amount, setAmount] = useState("");
@@ -220,6 +220,8 @@ export default function RecurringTransactionModal({
         onClose();
     };
 
+    const typeIsIncome = type === "income";
+
     return (
         <AppModal
             visible={visible}
@@ -228,404 +230,455 @@ export default function RecurringTransactionModal({
             showHandle={false}
             scrollable
         >
-                                <Text style={styles.inputLabelModern}>Type</Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    style={styles.categoryPicker}
-                                >
-                                    {(["income", "expense"] as const).map((t) => (
-                                        <TouchableOpacity
-                                            key={t}
-                                            style={[
-                                                styles.categoryChip,
-                                                type === t && {
-                                                    backgroundColor:
-                                                        t === "income"
-                                                            ? theme.colors.income
-                                                            : theme.colors.expense,
-                                                    borderColor:
-                                                        t === "income"
-                                                            ? theme.colors.income
-                                                            : theme.colors.expense,
-                                                },
-                                            ]}
-                                            onPress={() => setType(t)}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.categoryChipText,
-                                                    type === t && styles.categoryChipTextActive,
-                                                ]}
-                                            >
-                                                {t.charAt(0).toUpperCase() + t.slice(1)}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
+            <Text style={styles.fieldLabel}>Type</Text>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipRow}
+            >
+                {(["income", "expense"] as const).map((t) => {
+                    const isActive = type === t;
+                    const activeBg = t === "income" ? theme.colors.incomeContainer : theme.colors.expenseContainer;
+                    const activeColor = t === "income" ? theme.colors.onIncomeContainer : theme.colors.onExpenseContainer;
+                    return (
+                        <TouchableOpacity
+                            key={t}
+                            style={[
+                                styles.chip,
+                                isActive && { backgroundColor: activeBg, borderColor: activeBg },
+                            ]}
+                            onPress={() => setType(t)}
+                        >
+                            <Text
+                                style={[
+                                    styles.chipText,
+                                    isActive && { color: activeColor, fontWeight: "700" },
+                                ]}
+                            >
+                                {t.charAt(0).toUpperCase() + t.slice(1)}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
 
-                                <Text style={styles.inputLabelModern}>Amount</Text>
-                                <TextInput
-                                    style={styles.modalInputLargeModern}
-                                    placeholder="0.00"
-                                    placeholderTextColor={theme.colors.placeholder}
-                                    keyboardType="decimal-pad"
-                                    value={amount}
-                                    onChangeText={setAmount}
-                                />
+            <Text style={styles.fieldLabel}>Amount</Text>
+            <TextInput
+                style={styles.amountInput}
+                placeholder="0.00"
+                placeholderTextColor={theme.colors.placeholder}
+                keyboardType="decimal-pad"
+                value={amount}
+                onChangeText={setAmount}
+            />
 
-                                {businesses.length > 1 && (
-                                    <>
-                                        <Text style={styles.inputLabelModern}>Business</Text>
-                                        <ScrollView
-                                            horizontal
-                                            showsHorizontalScrollIndicator={false}
-                                            style={styles.categoryPicker}
-                                        >
-                                            {businesses.map((biz) => (
-                                                <TouchableOpacity
-                                                    key={biz.id}
-                                                    style={[
-                                                        styles.categoryChip,
-                                                        selectedBusiness === biz.id &&
-                                                            styles.categoryChipActive,
-                                                    ]}
-                                                    onPress={() => setSelectedBusiness(biz.id)}
-                                                >
-                                                    <Text
-                                                        style={[
-                                                            styles.categoryChipText,
-                                                            selectedBusiness === biz.id &&
-                                                                styles.categoryChipTextActive,
-                                                        ]}
-                                                    >
-                                                        {biz.name}
-                                                    </Text>
-                                                </TouchableOpacity>
-                                            ))}
-                                        </ScrollView>
-                                    </>
-                                )}
-
-                                <Text style={styles.inputLabelModern}>Category</Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    style={styles.categoryPicker}
-                                >
-                                    {filteredCategories.map((cat) => (
-                                        <TouchableOpacity
-                                            key={cat.id}
-                                            style={[
-                                                styles.categoryChip,
-                                                selectedCategory === cat.name &&
-                                                    styles.categoryChipActive,
-                                            ]}
-                                            onPress={() => setSelectedCategory(cat.name)}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.categoryChipText,
-                                                    selectedCategory === cat.name &&
-                                                        styles.categoryChipTextActive,
-                                                ]}
-                                            >
-                                                {cat.name}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-
-                                <Text style={styles.inputLabelModern}>Frequency</Text>
-                                <ScrollView
-                                    horizontal
-                                    showsHorizontalScrollIndicator={false}
-                                    style={styles.categoryPicker}
-                                >
-                                    {FREQUENCIES.map((f) => (
-                                        <TouchableOpacity
-                                            key={f.value}
-                                            style={[
-                                                styles.categoryChip,
-                                                frequency === f.value && styles.categoryChipActive,
-                                            ]}
-                                            onPress={() => {
-                                                setFrequency(f.value);
-                                                setSelectedDayOfWeek(null);
-                                                setSelectedDayOfMonth(null);
-                                                setStartDate(null);
-                                                setShowStartDatePicker(false);
-                                            }}
-                                        >
-                                            <Text
-                                                style={[
-                                                    styles.categoryChipText,
-                                                    frequency === f.value &&
-                                                        styles.categoryChipTextActive,
-                                                ]}
-                                            >
-                                                {f.label}
-                                            </Text>
-                                        </TouchableOpacity>
-                                    ))}
-                                </ScrollView>
-
-                                <Text style={styles.inputLabelModern}>
-                                    Starts On{" "}
-                                    <Text
-                                        style={{
-                                            fontWeight: "400",
-                                            color: theme.colors.textSecondary,
-                                        }}
-                                    >
-                                        (Optional)
-                                    </Text>
-                                </Text>
-                                {(frequency === "weekly" || frequency === "biweekly") && (
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        style={styles.categoryPicker}
-                                    >
-                                        {DAY_LABELS.map((label, index) => (
-                                            <TouchableOpacity
-                                                key={label}
-                                                style={[
-                                                    styles.categoryChip,
-                                                    selectedDayOfWeek === index &&
-                                                        styles.categoryChipActive,
-                                                ]}
-                                                onPress={() =>
-                                                    setSelectedDayOfWeek(
-                                                        selectedDayOfWeek === index ? null : index,
-                                                    )
-                                                }
-                                            >
-                                                <Text
-                                                    style={[
-                                                        styles.categoryChipText,
-                                                        selectedDayOfWeek === index &&
-                                                            styles.categoryChipTextActive,
-                                                    ]}
-                                                >
-                                                    {label}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                                {frequency === "monthly" && (
-                                    <ScrollView
-                                        horizontal
-                                        showsHorizontalScrollIndicator={false}
-                                        style={styles.categoryPicker}
-                                    >
-                                        {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => (
-                                            <TouchableOpacity
-                                                key={day}
-                                                style={[
-                                                    styles.categoryChip,
-                                                    { minWidth: 40, paddingHorizontal: 8 },
-                                                    selectedDayOfMonth === day &&
-                                                        styles.categoryChipActive,
-                                                ]}
-                                                onPress={() =>
-                                                    setSelectedDayOfMonth(
-                                                        selectedDayOfMonth === day ? null : day,
-                                                    )
-                                                }
-                                            >
-                                                <Text
-                                                    style={[
-                                                        styles.categoryChipText,
-                                                        selectedDayOfMonth === day &&
-                                                            styles.categoryChipTextActive,
-                                                    ]}
-                                                >
-                                                    {day}
-                                                </Text>
-                                            </TouchableOpacity>
-                                        ))}
-                                    </ScrollView>
-                                )}
-                                {(frequency === "daily" || frequency === "yearly") && (
-                                    <View style={{ marginBottom: 8 }}>
-                                        <View
-                                            style={{
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                gap: 8,
-                                            }}
-                                        >
-                                            <TouchableOpacity
-                                                style={{
-                                                    flex: 1,
-                                                    flexDirection: "row",
-                                                    alignItems: "center",
-                                                    gap: 10,
-                                                    height: 48,
-                                                    borderRadius: 12,
-                                                    borderWidth: 1,
-                                                    borderColor: showStartDatePicker
-                                                        ? theme.colors.primary
-                                                        : theme.colors.border,
-                                                    backgroundColor: theme.colors.background,
-                                                    paddingHorizontal: 16,
-                                                }}
-                                                onPress={() =>
-                                                    setShowStartDatePicker(!showStartDatePicker)
-                                                }
-                                            >
-                                                <Calendar
-                                                    size={16}
-                                                    color={
-                                                        startDate
-                                                            ? theme.colors.primary
-                                                            : theme.colors.textSecondary
-                                                    }
-                                                />
-                                                <Text
-                                                    style={{
-                                                        fontSize: 14,
-                                                        color: startDate
-                                                            ? theme.colors.text
-                                                            : theme.colors.placeholder,
-                                                        fontWeight: startDate ? "600" : "400",
-                                                    }}
-                                                >
-                                                    {startDate
-                                                        ? formatEndDate(startDate)
-                                                        : "Starts today"}
-                                                </Text>
-                                            </TouchableOpacity>
-                                            {startDate && (
-                                                <TouchableOpacity
-                                                    onPress={() => {
-                                                        setStartDate(null);
-                                                        setShowStartDatePicker(false);
-                                                    }}
-                                                    hitSlop={{
-                                                        top: 8,
-                                                        bottom: 8,
-                                                        left: 8,
-                                                        right: 8,
-                                                    }}
-                                                >
-                                                    <X
-                                                        size={20}
-                                                        color={theme.colors.textSecondary}
-                                                    />
-                                                </TouchableOpacity>
-                                            )}
-                                        </View>
-                                        {showStartDatePicker && (
-                                            <DateTimePicker
-                                                value={startDate || new Date()}
-                                                mode="date"
-                                                display={
-                                                    Platform.OS === "ios" ? "inline" : "default"
-                                                }
-                                                onChange={handleStartDateChange}
-                                                minimumDate={new Date()}
-                                            />
-                                        )}
-                                    </View>
-                                )}
-
-                                <Text style={styles.inputLabelModern}>Remark</Text>
-                                <TextInput
-                                    style={styles.modalInputModern}
-                                    placeholder="What is this for?"
-                                    placeholderTextColor={theme.colors.placeholder}
-                                    value={remark}
-                                    onChangeText={setRemark}
-                                />
-
-                                <Text style={styles.inputLabelModern}>End Date (Optional)</Text>
-                                <View style={{ marginBottom: 24 }}>
-                                    <View
-                                        style={{
-                                            flexDirection: "row",
-                                            alignItems: "center",
-                                            gap: 8,
-                                        }}
-                                    >
-                                        <TouchableOpacity
-                                            style={{
-                                                flex: 1,
-                                                flexDirection: "row",
-                                                alignItems: "center",
-                                                gap: 10,
-                                                height: 48,
-                                                borderRadius: 12,
-                                                borderWidth: 1,
-                                                borderColor: showDatePicker
-                                                    ? theme.colors.primary
-                                                    : theme.colors.border,
-                                                backgroundColor: theme.colors.background,
-                                                paddingHorizontal: 16,
-                                            }}
-                                            onPress={() => setShowDatePicker(!showDatePicker)}
-                                        >
-                                            <Calendar
-                                                size={16}
-                                                color={
-                                                    endDate
-                                                        ? theme.colors.primary
-                                                        : theme.colors.textSecondary
-                                                }
-                                            />
-                                            <Text
-                                                style={{
-                                                    fontSize: 14,
-                                                    color: endDate
-                                                        ? theme.colors.text
-                                                        : theme.colors.placeholder,
-                                                    fontWeight: endDate ? "600" : "400",
-                                                }}
-                                            >
-                                                {endDate ? formatEndDate(endDate) : "No end date"}
-                                            </Text>
-                                        </TouchableOpacity>
-                                        {endDate && (
-                                            <TouchableOpacity
-                                                onPress={() => {
-                                                    setEndDate(null);
-                                                    setShowDatePicker(false);
-                                                }}
-                                                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-                                            >
-                                                <X size={20} color={theme.colors.textSecondary} />
-                                            </TouchableOpacity>
-                                        )}
-                                    </View>
-                                    {showDatePicker && (
-                                        <DateTimePicker
-                                            value={endDate || new Date()}
-                                            mode="date"
-                                            display={Platform.OS === "ios" ? "inline" : "default"}
-                                            onChange={handleDateChange}
-                                            minimumDate={new Date()}
-                                        />
-                                    )}
-                                </View>
-
+            {businesses.length > 1 && (
+                <>
+                    <Text style={styles.fieldLabel}>Business</Text>
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        style={styles.chipRow}
+                    >
+                        {businesses.map((biz) => {
+                            const isActive = selectedBusiness === biz.id;
+                            return (
                                 <TouchableOpacity
+                                    key={biz.id}
                                     style={[
-                                        styles.submitBtnModern,
-                                        {
-                                            backgroundColor:
-                                                type === "income"
-                                                    ? theme.colors.income
-                                                    : theme.colors.expense,
-                                        },
+                                        styles.chip,
+                                        isActive && styles.chipActive,
                                     ]}
-                                    onPress={handleSubmit}
+                                    onPress={() => setSelectedBusiness(biz.id)}
                                 >
-                                    <Text style={styles.submitBtnTextModern}>
-                                        {editingItem ? "Update" : "Create"}
+                                    <Text
+                                        style={[
+                                            styles.chipText,
+                                            isActive && styles.chipTextActive,
+                                        ]}
+                                    >
+                                        {biz.name}
                                     </Text>
                                 </TouchableOpacity>
+                            );
+                        })}
+                    </ScrollView>
+                </>
+            )}
+
+            <Text style={styles.fieldLabel}>Category</Text>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipRow}
+            >
+                {filteredCategories.map((cat) => {
+                    const isActive = selectedCategory === cat.name;
+                    return (
+                        <TouchableOpacity
+                            key={cat.id}
+                            style={[
+                                styles.chip,
+                                isActive && styles.chipActive,
+                            ]}
+                            onPress={() => setSelectedCategory(cat.name)}
+                        >
+                            <Text
+                                style={[
+                                    styles.chipText,
+                                    isActive && styles.chipTextActive,
+                                ]}
+                            >
+                                {cat.name}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
+
+            <Text style={styles.fieldLabel}>Frequency</Text>
+            <ScrollView
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                style={styles.chipRow}
+            >
+                {FREQUENCIES.map((f) => {
+                    const isActive = frequency === f.value;
+                    return (
+                        <TouchableOpacity
+                            key={f.value}
+                            style={[
+                                styles.chip,
+                                isActive && styles.chipActive,
+                            ]}
+                            onPress={() => {
+                                setFrequency(f.value);
+                                setSelectedDayOfWeek(null);
+                                setSelectedDayOfMonth(null);
+                                setStartDate(null);
+                                setShowStartDatePicker(false);
+                            }}
+                        >
+                            <Text
+                                style={[
+                                    styles.chipText,
+                                    isActive && styles.chipTextActive,
+                                ]}
+                            >
+                                {f.label}
+                            </Text>
+                        </TouchableOpacity>
+                    );
+                })}
+            </ScrollView>
+
+            <Text style={styles.fieldLabel}>
+                Starts On{" "}
+                <Text style={styles.fieldLabelOptional}>(Optional)</Text>
+            </Text>
+            {(frequency === "weekly" || frequency === "biweekly") && (
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.chipRow}
+                >
+                    {DAY_LABELS.map((label, index) => {
+                        const isActive = selectedDayOfWeek === index;
+                        return (
+                            <TouchableOpacity
+                                key={label}
+                                style={[
+                                    styles.chip,
+                                    isActive && styles.chipActive,
+                                ]}
+                                onPress={() =>
+                                    setSelectedDayOfWeek(
+                                        selectedDayOfWeek === index ? null : index,
+                                    )
+                                }
+                            >
+                                <Text
+                                    style={[
+                                        styles.chipText,
+                                        isActive && styles.chipTextActive,
+                                    ]}
+                                >
+                                    {label}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            )}
+            {frequency === "monthly" && (
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.chipRow}
+                >
+                    {Array.from({ length: 28 }, (_, i) => i + 1).map((day) => {
+                        const isActive = selectedDayOfMonth === day;
+                        return (
+                            <TouchableOpacity
+                                key={day}
+                                style={[
+                                    styles.chip,
+                                    styles.chipDay,
+                                    isActive && styles.chipActive,
+                                ]}
+                                onPress={() =>
+                                    setSelectedDayOfMonth(
+                                        selectedDayOfMonth === day ? null : day,
+                                    )
+                                }
+                            >
+                                <Text
+                                    style={[
+                                        styles.chipText,
+                                        isActive && styles.chipTextActive,
+                                    ]}
+                                >
+                                    {day}
+                                </Text>
+                            </TouchableOpacity>
+                        );
+                    })}
+                </ScrollView>
+            )}
+            {(frequency === "daily" || frequency === "yearly") && (
+                <View style={styles.datePickerRow}>
+                    <TouchableOpacity
+                        style={[
+                            styles.datePickerBtn,
+                            showStartDatePicker && styles.datePickerBtnActive,
+                        ]}
+                        onPress={() => setShowStartDatePicker(!showStartDatePicker)}
+                    >
+                        <Calendar
+                            size={16}
+                            color={startDate ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                        />
+                        <Text
+                            style={[
+                                styles.datePickerText,
+                                startDate && styles.datePickerTextSelected,
+                            ]}
+                        >
+                            {startDate ? formatEndDate(startDate) : "Starts today"}
+                        </Text>
+                    </TouchableOpacity>
+                    {startDate && (
+                        <TouchableOpacity
+                            onPress={() => {
+                                setStartDate(null);
+                                setShowStartDatePicker(false);
+                            }}
+                            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        >
+                            <X size={20} color={theme.colors.onSurfaceVariant} />
+                        </TouchableOpacity>
+                    )}
+                    {showStartDatePicker && (
+                        <DateTimePicker
+                            value={startDate || new Date()}
+                            mode="date"
+                            display={Platform.OS === "ios" ? "inline" : "default"}
+                            onChange={handleStartDateChange}
+                            minimumDate={new Date()}
+                        />
+                    )}
+                </View>
+            )}
+
+            <Text style={styles.fieldLabel}>Remark</Text>
+            <TextInput
+                style={styles.textInput}
+                placeholder="What is this for?"
+                placeholderTextColor={theme.colors.placeholder}
+                value={remark}
+                onChangeText={setRemark}
+            />
+
+            <Text style={styles.fieldLabel}>End Date (Optional)</Text>
+            <View style={styles.datePickerRow}>
+                <TouchableOpacity
+                    style={[
+                        styles.datePickerBtn,
+                        showDatePicker && styles.datePickerBtnActive,
+                    ]}
+                    onPress={() => setShowDatePicker(!showDatePicker)}
+                >
+                    <Calendar
+                        size={16}
+                        color={endDate ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                    />
+                    <Text
+                        style={[
+                            styles.datePickerText,
+                            endDate && styles.datePickerTextSelected,
+                        ]}
+                    >
+                        {endDate ? formatEndDate(endDate) : "No end date"}
+                    </Text>
+                </TouchableOpacity>
+                {endDate && (
+                    <TouchableOpacity
+                        onPress={() => {
+                            setEndDate(null);
+                            setShowDatePicker(false);
+                        }}
+                        hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                    >
+                        <X size={20} color={theme.colors.onSurfaceVariant} />
+                    </TouchableOpacity>
+                )}
+                {showDatePicker && (
+                    <DateTimePicker
+                        value={endDate || new Date()}
+                        mode="date"
+                        display={Platform.OS === "ios" ? "inline" : "default"}
+                        onChange={handleDateChange}
+                        minimumDate={new Date()}
+                    />
+                )}
+            </View>
+
+            <TouchableOpacity
+                style={[
+                    styles.submitBtn,
+                    {
+                        backgroundColor: typeIsIncome
+                            ? theme.colors.incomeContainer
+                            : theme.colors.expenseContainer,
+                    },
+                ]}
+                onPress={handleSubmit}
+            >
+                <Text
+                    style={[
+                        styles.submitBtnText,
+                        {
+                            color: typeIsIncome
+                                ? theme.colors.onIncomeContainer
+                                : theme.colors.onExpenseContainer,
+                        },
+                    ]}
+                >
+                    {editingItem ? "Update" : "Create"}
+                </Text>
+            </TouchableOpacity>
         </AppModal>
     );
 }
+
+const createStyles = (theme: any) =>
+    StyleSheet.create({
+        fieldLabel: {
+            fontSize: 12,
+            color: theme.colors.onSurfaceVariant,
+            marginBottom: 8,
+            fontWeight: "600",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+        },
+        fieldLabelOptional: {
+            fontWeight: "400",
+            color: theme.colors.onSurfaceVariant,
+            textTransform: "none",
+        },
+        chipRow: {
+            flexDirection: "row",
+            marginBottom: 24,
+        },
+        chip: {
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: theme.shape.small,
+            backgroundColor: "transparent",
+            marginRight: 8,
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
+        },
+        chipDay: {
+            minWidth: 40,
+            paddingHorizontal: 8,
+            alignItems: "center",
+        },
+        chipActive: {
+            backgroundColor: theme.colors.secondaryContainer,
+            borderColor: theme.colors.secondaryContainer,
+        },
+        chipText: {
+            fontSize: 13,
+            color: theme.colors.onSurfaceVariant,
+            fontWeight: "500",
+        },
+        chipTextActive: {
+            color: theme.colors.onSecondaryContainer,
+            fontWeight: "600",
+        },
+        amountInput: {
+            fontSize: 38,
+            fontWeight: "800",
+            color: theme.colors.onSurface,
+            borderBottomWidth: 2,
+            borderBottomColor: theme.colors.outline,
+            paddingVertical: 8,
+            marginBottom: 24,
+        },
+        textInput: {
+            height: 52,
+            borderRadius: theme.shape.medium,
+            borderWidth: 1,
+            borderColor: theme.colors.outline,
+            backgroundColor: theme.colors.surfaceContainerHighest,
+            paddingHorizontal: 16,
+            fontSize: 14,
+            color: theme.colors.onSurface,
+            marginBottom: 24,
+        },
+        datePickerRow: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            marginBottom: 24,
+        },
+        datePickerBtn: {
+            flex: 1,
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 10,
+            height: 52,
+            borderRadius: theme.shape.medium,
+            borderWidth: 1,
+            borderColor: theme.colors.outline,
+            backgroundColor: theme.colors.surfaceContainerHighest,
+            paddingHorizontal: 16,
+        },
+        datePickerBtnActive: {
+            borderColor: theme.colors.primary,
+        },
+        datePickerText: {
+            fontSize: 14,
+            color: theme.colors.placeholder,
+            fontWeight: "400",
+        },
+        datePickerTextSelected: {
+            color: theme.colors.onSurface,
+            fontWeight: "600",
+        },
+        submitBtn: {
+            height: 56,
+            borderRadius: theme.shape.full,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 4,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
+        },
+        submitBtnText: {
+            fontSize: 15,
+            fontWeight: "700",
+            letterSpacing: 0.3,
+        },
+    });

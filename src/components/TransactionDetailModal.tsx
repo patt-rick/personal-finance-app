@@ -60,8 +60,8 @@ export default function TransactionDetailModal({
                                     {
                                         backgroundColor:
                                             transaction.type === "income"
-                                                ? theme.colors.success + "20"
-                                                : theme.colors.error + "20",
+                                                ? theme.colors.incomeContainer
+                                                : theme.colors.expenseContainer,
                                     },
                                 ]}
                             >
@@ -69,16 +69,27 @@ export default function TransactionDetailModal({
                                     style={{
                                         color:
                                             transaction.type === "income"
-                                                ? theme.colors.success
-                                                : theme.colors.error,
-                                        fontWeight: "bold",
+                                                ? theme.colors.onIncomeContainer
+                                                : theme.colors.onExpenseContainer,
+                                        fontWeight: "700",
                                         fontSize: 12,
+                                        letterSpacing: 0.5,
                                     }}
                                 >
                                     {transaction.type.toUpperCase()}
                                 </Text>
                             </View>
-                            <Text style={styles.txDetailAmount}>
+                            <Text
+                                style={[
+                                    styles.txDetailAmount,
+                                    {
+                                        color:
+                                            transaction.type === "income"
+                                                ? theme.colors.income
+                                                : theme.colors.expense,
+                                    },
+                                ]}
+                            >
                                 {transaction.type === "income" ? "+" : "-"}
                                 {symbol}
                                 {transaction.amount.toLocaleString()}
@@ -90,13 +101,13 @@ export default function TransactionDetailModal({
 
                         <View style={styles.txDetailInfoSection}>
                             <DetailRow
-                                icon={<Tag size={18} color={theme.colors.textSecondary} />}
+                                icon={<Tag size={18} color={theme.colors.onSurfaceVariant} />}
                                 label="Category"
                                 value={transaction.category || "General"}
                                 styles={styles}
                             />
                             <DetailRow
-                                icon={<Calendar size={18} color={theme.colors.textSecondary} />}
+                                icon={<Calendar size={18} color={theme.colors.onSurfaceVariant} />}
                                 label="Date & Time"
                                 value={`${new Date(transaction.date).toLocaleDateString()} ${new Date(
                                     transaction.date,
@@ -104,7 +115,7 @@ export default function TransactionDetailModal({
                                 styles={styles}
                             />
                             <DetailRow
-                                icon={<Info size={18} color={theme.colors.textSecondary} />}
+                                icon={<Info size={18} color={theme.colors.onSurfaceVariant} />}
                                 label="Mode"
                                 value={transaction.paymentMode || "Cash"}
                                 styles={styles}
@@ -112,7 +123,7 @@ export default function TransactionDetailModal({
                             {transaction.remark ? (
                                 <View style={[styles.txDetailRow, { alignItems: "flex-start" }]}>
                                     <View style={s.iconLabel}>
-                                        <MessageSquare size={18} color={theme.colors.textSecondary} />
+                                        <MessageSquare size={18} color={theme.colors.onSurfaceVariant} />
                                         <Text style={styles.txDetailLabel}>Remark</Text>
                                     </View>
                                     <Text
@@ -139,9 +150,9 @@ export default function TransactionDetailModal({
                                     <DetailRow
                                         icon={
                                             transaction.source === "sms" ? (
-                                                <Radio size={18} color={theme.colors.textSecondary} />
+                                                <Radio size={18} color={theme.colors.onSurfaceVariant} />
                                             ) : (
-                                                <Bell size={18} color={theme.colors.textSecondary} />
+                                                <Bell size={18} color={theme.colors.onSurfaceVariant} />
                                             )
                                         }
                                         label="Source"
@@ -157,7 +168,7 @@ export default function TransactionDetailModal({
                                 ) : null}
                                 {transaction.sourceApp ? (
                                     <DetailRow
-                                        icon={<Info size={18} color={theme.colors.textSecondary} />}
+                                        icon={<Info size={18} color={theme.colors.onSurfaceVariant} />}
                                         label="From"
                                         value={transaction.sourceApp}
                                         styles={styles}
@@ -165,7 +176,7 @@ export default function TransactionDetailModal({
                                 ) : null}
                                 {typeof transaction.confidence === "number" ? (
                                     <DetailRow
-                                        icon={<Gauge size={18} color={theme.colors.textSecondary} />}
+                                        icon={<Gauge size={18} color={theme.colors.onSurfaceVariant} />}
                                         label="Confidence"
                                         value={`${Math.round(transaction.confidence * 100)}%`}
                                         styles={styles}
@@ -174,7 +185,7 @@ export default function TransactionDetailModal({
                                 {transaction.rawText ? (
                                     <View style={[styles.txDetailRow, { alignItems: "flex-start" }]}>
                                         <View style={s.iconLabel}>
-                                            <FileText size={18} color={theme.colors.textSecondary} />
+                                            <FileText size={18} color={theme.colors.onSurfaceVariant} />
                                             <Text style={styles.txDetailLabel}>Original</Text>
                                         </View>
                                         <Text
@@ -205,7 +216,7 @@ export default function TransactionDetailModal({
                             <Pencil size={20} color={theme.colors.primary} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.txDetailCloseBtn} onPress={onClose}>
-                            <Text style={{ color: theme.colors.textInverse, fontWeight: "bold" }}>
+                            <Text style={{ color: theme.colors.onPrimary, fontWeight: "700", fontSize: 15 }}>
                                 Done
                             </Text>
                         </TouchableOpacity>

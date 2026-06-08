@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { View, Text, TouchableOpacity, Platform, StyleSheet } from "react-native";
 import { Calendar } from "lucide-react-native";
 import DateTimePicker, {
@@ -23,6 +23,7 @@ export default function DateRangePickerModal({
     onClose,
 }: DateRangePickerModalProps) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     const [localStart, setLocalStart] = useState(startDate);
     const [localEnd, setLocalEnd] = useState(endDate);
@@ -100,6 +101,7 @@ export default function DateRangePickerModal({
                     }
                     formatDate={formatDate}
                     theme={theme}
+                    styles={styles}
                 />
                 <DateField
                     label="To"
@@ -108,6 +110,7 @@ export default function DateRangePickerModal({
                     onPress={() => setShowPicker(showPicker === "end" ? null : "end")}
                     formatDate={formatDate}
                     theme={theme}
+                    styles={styles}
                 />
             </View>
 
@@ -123,12 +126,10 @@ export default function DateRangePickerModal({
             )}
 
             <TouchableOpacity
-                style={[styles.applyBtn, { backgroundColor: theme.colors.primary }]}
+                style={styles.applyBtn}
                 onPress={handleApply}
             >
-                <Text style={[styles.applyBtnText, { color: theme.colors.textInverse }]}>
-                    Apply
-                </Text>
+                <Text style={styles.applyBtnText}>Apply</Text>
             </TouchableOpacity>
         </AppModal>
     );
@@ -141,6 +142,7 @@ function DateField({
     onPress,
     formatDate,
     theme,
+    styles,
 }: {
     label: string;
     date: Date;
@@ -148,32 +150,30 @@ function DateField({
     onPress: () => void;
     formatDate: (d: Date) => string;
     theme: any;
+    styles: ReturnType<typeof createStyles>;
 }) {
     return (
         <View style={styles.dateFieldContainer}>
-            <Text style={[styles.dateFieldLabel, { color: theme.colors.textSecondary }]}>
-                {label}
-            </Text>
+            <Text style={styles.dateFieldLabel}>{label}</Text>
             <TouchableOpacity
                 style={[
                     styles.dateFieldBtn,
                     {
-                        backgroundColor: theme.colors.surface,
                         borderColor: isActive
                             ? theme.colors.primary
-                            : theme.colors.borderLight,
+                            : theme.colors.outline,
                     },
                 ]}
                 onPress={onPress}
             >
                 <Calendar
                     size={16}
-                    color={isActive ? theme.colors.primary : theme.colors.textSecondary}
+                    color={isActive ? theme.colors.primary : theme.colors.onSurfaceVariant}
                 />
                 <Text
                     style={[
                         styles.dateFieldText,
-                        { color: isActive ? theme.colors.primary : theme.colors.text },
+                        { color: isActive ? theme.colors.primary : theme.colors.onSurface },
                     ]}
                 >
                     {formatDate(date)}
@@ -183,43 +183,52 @@ function DateField({
     );
 }
 
-const styles = StyleSheet.create({
-    dateFieldsRow: {
-        flexDirection: "row",
-        gap: 12,
-        marginBottom: 16,
-    },
-    dateFieldContainer: {
-        flex: 1,
-    },
-    dateFieldLabel: {
-        fontSize: 12,
-        fontWeight: "600",
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-        marginBottom: 8,
-    },
-    dateFieldBtn: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 8,
-        paddingHorizontal: 14,
-        paddingVertical: 12,
-        borderRadius: 12,
-        borderWidth: 1,
-    },
-    dateFieldText: {
-        fontSize: 14,
-        fontWeight: "600",
-    },
-    applyBtn: {
-        paddingVertical: 14,
-        borderRadius: 14,
-        alignItems: "center",
-        marginTop: 16,
-    },
-    applyBtnText: {
-        fontSize: 16,
-        fontWeight: "700",
-    },
-});
+const createStyles = (theme: any) =>
+    StyleSheet.create({
+        dateFieldsRow: {
+            flexDirection: "row",
+            gap: 12,
+            marginBottom: 16,
+        },
+        dateFieldContainer: {
+            flex: 1,
+        },
+        dateFieldLabel: {
+            fontSize: 12,
+            fontWeight: "600",
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+            color: theme.colors.onSurfaceVariant,
+        },
+        dateFieldBtn: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+            paddingHorizontal: 14,
+            paddingVertical: 14,
+            borderRadius: theme.shape.medium,
+            borderWidth: 1,
+            backgroundColor: theme.colors.surfaceContainerHighest,
+        },
+        dateFieldText: {
+            fontSize: 14,
+            fontWeight: "600",
+        },
+        applyBtn: {
+            height: 52,
+            borderRadius: theme.shape.full,
+            alignItems: "center",
+            justifyContent: "center",
+            marginTop: 16,
+            backgroundColor: theme.colors.primary,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
+        },
+        applyBtnText: {
+            fontSize: 15,
+            fontWeight: "700",
+            letterSpacing: 0.1,
+            color: theme.colors.onPrimary,
+        },
+    });

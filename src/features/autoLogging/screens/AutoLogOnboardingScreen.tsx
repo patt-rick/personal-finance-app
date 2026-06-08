@@ -129,7 +129,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
         <View style={styles.container}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity style={styles.backBtn} onPress={onCancel} hitSlop={12}>
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={styles.headerTitle}>Turn On Auto-Log</Text>
             </View>
@@ -141,8 +141,8 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
                 showsVerticalScrollIndicator={false}
             >
                 <View style={styles.heroCard}>
-                    <View style={[styles.heroIcon, { backgroundColor: theme.colors.incomeBg }]}>
-                        <Sparkles size={22} color={theme.colors.primary} />
+                    <View style={[styles.heroIcon, { backgroundColor: theme.colors.primaryContainer }]}>
+                        <Sparkles size={22} color={theme.colors.onPrimaryContainer} />
                     </View>
                     <Text style={styles.heroTitle}>Capture expenses automatically</Text>
                     <Text style={styles.heroBody}>
@@ -153,7 +153,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
 
                 <Step
                     index={1}
-                    icon={<MessageSquare size={18} color={theme.colors.primary} />}
+                    icon={<MessageSquare size={18} color={theme.colors.onPrimaryContainer} />}
                     title="Read SMS"
                     subtitle="Lets us capture bank and mobile-money alerts"
                     state={sms}
@@ -166,7 +166,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
 
                 <Step
                     index={2}
-                    icon={<Bell size={18} color={theme.colors.primary} />}
+                    icon={<Bell size={18} color={theme.colors.onPrimaryContainer} />}
                     title="Notification Access"
                     subtitle="Captures posted notifications from allowed apps"
                     state={listener}
@@ -180,7 +180,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
                 {showPostNotifications ? (
                     <Step
                         index={3}
-                        icon={<ShieldCheck size={18} color={theme.colors.primary} />}
+                        icon={<ShieldCheck size={18} color={theme.colors.onPrimaryContainer} />}
                         title="Post Notifications"
                         subtitle="Lets us alert you about newly captured expenses"
                         state={postNotifications}
@@ -193,8 +193,8 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
                 ) : null}
 
                 <View style={styles.privacyCard}>
-                    <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                        <Lock size={16} color={theme.colors.primary} />
+                    <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                        <Lock size={16} color={theme.colors.onSecondaryContainer} />
                     </View>
                     <View style={{ flex: 1 }}>
                         <Text style={styles.privacyTitle}>Your messages stay on this device.</Text>
@@ -210,7 +210,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
                     style={[
                         styles.finishBtn,
                         {
-                            backgroundColor: canFinish ? theme.colors.primary : theme.colors.surface,
+                            backgroundColor: canFinish ? theme.colors.primary : theme.colors.surfaceContainerHighest,
                         },
                     ]}
                     disabled={!canFinish}
@@ -219,7 +219,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
                     <Text
                         style={[
                             styles.finishText,
-                            { color: canFinish ? theme.colors.textInverse : theme.colors.textSecondary },
+                            { color: canFinish ? theme.colors.onPrimary : theme.colors.onSurfaceVariant },
                         ]}
                     >
                         {canFinish ? "Finish setup" : "Review steps above"}
@@ -249,16 +249,16 @@ function Step({ index, icon, title, subtitle, state, busy, onGrant, onSkip, styl
     const statusColor = granted
         ? theme.colors.primary
         : skipped
-            ? theme.colors.textSecondary
-            : theme.colors.textSecondary;
+            ? theme.colors.onSurfaceVariant
+            : theme.colors.onSurfaceVariant;
     const statusLabel = granted ? "Granted" : skipped ? "Skipped" : "Pending";
     return (
         <View style={styles.stepCard}>
             <View style={styles.stepHeader}>
-                <View style={[styles.stepIndex, { backgroundColor: theme.colors.surface }]}>
-                    <Text style={[styles.stepIndexText, { color: theme.colors.textSecondary }]}>{index}</Text>
+                <View style={[styles.stepIndex, { backgroundColor: theme.colors.surfaceContainerHighest }]}>
+                    <Text style={[styles.stepIndexText, { color: theme.colors.onSurfaceVariant }]}>{index}</Text>
                 </View>
-                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>{icon}</View>
+                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>{icon}</View>
                 <View style={{ flex: 1 }}>
                     <Text style={styles.stepTitle}>{title}</Text>
                     <Text style={styles.stepSubtitle}>{subtitle}</Text>
@@ -271,14 +271,14 @@ function Step({ index, icon, title, subtitle, state, busy, onGrant, onSkip, styl
                     onPress={onGrant}
                     style={[
                         styles.stepPrimary,
-                        { backgroundColor: granted ? theme.colors.surface : theme.colors.primary },
+                        { backgroundColor: granted ? theme.colors.surfaceContainerHighest : theme.colors.primary },
                     ]}
                 >
                     <Text
                         style={[
                             styles.stepPrimaryText,
                             {
-                                color: granted ? theme.colors.textSecondary : theme.colors.textInverse,
+                                color: granted ? theme.colors.onSurfaceVariant : theme.colors.onPrimary,
                             },
                         ]}
                     >
@@ -290,7 +290,7 @@ function Step({ index, icon, title, subtitle, state, busy, onGrant, onSkip, styl
                     onPress={onSkip}
                     style={styles.stepSecondary}
                 >
-                    <Text style={[styles.stepSecondaryText, { color: theme.colors.textSecondary }]}>
+                    <Text style={[styles.stepSecondaryText, { color: theme.colors.onSurfaceVariant }]}>
                         {skipped ? "Skipped" : "Skip"}
                     </Text>
                 </TouchableOpacity>
@@ -312,30 +312,34 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
             letterSpacing: -0.3,
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
         heroCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 20,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.extraLarge,
             padding: 20,
             marginTop: 8,
             marginBottom: 16,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         heroIcon: {
             width: 44,
             height: 44,
-            borderRadius: 14,
+            borderRadius: theme.shape.large,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 14,
@@ -343,20 +347,22 @@ const createStyles = (theme: any) =>
         heroTitle: {
             fontSize: 20,
             fontWeight: "800",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.2,
             marginBottom: 6,
         },
         heroBody: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             lineHeight: 19,
         },
         stepCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             padding: 16,
             marginBottom: 12,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         stepHeader: {
             flexDirection: "row",
@@ -366,7 +372,7 @@ const createStyles = (theme: any) =>
         stepIndex: {
             width: 24,
             height: 24,
-            borderRadius: 8,
+            borderRadius: theme.shape.extraSmall,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -377,19 +383,19 @@ const createStyles = (theme: any) =>
         iconCircle: {
             width: 36,
             height: 36,
-            borderRadius: 10,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
         stepTitle: {
             fontSize: 15,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
         stepSubtitle: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 2,
             lineHeight: 16,
         },
@@ -402,7 +408,7 @@ const createStyles = (theme: any) =>
         stepPrimary: {
             paddingHorizontal: 16,
             height: 36,
-            borderRadius: 10,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -413,7 +419,7 @@ const createStyles = (theme: any) =>
         stepSecondary: {
             paddingHorizontal: 14,
             height: 36,
-            borderRadius: 10,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -427,22 +433,24 @@ const createStyles = (theme: any) =>
             letterSpacing: 0.3,
         },
         privacyCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             padding: 16,
             flexDirection: "row",
             alignItems: "flex-start",
             gap: 12,
             marginTop: 8,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         privacyTitle: {
             fontSize: 13,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
         privacyBody: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             lineHeight: 17,
             marginTop: 2,
         },
@@ -453,9 +461,11 @@ const createStyles = (theme: any) =>
         },
         finishBtn: {
             height: 52,
-            borderRadius: 14,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         finishText: {
             fontSize: 15,

@@ -14,8 +14,8 @@ export default function PrivacyModal({ visible, onClose }: Props) {
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     const headerLeft = (
-        <View style={[styles.headerIcon, { backgroundColor: theme.colors.incomeBg }]}>
-            <Lock size={18} color={theme.colors.primary} />
+        <View style={[styles.headerIcon, { backgroundColor: theme.colors.secondaryContainer }]}>
+            <Lock size={18} color={theme.colors.onSecondaryContainer} />
         </View>
     );
 
@@ -37,10 +37,10 @@ export default function PrivacyModal({ visible, onClose }: Props) {
             </Text>
 
             <Section title="What is captured" styles={styles} theme={theme}>
-                <Bullet icon={<MessageSquare size={14} color={theme.colors.primary} />} theme={theme} styles={styles}>
+                <Bullet icon={<MessageSquare size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
                     SMS: the sender and message body, only from senders you place on the allowlist.
                 </Bullet>
-                <Bullet icon={<Bell size={14} color={theme.colors.primary} />} theme={theme} styles={styles}>
+                <Bullet icon={<Bell size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
                     Notifications: the package name, title, and text, only from apps you allow.
                 </Bullet>
             </Section>
@@ -58,13 +58,13 @@ export default function PrivacyModal({ visible, onClose }: Props) {
             </Section>
 
             <Section title="What we never do" styles={styles} theme={theme}>
-                <Bullet icon={<ShieldCheck size={14} color={theme.colors.primary} />} theme={theme} styles={styles}>
+                <Bullet icon={<ShieldCheck size={14} color={theme.colors.onIncomeContainer} />} iconBg={theme.colors.incomeContainer} theme={theme} styles={styles}>
                     We never upload message content. There is no server.
                 </Bullet>
-                <Bullet icon={<ShieldCheck size={14} color={theme.colors.primary} />} theme={theme} styles={styles}>
+                <Bullet icon={<ShieldCheck size={14} color={theme.colors.onIncomeContainer} />} iconBg={theme.colors.incomeContainer} theme={theme} styles={styles}>
                     We never share captured text with third parties.
                 </Bullet>
-                <Bullet icon={<ShieldCheck size={14} color={theme.colors.primary} />} theme={theme} styles={styles}>
+                <Bullet icon={<ShieldCheck size={14} color={theme.colors.onIncomeContainer} />} iconBg={theme.colors.incomeContainer} theme={theme} styles={styles}>
                     We never use captured text for ads, profiling, or training any model.
                 </Bullet>
             </Section>
@@ -94,7 +94,7 @@ interface SectionProps {
 function Section({ title, children, styles, theme }: SectionProps) {
     return (
         <View style={styles.section}>
-            <Text style={[styles.sectionTitle, { color: theme.colors.textSecondary }]}>{title}</Text>
+            <Text style={[styles.sectionTitle, { color: theme.colors.onSurfaceVariant }]}>{title}</Text>
             <View style={{ gap: 10 }}>{children}</View>
         </View>
     );
@@ -103,26 +103,28 @@ function Section({ title, children, styles, theme }: SectionProps) {
 interface BulletProps {
     children: React.ReactNode;
     icon?: React.ReactNode;
+    iconBg?: string;
     styles: ReturnType<typeof createStyles>;
     theme: any;
 }
 
-function Bullet({ children, icon, styles, theme }: BulletProps) {
+function Bullet({ children, icon, iconBg, styles, theme }: BulletProps) {
+    const dotBg = iconBg ?? theme.colors.secondaryContainer;
     return (
         <View style={styles.bullet}>
-            <View style={[styles.bulletDot, { backgroundColor: theme.colors.incomeBg }]}>
+            <View style={[styles.bulletDot, { backgroundColor: dotBg }]}>
                 {icon ?? (
                     <View
                         style={{
                             width: 6,
                             height: 6,
                             borderRadius: 3,
-                            backgroundColor: theme.colors.primary,
+                            backgroundColor: theme.colors.onSecondaryContainer,
                         }}
                     />
                 )}
             </View>
-            <Text style={[styles.bulletText, { color: theme.colors.text }]}>{children}</Text>
+            <Text style={[styles.bulletText, { color: theme.colors.onSurface }]}>{children}</Text>
         </View>
     );
 }
@@ -133,22 +135,22 @@ const createStyles = (theme: any) =>
             marginBottom: 12,
         },
         headerIcon: {
-            width: 36,
-            height: 36,
-            borderRadius: 10,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
         },
         lead: {
             fontSize: 17,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.2,
             marginBottom: 8,
         },
         paragraph: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             lineHeight: 19,
             marginBottom: 20,
         },
@@ -170,7 +172,7 @@ const createStyles = (theme: any) =>
         bulletDot: {
             width: 24,
             height: 24,
-            borderRadius: 8,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
             marginTop: 1,

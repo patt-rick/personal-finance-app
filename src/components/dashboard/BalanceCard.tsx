@@ -7,14 +7,11 @@ import {
     Dimensions,
     NativeSyntheticEvent,
     NativeScrollEvent,
-    useColorScheme,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
-import Svg, { Path, Defs, LinearGradient as SvgGradient, Stop, Rect } from "react-native-svg";
 import { TrendingUp, TrendingDown } from "lucide-react-native";
 import { getCurrencySymbol } from "../../utils/_helpers";
 import { useTheme } from "../../theme/theme";
-import { useThemeContext } from "../../theme/ThemeContext";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_H_PADDING = 20;
@@ -36,82 +33,14 @@ interface BalanceCardProps {
     onPageChange?: (index: number) => void;
 }
 
-function ContactlessIcon({ color }: { color: string }) {
-    return (
-        <Svg width={20} height={20} viewBox="0 0 24 24" fill="none">
-            <Path
-                d="M8.5 14.5C9.16 13.84 9.16 12.76 8.5 12.1"
-                stroke={color}
-                strokeWidth={1.8}
-                strokeLinecap="round"
-            />
-            <Path
-                d="M11 17C12.66 15.34 12.66 12.66 11 11"
-                stroke={color}
-                strokeWidth={1.8}
-                strokeLinecap="round"
-            />
-            <Path
-                d="M13.5 19.5C16.16 16.84 16.16 12.16 13.5 9.5"
-                stroke={color}
-                strokeWidth={1.8}
-                strokeLinecap="round"
-            />
-        </Svg>
-    );
-}
-
-function CardCircles({ size }: { size: number }) {
-    const r = size / 2;
-    const overlap = size * 0.35;
-    return (
-        <View style={{ flexDirection: "row", alignItems: "center" }}>
-            <View
-                style={{
-                    width: size,
-                    height: size,
-                    borderRadius: r,
-                    backgroundColor: "rgba(193, 127, 89, 0.85)",
-                }}
-            />
-            <View
-                style={{
-                    width: size,
-                    height: size,
-                    borderRadius: r,
-                    backgroundColor: "rgba(201, 168, 108, 0.8)",
-                    marginLeft: -overlap,
-                }}
-            />
-        </View>
-    );
-}
-
-function HolographicOverlay() {
+function Sheen() {
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
             <LinearGradient
-                colors={[
-                    "transparent",
-                    "rgba(255,255,255,0.03)",
-                    "rgba(255,255,255,0.07)",
-                    "rgba(255,255,255,0.03)",
-                    "transparent",
-                ]}
+                colors={["rgba(255,255,255,0.14)", "transparent"]}
                 start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 1 }}
+                end={{ x: 0.7, y: 1 }}
                 style={StyleSheet.absoluteFill}
-            />
-            <LinearGradient
-                colors={[
-                    "transparent",
-                    "rgba(0,102,255,0.06)",
-                    "rgba(193,127,89,0.04)",
-                    "transparent",
-                ]}
-                start={{ x: 1, y: 0 }}
-                end={{ x: 0, y: 1 }}
-                style={[StyleSheet.absoluteFill, { opacity: 0.7 }]}
             />
         </View>
     );
@@ -119,9 +48,6 @@ function HolographicOverlay() {
 
 export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: BalanceCardProps) {
     const theme = useTheme();
-    const { themeMode } = useThemeContext();
-    const systemColorScheme = useColorScheme();
-    const isDark = themeMode === "system" ? systemColorScheme === "dark" : themeMode === "dark";
 
     const [activeIndex, setActiveIndex] = useState(0);
     const multiPage = currencies.length > 1;
@@ -137,9 +63,14 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
         [activeIndex, currencies.length, onPageChange],
     );
 
-    const cardGradient: [string, string, string] = isDark
-        ? [theme.colors.primary, theme.colors.gradientStart, theme.colors.primary]
-        : [theme.colors.primary, theme.colors.gradientStart, theme.colors.gradientEnd];
+    // Fixed brand gradient in both themes so the white ink stays legible.
+    const cardGradient: [string, string, string] = [
+        theme.colors.gradientMid,
+        theme.colors.gradientStart,
+        theme.colors.gradientEnd,
+    ];
+
+    const positiveGrowth = weeklyGrowth >= 0;
 
     const renderPage = (item: CurrencyBalance, cardWidth: number) => {
         const symbol = getCurrencySymbol(item.currency);
@@ -149,54 +80,60 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                     colors={cardGradient}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 1 }}
-                    style={[styles.card, { shadowColor: theme.colors.shadow }]}
+                    style={[styles.card, theme.elevation.level3, { shadowColor: theme.colors.shadow }]}
                 >
                     <View style={styles.bigCircle} pointerEvents="none" />
-                    <HolographicOverlay />
+                    <View style={styles.smallCircle} pointerEvents="none" />
+                    <Sheen />
 
-                    <View style={styles.balanceSection}>
-                        <View style={styles.topRow}>
-                            <Text style={styles.label}>
-                                {multiPage ? `Balance · ${item.currency}` : "Balance"}
-                            </Text>
-                            <CardCircles size={28} />
-                        </View>
-                        <Text style={[styles.amount, { color: theme.colors.textInverse }]} numberOfLines={1} adjustsFontSizeToFit>
-                            {symbol}{" "}
-                            {item.balance.toLocaleString(undefined, {
-                                minimumFractionDigits: 2,
-                                maximumFractionDigits: 2,
-                            })}
+                    <View style={styles.topRow}>
+                        <Text style={styles.label}>
+                            {multiPage ? `Balance · ${item.currency}` : "Total balance"}
                         </Text>
+                        <View style={styles.growthPill}>
+                            {positiveGrowth ? (
+                                <TrendingUp size={13} color="#FFFFFF" strokeWidth={2.5} />
+                            ) : (
+                                <TrendingDown size={13} color="#FFFFFF" strokeWidth={2.5} />
+                            )}
+                            <Text style={styles.growthText}>
+                                {positiveGrowth ? "+" : ""}
+                                {weeklyGrowth.toFixed(1)}%
+                            </Text>
+                        </View>
                     </View>
 
-                    <View style={styles.bottomRow}>
-                        <View style={styles.bottomLeft}>
-                            <View style={styles.miniStat}>
+                    <Text style={styles.amount} numberOfLines={1} adjustsFontSizeToFit>
+                        {symbol}{" "}
+                        {item.balance.toLocaleString(undefined, {
+                            minimumFractionDigits: 2,
+                            maximumFractionDigits: 2,
+                        })}
+                    </Text>
+
+                    <View style={styles.statsRow}>
+                        <View style={styles.miniStat}>
+                            <View style={styles.miniDot}>
+                                <TrendingUp size={12} color="#FFFFFF" strokeWidth={2.5} />
+                            </View>
+                            <View style={styles.miniText}>
                                 <Text style={styles.miniLabel}>Income</Text>
-                                <Text
-                                    style={[styles.miniValue, { color: theme.colors.textInverse }]}
-                                    numberOfLines={1}
-                                    adjustsFontSizeToFit
-                                >
+                                <Text style={styles.miniValue} numberOfLines={1} adjustsFontSizeToFit>
                                     {symbol}
-                                    {item.income.toLocaleString(undefined, {
-                                        maximumFractionDigits: 0,
-                                    })}
+                                    {item.income.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </Text>
                             </View>
-                            <View style={styles.miniDivider} />
-                            <View style={styles.miniStat}>
+                        </View>
+                        <View style={styles.miniDivider} />
+                        <View style={styles.miniStat}>
+                            <View style={styles.miniDot}>
+                                <TrendingDown size={12} color="#FFFFFF" strokeWidth={2.5} />
+                            </View>
+                            <View style={styles.miniText}>
                                 <Text style={styles.miniLabel}>Expense</Text>
-                                <Text
-                                    style={[styles.miniValue, { color: theme.colors.textInverse }]}
-                                    numberOfLines={1}
-                                    adjustsFontSizeToFit
-                                >
+                                <Text style={styles.miniValue} numberOfLines={1} adjustsFontSizeToFit>
                                     {symbol}
-                                    {item.expense.toLocaleString(undefined, {
-                                        maximumFractionDigits: 0,
-                                    })}
+                                    {item.expense.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                 </Text>
                             </View>
                         </View>
@@ -207,12 +144,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
     };
 
     if (currencies.length <= 1) {
-        const item = currencies[0] ?? {
-            currency: "USD",
-            income: 0,
-            expense: 0,
-            balance: 0,
-        };
+        const item = currencies[0] ?? { currency: "USD", income: 0, expense: 0, balance: 0 };
         const singleWidth = SCREEN_WIDTH - CARD_H_PADDING * 2;
         return <View style={styles.container}>{renderPage(item, singleWidth)}</View>;
     }
@@ -227,10 +159,7 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                 decelerationRate="fast"
                 snapToInterval={SNAP_INTERVAL}
                 snapToAlignment="start"
-                contentContainerStyle={{
-                    paddingHorizontal: CARD_H_PADDING,
-                    gap: CARD_GAP,
-                }}
+                contentContainerStyle={{ paddingHorizontal: CARD_H_PADDING, gap: CARD_GAP }}
             >
                 {currencies.map((c) => renderPage(c, CARD_WIDTH))}
             </ScrollView>
@@ -244,10 +173,8 @@ export default function BalanceCard({ currencies, weeklyGrowth, onPageChange }: 
                                 backgroundColor:
                                     i === activeIndex
                                         ? theme.colors.primary
-                                        : isDark
-                                          ? "rgba(255,255,255,0.15)"
-                                          : theme.colors.border,
-                                width: i === activeIndex ? 18 : 6,
+                                        : theme.colors.outlineVariant,
+                                width: i === activeIndex ? 20 : 6,
                             },
                         ]}
                     />
@@ -266,119 +193,110 @@ const styles = StyleSheet.create({
         marginTop: 8,
     },
     card: {
-        borderRadius: 20,
+        borderRadius: 28,
         padding: 24,
-        paddingBottom: 20,
         overflow: "hidden",
-        elevation: 8,
-        shadowOffset: { width: 0, height: 8 },
-        shadowOpacity: 0.25,
-        shadowRadius: 20,
     },
     bigCircle: {
         position: "absolute",
         width: 200,
         height: 200,
         borderRadius: 100,
+        backgroundColor: "rgba(255, 255, 255, 0.07)",
+        top: -70,
+        right: -50,
+    },
+    smallCircle: {
+        position: "absolute",
+        width: 120,
+        height: 120,
+        borderRadius: 60,
         backgroundColor: "rgba(255, 255, 255, 0.05)",
-        top: -60,
-        right: -40,
+        bottom: -50,
+        right: 40,
     },
     topRow: {
         flexDirection: "row",
         justifyContent: "space-between",
-        alignItems: "flex-start",
+        alignItems: "center",
+        marginBottom: 14,
     },
-    chipRow: {
+    label: {
+        fontSize: 13,
+        fontWeight: "600",
+        color: "rgba(255,255,255,0.85)",
+        letterSpacing: 0.4,
+    },
+    growthPill: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+        paddingHorizontal: 10,
+        paddingVertical: 5,
+        borderRadius: 999,
+        backgroundColor: "rgba(255,255,255,0.18)",
+    },
+    growthText: {
+        fontSize: 12,
+        fontWeight: "700",
+        color: "#FFFFFF",
+        letterSpacing: 0.2,
+    },
+    amount: {
+        fontSize: 38,
+        fontWeight: "800",
+        letterSpacing: -0.8,
+        color: "#FFFFFF",
+        marginBottom: 22,
+    },
+    statsRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        backgroundColor: "rgba(255,255,255,0.12)",
+        borderRadius: 18,
+        padding: 14,
+    },
+    miniStat: {
+        flex: 1,
         flexDirection: "row",
         alignItems: "center",
         gap: 10,
     },
-    contactless: {
-        transform: [{ rotate: "90deg" }],
-    },
-    badge: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-        paddingHorizontal: 9,
-        paddingVertical: 4,
-        borderRadius: 16,
-    },
-    badgeText: {
-        fontSize: 11,
-        fontWeight: "700",
-    },
-    balanceSection: {
-        marginBottom: 16,
-    },
-    label: {
-        fontSize: 12,
-        fontWeight: "500",
-        color: "rgba(255,255,255,0.45)",
-        letterSpacing: 0.8,
-        textTransform: "uppercase",
-        marginBottom: 6,
-    },
-    amount: {
-        fontSize: 32,
-        fontWeight: "800",
-        letterSpacing: -0.5,
-    },
-    cardDotsRow: {
-        flexDirection: "row",
-        gap: 16,
-        marginBottom: 20,
-    },
-    dotGroup: {
-        flexDirection: "row",
-        gap: 4,
-    },
-    cardDot: {
-        width: 6,
-        height: 6,
-        borderRadius: 3,
+    miniDot: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
         backgroundColor: "rgba(255,255,255,0.18)",
-    },
-    bottomRow: {
-        flexDirection: "row",
-        alignItems: "flex-end",
-        justifyContent: "space-between",
-    },
-    bottomLeft: {
-        flexDirection: "row",
         alignItems: "center",
-        flex: 1,
-        backgroundColor: "rgba(255,255,255,0.06)",
-        borderRadius: 12,
-        padding: 10,
+        justifyContent: "center",
     },
-    miniStat: {
+    miniText: {
         flex: 1,
     },
     miniLabel: {
-        fontSize: 9,
-        color: "rgba(255,255,255,0.4)",
+        fontSize: 10,
+        color: "rgba(255,255,255,0.7)",
         fontWeight: "600",
         textTransform: "uppercase",
-        letterSpacing: 0.5,
+        letterSpacing: 0.6,
         marginBottom: 2,
     },
     miniValue: {
-        fontSize: 13,
+        fontSize: 15,
         fontWeight: "700",
+        color: "#FFFFFF",
     },
     miniDivider: {
         width: 1,
-        height: 24,
-        backgroundColor: "rgba(255,255,255,0.1)",
-        marginHorizontal: 10,
+        height: 32,
+        backgroundColor: "rgba(255,255,255,0.16)",
+        marginHorizontal: 14,
     },
     dotsRow: {
         flexDirection: "row",
         justifyContent: "center",
         alignItems: "center",
-        marginTop: 10,
+        marginTop: 12,
         gap: 5,
     },
     dot: {

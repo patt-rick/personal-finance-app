@@ -117,7 +117,6 @@ export default function AppModal({
                     style={[
                         isBottomSheet ? s.sheet : s.card,
                         {
-                            backgroundColor: theme.colors.card,
                             maxHeight,
                             ...(isBottomSheet && { paddingBottom: sheetBottomPadding }),
                         },
@@ -126,7 +125,7 @@ export default function AppModal({
                 >
                     {showHandleBar && (
                         <View style={s.handle}>
-                            <View style={[s.handleBar, { backgroundColor: theme.colors.border }]} />
+                            <View style={[s.handleBar, { backgroundColor: theme.colors.outlineVariant }]} />
                         </View>
                     )}
 
@@ -151,7 +150,7 @@ export default function AppModal({
                                         accessibilityRole="button"
                                         accessibilityLabel="Close"
                                     >
-                                        <X size={22} color={theme.colors.textSecondary} />
+                                        <X size={22} color={theme.colors.onSurfaceVariant} />
                                     </TouchableOpacity>
                                 )}
                             </View>
@@ -174,21 +173,27 @@ const createStyles = (theme: any) =>
         centerAlign: { justifyContent: "center", paddingHorizontal: 20 },
         backdrop: {
             ...StyleSheet.absoluteFillObject,
-            backgroundColor: "rgba(0,0,0,0.45)",
+            backgroundColor: "rgba(0,0,0,0.4)",
         },
         sheet: {
-            borderTopLeftRadius: 28,
-            borderTopRightRadius: 28,
+            borderTopLeftRadius: theme.shape.extraLarge,
+            borderTopRightRadius: theme.shape.extraLarge,
             paddingHorizontal: 24,
             overflow: "hidden",
+            backgroundColor: theme.colors.surfaceContainerLow,
+            ...theme.elevation.level3,
+            shadowColor: theme.colors.shadow,
         },
         card: {
-            borderRadius: 24,
+            borderRadius: theme.shape.extraLarge,
             padding: 24,
             overflow: "hidden",
+            backgroundColor: theme.colors.surfaceContainerLow,
+            ...theme.elevation.level3,
+            shadowColor: theme.colors.shadow,
         },
-        handle: { alignItems: "center", paddingTop: 10, paddingBottom: 6 },
-        handleBar: { width: 36, height: 4, borderRadius: 2 },
+        handle: { alignItems: "center", paddingTop: 12, paddingBottom: 6 },
+        handleBar: { width: 32, height: 4, borderRadius: 2 },
         header: {
             flexDirection: "row",
             justifyContent: "space-between",
@@ -207,6 +212,7 @@ const createStyles = (theme: any) =>
             fontSize: 20,
             fontWeight: "700",
             letterSpacing: -0.3,
+            color: theme.colors.onSurface,
         },
         body: {
             flexShrink: 1,

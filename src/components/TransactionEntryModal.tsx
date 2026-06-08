@@ -119,8 +119,10 @@ export default function TransactionEntryModal({
                 <View style={s.typeToggleRow}>
                     {(["income", "expense"] as const).map((t) => {
                         const active = currentType === t;
-                        const accent =
-                            t === "income" ? theme.colors.income : theme.colors.expense;
+                        const activeBg =
+                            t === "income" ? theme.colors.incomeContainer : theme.colors.expenseContainer;
+                        const activeText =
+                            t === "income" ? theme.colors.onIncomeContainer : theme.colors.onExpenseContainer;
                         return (
                             <TouchableOpacity
                                 key={t}
@@ -128,8 +130,10 @@ export default function TransactionEntryModal({
                                 style={[
                                     s.typeToggleBtn,
                                     {
-                                        backgroundColor: active ? accent : theme.colors.surface,
-                                        borderColor: active ? accent : theme.colors.border,
+                                        backgroundColor: active
+                                            ? activeBg
+                                            : theme.colors.surfaceContainerHigh,
+                                        borderWidth: 0,
                                     },
                                 ]}
                             >
@@ -138,8 +142,8 @@ export default function TransactionEntryModal({
                                         s.typeToggleText,
                                         {
                                             color: active
-                                                ? theme.colors.textInverse
-                                                : theme.colors.textSecondary,
+                                                ? activeText
+                                                : theme.colors.onSurfaceVariant,
                                             fontWeight: active ? "700" : "500",
                                         },
                                     ]}
@@ -207,10 +211,7 @@ export default function TransactionEntryModal({
                 style={[
                     styles.submitBtnModern,
                     {
-                        backgroundColor:
-                            currentType === "income"
-                                ? theme.colors.income
-                                : theme.colors.expense,
+                        backgroundColor: theme.colors.primary,
                     },
                 ]}
                 onPress={handleSubmit}
@@ -225,17 +226,17 @@ const s = StyleSheet.create({
     typeToggleRow: {
         flexDirection: "row",
         gap: 8,
-        marginBottom: 16,
+        marginBottom: 20,
     },
     typeToggleBtn: {
         flex: 1,
-        height: 44,
+        height: 48,
         borderRadius: 12,
-        borderWidth: 1,
         alignItems: "center",
         justifyContent: "center",
     },
     typeToggleText: {
         fontSize: 14,
+        letterSpacing: 0.1,
     },
 });

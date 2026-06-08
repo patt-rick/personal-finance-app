@@ -63,9 +63,8 @@ export default function DonutChart({
                         cy={SIZE / 2}
                         r={RADIUS}
                         fill="none"
-                        stroke={theme.colors.border}
+                        stroke={theme.colors.surfaceContainerHighest}
                         strokeWidth={STROKE_WIDTH}
-                        opacity={0.3}
                     />
                     {segments.map((seg, i) => (
                         <Circle
@@ -87,11 +86,11 @@ export default function DonutChart({
                     {centerOverride ?? (
                         <>
                             <Text
-                                style={[styles.centerSmall, { color: theme.colors.textSecondary }]}
+                                style={[styles.centerSmall, { color: theme.colors.onSurfaceVariant }]}
                             >
                                 {midTotal ? "Balance" : "Total"}
                             </Text>
-                            <Text style={[styles.centerBig, { color: theme.colors.text }]}>
+                            <Text style={[styles.centerBig, { color: theme.colors.onSurface }]}>
                                 {currencySymbol}
                                 {midTotal
                                     ? midTotal.toLocaleString(undefined, {
@@ -116,13 +115,13 @@ export default function DonutChart({
                                 <Text
                                     style={[
                                         styles.legendLabel,
-                                        { color: theme.colors.textSecondary },
+                                        { color: theme.colors.onSurfaceVariant },
                                     ]}
                                     numberOfLines={1}
                                 >
                                     {item.label}
                                 </Text>
-                                <Text style={[styles.legendPct, { color: theme.colors.text }]}>
+                                <Text style={[styles.legendPct, { color: theme.colors.onSurface }]}>
                                     {pct}%
                                 </Text>
                             </View>

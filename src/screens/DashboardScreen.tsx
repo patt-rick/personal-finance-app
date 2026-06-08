@@ -28,6 +28,7 @@ import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import BalanceCard, { CurrencyBalance } from "../components/dashboard/BalanceCard";
 import TourOverlay from "../components/TourOverlay";
+import { maybeRequestReview } from "../utils/storeReview";
 
 function getGreeting(): string {
     const hour = new Date().getHours();
@@ -223,9 +224,9 @@ function QuickStats({
 
     return (
         <View style={[statsStyles.container]}>
-            <View style={[statsStyles.card, { backgroundColor: theme.colors.card }]}>
-                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.incomeBg }]}>
-                    <Hash size={14} color={theme.colors.income} />
+            <View style={[statsStyles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.primaryContainer }]}>
+                    <Hash size={18} color={theme.colors.onPrimaryContainer} />
                 </View>
                 <Text style={[statsStyles.value, { color: theme.colors.text }]}>
                     {stats.monthlyTx}
@@ -235,9 +236,9 @@ function QuickStats({
                 </Text>
             </View>
 
-            <View style={[statsStyles.card, { backgroundColor: theme.colors.card }]}>
-                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.expenseBg }]}>
-                    <TrendingUp size={14} color={theme.colors.expense} />
+            <View style={[statsStyles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.secondaryContainer }]}>
+                    <TrendingUp size={18} color={theme.colors.onSecondaryContainer} />
                 </View>
                 <Text style={[statsStyles.value, { color: theme.colors.text }]}>
                     {stats.totalTx}
@@ -247,9 +248,9 @@ function QuickStats({
                 </Text>
             </View>
 
-            <View style={[statsStyles.card, { backgroundColor: theme.colors.card }]}>
-                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.surface }]}>
-                    <Star size={14} color={theme.colors.gold} />
+            <View style={[statsStyles.card, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                <View style={[statsStyles.iconWrap, { backgroundColor: theme.colors.goldContainer }]}>
+                    <Star size={18} color={theme.colors.goldDark} />
                 </View>
                 <Text
                     style={[statsStyles.value, { color: theme.colors.text }]}
@@ -420,13 +421,13 @@ function DashboardHome({
                     <View
                         style={[
                             styles.countBadge,
-                            { backgroundColor: theme.colors.surface },
+                            { backgroundColor: theme.colors.secondaryContainer },
                         ]}
                     >
                         <Text
                             style={[
                                 styles.countBadgeText,
-                                { color: theme.colors.textSecondary },
+                                { color: theme.colors.onSecondaryContainer },
                             ]}
                         >
                             {businesses.length}
@@ -451,16 +452,16 @@ function DashboardHome({
                             <View
                                 style={[
                                     styles.emptyIconOuter,
-                                    { backgroundColor: theme.colors.surface },
+                                    { backgroundColor: theme.colors.secondaryContainer },
                                 ]}
                             >
                                 <View
                                     style={[
                                         styles.emptyIconInner,
-                                        { backgroundColor: theme.colors.incomeBg },
+                                        { backgroundColor: theme.colors.primaryContainer },
                                     ]}
                                 >
-                                    <Wallet size={32} color={theme.colors.primary} />
+                                    <Wallet size={32} color={theme.colors.onPrimaryContainer} />
                                 </View>
                             </View>
                             <Text style={[styles.emptyTitle, { color: theme.colors.text }]}>
@@ -513,6 +514,11 @@ function DashboardHome({
                             "All your cashbooks are listed here with their balances. Tap any cashbook to view its transactions in detail.",
                     },
                 ]}
+                onComplete={() => {
+                    setTimeout(() => {
+                        maybeRequestReview({ kind: "tour_completed" });
+                    }, 600);
+                }}
             />
         </View>
     );
@@ -523,40 +529,36 @@ const createStatsStyles = (theme: any) =>
         container: {
             flexDirection: "row",
             paddingHorizontal: 20,
-            gap: 10,
-            marginTop: 16,
+            gap: 12,
+            marginTop: 20,
         },
         card: {
             flex: 1,
-            paddingVertical: 14,
+            paddingVertical: 16,
             paddingHorizontal: 12,
-            borderRadius: 16,
-            alignItems: "center",
-            elevation: 1,
+            borderRadius: 24,
+            alignItems: "flex-start",
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.02,
-            shadowRadius: 3,
         },
         iconWrap: {
-            width: 28,
-            height: 28,
-            borderRadius: 8,
+            width: 36,
+            height: 36,
+            borderRadius: 12,
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: 8,
+            marginBottom: 12,
         },
         value: {
-            fontSize: 16,
+            fontSize: 20,
             fontWeight: "700",
-            letterSpacing: -0.3,
+            letterSpacing: -0.4,
             marginBottom: 2,
         },
         label: {
-            fontSize: 10,
+            fontSize: 11,
             fontWeight: "500",
-            textTransform: "uppercase",
-            letterSpacing: 0.3,
+            letterSpacing: 0.4,
         },
     });
 
@@ -598,12 +600,14 @@ const createStyles = (theme: any) =>
             letterSpacing: -0.2,
         },
         countBadge: {
-            paddingHorizontal: 10,
+            paddingHorizontal: 12,
             paddingVertical: 4,
-            borderRadius: 10,
+            borderRadius: 999,
+            minWidth: 28,
+            alignItems: "center",
         },
         countBadgeText: {
-            fontSize: 12,
+            fontSize: 13,
             fontWeight: "700",
         },
         cashbooksList: {
@@ -613,18 +617,15 @@ const createStyles = (theme: any) =>
             flexDirection: "row",
             alignItems: "center",
             padding: 14,
-            borderRadius: 16,
-            marginBottom: 10,
-            elevation: 1,
+            borderRadius: 24,
+            marginBottom: 12,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.02,
-            shadowRadius: 3,
         },
         cashbookIcon: {
-            width: 42,
-            height: 42,
-            borderRadius: 13,
+            width: 46,
+            height: 46,
+            borderRadius: 23,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -689,20 +690,18 @@ const createStyles = (theme: any) =>
         createBtn: {
             flexDirection: "row",
             alignItems: "center",
-            paddingVertical: 13,
+            paddingVertical: 16,
             paddingHorizontal: 28,
-            borderRadius: 14,
+            borderRadius: 999,
             gap: 8,
-            elevation: 2,
-            shadowColor: theme.colors.primary,
-            shadowOffset: { width: 0, height: 4 },
-            shadowOpacity: 0.2,
-            shadowRadius: 8,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         createBtnText: {
-            color: theme.colors.textInverse,
+            color: theme.colors.onPrimary,
             fontSize: 15,
             fontWeight: "700",
+            letterSpacing: 0.1,
         },
     });
 

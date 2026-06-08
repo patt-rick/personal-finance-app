@@ -161,18 +161,18 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
     const maxCategoryAmount = topCategories.length > 0 ? topCategories[0].amount : 0;
 
     return (
-        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+        <View style={styles.container}>
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 {onBack && (
                     <TouchableOpacity
                         onPress={onBack}
-                        style={[styles.backBtn, { backgroundColor: theme.colors.card }]}
+                        style={styles.backBtn}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                     >
-                        <ArrowLeft size={20} color={theme.colors.text} />
+                        <ArrowLeft size={20} color={theme.colors.onSurface} />
                     </TouchableOpacity>
                 )}
-                <Text style={[styles.title, { color: theme.colors.text }]}>Reports</Text>
+                <Text style={styles.title}>Reports</Text>
             </View>
 
             <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
@@ -184,16 +184,14 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                     <TouchableOpacity
                         style={[
                             styles.chip,
-                            {
-                                backgroundColor: !selectedBusinessId ? theme.colors.primary : theme.colors.surface,
-                            },
+                            !selectedBusinessId ? styles.chipActive : styles.chipInactive,
                         ]}
                         onPress={() => setSelectedBusinessId(null)}
                     >
                         <Text
                             style={[
                                 styles.chipText,
-                                { color: !selectedBusinessId ? theme.colors.textInverse : theme.colors.text },
+                                !selectedBusinessId ? styles.chipTextActive : styles.chipTextInactive,
                             ]}
                         >
                             All
@@ -204,17 +202,14 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                             key={biz.id}
                             style={[
                                 styles.chip,
-                                {
-                                    backgroundColor:
-                                        selectedBusinessId === biz.id ? theme.colors.primary : theme.colors.surface,
-                                },
+                                selectedBusinessId === biz.id ? styles.chipActive : styles.chipInactive,
                             ]}
                             onPress={() => setSelectedBusinessId(biz.id)}
                         >
                             <Text
                                 style={[
                                     styles.chipText,
-                                    { color: selectedBusinessId === biz.id ? theme.colors.textInverse : theme.colors.text },
+                                    selectedBusinessId === biz.id ? styles.chipTextActive : styles.chipTextInactive,
                                 ]}
                             >
                                 {biz.name}
@@ -233,17 +228,14 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                             key={period}
                             style={[
                                 styles.chip,
-                                {
-                                    backgroundColor:
-                                        selectedPeriod === period ? theme.colors.primary : theme.colors.surface,
-                                },
+                                selectedPeriod === period ? styles.chipActive : styles.chipInactive,
                             ]}
                             onPress={() => setSelectedPeriod(period)}
                         >
                             <Text
                                 style={[
                                     styles.chipText,
-                                    { color: selectedPeriod === period ? theme.colors.textInverse : theme.colors.text },
+                                    selectedPeriod === period ? styles.chipTextActive : styles.chipTextInactive,
                                 ]}
                             >
                                 {period}
@@ -254,10 +246,10 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
 
                 {!hasData ? (
                     <View style={styles.emptyContainer}>
-                        <View style={[styles.emptyIcon, { backgroundColor: theme.colors.surface }]}>
-                            <FileText size={40} color={theme.colors.textSecondary} />
+                        <View style={styles.emptyIcon}>
+                            <FileText size={40} color={theme.colors.onSurfaceVariant} />
                         </View>
-                        <Text style={[styles.emptyText, { color: theme.colors.textSecondary }]}>
+                        <Text style={styles.emptyText}>
                             No transactions found for this period
                         </Text>
                     </View>
@@ -266,7 +258,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         {chartPages.length > 0 && <ChartCarousel pages={chartPages} />}
 
                         <View style={styles.sectionHeader}>
-                            <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                            <Text style={styles.sectionTitle}>
                                 Month over Month
                             </Text>
                         </View>
@@ -294,22 +286,22 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         {topCategories.length > 0 && (
                             <>
                                 <View style={styles.sectionHeader}>
-                                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                                    <Text style={styles.sectionTitle}>
                                         Top Spending Categories
                                     </Text>
                                 </View>
-                                <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
+                                <View style={styles.card}>
                                     {topCategories.map((cat, i) => (
                                         <View key={cat.name} style={[styles.categoryRow, i > 0 && styles.categoryDivider]}>
                                             <View style={styles.categoryInfo}>
-                                                <Text style={[styles.categoryName, { color: theme.colors.text }]}>
+                                                <Text style={styles.categoryName}>
                                                     {cat.name}
                                                 </Text>
-                                                <Text style={[styles.categoryCount, { color: theme.colors.textSecondary }]}>
+                                                <Text style={styles.categoryCount}>
                                                     {cat.count} transaction{cat.count !== 1 ? "s" : ""}
                                                 </Text>
                                             </View>
-                                            <Text style={[styles.categoryAmount, { color: theme.colors.text }]}>
+                                            <Text style={styles.categoryAmount}>
                                                 {currencySymbol}{cat.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                             </Text>
                                             <View style={styles.progressBarBg}>
@@ -317,8 +309,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                                                     style={[
                                                         styles.progressBarFill,
                                                         {
-                                                            backgroundColor: theme.colors.primary,
-                                                            width: `${maxCategoryAmount > 0 ? (cat.amount / maxCategoryAmount) * 100 : 0}%`,
+                                                            width: `${maxCategoryAmount > 0 ? (cat.amount / maxCategoryAmount) * 100 : 0}%` as any,
                                                         },
                                                     ]}
                                                 />
@@ -332,22 +323,22 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         {biggestExpenses.length > 0 && (
                             <>
                                 <View style={styles.sectionHeader}>
-                                    <Text style={[styles.sectionTitle, { color: theme.colors.text }]}>
+                                    <Text style={styles.sectionTitle}>
                                         Biggest Expenses
                                     </Text>
                                 </View>
-                                <View style={[styles.card, { backgroundColor: theme.colors.card }]}>
+                                <View style={styles.card}>
                                     {biggestExpenses.map((tx, i) => (
                                         <View key={tx.id} style={[styles.txRow, i > 0 && styles.categoryDivider]}>
                                             <View style={styles.txInfo}>
-                                                <Text style={[styles.txDesc, { color: theme.colors.text }]} numberOfLines={1}>
+                                                <Text style={styles.txDesc} numberOfLines={1}>
                                                     {tx.description}
                                                 </Text>
-                                                <Text style={[styles.txMeta, { color: theme.colors.textSecondary }]}>
+                                                <Text style={styles.txMeta}>
                                                     {tx.category || "Uncategorized"} · {new Date(tx.date).toLocaleDateString()}
                                                 </Text>
                                             </View>
-                                            <Text style={[styles.txAmount, { color: theme.colors.error }]}>
+                                            <Text style={styles.txAmount}>
                                                 -{currencySymbol}{tx.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                             </Text>
                                         </View>
@@ -376,12 +367,12 @@ function ComparisonCard({
     const isPositive = value >= 0;
     const Arrow = isPositive ? TrendingUp : TrendingDown;
     const color = label === "Expense"
-        ? (isPositive ? theme.colors.error : theme.colors.success)
-        : (isPositive ? theme.colors.success : theme.colors.error);
+        ? (isPositive ? theme.colors.error : theme.colors.income)
+        : (isPositive ? theme.colors.income : theme.colors.error);
 
     return (
-        <View style={[styles.statCard, { backgroundColor: theme.colors.card }]}>
-            <Text style={[styles.statLabel, { color: theme.colors.textSecondary }]}>{label}</Text>
+        <View style={styles.statCard}>
+            <Text style={styles.statLabel}>{label}</Text>
             <Arrow size={16} color={color} />
             <Text style={[styles.statValue, { color }]}>
                 {Math.abs(value).toFixed(1)}%
@@ -394,6 +385,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
     return StyleSheet.create({
         container: {
             flex: 1,
+            backgroundColor: theme.colors.background,
         },
         header: {
             flexDirection: "row" as const,
@@ -403,16 +395,18 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center" as const,
             justifyContent: "center" as const,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         title: {
-            fontSize: 26,
-            fontWeight: "800",
-            letterSpacing: -0.3,
+            ...theme.typescale.headlineSmall,
+            color: theme.colors.onSurface,
         },
         chipRow: {
             paddingHorizontal: 20,
@@ -422,28 +416,45 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
         chip: {
             paddingHorizontal: 14,
             paddingVertical: 8,
-            borderRadius: 20,
+            borderRadius: theme.shape.small,
+            borderWidth: 1,
+        },
+        chipInactive: {
+            backgroundColor: "transparent",
+            borderColor: theme.colors.outlineVariant,
+        },
+        chipActive: {
+            backgroundColor: theme.colors.secondaryContainer,
+            borderColor: theme.colors.secondaryContainer,
         },
         chipText: {
             fontSize: 13,
-            fontWeight: "600",
+            fontWeight: "600" as const,
+        },
+        chipTextInactive: {
+            color: theme.colors.onSurfaceVariant,
+        },
+        chipTextActive: {
+            color: theme.colors.onSecondaryContainer,
         },
         emptyContainer: {
             padding: 60,
-            alignItems: "center",
+            alignItems: "center" as const,
         },
         emptyIcon: {
             width: 80,
             height: 80,
-            borderRadius: 40,
-            alignItems: "center",
-            justifyContent: "center",
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.surfaceContainerHigh,
+            alignItems: "center" as const,
+            justifyContent: "center" as const,
             marginBottom: 16,
         },
         emptyText: {
-            textAlign: "center",
+            textAlign: "center" as const,
             fontSize: 14,
             lineHeight: 20,
+            color: theme.colors.onSurfaceVariant,
         },
         sectionHeader: {
             paddingHorizontal: 20,
@@ -451,85 +462,85 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             marginBottom: 12,
         },
         sectionTitle: {
-            fontSize: 17,
-            fontWeight: "700",
-            letterSpacing: -0.2,
+            ...theme.typescale.titleMedium,
+            color: theme.colors.onSurface,
         },
         comparisonRow: {
-            flexDirection: "row",
+            flexDirection: "row" as const,
             paddingHorizontal: 20,
             gap: 10,
         },
         statCard: {
             flex: 1,
-            alignItems: "center",
+            alignItems: "center" as const,
             padding: 14,
-            borderRadius: 16,
+            borderRadius: theme.shape.large,
             gap: 6,
-            elevation: 1,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.02,
-            shadowRadius: 3,
         },
         statLabel: {
             fontSize: 11,
-            fontWeight: "600",
-            textTransform: "uppercase",
+            fontWeight: "600" as const,
+            textTransform: "uppercase" as const,
             letterSpacing: 0.5,
+            color: theme.colors.onSurfaceVariant,
         },
         statValue: {
             fontSize: 16,
-            fontWeight: "800",
+            fontWeight: "800" as const,
         },
         card: {
             marginHorizontal: 20,
-            borderRadius: 16,
+            borderRadius: theme.shape.large,
             padding: 14,
-            elevation: 1,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.02,
-            shadowRadius: 3,
         },
         categoryRow: {
             paddingVertical: 12,
         },
         categoryDivider: {
             borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: theme.colors.borderLight,
+            borderTopColor: theme.colors.outlineVariant,
         },
         categoryInfo: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "center",
+            flexDirection: "row" as const,
+            justifyContent: "space-between" as const,
+            alignItems: "center" as const,
             marginBottom: 6,
         },
         categoryName: {
             fontSize: 14,
-            fontWeight: "600",
+            fontWeight: "600" as const,
+            color: theme.colors.onSurface,
         },
         categoryCount: {
             fontSize: 11,
+            color: theme.colors.onSurfaceVariant,
         },
         categoryAmount: {
             fontSize: 14,
-            fontWeight: "700",
+            fontWeight: "700" as const,
             marginBottom: 6,
+            color: theme.colors.onSurface,
         },
         progressBarBg: {
             height: 6,
             borderRadius: 3,
-            backgroundColor: theme.colors.borderLight,
-            overflow: "hidden",
+            backgroundColor: theme.colors.surfaceContainerHighest,
+            overflow: "hidden" as const,
         },
         progressBarFill: {
             height: 6,
             borderRadius: 3,
+            backgroundColor: theme.colors.primary,
         },
         txRow: {
-            flexDirection: "row",
-            alignItems: "center",
+            flexDirection: "row" as const,
+            alignItems: "center" as const,
             paddingVertical: 12,
         },
         txInfo: {
@@ -538,15 +549,18 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
         },
         txDesc: {
             fontSize: 14,
-            fontWeight: "600",
+            fontWeight: "600" as const,
+            color: theme.colors.onSurface,
         },
         txMeta: {
             fontSize: 11,
             marginTop: 2,
+            color: theme.colors.onSurfaceVariant,
         },
         txAmount: {
             fontSize: 14,
-            fontWeight: "700",
+            fontWeight: "700" as const,
+            color: theme.colors.expense,
         },
     });
 }

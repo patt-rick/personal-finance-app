@@ -300,8 +300,6 @@ export default function SettingsScreen({
 
     return (
         <View style={styles.container}>
-            <View style={[styles.headerDecoration, { height: 260 + insets.top }]} />
-
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <Text style={styles.headerTitle}>Settings</Text>
             </View>
@@ -335,7 +333,7 @@ export default function SettingsScreen({
                                     style={styles.editBtn}
                                     onPress={() => setIsEditing(true)}
                                 >
-                                    <Pencil size={16} color={theme.colors.primary} />
+                                    <Pencil size={16} color={theme.colors.onPrimaryContainer} />
                                 </TouchableOpacity>
                             )}
                         </View>
@@ -345,7 +343,7 @@ export default function SettingsScreen({
                                 <View style={styles.editFieldGroup}>
                                     <Text style={styles.editFieldLabel}>Name</Text>
                                     <View style={styles.editInputRow}>
-                                        <User size={16} color={theme.colors.textSecondary} />
+                                        <User size={16} color={theme.colors.onSurfaceVariant} />
                                         <TextInput
                                             style={styles.editInput}
                                             value={name}
@@ -359,7 +357,7 @@ export default function SettingsScreen({
                                 <View style={styles.editFieldGroup}>
                                     <Text style={styles.editFieldLabel}>Email</Text>
                                     <View style={styles.editInputRow}>
-                                        <Mail size={16} color={theme.colors.textSecondary} />
+                                        <Mail size={16} color={theme.colors.onSurfaceVariant} />
                                         <TextInput
                                             style={styles.editInput}
                                             value={email}
@@ -382,7 +380,7 @@ export default function SettingsScreen({
                                         style={styles.editSaveBtn}
                                         onPress={handleSave}
                                     >
-                                        <Check size={16} color={theme.colors.textInverse} />
+                                        <Check size={16} color={theme.colors.onPrimary} />
                                         <Text style={styles.editSaveText}>Save</Text>
                                     </TouchableOpacity>
                                 </View>
@@ -398,24 +396,25 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowCategories(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.expenseBg }]}>
-                                    <Tags size={18} color={theme.colors.expense} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.errorContainer }]}>
+                                    <Tags size={18} color={theme.colors.onErrorContainer} />
                                 </View>
                                 <Text style={styles.rowText}>Categories</Text>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
+                            <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowSecurity(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Lock size={18} color={theme.colors.primary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Lock size={18} color={theme.colors.onPrimaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Security</Text>
                                     <Text style={styles.rowSubText}>PIN lock & biometrics</Text>
                                 </View>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -428,53 +427,56 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowReports(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.surface }]}>
-                                    <BarChart3 size={18} color={theme.colors.chartBlue} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <BarChart3 size={18} color={theme.colors.onSecondaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Reports</Text>
                                     <Text style={styles.rowSubText}>Financial insights & analytics</Text>
                                 </View>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
+                            <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => setShowRecurring(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Repeat size={18} color={theme.colors.success} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeContainer }]}>
+                                    <Repeat size={18} color={theme.colors.onIncomeContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Recurring Transactions</Text>
                                     <Text style={styles.rowSubText}>Manage automated entries</Text>
                                 </View>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
+                            <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => setShowDebts(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.expenseBg }]}>
-                                    <Handshake size={18} color={theme.colors.secondary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                                    <Handshake size={18} color={theme.colors.onTertiaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Debts & Loans</Text>
                                     <Text style={styles.rowSubText}>Track money owed & owing</Text>
                                 </View>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
+                            <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => setShowAutoLog(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Zap size={18} color={theme.colors.primary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Zap size={18} color={theme.colors.onPrimaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Automatic Logging</Text>
                                     <Text style={styles.rowSubText}>Capture from SMS & notifications</Text>
                                 </View>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -484,8 +486,8 @@ export default function SettingsScreen({
                         <Text style={styles.sectionLabel}>Appearance</Text>
                         <View style={styles.groupCard}>
                             <View style={[styles.row, { borderBottomWidth: 0, paddingBottom: 12 }]}>
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Palette size={18} color={theme.colors.primary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Palette size={18} color={theme.colors.onPrimaryContainer} />
                                 </View>
                                 <Text style={styles.rowText}>Theme</Text>
                             </View>
@@ -504,12 +506,12 @@ export default function SettingsScreen({
                                         >
                                             <Icon
                                                 size={18}
-                                                color={isActive ? theme.colors.textInverse : theme.colors.textSecondary}
+                                                color={isActive ? theme.colors.onSecondaryContainer : theme.colors.onSurfaceVariant}
                                             />
                                             <Text
                                                 style={[
                                                     styles.themeOptionLabel,
-                                                    isActive && { color: theme.colors.textInverse },
+                                                    isActive && styles.themeOptionLabelActive,
                                                 ]}
                                             >
                                                 {option.label}
@@ -530,8 +532,8 @@ export default function SettingsScreen({
                                 onPress={handleExport}
                                 disabled={isExporting}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Upload size={18} color={theme.colors.success} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeContainer }]}>
+                                    <Upload size={18} color={theme.colors.onIncomeContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Export Data</Text>
@@ -540,16 +542,17 @@ export default function SettingsScreen({
                                 {isExporting ? (
                                     <ActivityIndicator size="small" color={theme.colors.primary} />
                                 ) : (
-                                    <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                    <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                                 )}
                             </TouchableOpacity>
+                            <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={handleImport}
                                 disabled={isImporting}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Download size={18} color={theme.colors.primary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Download size={18} color={theme.colors.onPrimaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Import Data</Text>
@@ -558,7 +561,7 @@ export default function SettingsScreen({
                                 {isImporting ? (
                                     <ActivityIndicator size="small" color={theme.colors.primary} />
                                 ) : (
-                                    <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                    <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                                 )}
                             </TouchableOpacity>
                         </View>
@@ -569,8 +572,8 @@ export default function SettingsScreen({
                         <Text style={styles.sectionLabel}>About</Text>
                         <View style={styles.groupCard}>
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.surface }]}>
-                                    <Info size={18} color={theme.colors.chartBlue} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <Info size={18} color={theme.colors.onSecondaryContainer} />
                                 </View>
                                 <Text style={styles.rowText}>Version</Text>
                                 <Text style={styles.rowValueText}>{APP_VERSION}</Text>
@@ -578,13 +581,15 @@ export default function SettingsScreen({
                                     <Text style={styles.premiumBadgeText}>Premium</Text>
                                 </View>
                             </View>
+                            <View style={styles.rowDivider} />
                             <View style={styles.row}>
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Shield size={18} color={theme.colors.success} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeContainer }]}>
+                                    <Shield size={18} color={theme.colors.onIncomeContainer} />
                                 </View>
                                 <Text style={styles.rowText}>Encryption</Text>
                                 <Text style={styles.rowValueText}>AES-256</Text>
                             </View>
+                            <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => {
@@ -592,14 +597,14 @@ export default function SettingsScreen({
                                     Alert.alert("Tours Reset", "The guided tours will show again on each page.");
                                 }}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.incomeBg }]}>
-                                    <Info size={18} color={theme.colors.primary} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
+                                    <Info size={18} color={theme.colors.onPrimaryContainer} />
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Replay Tours</Text>
                                     <Text style={styles.rowSubText}>Show feature guides again</Text>
                                 </View>
-                                <ChevronRight size={18} color={theme.colors.textSecondary} />
+                                <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
                         </View>
                     </View>
@@ -711,14 +716,14 @@ function ExportPinVerifyScreen({
                     style={verifyStyles.backBtn}
                     hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 >
-                    <ArrowLeft size={20} color={theme.colors.text} />
+                    <ArrowLeft size={20} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <Text style={verifyStyles.headerTitle}>Verify PIN</Text>
             </View>
 
             <View style={verifyStyles.content}>
                 <View style={verifyStyles.lockIconCircle}>
-                    <Upload size={28} color={theme.colors.primary} />
+                    <Upload size={28} color={theme.colors.onPrimaryContainer} />
                 </View>
                 <Text style={verifyStyles.subtitle}>Enter your PIN to export data</Text>
 
@@ -750,7 +755,7 @@ function ExportPinVerifyScreen({
                                 >
                                     <Delete
                                         size={22}
-                                        color={pin.length === 0 || error ? theme.colors.border : theme.colors.text}
+                                        color={pin.length === 0 || error ? theme.colors.outlineVariant : theme.colors.onSurface}
                                     />
                                 </TouchableOpacity>
                             );
@@ -783,17 +788,19 @@ const createVerifyStyles = (theme: any) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.card,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.medium,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.3,
         },
         content: {
@@ -802,17 +809,17 @@ const createVerifyStyles = (theme: any) =>
             paddingTop: 60,
         },
         lockIconCircle: {
-            width: 64,
-            height: 64,
-            borderRadius: 20,
-            backgroundColor: theme.colors.incomeBg,
+            width: 72,
+            height: 72,
+            borderRadius: theme.shape.extraLarge,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
             marginBottom: 20,
         },
         subtitle: {
             fontSize: 15,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             fontWeight: "500",
             marginBottom: 32,
         },
@@ -826,7 +833,7 @@ const createVerifyStyles = (theme: any) =>
             height: 14,
             borderRadius: 7,
             borderWidth: 2,
-            borderColor: theme.colors.border,
+            borderColor: theme.colors.outline,
         },
         dotFilled: {
             backgroundColor: theme.colors.primary,
@@ -854,30 +861,22 @@ const createVerifyStyles = (theme: any) =>
             width: 68,
             height: 68,
             borderRadius: 34,
-            backgroundColor: theme.colors.card,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         keyText: {
             fontSize: 24,
             fontWeight: "400",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
         },
     });
 
 const createStyles = (theme: any) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
-        headerDecoration: {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: theme.colors.incomeBg,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            opacity: 0.6,
-        },
         header: {
             paddingHorizontal: 20,
             paddingBottom: 16,
@@ -885,7 +884,7 @@ const createStyles = (theme: any) =>
         headerTitle: {
             fontSize: 26,
             fontWeight: "800",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.3,
         },
 
@@ -893,14 +892,11 @@ const createStyles = (theme: any) =>
         profileCard: {
             marginHorizontal: 20,
             marginTop: 8,
-            backgroundColor: theme.colors.card,
-            borderRadius: 20,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.extraLarge,
             padding: 20,
-            elevation: 2,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 2 },
-            shadowOpacity: 0.06,
-            shadowRadius: 8,
         },
         profileTop: {
             flexDirection: "row",
@@ -909,15 +905,15 @@ const createStyles = (theme: any) =>
         avatar: {
             width: 56,
             height: 56,
-            borderRadius: 18,
-            backgroundColor: theme.colors.primary,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
         },
         avatarText: {
             fontSize: 20,
             fontWeight: "700",
-            color: theme.colors.textInverse,
+            color: theme.colors.onPrimaryContainer,
             letterSpacing: 0.5,
         },
         profileInfo: {
@@ -927,19 +923,19 @@ const createStyles = (theme: any) =>
         profileName: {
             fontSize: 18,
             fontWeight: "700",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.2,
         },
         profileEmail: {
             fontSize: 13,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 3,
         },
         editBtn: {
-            width: 36,
-            height: 36,
-            borderRadius: 12,
-            backgroundColor: theme.colors.incomeBg,
+            width: 40,
+            height: 40,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
         },
@@ -947,7 +943,7 @@ const createStyles = (theme: any) =>
             marginTop: 20,
             paddingTop: 20,
             borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: theme.colors.borderLight,
+            borderTopColor: theme.colors.outlineVariant,
         },
         editFieldGroup: {
             marginBottom: 16,
@@ -955,7 +951,7 @@ const createStyles = (theme: any) =>
         editFieldLabel: {
             fontSize: 12,
             fontWeight: "600",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginBottom: 8,
             marginLeft: 2,
             textTransform: "uppercase",
@@ -964,18 +960,18 @@ const createStyles = (theme: any) =>
         editInputRow: {
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: theme.colors.background,
-            borderRadius: 14,
+            backgroundColor: theme.colors.surfaceContainerHighest,
+            borderRadius: theme.shape.medium,
             paddingHorizontal: 14,
-            height: 48,
+            height: 52,
             gap: 10,
             borderWidth: 1,
-            borderColor: theme.colors.borderLight,
+            borderColor: theme.colors.outline,
         },
         editInput: {
             flex: 1,
             fontSize: 15,
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             padding: 0,
         },
         editActions: {
@@ -985,31 +981,33 @@ const createStyles = (theme: any) =>
         },
         editCancelBtn: {
             flex: 1,
-            height: 46,
-            borderRadius: 14,
-            backgroundColor: theme.colors.surface,
+            height: 52,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             alignItems: "center",
             justifyContent: "center",
         },
         editCancelText: {
             fontSize: 14,
             fontWeight: "600",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
         },
         editSaveBtn: {
             flex: 1,
-            height: 46,
-            borderRadius: 14,
+            height: 52,
+            borderRadius: theme.shape.full,
             backgroundColor: theme.colors.primary,
             flexDirection: "row",
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         editSaveText: {
             fontSize: 14,
             fontWeight: "700",
-            color: theme.colors.textInverse,
+            color: theme.colors.onPrimary,
         },
 
         // Sections
@@ -1019,7 +1017,7 @@ const createStyles = (theme: any) =>
         },
         sectionLabel: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginBottom: 10,
             marginLeft: 4,
@@ -1029,27 +1027,27 @@ const createStyles = (theme: any) =>
 
         // Grouped Card
         groupCard: {
-            backgroundColor: theme.colors.card,
-            borderRadius: 16,
+            backgroundColor: theme.colors.surfaceContainerLow,
+            borderRadius: theme.shape.large,
             overflow: "hidden",
-            elevation: 1,
+            ...theme.elevation.level1,
             shadowColor: theme.colors.shadow,
-            shadowOffset: { width: 0, height: 1 },
-            shadowOpacity: 0.04,
-            shadowRadius: 3,
+        },
+        rowDivider: {
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: theme.colors.outlineVariant,
+            marginLeft: 68,
         },
         row: {
             flexDirection: "row",
             alignItems: "center",
             paddingHorizontal: 16,
             paddingVertical: 14,
-            borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: theme.colors.borderLight,
         },
         iconCircle: {
-            width: 36,
-            height: 36,
-            borderRadius: 10,
+            width: 38,
+            height: 38,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
             marginRight: 14,
@@ -1058,17 +1056,17 @@ const createStyles = (theme: any) =>
             flex: 1,
             fontSize: 15,
             fontWeight: "600",
-            color: theme.colors.text,
+            color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
         rowSubText: {
             fontSize: 12,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             marginTop: 1,
         },
         rowValueText: {
             fontSize: 14,
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             fontWeight: "500",
             marginRight: 6,
         },
@@ -1077,13 +1075,13 @@ const createStyles = (theme: any) =>
         premiumBadge: {
             paddingHorizontal: 8,
             paddingVertical: 3,
-            borderRadius: 6,
-            backgroundColor: theme.colors.incomeBg,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.primaryContainer,
         },
         premiumBadgeText: {
             fontSize: 10,
             fontWeight: "700",
-            color: theme.colors.primary,
+            color: theme.colors.onPrimaryContainer,
             letterSpacing: 0.4,
         },
 
@@ -1097,22 +1095,25 @@ const createStyles = (theme: any) =>
         themeOption: {
             flex: 1,
             height: 64,
-            backgroundColor: theme.colors.surface,
-            borderRadius: 14,
+            backgroundColor: "transparent",
+            borderRadius: theme.shape.large,
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
-            borderWidth: 1.5,
-            borderColor: "transparent",
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
         },
         themeOptionActive: {
-            backgroundColor: theme.colors.primary,
-            borderColor: theme.colors.primary,
+            backgroundColor: theme.colors.secondaryContainer,
+            borderColor: theme.colors.secondaryContainer,
         },
         themeOptionLabel: {
             fontSize: 11,
             fontWeight: "700",
-            color: theme.colors.textSecondary,
+            color: theme.colors.onSurfaceVariant,
             letterSpacing: 0.3,
+        },
+        themeOptionLabelActive: {
+            color: theme.colors.onSecondaryContainer,
         },
     });
