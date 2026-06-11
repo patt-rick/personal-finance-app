@@ -10,16 +10,7 @@ import {
     Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import {
-    Plus,
-    ChevronRight,
-    Wallet,
-    Landmark,
-    ArrowRightLeft,
-    TrendingUp,
-    TrendingDown,
-    Activity,
-} from "lucide-react-native";
+import { Plus, Wallet, Landmark, ArrowRightLeft } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
@@ -29,7 +20,8 @@ import CashbookDetailSheet from "../components/CashbookDetailSheet";
 import CreateCashbookModal from "../components/CreateCashbookModal";
 import TransferCashbookModal from "../components/TransferCashbookModal";
 import TourOverlay from "../components/TourOverlay";
-import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
+import { EmptyScene } from "../components/illustrations";
+import MoneyText from "../components/MoneyText";
 
 interface BusinessesScreenProps {
     businesses: Business[];
@@ -186,7 +178,12 @@ function SummaryStrip({
     if (!totals || businesses.length === 0) return null;
 
     return (
-        <View style={[summaryStyles.strip, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+        <View
+            style={[
+                summaryStyles.strip,
+                { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+            ]}
+        >
             <View style={summaryStyles.item}>
                 <View style={[summaryStyles.dot, { backgroundColor: theme.colors.income }]} />
                 <View>
@@ -219,7 +216,7 @@ function SummaryStrip({
                             backgroundColor:
                                 totals.balance >= 0
                                     ? theme.colors.income
-                                    : theme.colors.error,
+                                    : theme.colors.onSurfaceVariant,
                         },
                     ]}
                 />
@@ -234,7 +231,7 @@ function SummaryStrip({
                                 color:
                                     totals.balance >= 0
                                         ? theme.colors.income
-                                        : theme.colors.error,
+                                        : theme.colors.onSurface,
                             },
                         ]}
                     >
@@ -253,11 +250,10 @@ const createSummaryStyles = (theme: any) => StyleSheet.create({
         alignItems: "center",
         marginHorizontal: 20,
         marginBottom: 20,
-        borderRadius: theme.shape.large,
+        borderRadius: 14,
+        borderWidth: StyleSheet.hairlineWidth,
         paddingVertical: 14,
         paddingHorizontal: 16,
-        ...theme.elevation.level1,
-        shadowColor: theme.colors.shadow,
     },
     item: {
         flex: 1,
@@ -277,14 +273,14 @@ const createSummaryStyles = (theme: any) => StyleSheet.create({
     },
     label: {
         fontSize: 9,
-        fontWeight: "600",
+        fontFamily: theme.fonts.semibold,
         textTransform: "uppercase",
-        letterSpacing: 0.4,
+        letterSpacing: 0.6,
     },
     value: {
         fontSize: 13,
-        fontWeight: "700",
-        letterSpacing: -0.2,
+        fontFamily: theme.fonts.semibold,
+        fontVariant: ["tabular-nums"],
         marginTop: 1,
     },
 });
@@ -389,13 +385,14 @@ export default function BusinessesScreen({
 
     return (
         <View style={styles.container}>
-            <HeaderBackdrop height={insets.top + 200} />
-            <View style={[styles.headerDecoration, { height: 240 + insets.top }]} />
-
-            <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
+            <View style={[s.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <View>
-                    <Text style={styles.greetingText}>Your finances,</Text>
-                    <Text style={styles.userNameText}>Cashbooks</Text>
+                    <Text style={[s.headerTitle, { color: theme.colors.onSurface }]}>
+                        Cashbooks
+                    </Text>
+                    <Text style={[s.headerSub, { color: theme.colors.onSurfaceVariant }]}>
+                        {businesses.length} book{businesses.length !== 1 ? "s" : ""}
+                    </Text>
                 </View>
             </View>
 
@@ -440,16 +437,17 @@ export default function BusinessesScreen({
                                                 backgroundColor:
                                                     balance >= 0
                                                         ? theme.colors.incomeContainer
-                                                        : theme.colors.expenseContainer,
+                                                        : theme.colors.surfaceContainerHigh,
                                             },
                                         ]}
                                     >
                                         <Wallet
-                                            size={18}
+                                            size={17}
+                                            strokeWidth={2}
                                             color={
                                                 balance >= 0
-                                                    ? theme.colors.onIncomeContainer
-                                                    : theme.colors.onExpenseContainer
+                                                    ? theme.colors.income
+                                                    : theme.colors.onSurfaceVariant
                                             }
                                         />
                                     </View>
@@ -463,21 +461,17 @@ export default function BusinessesScreen({
                                         </Text>
                                     </View>
                                     <View style={{ alignItems: "flex-end" }}>
-                                        <Text
-                                            style={[
-                                                s.cardBalance,
-                                                {
-                                                    color:
-                                                        balance >= 0
-                                                            ? theme.colors.income
-                                                            : theme.colors.error,
-                                                },
-                                            ]}
-                                        >
-                                            {balance >= 0 ? "+" : ""}
-                                            {symbol}
-                                            {Math.abs(balance).toLocaleString()}
-                                        </Text>
+                                        <MoneyText
+                                            amount={balance}
+                                            symbol={symbol}
+                                            sign={balance >= 0 ? "+" : "-"}
+                                            size={14}
+                                            color={
+                                                balance >= 0
+                                                    ? theme.colors.income
+                                                    : theme.colors.onSurface
+                                            }
+                                        />
                                         <ActivityDots transactions={bizTx} theme={theme} />
                                     </View>
                                 </View>
@@ -512,7 +506,7 @@ export default function BusinessesScreen({
                 onPress={() => setCreateModalVisible(true)}
                 activeOpacity={0.85}
             >
-                <Plus size={22} color={theme.colors.onPrimaryContainer} />
+                <Plus size={22} color={theme.colors.onPrimary} />
             </TouchableOpacity>
 
             <CashbookDetailSheet
@@ -574,29 +568,45 @@ const createLocalStyles = (theme: any) =>
     StyleSheet.create({
         list: { flex: 1, paddingHorizontal: 20 },
 
+        header: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            paddingHorizontal: 20,
+            paddingBottom: 16,
+        },
+        headerTitle: {
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
+        },
+        headerSub: {
+            fontSize: 12,
+            fontFamily: theme.fonts.regular,
+            marginTop: 2,
+        },
+
         card: {
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.largeIncreased,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 14,
             marginBottom: 10,
-            padding: 14,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            padding: 13,
         },
         cardTop: {
             flexDirection: "row",
             alignItems: "center",
         },
         cardIcon: {
-            width: 42,
-            height: 42,
-            borderRadius: 21,
+            width: 38,
+            height: 38,
+            borderRadius: 19,
             alignItems: "center",
             justifyContent: "center",
-            marginRight: 14,
+            marginRight: 12,
         },
-        cardName: { fontSize: 15, fontWeight: "600", letterSpacing: -0.1 },
-        cardMeta: { fontSize: 11, marginTop: 3, letterSpacing: 0.1 },
-        cardBalance: { fontSize: 14, fontWeight: "700", letterSpacing: -0.2 },
+        cardName: { fontSize: 14, fontFamily: theme.fonts.semibold },
+        cardMeta: { fontSize: 11, fontFamily: theme.fonts.regular, marginTop: 2 },
 
         empty: {
             padding: 40,
@@ -618,13 +628,13 @@ const createLocalStyles = (theme: any) =>
             justifyContent: "center",
         },
         emptyTitle: {
-            fontSize: 19,
-            fontWeight: "700",
+            fontSize: 18,
+            fontFamily: theme.fonts.semibold,
             marginBottom: 8,
-            letterSpacing: -0.2,
         },
         emptyText: {
             fontSize: 13,
+            fontFamily: theme.fonts.regular,
             textAlign: "center",
             lineHeight: 20,
             marginBottom: 24,
@@ -638,13 +648,11 @@ const createLocalStyles = (theme: any) =>
             borderRadius: theme.shape.full,
             gap: 8,
             minHeight: 52,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         emptyBtnText: {
             color: theme.colors.onPrimary,
             fontSize: 15,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
         },
 
         fab: {
@@ -653,8 +661,8 @@ const createLocalStyles = (theme: any) =>
             bottom: 100,
             width: 56,
             height: 56,
-            borderRadius: theme.shape.large,
-            backgroundColor: theme.colors.primaryContainer,
+            borderRadius: 28,
+            backgroundColor: theme.colors.primary,
             alignItems: "center",
             justifyContent: "center",
             ...theme.elevation.level3,

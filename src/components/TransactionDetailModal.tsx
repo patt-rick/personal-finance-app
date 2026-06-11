@@ -23,6 +23,7 @@ import { Transaction } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import AppModal from "./AppModal";
+import CategoryIcon from "./CategoryIcon";
 
 interface TransactionDetailModalProps {
     visible: boolean;
@@ -54,30 +55,13 @@ export default function TransactionDetailModal({
                         showsVerticalScrollIndicator={false}
                     >
                         <View style={styles.txDetailHeader}>
-                            <View
-                                style={[
-                                    styles.txDetailTypeBadge,
-                                    {
-                                        backgroundColor:
-                                            transaction.type === "income"
-                                                ? theme.colors.incomeContainer
-                                                : theme.colors.expenseContainer,
-                                    },
-                                ]}
-                            >
-                                <Text
-                                    style={{
-                                        color:
-                                            transaction.type === "income"
-                                                ? theme.colors.onIncomeContainer
-                                                : theme.colors.onExpenseContainer,
-                                        fontWeight: "700",
-                                        fontSize: 12,
-                                        letterSpacing: 0.5,
-                                    }}
-                                >
-                                    {transaction.type.toUpperCase()}
-                                </Text>
+                            <View style={{ marginBottom: 12 }}>
+                                <CategoryIcon
+                                    category={transaction.category || transaction.description}
+                                    type={transaction.type}
+                                    autoLogged={transaction.autoLogged}
+                                    size={48}
+                                />
                             </View>
                             <Text
                                 style={[
@@ -86,7 +70,7 @@ export default function TransactionDetailModal({
                                         color:
                                             transaction.type === "income"
                                                 ? theme.colors.income
-                                                : theme.colors.expense,
+                                                : theme.colors.onSurface,
                                     },
                                 ]}
                             >
@@ -97,6 +81,33 @@ export default function TransactionDetailModal({
                             <Text style={styles.txDetailDescription}>
                                 {transaction.description}
                             </Text>
+                            <View
+                                style={[
+                                    styles.txDetailTypeBadge,
+                                    {
+                                        marginTop: 10,
+                                        marginBottom: 0,
+                                        backgroundColor:
+                                            transaction.type === "income"
+                                                ? theme.colors.incomeContainer
+                                                : theme.colors.surfaceContainerHigh,
+                                    },
+                                ]}
+                            >
+                                <Text
+                                    style={{
+                                        color:
+                                            transaction.type === "income"
+                                                ? theme.colors.onIncomeContainer
+                                                : theme.colors.onSurfaceVariant,
+                                        fontFamily: theme.fonts.semibold,
+                                        fontSize: 11,
+                                        letterSpacing: 0.8,
+                                    }}
+                                >
+                                    {transaction.type.toUpperCase()}
+                                </Text>
+                            </View>
                         </View>
 
                         <View style={styles.txDetailInfoSection}>
@@ -142,7 +153,12 @@ export default function TransactionDetailModal({
                             <View style={[styles.txDetailInfoSection, { marginTop: 12 }]}>
                                 <View style={s.sourceHeader}>
                                     <Sparkles size={14} color={theme.colors.primary} />
-                                    <Text style={[s.sourceHeaderText, { color: theme.colors.primary }]}>
+                                    <Text
+                                        style={[
+                                            s.sourceHeaderText,
+                                            { color: theme.colors.primary, fontFamily: theme.fonts.semibold },
+                                        ]}
+                                    >
                                         Source details
                                     </Text>
                                 </View>
@@ -216,7 +232,13 @@ export default function TransactionDetailModal({
                             <Pencil size={20} color={theme.colors.primary} />
                         </TouchableOpacity>
                         <TouchableOpacity style={styles.txDetailCloseBtn} onPress={onClose}>
-                            <Text style={{ color: theme.colors.onPrimary, fontWeight: "700", fontSize: 15 }}>
+                            <Text
+                                style={{
+                                    color: theme.colors.onPrimary,
+                                    fontFamily: theme.fonts.semibold,
+                                    fontSize: 15,
+                                }}
+                            >
                                 Done
                             </Text>
                         </TouchableOpacity>
@@ -263,7 +285,6 @@ const s = StyleSheet.create({
     },
     sourceHeaderText: {
         fontSize: 11,
-        fontWeight: "700",
         letterSpacing: 0.6,
         textTransform: "uppercase",
     },

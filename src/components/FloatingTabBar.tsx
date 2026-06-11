@@ -1,17 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import {
     View,
-    Text,
     TouchableOpacity,
     StyleSheet,
     Animated,
     Dimensions,
-    useColorScheme,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { LayoutGrid, Landmark, PiggyBank, Settings } from "lucide-react-native";
+import { Home, BookOpen, PieChart, SlidersHorizontal, Plus } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
-import { useThemeContext } from "../theme/ThemeContext";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
@@ -19,32 +16,38 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const TAB_COUNT = 4;
 const BAR_H_MARGIN = 20;
 const BAR_WIDTH = SCREEN_WIDTH - BAR_H_MARGIN * 2;
-const TAB_WIDTH = BAR_WIDTH / TAB_COUNT;
-const INDICATOR_WIDTH = 60;
-const INDICATOR_OFFSET = (TAB_WIDTH - INDICATOR_WIDTH) / 2;
 const BAR_HEIGHT = 64;
+const FAB_AREA = 56;
+const FAB_SIZE = 38;
+const TABS_WIDTH = BAR_WIDTH - FAB_AREA;
+const TAB_WIDTH = TABS_WIDTH / TAB_COUNT;
+const DOT_SIZE = 4;
+const DOT_OFFSET = (TAB_WIDTH - DOT_SIZE) / 2;
 
 export const FLOATING_TAB_HEIGHT = BAR_HEIGHT + 24;
 
-const TAB_ICONS = [LayoutGrid, Landmark, PiggyBank, Settings];
+const TAB_ICONS = [Home, BookOpen, PieChart, SlidersHorizontal];
 const TAB_LABELS = ["Home", "Books", "Budget", "Settings"];
 
-export default function FloatingTabBar({ state, navigation }: BottomTabBarProps) {
+interface FloatingTabBarExtraProps {
+    onQuickAdd: () => void;
+}
+
+export default function FloatingTabBar({
+    state,
+    navigation,
+    onQuickAdd,
+}: BottomTabBarProps & FloatingTabBarExtraProps) {
     const theme = useTheme();
-    const { themeMode } = useThemeContext();
-    const systemColorScheme = useColorScheme();
-    const isDark = themeMode === "system" ? systemColorScheme === "dark" : themeMode === "dark";
     const insets = useSafeAreaInsets();
-    const indicatorX = useRef(
-        new Animated.Value(state.index * TAB_WIDTH + INDICATOR_OFFSET),
-    ).current;
+    const dotX = useRef(new Animated.Value(state.index * TAB_WIDTH + DOT_OFFSET)).current;
     const focusAnims = useRef(
         state.routes.map((_, i) => new Animated.Value(i === state.index ? 1 : 0)),
     ).current;
 
     useEffect(() => {
-        Animated.spring(indicatorX, {
-            toValue: state.index * TAB_WIDTH + INDICATOR_OFFSET,
+        Animated.spring(dotX, {
+            toValue: state.index * TAB_WIDTH + DOT_OFFSET,
             friction: 8,
             tension: 70,
             useNativeDriver: true,
@@ -58,7 +61,7 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                 useNativeDriver: true,
             }).start();
         });
-    }, [state.index, indicatorX, focusAnims]);
+    }, [state.index, dotX, focusAnims]);
 
     const bottomPadding = Math.max(insets.bottom, 8);
 
@@ -69,52 +72,45 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                     styles.bar,
                     theme.elevation.level2,
                     {
-                        backgroundColor: theme.colors.surfaceContainer,
-                        borderColor: theme.colors.outlineVariant,
-                        borderWidth: isDark ? 0 : StyleSheet.hairlineWidth,
+                        backgroundColor: theme.colors.inverseSurface,
                         shadowColor: theme.colors.shadow,
                     },
                 ]}
             >
-                <Animated.View
-                    style={[
-                        styles.indicator,
-                        {
-                            backgroundColor: theme.colors.secondaryContainer,
-                            transform: [{ translateX: indicatorX }],
-                        },
-                    ]}
-                />
+                <View style={styles.tabs}>
+                    <Animated.View
+                        style={[
+                            styles.dot,
+                            { transform: [{ translateX: dotX }] },
+                        ]}
+                    />
+                    {state.routes.map((route, index) => {
+                        const isFocused = state.index === index;
+                        const Icon = TAB_ICONS[index];
+                        const focusAnim = focusAnims[index];
 
-                {state.routes.map((route, index) => {
-                    const isFocused = state.index === index;
-                    const Icon = TAB_ICONS[index];
-                    const label = TAB_LABELS[index];
-                    const focusAnim = focusAnims[index];
+                        const onPress = () => {
+                            const event = navigation.emit({
+                                type: "tabPress",
+                                target: route.key,
+                                canPreventDefault: true,
+                            });
 
-                    const onPress = () => {
-                        const event = navigation.emit({
-                            type: "tabPress",
-                            target: route.key,
-                            canPreventDefault: true,
-                        });
+                            if (!isFocused && !event.defaultPrevented) {
+                                navigation.navigate(route.name);
+                            }
+                        };
 
-                        if (!isFocused && !event.defaultPrevented) {
-                            navigation.navigate(route.name);
-                        }
-                    };
-
-                    return (
-                        <TouchableOpacity
-                            key={route.key}
-                            accessibilityRole="button"
-                            accessibilityState={isFocused ? { selected: true } : {}}
-                            accessibilityLabel={route.name}
-                            onPress={onPress}
-                            activeOpacity={0.7}
-                            style={styles.tab}
-                        >
-                            <View style={styles.tabContent}>
+                        return (
+                            <TouchableOpacity
+                                key={route.key}
+                                accessibilityRole="button"
+                                accessibilityState={isFocused ? { selected: true } : {}}
+                                accessibilityLabel={TAB_LABELS[index] ?? route.name}
+                                onPress={onPress}
+                                activeOpacity={0.7}
+                                style={styles.tab}
+                            >
                                 <View>
                                     <Animated.View
                                         style={{
@@ -124,42 +120,32 @@ export default function FloatingTabBar({ state, navigation }: BottomTabBarProps)
                                             }),
                                         }}
                                     >
-                                        <Icon size={22} color={theme.colors.onSurfaceVariant} />
+                                        <Icon size={21} color={theme.colors.outline} strokeWidth={2} />
                                     </Animated.View>
                                     <Animated.View
                                         style={[StyleSheet.absoluteFill, { opacity: focusAnim }]}
                                     >
-                                        <Icon size={22} color={theme.colors.onSecondaryContainer} />
+                                        <Icon
+                                            size={21}
+                                            color={theme.colors.inverseOnSurface}
+                                            strokeWidth={2}
+                                        />
                                     </Animated.View>
                                 </View>
-                                <Animated.View
-                                    style={{
-                                        opacity: focusAnim.interpolate({
-                                            inputRange: [0, 1],
-                                            outputRange: [1, 0],
-                                        }),
-                                    }}
-                                >
-                                    <Text
-                                        style={[
-                                            styles.label,
-                                            { color: theme.colors.onSurfaceVariant },
-                                        ]}
-                                    >
-                                        {label}
-                                    </Text>
-                                </Animated.View>
-                                <Animated.View
-                                    style={[styles.labelAbsolute, { opacity: focusAnim }]}
-                                >
-                                    <Text style={[styles.label, styles.labelActive, { color: theme.colors.onSecondaryContainer }]}>
-                                        {label}
-                                    </Text>
-                                </Animated.View>
-                            </View>
-                        </TouchableOpacity>
-                    );
-                })}
+                            </TouchableOpacity>
+                        );
+                    })}
+                </View>
+
+                <TouchableOpacity
+                    accessibilityRole="button"
+                    accessibilityLabel="Add transaction"
+                    onPress={onQuickAdd}
+                    activeOpacity={0.8}
+                    style={styles.fab}
+                >
+                    <Plus size={20} color="#FFFFFF" strokeWidth={2.5} />
+                </TouchableOpacity>
             </View>
         </View>
     );
@@ -180,13 +166,13 @@ const styles = StyleSheet.create({
         height: BAR_HEIGHT,
         borderRadius: BAR_HEIGHT / 2,
         alignItems: "center",
+        paddingRight: (FAB_AREA - FAB_SIZE) / 2,
     },
-    indicator: {
-        position: "absolute",
-        top: (BAR_HEIGHT - 40) / 2,
-        width: INDICATOR_WIDTH,
-        height: 40,
-        borderRadius: 20,
+    tabs: {
+        flexDirection: "row",
+        width: TABS_WIDTH,
+        height: "100%",
+        alignItems: "center",
     },
     tab: {
         flex: 1,
@@ -194,23 +180,21 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
     },
-    tabContent: {
-        alignItems: "center",
-        gap: 3,
-    },
-    label: {
-        fontSize: 11,
-        fontWeight: "500",
-        letterSpacing: 0.5,
-    },
-    labelActive: {
-        fontWeight: "700",
-    },
-    labelAbsolute: {
+    dot: {
         position: "absolute",
-        bottom: 0,
+        bottom: 13,
         left: 0,
-        right: 0,
+        width: DOT_SIZE,
+        height: DOT_SIZE,
+        borderRadius: DOT_SIZE / 2,
+        backgroundColor: "#0066FF",
+    },
+    fab: {
+        width: FAB_SIZE,
+        height: FAB_SIZE,
+        borderRadius: FAB_SIZE / 2,
+        backgroundColor: "#0066FF",
         alignItems: "center",
+        justifyContent: "center",
     },
 });

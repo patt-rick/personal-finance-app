@@ -35,7 +35,7 @@ import {
 import { getCurrencySymbol } from "../utils/_helpers";
 import BudgetSetupScreen from "./BudgetSetupScreen";
 import TourOverlay from "../components/TourOverlay";
-import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
+import { EmptyScene } from "../components/illustrations";
 
 interface BudgetDashboardScreenProps {
     businesses: Business[];
@@ -101,7 +101,7 @@ function BudgetRing({
                     cx={size / 2}
                     cy={size / 2}
                     r={radius}
-                    stroke={theme.colors.surfaceContainerHighest}
+                    stroke={theme.colors.surfaceContainerHigh}
                     strokeWidth={strokeWidth}
                     fill="none"
                 />
@@ -122,11 +122,11 @@ function BudgetRing({
             <View style={{ position: "absolute", alignItems: "center" }}>
                 <Text
                     style={{
-                        fontSize: 11,
-                        fontWeight: "600",
+                        fontSize: 10,
+                        fontFamily: theme.fonts.semibold,
                         color: theme.colors.onSurfaceVariant,
                         textTransform: "uppercase",
-                        letterSpacing: 0.5,
+                        letterSpacing: 0.8,
                         marginBottom: 2,
                     }}
                 >
@@ -135,9 +135,9 @@ function BudgetRing({
                 <Text
                     style={{
                         fontSize: 26,
-                        fontWeight: "800",
+                        fontFamily: theme.fonts.semibold,
+                        fontVariant: ["tabular-nums"],
                         color: theme.colors.onSurface,
-                        letterSpacing: -0.5,
                     }}
                     numberOfLines={1}
                     adjustsFontSizeToFit
@@ -147,7 +147,7 @@ function BudgetRing({
                 <Text
                     style={{
                         fontSize: 11,
-                        fontWeight: "500",
+                        fontFamily: theme.fonts.regular,
                         color: healthColor,
                         marginTop: 2,
                     }}
@@ -291,12 +291,11 @@ export default function BudgetDashboardScreen({
     if (businesses.length === 0) {
         return (
             <View style={styles.container}>
-                <HeaderBackdrop height={insets.top + 200} />
-                <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
-                    <View>
-                        <Text style={styles.greetingText}>Financial focus,</Text>
-                        <Text style={styles.userNameText}>Budgets</Text>
-                    </View>
+                <View style={[s.header, { paddingTop: Math.max(insets.top, 40) }]}>
+                    <Text style={[s.headerTitle, { color: theme.colors.onSurface }]}>Budget</Text>
+                    <Text style={[s.headerSub, { color: theme.colors.onSurfaceVariant }]}>
+                        Spending limits per cashbook
+                    </Text>
                 </View>
                 <View style={s.emptyCenter}>
                     <EmptyScene variant="budget" size={224} />
@@ -322,18 +321,16 @@ export default function BudgetDashboardScreen({
     const healthColor = spentPercentage < 70
         ? theme.colors.income
         : spentPercentage < 90
-            ? theme.colors.secondary
+            ? theme.colors.gold
             : theme.colors.error;
 
     return (
         <View style={styles.container}>
-            <HeaderBackdrop height={insets.top + 200} />
-
-            <View style={[styles.modernHeader, { paddingTop: Math.max(insets.top, 40) }]}>
-                <View>
-                    <Text style={styles.greetingText}>Keep tracking,</Text>
-                    <Text style={styles.userNameText}>Budgeting</Text>
-                </View>
+            <View style={[s.header, { paddingTop: Math.max(insets.top, 40) }]}>
+                <Text style={[s.headerTitle, { color: theme.colors.onSurface }]}>Budget</Text>
+                <Text style={[s.headerSub, { color: theme.colors.onSurfaceVariant }]}>
+                    {selectedBusiness ? selectedBusiness.name : "Spending limits per cashbook"}
+                </Text>
             </View>
 
             <ScrollView
@@ -388,7 +385,12 @@ export default function BudgetDashboardScreen({
                     </View>
                 ) : !budget ? (
                     <View style={s.noBudgetContainer}>
-                        <View style={[s.noBudgetCard, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                        <View
+                            style={[
+                                s.noBudgetCard,
+                                { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+                            ]}
+                        >
                             <EmptyScene variant="budget" size={224} />
                             <Text style={[s.noBudgetTitle, { color: theme.colors.onSurface }]}>
                                 No Budget Set
@@ -410,7 +412,12 @@ export default function BudgetDashboardScreen({
                     </View>
                 ) : (
                     <>
-                        <View style={[s.summaryCard, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                        <View
+                            style={[
+                                s.summaryCard,
+                                { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+                            ]}
+                        >
                             <View style={s.summaryTop}>
                                 <View>
                                     <Text style={[s.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
@@ -451,7 +458,7 @@ export default function BudgetDashboardScreen({
                                     </Text>
                                 </View>
                                 <View style={s.summaryFooterItem}>
-                                    <View style={[s.summaryFooterDot, { backgroundColor: theme.colors.surfaceContainerHighest }]} />
+                                    <View style={[s.summaryFooterDot, { backgroundColor: theme.colors.surfaceContainerHigh }]} />
                                     <Text style={[s.summaryFooterText, { color: theme.colors.onSurfaceVariant }]}>
                                         {currencySymbol}{totalLimit.toFixed(2)} budget
                                     </Text>
@@ -465,14 +472,24 @@ export default function BudgetDashboardScreen({
                             </Text>
 
                             {budgetData.length === 0 ? (
-                                <View style={[s.emptyCard, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                                <View
+                                    style={[
+                                        s.emptyCard,
+                                        { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+                                    ]}
+                                >
                                     <AlertCircle size={28} color={theme.colors.onSurfaceVariant} />
                                     <Text style={[s.emptyCardText, { color: theme.colors.onSurfaceVariant }]}>
                                         No category budgets set
                                     </Text>
                                 </View>
                             ) : (
-                                <View style={[s.categoryList, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+                                <View
+                                    style={[
+                                        s.categoryList,
+                                        { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
+                                    ]}
+                                >
                                     {budgetData.map((item, index) => {
                                         const isOver = item.spent > item.limit;
                                         const statusColor = getBudgetStatusColor(item.percentage, theme);
@@ -498,7 +515,7 @@ export default function BudgetDashboardScreen({
                                                                 cx={20}
                                                                 cy={20}
                                                                 r={16}
-                                                                stroke={theme.colors.surfaceContainerHighest}
+                                                                stroke={theme.colors.surfaceContainerHigh}
                                                                 strokeWidth={4}
                                                                 fill="none"
                                                             />
@@ -531,7 +548,7 @@ export default function BudgetDashboardScreen({
                                                             <View
                                                                 style={[
                                                                     s.categoryProgressBg,
-                                                                    { backgroundColor: theme.colors.surfaceContainerHighest },
+                                                                    { backgroundColor: theme.colors.surfaceContainerHigh },
                                                                 ]}
                                                             >
                                                                 <View
@@ -604,6 +621,19 @@ const createBudgetStyles = (theme: any) =>
         content: {
             flex: 1,
         },
+        header: {
+            paddingHorizontal: 20,
+            paddingBottom: 16,
+        },
+        headerTitle: {
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
+        },
+        headerSub: {
+            fontSize: 12,
+            fontFamily: theme.fonts.regular,
+            marginTop: 2,
+        },
         section: {
             marginBottom: 16,
             paddingHorizontal: 20,
@@ -616,20 +646,20 @@ const createBudgetStyles = (theme: any) =>
             borderWidth: 1,
         },
         businessChipSelected: {
-            backgroundColor: theme.colors.secondaryContainer,
-            borderColor: theme.colors.secondaryContainer,
+            backgroundColor: theme.colors.inverseSurface,
+            borderColor: theme.colors.inverseSurface,
         },
         businessChipUnselected: {
             backgroundColor: "transparent",
             borderColor: theme.colors.outlineVariant,
         },
         businessChipText: {
-            fontSize: 14,
-            fontWeight: "500",
+            fontSize: 13,
+            fontFamily: theme.fonts.regular,
         },
         businessChipTextSelected: {
-            color: theme.colors.onSecondaryContainer,
-            fontWeight: "600",
+            color: theme.colors.inverseOnSurface,
+            fontFamily: theme.fonts.semibold,
         },
         businessChipTextUnselected: {
             color: theme.colors.onSurfaceVariant,
@@ -662,13 +692,13 @@ const createBudgetStyles = (theme: any) =>
             justifyContent: "center",
         },
         emptyTitle: {
-            fontSize: 19,
-            fontWeight: "700",
+            fontSize: 18,
+            fontFamily: theme.fonts.semibold,
             marginBottom: 8,
-            letterSpacing: -0.2,
         },
         emptyText: {
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             textAlign: "center",
             paddingHorizontal: 40,
         },
@@ -680,19 +710,18 @@ const createBudgetStyles = (theme: any) =>
         },
         noBudgetCard: {
             padding: 32,
-            borderRadius: theme.shape.extraLarge,
+            borderRadius: 16,
+            borderWidth: StyleSheet.hairlineWidth,
             alignItems: "center",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         noBudgetTitle: {
-            fontSize: 19,
-            fontWeight: "700",
+            fontSize: 18,
+            fontFamily: theme.fonts.semibold,
             marginBottom: 8,
-            letterSpacing: -0.2,
         },
         noBudgetText: {
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             textAlign: "center",
             marginBottom: 24,
             lineHeight: 20,
@@ -705,13 +734,10 @@ const createBudgetStyles = (theme: any) =>
             borderRadius: theme.shape.full,
             gap: 8,
             minHeight: 52,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         setupButtonText: {
             fontSize: 15,
-            fontWeight: "700",
-            letterSpacing: 0.1,
+            fontFamily: theme.fonts.semibold,
         },
 
         // Summary Card
@@ -719,10 +745,9 @@ const createBudgetStyles = (theme: any) =>
             marginHorizontal: 20,
             marginBottom: 28,
             padding: 20,
-            borderRadius: theme.shape.extraLarge,
+            borderRadius: 16,
+            borderWidth: StyleSheet.hairlineWidth,
             alignItems: "center",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         summaryTop: {
             flexDirection: "row",
@@ -733,12 +758,11 @@ const createBudgetStyles = (theme: any) =>
         },
         summaryLabel: {
             fontSize: 12,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
         },
         periodLabel: {
             fontSize: 16,
-            fontWeight: "700",
-            letterSpacing: -0.2,
+            fontFamily: theme.fonts.semibold,
             marginTop: 2,
         },
         editBudgetBtn: {
@@ -750,7 +774,7 @@ const createBudgetStyles = (theme: any) =>
         },
         editBudgetText: {
             fontSize: 12,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
         },
         summaryFooter: {
             flexDirection: "row",
@@ -771,7 +795,8 @@ const createBudgetStyles = (theme: any) =>
         },
         summaryFooterText: {
             fontSize: 12,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
         },
 
         // Category Section
@@ -779,22 +804,20 @@ const createBudgetStyles = (theme: any) =>
             paddingHorizontal: 20,
         },
         categorySectionTitle: {
-            fontSize: 17,
-            fontWeight: "700",
+            fontSize: 15,
+            fontFamily: theme.fonts.semibold,
             marginBottom: 12,
-            letterSpacing: -0.1,
         },
         categoryList: {
-            borderRadius: theme.shape.extraLarge,
+            borderRadius: 14,
+            borderWidth: StyleSheet.hairlineWidth,
             overflow: "hidden",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         categoryRow: {
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 14,
+            paddingHorizontal: 14,
+            paddingVertical: 13,
         },
         categoryIcon: {
             width: 40,
@@ -805,7 +828,7 @@ const createBudgetStyles = (theme: any) =>
         categoryInitial: {
             position: "absolute",
             fontSize: 13,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
         },
         categoryInfo: {
             flex: 1,
@@ -813,41 +836,42 @@ const createBudgetStyles = (theme: any) =>
         },
         categoryName: {
             fontSize: 14,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginBottom: 6,
         },
         categoryProgressRow: {
             gap: 4,
         },
         categoryProgressBg: {
-            height: 4,
-            borderRadius: theme.shape.full,
+            height: 6,
+            borderRadius: 3,
             overflow: "hidden",
         },
         categoryProgressFill: {
             height: "100%",
-            borderRadius: theme.shape.full,
+            borderRadius: 3,
         },
         categorySpentLabel: {
             fontSize: 11,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
             marginTop: 2,
         },
         categoryStatus: {
             fontSize: 13,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
             marginLeft: 8,
-            letterSpacing: -0.2,
         },
         emptyCard: {
             padding: 32,
-            borderRadius: theme.shape.extraLarge,
+            borderRadius: 16,
+            borderWidth: StyleSheet.hairlineWidth,
             alignItems: "center",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         emptyCardText: {
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             marginTop: 8,
         },
     });

@@ -2,6 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Alert, Platform, View, useColorScheme, AppState } from "react-native";
 
 import { StatusBar } from "expo-status-bar";
+import {
+    useFonts,
+    Manrope_300Light,
+    Manrope_400Regular,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+} from "@expo-google-fonts/manrope";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -36,12 +43,29 @@ import {
     getBiometricType,
     authenticateWithBiometrics,
 } from "./src/utils/security";
+import QuickAddModal from "./src/components/QuickAddModal";
 import { drainNativeQueue } from "./src/features/autoLogging/services/ingestion/drainNativeQueue";
 import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nativeBridge";
 
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+    const scheme = useColorScheme();
+    const [fontsLoaded] = useFonts({
+        Manrope_300Light,
+        Manrope_400Regular,
+        Manrope_600SemiBold,
+        Manrope_700Bold,
+    });
+
+    if (!fontsLoaded) {
+        return (
+            <View
+                style={{ flex: 1, backgroundColor: scheme === "dark" ? "#15130F" : "#F7F4EF" }}
+            />
+        );
+    }
+
     return (
         <ThemeProvider>
             <MainApp />
@@ -58,6 +82,7 @@ function MainApp() {
     const [isLoading, setIsLoading] = useState(true);
     const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
     const [isLocked, setIsLocked] = useState(false);
+    const [quickAddVisible, setQuickAddVisible] = useState(false);
     const [pinEnabled, setPinEnabled] = useState(false);
     const [biometricsAvailable, setBiometricsAvailable] = useState(false);
     const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -317,7 +342,11 @@ function MainApp() {
                 />
                 <NavigationContainer theme={isDark ? MyDarkTheme : MyDefaultTheme}>
                     <Tab.Navigator
-                        tabBar={(props) => (currentBusiness ? null : <FloatingTabBar {...props} />)}
+                        tabBar={(props) =>
+                            currentBusiness ? null : (
+                                <FloatingTabBar {...props} onQuickAdd={() => setQuickAddVisible(true)} />
+                            )
+                        }
                         screenOptions={{
                             headerShown: false,
                             tabBarShowLabel: false,
@@ -396,6 +425,12 @@ function MainApp() {
                         </Tab.Screen>
                     </Tab.Navigator>
                 </NavigationContainer>
+                <QuickAddModal
+                    visible={quickAddVisible}
+                    businesses={businesses}
+                    onClose={() => setQuickAddVisible(false)}
+                    onCreate={(tx) => handleSaveTransactions([...transactions, tx])}
+                />
             </View>
         </SafeAreaProvider>
     );

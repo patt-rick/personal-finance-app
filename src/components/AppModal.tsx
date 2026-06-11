@@ -133,7 +133,7 @@ export default function AppModal({
                         <View style={s.header}>
                             {title ? (
                                 <Text
-                                    style={[s.title, { color: theme.colors.text }]}
+                                    style={[s.title, { color: theme.colors.onSurface }]}
                                     numberOfLines={1}
                                 >
                                     {title}
@@ -176,8 +176,8 @@ const createStyles = (theme: any) =>
             backgroundColor: "rgba(0,0,0,0.4)",
         },
         sheet: {
-            borderTopLeftRadius: theme.shape.extraLarge,
-            borderTopRightRadius: theme.shape.extraLarge,
+            borderTopLeftRadius: theme.shape.largeIncreased,
+            borderTopRightRadius: theme.shape.largeIncreased,
             paddingHorizontal: 24,
             overflow: "hidden",
             backgroundColor: theme.colors.surfaceContainerLow,
@@ -185,7 +185,7 @@ const createStyles = (theme: any) =>
             shadowColor: theme.colors.shadow,
         },
         card: {
-            borderRadius: theme.shape.extraLarge,
+            borderRadius: theme.shape.largeIncreased,
             padding: 24,
             overflow: "hidden",
             backgroundColor: theme.colors.surfaceContainerLow,
@@ -209,9 +209,8 @@ const createStyles = (theme: any) =>
         },
         title: {
             flex: 1,
-            fontSize: 20,
-            fontWeight: "700",
-            letterSpacing: -0.3,
+            fontSize: 18,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
         body: {

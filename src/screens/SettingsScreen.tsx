@@ -54,7 +54,6 @@ import DebtTrackerScreen from "./DebtTrackerScreen";
 import ReportsScreen from "./ReportsScreen";
 import AutoLogSettingsScreen from "../features/autoLogging/screens/AutoLogSettingsScreen";
 import TourOverlay from "../components/TourOverlay";
-import { HeaderBackdrop } from "../components/illustrations";
 
 const APP_VERSION = require("../../app.json").expo.version;
 
@@ -301,7 +300,6 @@ export default function SettingsScreen({
 
     return (
         <View style={styles.container}>
-            <HeaderBackdrop height={240} />
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <Text style={styles.headerTitle}>Settings</Text>
             </View>
@@ -398,8 +396,8 @@ export default function SettingsScreen({
                                 style={styles.row}
                                 onPress={() => setShowCategories(true)}
                             >
-                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.errorContainer }]}>
-                                    <Tags size={18} color={theme.colors.onErrorContainer} />
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.goldContainer }]}>
+                                    <Tags size={18} color={theme.colors.gold} />
                                 </View>
                                 <Text style={styles.rowText}>Categories</Text>
                                 <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
@@ -800,10 +798,9 @@ const createVerifyStyles = (theme: any) =>
             shadowColor: theme.colors.shadow,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "800",
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.3,
         },
         content: {
             flex: 1,
@@ -822,7 +819,7 @@ const createVerifyStyles = (theme: any) =>
         subtitle: {
             fontSize: 15,
             color: theme.colors.onSurfaceVariant,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
             marginBottom: 32,
         },
         dotsRow: {
@@ -848,7 +845,7 @@ const createVerifyStyles = (theme: any) =>
         errorText: {
             fontSize: 13,
             color: theme.colors.error,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginTop: 4,
         },
         keypad: {
@@ -871,7 +868,8 @@ const createVerifyStyles = (theme: any) =>
         },
         keyText: {
             fontSize: 24,
-            fontWeight: "400",
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
             color: theme.colors.onSurface,
         },
     });
@@ -884,21 +882,20 @@ const createStyles = (theme: any) =>
             paddingBottom: 16,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "800",
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.3,
         },
 
         // Profile Card
         profileCard: {
             marginHorizontal: 20,
             marginTop: 8,
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.extraLarge,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 16,
             padding: 20,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         profileTop: {
             flexDirection: "row",
@@ -908,14 +905,14 @@ const createStyles = (theme: any) =>
             width: 56,
             height: 56,
             borderRadius: theme.shape.full,
-            backgroundColor: theme.colors.primaryContainer,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             alignItems: "center",
             justifyContent: "center",
         },
         avatarText: {
             fontSize: 20,
-            fontWeight: "700",
-            color: theme.colors.onPrimaryContainer,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurfaceVariant,
             letterSpacing: 0.5,
         },
         profileInfo: {
@@ -923,13 +920,13 @@ const createStyles = (theme: any) =>
             marginLeft: 16,
         },
         profileName: {
-            fontSize: 18,
-            fontWeight: "700",
+            fontSize: 17,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.2,
         },
         profileEmail: {
             fontSize: 13,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             marginTop: 3,
         },
@@ -951,28 +948,27 @@ const createStyles = (theme: any) =>
             marginBottom: 16,
         },
         editFieldLabel: {
-            fontSize: 12,
-            fontWeight: "600",
+            fontSize: 11,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurfaceVariant,
             marginBottom: 8,
             marginLeft: 2,
             textTransform: "uppercase",
-            letterSpacing: 0.5,
+            letterSpacing: 0.8,
         },
         editInputRow: {
             flexDirection: "row",
             alignItems: "center",
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             borderRadius: theme.shape.medium,
             paddingHorizontal: 14,
             height: 52,
             gap: 10,
-            borderWidth: 1,
-            borderColor: theme.colors.outline,
         },
         editInput: {
             flex: 1,
             fontSize: 15,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurface,
             padding: 0,
         },
@@ -991,7 +987,7 @@ const createStyles = (theme: any) =>
         },
         editCancelText: {
             fontSize: 14,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurfaceVariant,
         },
         editSaveBtn: {
@@ -1003,12 +999,10 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         editSaveText: {
             fontSize: 14,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onPrimary,
         },
 
@@ -1018,58 +1012,59 @@ const createStyles = (theme: any) =>
             paddingHorizontal: 20,
         },
         sectionLabel: {
-            fontSize: 12,
+            fontSize: 11,
             color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginBottom: 10,
             marginLeft: 4,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.8,
         },
 
         // Grouped Card
         groupCard: {
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 14,
             overflow: "hidden",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         rowDivider: {
             height: StyleSheet.hairlineWidth,
-            backgroundColor: theme.colors.outlineVariant,
-            marginLeft: 68,
+            backgroundColor: theme.colors.borderLight,
+            marginLeft: 64,
         },
         row: {
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 14,
+            paddingHorizontal: 14,
+            paddingVertical: 13,
         },
         iconCircle: {
-            width: 38,
-            height: 38,
+            width: 34,
+            height: 34,
             borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
-            marginRight: 14,
+            marginRight: 12,
         },
         rowText: {
             flex: 1,
-            fontSize: 15,
-            fontWeight: "600",
+            fontSize: 14,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.1,
         },
         rowSubText: {
-            fontSize: 12,
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             marginTop: 1,
         },
         rowValueText: {
-            fontSize: 14,
+            fontSize: 13,
             color: theme.colors.onSurfaceVariant,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
             marginRight: 6,
         },
 
@@ -1082,7 +1077,7 @@ const createStyles = (theme: any) =>
         },
         premiumBadgeText: {
             fontSize: 10,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onPrimaryContainer,
             letterSpacing: 0.4,
         },
@@ -1111,7 +1106,7 @@ const createStyles = (theme: any) =>
         },
         themeOptionLabel: {
             fontSize: 11,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurfaceVariant,
             letterSpacing: 0.3,
         },
