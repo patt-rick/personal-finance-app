@@ -20,6 +20,7 @@ interface TransactionEntryModalProps {
     editingTx: Transaction | null;
     categories: Category[];
     symbol: string;
+    showTypeToggle?: boolean;
     onClose: () => void;
     onSubmit: (data: {
         amount: number;
@@ -36,6 +37,7 @@ export default function TransactionEntryModal({
     editingTx,
     categories,
     symbol,
+    showTypeToggle,
     onClose,
     onSubmit,
 }: TransactionEntryModalProps) {
@@ -115,7 +117,7 @@ export default function TransactionEntryModal({
             showHandle={false}
             scrollable
         >
-            {editingTx ? (
+            {editingTx || showTypeToggle ? (
                 <View style={s.typeToggleRow}>
                     {(["income", "expense"] as const).map((t) => {
                         const active = currentType === t;

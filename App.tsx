@@ -43,6 +43,7 @@ import {
     getBiometricType,
     authenticateWithBiometrics,
 } from "./src/utils/security";
+import QuickAddModal from "./src/components/QuickAddModal";
 import { drainNativeQueue } from "./src/features/autoLogging/services/ingestion/drainNativeQueue";
 import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nativeBridge";
 
@@ -419,6 +420,12 @@ function MainApp() {
                         </Tab.Screen>
                     </Tab.Navigator>
                 </NavigationContainer>
+                <QuickAddModal
+                    visible={quickAddVisible}
+                    businesses={businesses}
+                    onClose={() => setQuickAddVisible(false)}
+                    onCreate={(tx) => handleSaveTransactions([...transactions, tx])}
+                />
             </View>
         </SafeAreaProvider>
     );
