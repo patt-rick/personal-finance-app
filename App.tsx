@@ -76,6 +76,7 @@ function MainApp() {
     const [isLoading, setIsLoading] = useState(true);
     const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
     const [isLocked, setIsLocked] = useState(false);
+    const [quickAddVisible, setQuickAddVisible] = useState(false);
     const [pinEnabled, setPinEnabled] = useState(false);
     const [biometricsAvailable, setBiometricsAvailable] = useState(false);
     const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -335,7 +336,11 @@ function MainApp() {
                 />
                 <NavigationContainer theme={isDark ? MyDarkTheme : MyDefaultTheme}>
                     <Tab.Navigator
-                        tabBar={(props) => (currentBusiness ? null : <FloatingTabBar {...props} />)}
+                        tabBar={(props) =>
+                            currentBusiness ? null : (
+                                <FloatingTabBar {...props} onQuickAdd={() => setQuickAddVisible(true)} />
+                            )
+                        }
                         screenOptions={{
                             headerShown: false,
                             tabBarShowLabel: false,
