@@ -13,7 +13,7 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     borderBottomColor: theme.colors.outlineVariant,
   },
   headerTitle: {
-    fontWeight: '700',
+    fontFamily: theme.fonts.semibold,
     fontSize: 22,
     color: theme.colors.onSurface,
     letterSpacing: 0,
@@ -36,52 +36,53 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   businessChip: {
     paddingHorizontal: theme.spacing.l,
     paddingVertical: theme.spacing.s,
-    borderRadius: theme.shape.small,
+    borderRadius: theme.shape.full,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: theme.colors.outlineVariant,
     marginRight: theme.spacing.s,
   },
   businessChipActive: {
-    backgroundColor: theme.colors.secondaryContainer,
-    borderColor: theme.colors.secondaryContainer,
+    backgroundColor: theme.colors.inverseSurface,
+    borderColor: theme.colors.inverseSurface,
   },
   businessChipText: {
     fontSize: 14,
     color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
+    fontFamily: theme.fonts.regular,
   },
   businessChipTextActive: {
-    color: theme.colors.onSecondaryContainer,
-    fontWeight: '600',
+    color: theme.colors.inverseOnSurface,
+    fontFamily: theme.fonts.semibold,
   },
 
   // Summary Card
   summaryCard: {
     margin: theme.spacing.l,
     padding: theme.spacing.xl,
-    backgroundColor: theme.colors.surfaceContainerLow,
-    borderRadius: theme.shape.extraLarge,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 16,
     alignItems: 'center',
-    ...theme.elevation.level1,
-    shadowColor: theme.colors.shadow,
   },
   summaryLabel: {
     fontSize: 14,
     color: theme.colors.onSurfaceVariant,
     marginBottom: theme.spacing.s,
-    fontWeight: '500',
+    fontFamily: theme.fonts.regular,
   },
   summaryValue: {
     fontSize: 36,
-    fontWeight: '700',
+    fontFamily: theme.fonts.light,
+    fontVariant: ['tabular-nums'] as const,
     letterSpacing: -0.5,
   },
   positive: {
     color: theme.colors.income,
   },
   negative: {
-    color: theme.colors.expense,
+    color: theme.colors.onSurface,
   },
 
   // Stats Row
@@ -94,10 +95,10 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   statCard: {
     flex: 1,
     padding: theme.spacing.l,
-    borderRadius: theme.shape.large,
-    backgroundColor: theme.colors.surfaceContainerLow,
-    ...theme.elevation.level1,
-    shadowColor: theme.colors.shadow,
+    borderRadius: 14,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
   },
   incomeCard: {
     borderLeftWidth: 3,
@@ -105,18 +106,19 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   expenseCard: {
     borderLeftWidth: 3,
-    borderLeftColor: theme.colors.expense,
+    borderLeftColor: theme.colors.onSurfaceVariant,
   },
   statLabel: {
     fontSize: 12,
     color: theme.colors.onSurfaceVariant,
     marginTop: theme.spacing.s,
     marginBottom: theme.spacing.xs,
-    fontWeight: '500',
+    fontFamily: theme.fonts.regular,
   },
   statValue: {
     fontSize: 20,
-    fontWeight: '700',
+    fontFamily: theme.fonts.semibold,
+    fontVariant: ['tabular-nums'] as const,
     color: theme.colors.onSurface,
     letterSpacing: -0.3,
   },
@@ -128,7 +130,7 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   sectionTitle: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: theme.fonts.semibold,
     marginBottom: theme.spacing.l,
     color: theme.colors.onSurface,
   },
@@ -140,8 +142,10 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     alignItems: 'center',
     paddingVertical: theme.spacing.l,
     paddingHorizontal: theme.spacing.l,
-    backgroundColor: theme.colors.surfaceContainerLow,
-    borderRadius: theme.shape.large,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
     marginBottom: theme.spacing.s,
   },
   transactionLeft: {
@@ -149,21 +153,24 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   transactionDescription: {
     fontSize: 15,
-    fontWeight: '500',
+    fontFamily: theme.fonts.regular,
     color: theme.colors.onSurface,
     marginBottom: theme.spacing.xs,
   },
   transactionDate: {
     fontSize: 13,
+    fontFamily: theme.fonts.regular,
     color: theme.colors.onSurfaceVariant,
   },
   transactionMeta: {
     fontSize: 13,
+    fontFamily: theme.fonts.regular,
     color: theme.colors.onSurfaceVariant,
   },
   transactionAmount: {
     fontSize: 16,
-    fontWeight: '700',
+    fontFamily: theme.fonts.semibold,
+    fontVariant: ['tabular-nums'] as const,
     marginLeft: theme.spacing.m,
   },
 
@@ -172,6 +179,7 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
     textAlign: 'center',
     color: theme.colors.onSurfaceVariant,
     fontSize: 14,
+    fontFamily: theme.fonts.regular,
     marginTop: 32,
   },
 
@@ -208,22 +216,21 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   typeButtonText: {
     fontSize: 15,
-    fontWeight: '600',
+    fontFamily: theme.fonts.semibold,
     color: theme.colors.onSurfaceVariant,
   },
   typeButtonTextActive: {
     color: theme.colors.onPrimary,
   },
 
-  // Input (Material 3 filled text field)
+  // Input (filled, borderless)
   input: {
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    borderRadius: theme.shape.medium,
+    borderRadius: 12,
     padding: 14,
     marginBottom: theme.spacing.l,
     fontSize: 15,
-    backgroundColor: theme.colors.surfaceContainerHighest,
+    fontFamily: theme.fonts.regular,
+    backgroundColor: theme.colors.surfaceContainerHigh,
     color: theme.colors.onSurface,
   },
 
@@ -233,18 +240,16 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   pickerLabel: {
     fontSize: 14,
-    fontWeight: '500',
+    fontFamily: theme.fonts.regular,
     marginBottom: theme.spacing.s,
     color: theme.colors.onSurfaceVariant,
   },
   picker: {
-    borderWidth: 1,
-    borderColor: theme.colors.outline,
-    borderRadius: theme.shape.medium,
-    backgroundColor: theme.colors.surfaceContainerHighest,
+    borderRadius: 12,
+    backgroundColor: theme.colors.surfaceContainerHigh,
   },
 
-  // Button (Material 3 filled button)
+  // Button (filled)
   button: {
     backgroundColor: theme.colors.primary,
     paddingVertical: theme.spacing.l,
@@ -256,34 +261,35 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   buttonText: {
     color: theme.colors.onPrimary,
     fontSize: 15,
-    fontWeight: '700',
+    fontFamily: theme.fonts.semibold,
     letterSpacing: 0.1,
   },
   buttonSecondary: {
-    backgroundColor: theme.colors.secondaryContainer,
+    backgroundColor: theme.colors.surfaceContainerHigh,
   },
   buttonSecondaryText: {
-    color: theme.colors.onSecondaryContainer,
+    color: theme.colors.onSurfaceVariant,
   },
 
   // Business Item
   businessItem: {
     padding: theme.spacing.l,
-    backgroundColor: theme.colors.surfaceContainerLow,
-    borderRadius: theme.shape.large,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
     marginBottom: theme.spacing.m,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    ...theme.elevation.level1,
-    shadowColor: theme.colors.shadow,
   },
   businessItemActive: {
     backgroundColor: theme.colors.secondaryContainer,
+    borderColor: theme.colors.secondaryContainer,
   },
   businessName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: theme.fonts.semibold,
     color: theme.colors.onSurface,
   },
   businessNameActive: {
@@ -291,6 +297,7 @@ export const createGlobalStyles = (theme: any) => StyleSheet.create({
   },
   businessMeta: {
     fontSize: 13,
+    fontFamily: theme.fonts.regular,
     color: theme.colors.onSurfaceVariant,
     marginTop: theme.spacing.xs,
   },

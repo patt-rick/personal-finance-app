@@ -86,10 +86,9 @@ export default function TransferCashbookModal({
                             key={biz.id}
                             style={[
                                 s.card,
-                                { backgroundColor: theme.colors.surfaceContainerHigh },
                                 isSelected && {
-                                    backgroundColor: theme.colors.secondaryContainer,
-                                    borderColor: theme.colors.secondary,
+                                    backgroundColor: theme.colors.inverseSurface,
+                                    borderColor: theme.colors.inverseSurface,
                                 },
                             ]}
                             onPress={() => setSelectedId(biz.id)}
@@ -101,26 +100,30 @@ export default function TransferCashbookModal({
                                     {
                                         backgroundColor: isSelected
                                             ? theme.colors.primary
-                                            : theme.colors.surfaceContainerLowest,
+                                            : theme.colors.surfaceContainerHigh,
                                     },
                                 ]}
                             >
                                 <Wallet
                                     size={16}
-                                    color={isSelected ? theme.colors.onPrimary : theme.colors.primary}
+                                    color={
+                                        isSelected
+                                            ? theme.colors.onPrimary
+                                            : theme.colors.onSurfaceVariant
+                                    }
                                 />
                             </View>
                             <View style={{ flex: 1 }}>
                                 <Text style={[s.cardName, {
                                     color: isSelected
-                                        ? theme.colors.onSecondaryContainer
+                                        ? theme.colors.inverseOnSurface
                                         : theme.colors.onSurface,
                                 }]}>
                                     {biz.name}
                                 </Text>
                                 <Text style={[s.cardMeta, {
                                     color: isSelected
-                                        ? theme.colors.onSecondaryContainer
+                                        ? theme.colors.inverseOnSurface
                                         : theme.colors.onSurfaceVariant,
                                 }]}>
                                     {symbol} {biz.currency || "USD"} · {bizTxCount}{" "}
@@ -182,12 +185,12 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
         },
-        title: { fontSize: 18, fontWeight: "700", letterSpacing: -0.3 },
-        subtitle: { fontSize: 12, fontWeight: "500", marginTop: 2 },
+        title: { fontSize: 18, fontFamily: theme.fonts.semibold, letterSpacing: -0.3 },
+        subtitle: { fontSize: 12, fontFamily: theme.fonts.regular, marginTop: 2 },
 
         sectionLabel: {
             fontSize: 11,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 10,
@@ -199,10 +202,11 @@ const createStyles = (theme: any) =>
             flexDirection: "row",
             alignItems: "center",
             padding: 14,
-            borderRadius: theme.shape.large,
+            borderRadius: 14,
             marginBottom: 8,
-            borderWidth: 1.5,
-            borderColor: "transparent",
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
+            backgroundColor: "transparent",
         },
         cardIcon: {
             width: 36,
@@ -212,8 +216,8 @@ const createStyles = (theme: any) =>
             justifyContent: "center",
             marginRight: 12,
         },
-        cardName: { fontSize: 14, fontWeight: "600", letterSpacing: -0.1 },
-        cardMeta: { fontSize: 11, marginTop: 2 },
+        cardName: { fontSize: 14, fontFamily: theme.fonts.semibold, letterSpacing: -0.1 },
+        cardMeta: { fontSize: 11, fontFamily: theme.fonts.regular, marginTop: 2 },
 
         radio: {
             width: 22,
@@ -233,10 +237,12 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             gap: 8,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
-        transferBtnText: { color: theme.colors.onPrimary, fontWeight: "700", fontSize: 15 },
+        transferBtnText: {
+            color: theme.colors.onPrimary,
+            fontFamily: theme.fonts.semibold,
+            fontSize: 15,
+        },
         cancelBtn: { alignItems: "center", paddingVertical: 8 },
-        cancelBtnText: { fontSize: 14, fontWeight: "600" },
+        cancelBtnText: { fontSize: 14, fontFamily: theme.fonts.semibold },
     });

@@ -30,23 +30,23 @@ const createStyles = (theme: any) => StyleSheet.create({
   chip: {
     paddingHorizontal: 14,
     paddingVertical: 8,
-    borderRadius: theme.shape.small,
+    borderRadius: theme.shape.full,
     backgroundColor: 'transparent',
     borderWidth: 1,
     borderColor: theme.colors.outlineVariant,
     marginRight: theme.spacing.s,
   },
   chipActive: {
-    backgroundColor: theme.colors.secondaryContainer,
-    borderColor: theme.colors.secondaryContainer,
+    backgroundColor: theme.colors.inverseSurface,
+    borderColor: theme.colors.inverseSurface,
   },
   chipText: {
     fontSize: 14,
     color: theme.colors.onSurfaceVariant,
-    fontWeight: '500',
+    fontFamily: theme.fonts.regular,
   },
   chipTextActive: {
-    color: theme.colors.onSecondaryContainer,
-    fontWeight: '600',
+    color: theme.colors.inverseOnSurface,
+    fontFamily: theme.fonts.semibold,
   },
 });
