@@ -1,345 +1,588 @@
-import React, { useEffect, useRef, useMemo } from "react";
-import {
-    View,
-    Text,
-    StyleSheet,
-    Animated,
-    Dimensions,
-    Image,
-    useColorScheme,
-} from "react-native";
+import React, { useEffect, useRef } from "react";
+import { View, Text, StyleSheet, Animated, Easing, Dimensions } from "react-native";
 import { StatusBar } from "expo-status-bar";
+import { LinearGradient } from "expo-linear-gradient";
 import Svg, { Path } from "react-native-svg";
 import { useTheme } from "../theme/theme";
-import { useThemeContext } from "../theme/ThemeContext";
 
-const { width, height } = Dimensions.get("window");
+const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
-function WaveBackground({ isDark }: { isDark: boolean }) {
-    const theme = useTheme();
-    const primary = theme.colors.primary;
-    const deep = theme.colors.gradientEnd;
-    const gold = theme.colors.gold;
+const CARD_WIDTH = Math.min(230, SCREEN_WIDTH * 0.62);
+const CARD_HEIGHT = CARD_WIDTH / 1.586;
+const WORDMARK = "Finance Tracker";
 
+function Contactless({ size = 18 }: { size?: number }) {
     return (
-        <View style={StyleSheet.absoluteFill} pointerEvents="none">
-            <Svg
-                width={width}
-                height={height}
-                viewBox={`0 0 ${width} ${height}`}
-                style={StyleSheet.absoluteFill}
-            >
-                <Path
-                    d={`M${width * 0.6},0
-                        C${width * 0.45},${height * 0.08} ${width * 1.1},${height * 0.12} ${width},${height * 0.22}
-                        L${width},0 Z`}
-                    fill={primary}
-                    opacity={isDark ? 0.2 : 0.85}
-                />
-                <Path
-                    d={`M${width * 0.75},0
-                        C${width * 0.5},${height * 0.06} ${width * 1.15},${height * 0.15} ${width},${height * 0.28}
-                        L${width},${height * 0.18}
-                        C${width * 0.95},${height * 0.1} ${width * 0.55},${height * 0.04} ${width * 0.85},0 Z`}
-                    fill={deep}
-                    opacity={isDark ? 0.3 : 0.3}
-                />
-                <Path
-                    d={`M0,${height * 0.7}
-                        C${width * 0.15},${height * 0.65} ${width * 0.05},${height * 0.82} ${width * 0.35},${height * 0.78}
-                        C${width * 0.55},${height * 0.75} ${width * 0.4},${height * 0.92} ${width * 0.5},${height}
-                        L0,${height} Z`}
-                    fill={primary}
-                    opacity={isDark ? 0.18 : 0.8}
-                />
-                <Path
-                    d={`M0,${height * 0.78}
-                        C${width * 0.1},${height * 0.74} ${width * 0.15},${height * 0.88} ${width * 0.4},${height * 0.85}
-                        C${width * 0.5},${height * 0.84} ${width * 0.45},${height * 0.95} ${width * 0.55},${height}
-                        L0,${height} Z`}
-                    fill={deep}
-                    opacity={isDark ? 0.25 : 0.25}
-                />
-                <Path
-                    d={`M${width},${height * 0.55}
-                        C${width * 0.85},${height * 0.58} ${width * 0.95},${height * 0.48} ${width * 0.78},${height * 0.5}
-                        C${width * 0.7},${height * 0.51} ${width * 0.75},${height * 0.42} ${width * 0.65},${height * 0.45}
-                        L${width * 0.65},${height * 0.46}
-                        C${width * 0.78},${height * 0.44} ${width * 0.72},${height * 0.53} ${width * 0.85},${height * 0.52}
-                        C${width * 0.92},${height * 0.515} ${width * 0.88},${height * 0.56} ${width},${height * 0.58} Z`}
-                    fill={gold}
-                    opacity={isDark ? 0.3 : 0.4}
-                />
-            </Svg>
-        </View>
+        <Svg width={size} height={size} viewBox="0 0 24 24">
+            <Path d="M6 8.5a8 8 0 0 1 0 7" stroke="rgba(255,255,255,0.8)" strokeWidth={2} strokeLinecap="round" fill="none" />
+            <Path d="M9.5 6.5a12 12 0 0 1 0 11" stroke="rgba(255,255,255,0.8)" strokeWidth={2} strokeLinecap="round" fill="none" />
+            <Path d="M13 4.5a16 16 0 0 1 0 15" stroke="rgba(255,255,255,0.8)" strokeWidth={2} strokeLinecap="round" fill="none" />
+        </Svg>
     );
 }
 
-function LoadingDots() {
-    const theme = useTheme();
-    const dot1 = useRef(new Animated.Value(0.3)).current;
-    const dot2 = useRef(new Animated.Value(0.3)).current;
-    const dot3 = useRef(new Animated.Value(0.3)).current;
+// One expanding ripple ring, looping with a phase delay.
+function Ripple({ delay, color }: { delay: number; color: string }) {
+    const anim = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
-        const animateDot = (dot: Animated.Value, delay: number) =>
-            Animated.loop(
-                Animated.sequence([
-                    Animated.timing(dot, {
-                        toValue: 1,
-                        duration: 400,
-                        delay,
-                        useNativeDriver: true,
-                    }),
-                    Animated.timing(dot, {
-                        toValue: 0.3,
-                        duration: 400,
-                        useNativeDriver: true,
-                    }),
-                ])
-            );
-
-        animateDot(dot1, 0).start();
-        animateDot(dot2, 200).start();
-        animateDot(dot3, 400).start();
-    }, [dot1, dot2, dot3]);
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(delay),
+                Animated.timing(anim, {
+                    toValue: 1,
+                    duration: 1800,
+                    easing: Easing.out(Easing.quad),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(anim, { toValue: 0, duration: 0, useNativeDriver: true }),
+            ]),
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [anim, delay]);
 
     return (
-        <View style={loadingStyles.container}>
-            {[dot1, dot2, dot3].map((dot, i) => (
-                <Animated.View
-                    key={i}
-                    style={[
-                        loadingStyles.dot,
+        <Animated.View
+            pointerEvents="none"
+            style={[
+                styles.ripple,
+                {
+                    borderColor: color,
+                    opacity: anim.interpolate({
+                        inputRange: [0, 0.15, 1],
+                        outputRange: [0, 0.45, 0],
+                    }),
+                    transform: [
                         {
-                            backgroundColor: theme.colors.primary,
-                            opacity: dot,
+                            scale: anim.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0.4, 2.4],
+                            }),
                         },
-                    ]}
+                    ],
+                },
+            ]}
+        />
+    );
+}
+
+// A gold coin that pops in with a spring, then bobs forever.
+function Coin({
+    size,
+    style,
+    popDelay,
+    floatPhase,
+}: {
+    size: number;
+    style: object;
+    popDelay: number;
+    floatPhase: number;
+}) {
+    const pop = useRef(new Animated.Value(0)).current;
+    const float = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.sequence([
+            Animated.delay(popDelay),
+            Animated.spring(pop, { toValue: 1, friction: 5, tension: 120, useNativeDriver: true }),
+        ]).start();
+
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(floatPhase),
+                Animated.timing(float, {
+                    toValue: 1,
+                    duration: 1900,
+                    easing: Easing.inOut(Easing.sin),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(float, {
+                    toValue: 0,
+                    duration: 1900,
+                    easing: Easing.inOut(Easing.sin),
+                    useNativeDriver: true,
+                }),
+            ]),
+        );
+        loop.start();
+        return () => loop.stop();
+    }, [pop, float, popDelay, floatPhase]);
+
+    return (
+        <Animated.View
+            pointerEvents="none"
+            style={[
+                style,
+                {
+                    position: "absolute",
+                    opacity: pop,
+                    transform: [
+                        { scale: pop },
+                        {
+                            translateY: float.interpolate({
+                                inputRange: [0, 1],
+                                outputRange: [0, -7],
+                            }),
+                        },
+                    ],
+                },
+            ]}
+        >
+            <LinearGradient
+                colors={["#E8D9A8", "#C9B26E"]}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={{
+                    width: size,
+                    height: size,
+                    borderRadius: size / 2,
+                    alignItems: "center",
+                    justifyContent: "center",
+                }}
+            >
+                <View
+                    style={{
+                        width: size * 0.62,
+                        height: size * 0.62,
+                        borderRadius: (size * 0.62) / 2,
+                        borderWidth: 1.5,
+                        borderColor: "rgba(80,60,20,0.30)",
+                    }}
                 />
-            ))}
-        </View>
+            </LinearGradient>
+        </Animated.View>
+    );
+}
+
+// Staggered letter of the wordmark.
+function WordmarkLetter({
+    char,
+    index,
+    color,
+    fontFamily,
+}: {
+    char: string;
+    index: number;
+    color: string;
+    fontFamily: string;
+}) {
+    const anim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        Animated.sequence([
+            Animated.delay(650 + index * 35),
+            Animated.spring(anim, { toValue: 1, friction: 7, tension: 90, useNativeDriver: true }),
+        ]).start();
+    }, [anim, index]);
+
+    return (
+        <Animated.Text
+            style={{
+                fontSize: 24,
+                fontFamily,
+                color,
+                opacity: anim,
+                transform: [
+                    {
+                        translateY: anim.interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [16, 0],
+                        }),
+                    },
+                ],
+            }}
+        >
+            {char === " " ? " " : char}
+        </Animated.Text>
+    );
+}
+
+// Pulsing loader dot.
+function LoaderDot({ index, color }: { index: number; color: string }) {
+    const anim = useRef(new Animated.Value(0)).current;
+
+    useEffect(() => {
+        const loop = Animated.loop(
+            Animated.sequence([
+                Animated.delay(index * 180),
+                Animated.timing(anim, {
+                    toValue: 1,
+                    duration: 420,
+                    easing: Easing.inOut(Easing.quad),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(anim, {
+                    toValue: 0,
+                    duration: 420,
+                    easing: Easing.inOut(Easing.quad),
+                    useNativeDriver: true,
+                }),
+                Animated.delay((2 - index) * 180),
+            ]),
+        );
+        const timer = setTimeout(() => loop.start(), 1300);
+        return () => {
+            clearTimeout(timer);
+            loop.stop();
+        };
+    }, [anim, index]);
+
+    return (
+        <Animated.View
+            style={[
+                styles.loaderDot,
+                {
+                    backgroundColor: color,
+                    opacity: anim.interpolate({ inputRange: [0, 1], outputRange: [0.25, 1] }),
+                    transform: [
+                        { scale: anim.interpolate({ inputRange: [0, 1], outputRange: [1, 1.35] }) },
+                    ],
+                },
+            ]}
+        />
     );
 }
 
 export default function SplashScreen() {
     const theme = useTheme();
-    const styles = useMemo(() => createStyles(theme), [theme]);
-    const { themeMode } = useThemeContext();
-    const systemColorScheme = useColorScheme();
-    const isDark =
-        themeMode === "system"
-            ? systemColorScheme === "dark"
-            : themeMode === "dark";
 
-    const logoOpacity = useRef(new Animated.Value(0)).current;
-    const logoScale = useRef(new Animated.Value(0.8)).current;
-    const titleOpacity = useRef(new Animated.Value(0)).current;
-    const titleTranslateY = useRef(new Animated.Value(24)).current;
-    const subtitleOpacity = useRef(new Animated.Value(0)).current;
-    const subtitleTranslateY = useRef(new Animated.Value(16)).current;
-    const footerOpacity = useRef(new Animated.Value(0)).current;
-    const loadingOpacity = useRef(new Animated.Value(0)).current;
+    const cardIn = useRef(new Animated.Value(0)).current;
+    const cardFloat = useRef(new Animated.Value(0)).current;
+    const taglineIn = useRef(new Animated.Value(0)).current;
+    const blobDrift = useRef(new Animated.Value(0)).current;
 
     useEffect(() => {
         Animated.sequence([
-            Animated.parallel([
-                Animated.timing(logoOpacity, {
-                    toValue: 1,
-                    duration: 600,
-                    useNativeDriver: true,
-                }),
-                Animated.spring(logoScale, {
-                    toValue: 1,
-                    friction: 7,
-                    tension: 40,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(titleOpacity, {
-                    toValue: 1,
-                    duration: 500,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(titleTranslateY, {
-                    toValue: 0,
-                    duration: 500,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.parallel([
-                Animated.timing(subtitleOpacity, {
-                    toValue: 1,
-                    duration: 400,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(subtitleTranslateY, {
-                    toValue: 0,
-                    duration: 400,
-                    useNativeDriver: true,
-                }),
-                Animated.timing(loadingOpacity, {
-                    toValue: 1,
-                    duration: 400,
-                    useNativeDriver: true,
-                }),
-            ]),
-            Animated.timing(footerOpacity, {
+            Animated.delay(120),
+            Animated.spring(cardIn, { toValue: 1, friction: 7, tension: 60, useNativeDriver: true }),
+        ]).start();
+
+        Animated.sequence([
+            Animated.delay(1250),
+            Animated.timing(taglineIn, {
                 toValue: 1,
                 duration: 500,
+                easing: Easing.out(Easing.quad),
                 useNativeDriver: true,
             }),
         ]).start();
-    }, [
-        logoOpacity,
-        logoScale,
-        titleOpacity,
-        titleTranslateY,
-        subtitleOpacity,
-        subtitleTranslateY,
-        loadingOpacity,
-        footerOpacity,
-    ]);
+
+        const floatLoop = Animated.loop(
+            Animated.sequence([
+                Animated.timing(cardFloat, {
+                    toValue: 1,
+                    duration: 2200,
+                    easing: Easing.inOut(Easing.sin),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(cardFloat, {
+                    toValue: 0,
+                    duration: 2200,
+                    easing: Easing.inOut(Easing.sin),
+                    useNativeDriver: true,
+                }),
+            ]),
+        );
+        floatLoop.start();
+
+        const driftLoop = Animated.loop(
+            Animated.sequence([
+                Animated.timing(blobDrift, {
+                    toValue: 1,
+                    duration: 5200,
+                    easing: Easing.inOut(Easing.sin),
+                    useNativeDriver: true,
+                }),
+                Animated.timing(blobDrift, {
+                    toValue: 0,
+                    duration: 5200,
+                    easing: Easing.inOut(Easing.sin),
+                    useNativeDriver: true,
+                }),
+            ]),
+        );
+        driftLoop.start();
+
+        return () => {
+            floatLoop.stop();
+            driftLoop.stop();
+        };
+    }, [cardIn, cardFloat, taglineIn, blobDrift]);
 
     return (
-        <View style={styles.container}>
-            <StatusBar
-                style={isDark ? "light" : "dark"}
-                backgroundColor={theme.colors.background}
+        <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
+            <StatusBar style={theme.dark ? "light" : "dark"} />
+
+            {/* Soft drifting backdrop blobs */}
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    styles.blob,
+                    {
+                        top: -90,
+                        right: -110,
+                        backgroundColor: theme.colors.goldContainer,
+                        opacity: 0.45,
+                        transform: [
+                            {
+                                translateY: blobDrift.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, 26],
+                                }),
+                            },
+                        ],
+                    },
+                ]}
+            />
+            <Animated.View
+                pointerEvents="none"
+                style={[
+                    styles.blob,
+                    {
+                        bottom: -120,
+                        left: -100,
+                        backgroundColor: theme.colors.primaryContainer,
+                        opacity: 0.4,
+                        transform: [
+                            {
+                                translateY: blobDrift.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [0, -22],
+                                }),
+                            },
+                        ],
+                    },
+                ]}
             />
 
-            <WaveBackground isDark={isDark} />
+            <View style={styles.stage}>
+                {/* Contactless ripples behind the card */}
+                <Ripple delay={900} color={theme.colors.primary} />
+                <Ripple delay={1800} color={theme.colors.primary} />
 
-            <View style={styles.content}>
+                {/* The hero card */}
                 <Animated.View
-                    style={[
-                        styles.logoWrapper,
-                        {
-                            opacity: logoOpacity,
-                            transform: [{ scale: logoScale }],
-                        },
-                    ]}
+                    style={{
+                        opacity: cardIn,
+                        transform: [
+                            {
+                                translateY: Animated.add(
+                                    cardIn.interpolate({ inputRange: [0, 1], outputRange: [46, 0] }),
+                                    cardFloat.interpolate({ inputRange: [0, 1], outputRange: [0, -8] }),
+                                ),
+                            },
+                            { scale: cardIn.interpolate({ inputRange: [0, 1], outputRange: [0.6, 1] }) },
+                            {
+                                rotate: cardIn.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: ["-14deg", "-5deg"],
+                                }),
+                            },
+                        ],
+                    }}
                 >
-                    <View style={styles.logoContainer}>
-                        <Image
-                            source={require("../icon.png")}
-                            style={styles.logoImage}
-                            resizeMode="contain"
-                        />
-                    </View>
+                    <LinearGradient
+                        colors={["#0066FF", "#0047B8"]}
+                        start={{ x: 0, y: 0 }}
+                        end={{ x: 1, y: 1 }}
+                        style={[styles.card, { shadowColor: "#0066FF" }]}
+                    >
+                        <View style={styles.cardTopRow}>
+                            <View style={styles.chip}>
+                                <View style={styles.chipInner} />
+                            </View>
+                            <Contactless />
+                        </View>
+
+                        {/* "Card number" dot groups */}
+                        <View style={styles.numberRow}>
+                            {[0, 1, 2, 3].map((g) => (
+                                <View key={g} style={styles.numberGroup}>
+                                    {[0, 1, 2, 3].map((d) => (
+                                        <View key={d} style={styles.numberDot} />
+                                    ))}
+                                </View>
+                            ))}
+                        </View>
+
+                        <View style={styles.cardBottomRow}>
+                            <Text style={[styles.cardName, { fontFamily: theme.fonts.semibold }]}>
+                                YOUR MONEY
+                            </Text>
+                            <View style={styles.roundelRow}>
+                                <View style={[styles.roundel, { backgroundColor: "rgba(255,255,255,0.85)" }]} />
+                                <View
+                                    style={[
+                                        styles.roundel,
+                                        styles.roundelOverlap,
+                                        { backgroundColor: "rgba(255,210,80,0.85)" },
+                                    ]}
+                                />
+                            </View>
+                        </View>
+                    </LinearGradient>
                 </Animated.View>
 
-                <Animated.Text
-                    style={[
-                        styles.title,
-                        {
-                            opacity: titleOpacity,
-                            transform: [{ translateY: titleTranslateY }],
-                        },
-                    ]}
-                >
-                    Finance Tracker
-                </Animated.Text>
-
-                <Animated.Text
-                    style={[
-                        styles.subtitle,
-                        {
-                            opacity: subtitleOpacity,
-                            transform: [{ translateY: subtitleTranslateY }],
-                        },
-                    ]}
-                >
-                    Your Premium Cashbook
-                </Animated.Text>
-
-                <Animated.View style={{ opacity: loadingOpacity }}>
-                    <LoadingDots />
-                </Animated.View>
+                {/* Coins orbiting the card */}
+                <Coin size={34} style={{ top: -16, left: -26 }} popDelay={620} floatPhase={0} />
+                <Coin size={22} style={{ bottom: -10, right: -20 }} popDelay={760} floatPhase={500} />
+                <Coin size={15} style={{ top: 26, right: -38 }} popDelay={900} floatPhase={1000} />
             </View>
 
-            <Animated.View style={[styles.footer, { opacity: footerOpacity }]}>
-                <View style={styles.footerDivider} />
-                <Text style={styles.footerText}>
-                    SECURE {"  "}·{"  "} PRIVATE {"  "}·{"  "} FAST
-                </Text>
-            </Animated.View>
+            {/* Wordmark */}
+            <View style={styles.wordmarkRow}>
+                {WORDMARK.split("").map((char, i) => (
+                    <WordmarkLetter
+                        key={i}
+                        char={char}
+                        index={i}
+                        color={theme.colors.onSurface}
+                        fontFamily={theme.fonts.semibold}
+                    />
+                ))}
+            </View>
+
+            <Animated.Text
+                style={[
+                    styles.tagline,
+                    {
+                        color: theme.colors.onSurfaceVariant,
+                        fontFamily: theme.fonts.regular,
+                        opacity: taglineIn,
+                        transform: [
+                            {
+                                translateY: taglineIn.interpolate({
+                                    inputRange: [0, 1],
+                                    outputRange: [8, 0],
+                                }),
+                            },
+                        ],
+                    },
+                ]}
+            >
+                Private. Offline. Yours.
+            </Animated.Text>
+
+            <View style={styles.loaderRow}>
+                {[0, 1, 2].map((i) => (
+                    <LoaderDot key={i} index={i} color={theme.colors.primary} />
+                ))}
+            </View>
         </View>
     );
 }
 
-const loadingStyles = StyleSheet.create({
+const styles = StyleSheet.create({
     container: {
+        flex: 1,
+        alignItems: "center",
+        justifyContent: "center",
+    },
+    blob: {
+        position: "absolute",
+        width: 280,
+        height: 280,
+        borderRadius: 140,
+    },
+    stage: {
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        alignItems: "center",
+        justifyContent: "center",
+        marginBottom: 52,
+    },
+    ripple: {
+        position: "absolute",
+        width: CARD_WIDTH,
+        height: CARD_WIDTH,
+        borderRadius: CARD_WIDTH / 2,
+        borderWidth: 1.5,
+    },
+    card: {
+        width: CARD_WIDTH,
+        height: CARD_HEIGHT,
+        borderRadius: 16,
+        padding: 16,
+        justifyContent: "space-between",
+        overflow: "hidden",
+        shadowOffset: { width: 0, height: 14 },
+        shadowOpacity: 0.3,
+        shadowRadius: 24,
+        elevation: 10,
+    },
+    cardTopRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-start",
+    },
+    chip: {
+        width: 34,
+        height: 25,
+        borderRadius: 5,
+        padding: 4,
+        backgroundColor: "#D7C389",
+    },
+    chipInner: {
+        flex: 1,
+        borderRadius: 2,
+        borderWidth: 1,
+        borderColor: "rgba(80,60,20,0.35)",
+    },
+    numberRow: {
+        flexDirection: "row",
+        gap: 12,
+    },
+    numberGroup: {
+        flexDirection: "row",
+        gap: 4,
+    },
+    numberDot: {
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+        backgroundColor: "rgba(255,255,255,0.65)",
+    },
+    cardBottomRow: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
+    },
+    cardName: {
+        fontSize: 9,
+        letterSpacing: 1.6,
+        color: "rgba(255,255,255,0.85)",
+    },
+    roundelRow: {
+        flexDirection: "row",
+        alignItems: "center",
+    },
+    roundel: {
+        width: 18,
+        height: 18,
+        borderRadius: 9,
+    },
+    roundelOverlap: {
+        marginLeft: -8,
+    },
+    wordmarkRow: {
+        flexDirection: "row",
+        marginTop: 8,
+    },
+    tagline: {
+        fontSize: 13,
+        marginTop: 10,
+        letterSpacing: 0.4,
+    },
+    loaderRow: {
+        position: "absolute",
+        bottom: 64,
         flexDirection: "row",
         gap: 8,
-        marginTop: 32,
     },
-    dot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
+    loaderDot: {
+        width: 7,
+        height: 7,
+        borderRadius: 3.5,
     },
 });
-
-const createStyles = (theme: ReturnType<typeof useTheme>) =>
-    StyleSheet.create({
-        container: {
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: theme.colors.background,
-        },
-        content: {
-            alignItems: "center",
-            paddingBottom: 40,
-        },
-        logoWrapper: {
-            marginBottom: 32,
-        },
-        logoContainer: {
-            width: 120,
-            height: 120,
-            borderRadius: theme.shape.extraLarge,
-            alignItems: "center",
-            justifyContent: "center",
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-            borderWidth: StyleSheet.hairlineWidth,
-        },
-        logoImage: {
-            width: 72,
-            height: 72,
-        },
-        title: {
-            fontSize: 30,
-            fontFamily: theme.fonts.semibold,
-            letterSpacing: 1,
-            color: theme.colors.onSurface,
-        },
-        subtitle: {
-            fontSize: 14,
-            fontFamily: theme.fonts.regular,
-            letterSpacing: 3,
-            textTransform: "uppercase",
-            marginTop: 10,
-            color: theme.colors.onSurfaceVariant,
-        },
-        footer: {
-            position: "absolute",
-            bottom: 56,
-            alignItems: "center",
-        },
-        footerDivider: {
-            width: 32,
-            height: 1,
-            marginBottom: 16,
-            backgroundColor: theme.colors.outlineVariant,
-        },
-        footerText: {
-            fontSize: 11,
-            letterSpacing: 4,
-            fontFamily: theme.fonts.regular,
-            color: theme.colors.onSurfaceVariant,
-        },
-    });
