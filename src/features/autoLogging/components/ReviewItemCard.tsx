@@ -3,6 +3,7 @@ import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-nativ
 import { Check, Trash2, MessageSquare, Bell } from "lucide-react-native";
 import { useTheme } from "../../../theme/theme";
 import { Business } from "../../../types";
+import MoneyText from "../../../components/MoneyText";
 import { ReviewItem } from "../types";
 import { getCurrencySymbol } from "../../../utils/_helpers";
 import { ConfirmEdits } from "../hooks/useAutoLogQueue";
@@ -44,7 +45,14 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                     </Text>
                 </View>
                 <View style={{ flex: 1 }} />
-                <Text style={styles.confidence}>{confidencePercent}%</Text>
+                <Text
+                    style={[
+                        styles.confidence,
+                        confidencePercent < 70 && { color: theme.colors.gold },
+                    ]}
+                >
+                    {confidencePercent}%
+                </Text>
             </TouchableOpacity>
 
             <View style={styles.headRow}>
@@ -56,16 +64,12 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                         {item.draft.category} • {item.draft.type} • routes to {business?.name ?? "—"}
                     </Text>
                 </View>
-                <Text
-                    style={[
-                        styles.amount,
-                        {
-                            color: item.draft.type === "income" ? theme.colors.income : theme.colors.onSurface,
-                        },
-                    ]}
-                >
-                    {symbol}{item.draft.amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-                </Text>
+                <MoneyText
+                    amount={item.draft.amount}
+                    symbol={symbol}
+                    size={18}
+                    color={item.draft.type === "income" ? theme.colors.income : theme.colors.onSurface}
+                />
             </View>
 
             {expanded ? (
@@ -111,11 +115,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         card: {
             padding: 14,
-            borderRadius: theme.shape.large,
+            borderRadius: 14,
             marginBottom: theme.spacing.m,
-            backgroundColor: theme.colors.surfaceContainerLow,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         top: {
             flexDirection: "row",
@@ -133,13 +137,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         sourceChipText: {
             fontSize: 11,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.3,
             color: theme.colors.onPrimaryContainer,
         },
         confidence: {
             fontSize: 11,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
             color: theme.colors.onSurfaceVariant,
         },
         headRow: {
@@ -149,20 +154,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         merchant: {
             fontSize: 16,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: -0.2,
             color: theme.colors.onSurface,
         },
         meta: {
             fontSize: 11,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
             marginTop: 2,
             color: theme.colors.onSurfaceVariant,
-        },
-        amount: {
-            fontSize: 18,
-            fontWeight: "800",
-            letterSpacing: -0.3,
         },
         editArea: {
             marginTop: 10,
@@ -172,7 +172,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         label: {
             fontSize: 10,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 6,
@@ -182,20 +182,20 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         input: {
             height: 48,
             borderRadius: theme.shape.medium,
-            borderWidth: 1,
-            borderColor: theme.colors.outline,
             paddingHorizontal: 14,
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurface,
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         rawText: {
             padding: 10,
             borderRadius: theme.shape.medium,
             fontSize: 12,
+            fontFamily: theme.fonts.regular,
             lineHeight: 17,
             color: theme.colors.onSurfaceVariant,
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         actions: {
             flexDirection: "row",
@@ -216,7 +216,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         rejectText: {
             fontSize: 13,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.error,
         },
         confirmBtn: {
@@ -228,12 +228,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             gap: 6,
             borderRadius: theme.shape.full,
             backgroundColor: theme.colors.primary,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         confirmText: {
             fontSize: 13,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onPrimary,
         },
     });

@@ -7,18 +7,15 @@ import Svg, {
     Path,
     G,
     Line,
-    Defs,
-    LinearGradient,
-    Stop,
 } from "react-native-svg";
 import { useTheme } from "../../theme/theme";
 
 /**
- * Material You "expressive geometric" spot illustrations + decorative layers.
+ * Warm "Wallet" spot illustrations + decorative layers.
  * Everything is in-code react-native-svg so it scales crisply and adapts to
  * light/dark via theme tokens. Empty scenes share a visual language: a soft
- * grounding platform, a primary object in container tones, and a few accent
- * pops (tertiary / gold / income).
+ * grounding platform, an object rendered in warm container tones (gold /
+ * green / paper neutrals), and the brand blue used as a single sparing accent.
  */
 
 type SceneProps = { size?: number };
@@ -62,15 +59,15 @@ export function EmptyWallet({ size }: SceneProps) {
     return (
         <Scene size={size}>
             <Platform color={c.secondaryContainer} />
-            <Confetti a={c.primary} b={c.tertiary} c={c.gold} />
+            <Confetti a={c.income} b={c.tertiary} c={c.gold} />
             {/* cards peeking from the wallet */}
             <Rect x={86} y={40} width={64} height={34} rx={9} fill={c.tertiaryContainer} transform="rotate(-7 118 57)" />
             <Rect x={92} y={36} width={62} height={32} rx={9} fill={c.surfaceContainerHighest} transform="rotate(4 123 52)" />
             {/* wallet body */}
-            <Rect x={52} y={66} width={116} height={66} rx={18} fill={c.primaryContainer} />
-            <Rect x={52} y={66} width={116} height={30} rx={18} fill={c.primary} opacity={0.16} />
+            <Rect x={52} y={66} width={116} height={66} rx={18} fill={c.goldContainer} />
+            <Rect x={52} y={66} width={116} height={30} rx={18} fill={c.gold} opacity={0.18} />
             {/* card slot strip */}
-            <Rect x={52} y={104} width={116} height={8} fill={c.onPrimaryContainer} opacity={0.1} />
+            <Rect x={52} y={104} width={116} height={8} fill={c.onGoldContainer} opacity={0.12} />
             {/* clasp */}
             <Circle cx={150} cy={99} r={9} fill={c.primary} />
             <Circle cx={150} cy={99} r={3.5} fill={c.onPrimary} />
@@ -86,7 +83,7 @@ export function EmptyReceipt({ size }: SceneProps) {
     return (
         <Scene size={size}>
             <Platform color={c.secondaryContainer} />
-            <Confetti a={c.tertiary} b={c.primary} c={c.income} />
+            <Confetti a={c.tertiary} b={c.gold} c={c.income} />
             {/* receipt */}
             <Path
                 d="M74 36 h72 a6 6 0 0 1 6 6 v92 l-10 -7 l-10 7 l-10 -7 l-10 7 l-10 -7 l-10 7 l-10 -7 l-10 7 v-92 a6 6 0 0 1 6 -6 z"
@@ -96,9 +93,9 @@ export function EmptyReceipt({ size }: SceneProps) {
             <Rect x={84} y={70} width={36} height={7} rx={3.5} fill={c.onSurfaceVariant} opacity={0.3} />
             <Rect x={84} y={86} width={44} height={7} rx={3.5} fill={c.onSurfaceVariant} opacity={0.3} />
             {/* magnifier */}
-            <Circle cx={142} cy={104} r={26} fill={c.primaryContainer} stroke={c.primary} strokeWidth={5} />
+            <Circle cx={142} cy={104} r={26} fill={c.surfaceContainer} stroke={c.primary} strokeWidth={5} />
             <Line x1={160} y1={122} x2={176} y2={138} stroke={c.primary} strokeWidth={8} strokeLinecap="round" />
-            <Path d="M132 104 h20 M142 94 v20" stroke={c.onPrimaryContainer} strokeWidth={3.5} strokeLinecap="round" />
+            <Path d="M132 104 h20 M142 94 v20" stroke={c.onSurfaceVariant} strokeWidth={3.5} strokeLinecap="round" />
         </Scene>
     );
 }
@@ -108,11 +105,11 @@ export function EmptyTarget({ size }: SceneProps) {
     return (
         <Scene size={size}>
             <Platform color={c.secondaryContainer} />
-            <Confetti a={c.primary} b={c.gold} c={c.tertiary} />
+            <Confetti a={c.income} b={c.gold} c={c.tertiary} />
             <Circle cx={110} cy={88} r={56} fill={c.surfaceContainerHighest} />
-            <Circle cx={110} cy={88} r={56} fill="none" stroke={c.primary} strokeWidth={6} opacity={0.9} />
+            <Circle cx={110} cy={88} r={56} fill="none" stroke={c.gold} strokeWidth={6} opacity={0.9} />
             <Circle cx={110} cy={88} r={38} fill="none" stroke={c.tertiary} strokeWidth={6} />
-            <Circle cx={110} cy={88} r={20} fill={c.primaryContainer} />
+            <Circle cx={110} cy={88} r={20} fill={c.incomeContainer} />
             <Circle cx={110} cy={88} r={8} fill={c.primary} />
             {/* arrow */}
             <Path d="M150 48 l24 -16 l-7 14 l14 -1 l-31 19 z" fill={c.gold} />
@@ -132,8 +129,8 @@ export function EmptyCoins({ size }: SceneProps) {
             <Ellipse cx={92} cy={108} rx={40} ry={14} fill={c.goldContainer} stroke={c.gold} strokeWidth={3} />
             <Path d="M92 99 v18 M85 104 h12 M85 112 h12" stroke={c.goldDark} strokeWidth={2.6} fill="none" strokeLinecap="round" />
             {/* note / hand */}
-            <Rect x={120} y={56} width={68} height={42} rx={10} fill={c.primaryContainer} transform="rotate(8 154 77)" />
-            <Circle cx={154} cy={77} r={11} fill={c.primary} transform="rotate(8 154 77)" />
+            <Rect x={120} y={56} width={68} height={42} rx={10} fill={c.incomeContainer} transform="rotate(8 154 77)" />
+            <Circle cx={154} cy={77} r={11} fill={c.income} transform="rotate(8 154 77)" />
         </Scene>
     );
 }
@@ -143,12 +140,12 @@ export function EmptyCalendar({ size }: SceneProps) {
     return (
         <Scene size={size}>
             <Platform color={c.secondaryContainer} />
-            <Confetti a={c.tertiary} b={c.primary} c={c.income} />
+            <Confetti a={c.tertiary} b={c.gold} c={c.income} />
             <Rect x={62} y={48} width={96} height={88} rx={16} fill={c.surfaceContainerHighest} />
-            <Rect x={62} y={48} width={96} height={26} rx={16} fill={c.primary} />
-            <Rect x={62} y={62} width={96} height={12} fill={c.primary} />
-            <Circle cx={86} cy={44} r={6} fill={c.primaryContainer} />
-            <Circle cx={134} cy={44} r={6} fill={c.primaryContainer} />
+            <Rect x={62} y={48} width={96} height={26} rx={16} fill={c.tertiary} />
+            <Rect x={62} y={62} width={96} height={12} fill={c.tertiary} />
+            <Circle cx={86} cy={44} r={6} fill={c.tertiaryContainer} />
+            <Circle cx={134} cy={44} r={6} fill={c.tertiaryContainer} />
             {/* repeat arrows */}
             <Path
                 d="M92 104 a18 18 0 1 1 6 14"
@@ -168,7 +165,7 @@ export function EmptyChart({ size }: SceneProps) {
     return (
         <Scene size={size}>
             <Platform color={c.secondaryContainer} />
-            <Confetti a={c.primary} b={c.tertiary} c={c.income} />
+            <Confetti a={c.gold} b={c.tertiary} c={c.income} />
             {/* panel */}
             <Rect x={48} y={42} width={124} height={92} rx={16} fill={c.surfaceContainerHighest} />
             {/* bars */}
@@ -183,35 +180,6 @@ export function EmptyChart({ size }: SceneProps) {
 }
 
 /* ---------- Decorative layers (place absolutely behind content) ---------- */
-
-/**
- * Soft overlapping geometric blobs for header / hero backgrounds.
- * `tone` controls intensity; defaults read container tokens.
- */
-export function HeaderBackdrop({
-    height = 220,
-    opacity = 1,
-}: {
-    height?: number;
-    opacity?: number;
-}) {
-    const c = useTheme().colors;
-    return (
-        <View style={[StyleSheet.absoluteFill, { opacity }]} pointerEvents="none">
-            <Svg width="100%" height={height} viewBox="0 0 400 220" preserveAspectRatio="xMidYMin slice">
-                <Defs>
-                    <LinearGradient id="hb" x1="0" y1="0" x2="1" y2="1">
-                        <Stop offset="0" stopColor={c.primaryContainer} stopOpacity={0.55} />
-                        <Stop offset="1" stopColor={c.primaryContainer} stopOpacity={0} />
-                    </LinearGradient>
-                </Defs>
-                <Circle cx={330} cy={20} r={120} fill="url(#hb)" />
-                <Circle cx={60} cy={-10} r={90} fill={c.tertiaryContainer} opacity={0.35} />
-                <Circle cx={370} cy={120} r={40} fill={c.secondaryContainer} opacity={0.4} />
-            </Svg>
-        </View>
-    );
-}
 
 /** Subtle dot grid texture for surfaces. */
 export function DotGrid({

@@ -32,3 +32,10 @@ Spec: `docs/superpowers/specs/2026-06-11-wallet-redesign-design.md`. Phase 1 (me
 - **E (small modals + shared):** `src/components/CreateCashbookModal.tsx`, `src/components/TransferCashbookModal.tsx`, `src/components/DateRangePickerModal.tsx`, `src/components/BusinessChip.tsx`, `src/components/BusinessItem.tsx`, `src/components/TourOverlay.tsx`, `src/styles/globalStyles.ts`
 
 Verification gate per cluster (run by the orchestrator, not agents): `npx tsc -b` clean, `npx jest` green, commit per cluster.
+
+## Phase 3 clusters (same conventions)
+
+- **F (autoLog screens):** AutoLogOnboardingScreen, AutoLogSettingsScreen, ReviewQueueScreen, SenderMappingsScreen
+- **G (autoLog components):** AllowedAppsSelector, AutoLogStatsCard, AutoLogToggleRow, PrivacyModal, ReviewItemCard, SenderMappingEditor, SenderMappingRow
+- **H (security screens):** LockScreen, PinSetupScreen — keypad pattern reference: ExportPinVerifyScreen inside SettingsScreen.tsx
+- **I (splash + illustrations):** SplashScreen; illustrations/index.tsx — DELETE the now-unused HeaderBackdrop export, re-tint EmptyScene & friends to the warm palette (keep component APIs)

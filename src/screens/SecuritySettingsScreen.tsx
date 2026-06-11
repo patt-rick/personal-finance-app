@@ -155,8 +155,6 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
 
     return (
         <View style={styles.container}>
-            <View style={[styles.headerDecoration, { height: 180 + insets.top }]} />
-
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <TouchableOpacity
                     style={styles.backBtn}
@@ -370,7 +368,7 @@ function PinVerifyScreen({
                                         color={
                                             pin.length === 0 || error
                                                 ? theme.colors.outlineVariant
-                                                : theme.colors.onSurfaceVariant
+                                                : theme.colors.onSurface
                                         }
                                     />
                                 </TouchableOpacity>
@@ -404,8 +402,8 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             borderRadius: theme.shape.medium,
             backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
@@ -414,10 +412,9 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
             shadowColor: theme.colors.shadow,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "700",
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.3,
         },
         content: {
             flex: 1,
@@ -425,9 +422,9 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
             paddingTop: 60,
         },
         lockIconCircle: {
-            width: 64,
-            height: 64,
-            borderRadius: 32,
+            width: 72,
+            height: 72,
+            borderRadius: theme.shape.extraLarge,
             backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
@@ -436,7 +433,7 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
         subtitle: {
             fontSize: 15,
             color: theme.colors.onSurfaceVariant,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
             marginBottom: 32,
         },
         dotsRow: {
@@ -449,7 +446,7 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
             height: 14,
             borderRadius: 7,
             borderWidth: 2,
-            borderColor: theme.colors.outlineVariant,
+            borderColor: theme.colors.outline,
         },
         dotFilled: {
             backgroundColor: theme.colors.primary,
@@ -462,7 +459,7 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
         errorText: {
             fontSize: 13,
             color: theme.colors.error,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginTop: 4,
         },
         keypad: {
@@ -477,13 +474,16 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
             width: 68,
             height: 68,
             borderRadius: 34,
-            backgroundColor: theme.colors.surfaceContainerHigh,
+            backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
             justifyContent: "center",
+            ...theme.elevation.level1,
+            shadowColor: theme.colors.shadow,
         },
         keyText: {
             fontSize: 24,
-            fontWeight: "400",
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
             color: theme.colors.onSurface,
         },
     });
@@ -491,16 +491,6 @@ const createVerifyStyles = (theme: ReturnType<typeof useTheme>) =>
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         container: { flex: 1, backgroundColor: theme.colors.background },
-        headerDecoration: {
-            position: "absolute",
-            top: 0,
-            left: 0,
-            right: 0,
-            backgroundColor: theme.colors.primaryContainer,
-            borderBottomLeftRadius: 40,
-            borderBottomRightRadius: 40,
-            opacity: 0.5,
-        },
         header: {
             flexDirection: "row",
             alignItems: "center",
@@ -509,8 +499,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             gap: 12,
         },
         backBtn: {
-            width: 36,
-            height: 36,
+            width: 40,
+            height: 40,
             borderRadius: theme.shape.medium,
             backgroundColor: theme.colors.surfaceContainerLow,
             alignItems: "center",
@@ -519,30 +509,29 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             shadowColor: theme.colors.shadow,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "700",
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.3,
         },
         section: {
             marginTop: 24,
             paddingHorizontal: 20,
         },
         sectionLabel: {
-            fontSize: 12,
+            fontSize: 11,
             color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginBottom: 10,
             marginLeft: 4,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.8,
         },
         groupCard: {
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 14,
             overflow: "hidden",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         row: {
             flexDirection: "row",
@@ -550,25 +539,25 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             paddingHorizontal: 16,
             paddingVertical: 14,
             borderBottomWidth: StyleSheet.hairlineWidth,
-            borderBottomColor: theme.colors.outlineVariant,
+            borderBottomColor: theme.colors.borderLight,
         },
         iconCircle: {
             width: 36,
             height: 36,
-            borderRadius: 18,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
             marginRight: 14,
         },
         rowText: {
             flex: 1,
-            fontSize: 15,
-            fontWeight: "600",
+            fontSize: 14,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.1,
         },
         rowSubText: {
-            fontSize: 12,
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             marginTop: 1,
         },

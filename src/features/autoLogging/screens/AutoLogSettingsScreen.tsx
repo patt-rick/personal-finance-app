@@ -440,7 +440,7 @@ function NavRow({
         <TouchableOpacity
             style={[
                 styles.navRow,
-                { borderBottomColor: theme.colors.outlineVariant },
+                { borderBottomColor: theme.colors.borderLight },
                 last && { borderBottomWidth: 0 },
             ]}
             onPress={onPress}
@@ -467,7 +467,7 @@ function CurrencyRow({
     theme: any;
 }) {
     return (
-        <View style={[styles.currencyRow, { borderBottomColor: theme.colors.outlineVariant }]}>
+        <View style={[styles.currencyRow, { borderBottomColor: theme.colors.borderLight }]}>
             <View style={styles.currencyHeader}>
                 <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
                     <Wallet size={18} color={theme.colors.onSecondaryContainer} />
@@ -487,15 +487,17 @@ function CurrencyRow({
                             key={c.value}
                             style={[
                                 styles.currencyCard,
-                                { backgroundColor: theme.colors.surfaceContainerHighest },
-                                selected && { backgroundColor: theme.colors.primary },
+                                selected && {
+                                    backgroundColor: theme.colors.primary,
+                                    borderColor: theme.colors.primary,
+                                },
                             ]}
                             onPress={() => onChange(c.value)}
                         >
                             <Text
                                 style={[
                                     styles.currencySymbol,
-                                    { color: theme.colors.onSurface },
+                                    { color: theme.colors.onSurfaceVariant },
                                     selected && { color: theme.colors.onPrimary },
                                 ]}
                             >
@@ -539,27 +541,26 @@ const createStyles = (theme: any) =>
             shadowColor: theme.colors.shadow,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "800",
-            letterSpacing: -0.3,
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
         sectionLabel: {
-            fontSize: 12,
+            fontSize: 11,
             color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginTop: 24,
             marginBottom: 10,
             marginLeft: 4,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.8,
         },
         groupCard: {
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 14,
             overflow: "hidden",
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         navRow: {
             flexDirection: "row",
@@ -578,11 +579,11 @@ const createStyles = (theme: any) =>
         },
         navTitle: {
             fontSize: 15,
-            fontWeight: "600",
-            letterSpacing: -0.1,
+            fontFamily: theme.fonts.semibold,
         },
         navSubtitle: {
             fontSize: 12,
+            fontFamily: theme.fonts.regular,
             marginTop: 1,
         },
         currencyRow: {
@@ -606,28 +607,17 @@ const createStyles = (theme: any) =>
             borderRadius: theme.shape.medium,
             alignItems: "center",
             justifyContent: "center",
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
         },
         currencySymbol: {
             fontSize: 18,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
         },
         currencyCode: {
             fontSize: 10,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginTop: 2,
-        },
-        privacyCard: {
-            padding: 16,
-        },
-        privacyTitle: {
-            fontSize: 14,
-            fontWeight: "700",
-            color: theme.colors.onSurface,
-            marginBottom: 4,
-        },
-        privacyBody: {
-            fontSize: 12,
-            color: theme.colors.onSurfaceVariant,
-            lineHeight: 18,
         },
     });
