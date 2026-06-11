@@ -2,6 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Alert, Platform, View, useColorScheme, AppState } from "react-native";
 
 import { StatusBar } from "expo-status-bar";
+import {
+    useFonts,
+    Manrope_300Light,
+    Manrope_400Regular,
+    Manrope_600SemiBold,
+    Manrope_700Bold,
+} from "@expo-google-fonts/manrope";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
 import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
@@ -42,6 +49,17 @@ import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nat
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+    const [fontsLoaded] = useFonts({
+        Manrope_300Light,
+        Manrope_400Regular,
+        Manrope_600SemiBold,
+        Manrope_700Bold,
+    });
+
+    if (!fontsLoaded) {
+        return <View style={{ flex: 1, backgroundColor: "#F7F4EF" }} />;
+    }
+
     return (
         <ThemeProvider>
             <MainApp />
