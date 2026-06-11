@@ -18,7 +18,8 @@ const { width, height } = Dimensions.get("window");
 function WaveBackground({ isDark }: { isDark: boolean }) {
     const theme = useTheme();
     const primary = theme.colors.primary;
-    const primaryContainer = theme.colors.primaryContainer;
+    const deep = theme.colors.gradientEnd;
+    const gold = theme.colors.gold;
 
     return (
         <View style={StyleSheet.absoluteFill} pointerEvents="none">
@@ -40,8 +41,8 @@ function WaveBackground({ isDark }: { isDark: boolean }) {
                         C${width * 0.5},${height * 0.06} ${width * 1.15},${height * 0.15} ${width},${height * 0.28}
                         L${width},${height * 0.18}
                         C${width * 0.95},${height * 0.1} ${width * 0.55},${height * 0.04} ${width * 0.85},0 Z`}
-                    fill={primaryContainer}
-                    opacity={isDark ? 0.3 : 0.6}
+                    fill={deep}
+                    opacity={isDark ? 0.3 : 0.3}
                 />
                 <Path
                     d={`M0,${height * 0.7}
@@ -56,8 +57,8 @@ function WaveBackground({ isDark }: { isDark: boolean }) {
                         C${width * 0.1},${height * 0.74} ${width * 0.15},${height * 0.88} ${width * 0.4},${height * 0.85}
                         C${width * 0.5},${height * 0.84} ${width * 0.45},${height * 0.95} ${width * 0.55},${height}
                         L0,${height} Z`}
-                    fill={primaryContainer}
-                    opacity={isDark ? 0.25 : 0.45}
+                    fill={deep}
+                    opacity={isDark ? 0.25 : 0.25}
                 />
                 <Path
                     d={`M${width},${height * 0.55}
@@ -66,8 +67,8 @@ function WaveBackground({ isDark }: { isDark: boolean }) {
                         L${width * 0.65},${height * 0.46}
                         C${width * 0.78},${height * 0.44} ${width * 0.72},${height * 0.53} ${width * 0.85},${height * 0.52}
                         C${width * 0.92},${height * 0.515} ${width * 0.88},${height * 0.56} ${width},${height * 0.58} Z`}
-                    fill={primaryContainer}
-                    opacity={isDark ? 0.2 : 0.35}
+                    fill={gold}
+                    opacity={isDark ? 0.3 : 0.4}
                 />
             </Svg>
         </View>
@@ -302,9 +303,9 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             borderRadius: theme.shape.extraLarge,
             alignItems: "center",
             justifyContent: "center",
-            backgroundColor: theme.colors.surfaceContainerLow,
-            ...theme.elevation.level2,
-            shadowColor: theme.colors.shadow,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         logoImage: {
             width: 72,
@@ -312,13 +313,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         title: {
             fontSize: 30,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 1,
             color: theme.colors.onSurface,
         },
         subtitle: {
             fontSize: 14,
-            fontWeight: "400",
+            fontFamily: theme.fonts.regular,
             letterSpacing: 3,
             textTransform: "uppercase",
             marginTop: 10,
@@ -338,7 +339,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         footerText: {
             fontSize: 11,
             letterSpacing: 4,
-            fontWeight: "300",
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
         },
     });
