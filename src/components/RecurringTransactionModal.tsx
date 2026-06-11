@@ -220,8 +220,6 @@ export default function RecurringTransactionModal({
         onClose();
     };
 
-    const typeIsIncome = type === "income";
-
     return (
         <AppModal
             visible={visible}
@@ -252,7 +250,7 @@ export default function RecurringTransactionModal({
                             <Text
                                 style={[
                                     styles.chipText,
-                                    isActive && { color: activeColor, fontWeight: "700" },
+                                    isActive && { color: activeColor, fontFamily: theme.fonts.semibold },
                                 ]}
                             >
                                 {t.charAt(0).toUpperCase() + t.slice(1)}
@@ -543,27 +541,8 @@ export default function RecurringTransactionModal({
                 )}
             </View>
 
-            <TouchableOpacity
-                style={[
-                    styles.submitBtn,
-                    {
-                        backgroundColor: typeIsIncome
-                            ? theme.colors.incomeContainer
-                            : theme.colors.expenseContainer,
-                    },
-                ]}
-                onPress={handleSubmit}
-            >
-                <Text
-                    style={[
-                        styles.submitBtnText,
-                        {
-                            color: typeIsIncome
-                                ? theme.colors.onIncomeContainer
-                                : theme.colors.onExpenseContainer,
-                        },
-                    ]}
-                >
+            <TouchableOpacity style={styles.submitBtn} onPress={handleSubmit}>
+                <Text style={styles.submitBtnText}>
                     {editingItem ? "Update" : "Create"}
                 </Text>
             </TouchableOpacity>
@@ -574,15 +553,15 @@ export default function RecurringTransactionModal({
 const createStyles = (theme: any) =>
     StyleSheet.create({
         fieldLabel: {
-            fontSize: 12,
+            fontSize: 11,
             color: theme.colors.onSurfaceVariant,
             marginBottom: 8,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
-            letterSpacing: 0.5,
+            letterSpacing: 0.8,
         },
         fieldLabelOptional: {
-            fontWeight: "400",
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             textTransform: "none",
         },
@@ -593,7 +572,7 @@ const createStyles = (theme: any) =>
         chip: {
             paddingHorizontal: 14,
             paddingVertical: 8,
-            borderRadius: theme.shape.small,
+            borderRadius: theme.shape.full,
             backgroundColor: "transparent",
             marginRight: 8,
             borderWidth: 1,
@@ -605,35 +584,35 @@ const createStyles = (theme: any) =>
             alignItems: "center",
         },
         chipActive: {
-            backgroundColor: theme.colors.secondaryContainer,
-            borderColor: theme.colors.secondaryContainer,
+            backgroundColor: theme.colors.primary,
+            borderColor: theme.colors.primary,
         },
         chipText: {
             fontSize: 13,
             color: theme.colors.onSurfaceVariant,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
         },
         chipTextActive: {
-            color: theme.colors.onSecondaryContainer,
-            fontWeight: "600",
+            color: theme.colors.onPrimary,
+            fontFamily: theme.fonts.semibold,
         },
         amountInput: {
-            fontSize: 38,
-            fontWeight: "800",
+            fontSize: 34,
+            fontFamily: theme.fonts.light,
+            fontVariant: ["tabular-nums"],
             color: theme.colors.onSurface,
             borderBottomWidth: 2,
-            borderBottomColor: theme.colors.outline,
+            borderBottomColor: theme.colors.outlineVariant,
             paddingVertical: 8,
             marginBottom: 24,
         },
         textInput: {
             height: 52,
             borderRadius: theme.shape.medium,
-            borderWidth: 1,
-            borderColor: theme.colors.outline,
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             paddingHorizontal: 16,
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurface,
             marginBottom: 24,
         },
@@ -651,8 +630,8 @@ const createStyles = (theme: any) =>
             height: 52,
             borderRadius: theme.shape.medium,
             borderWidth: 1,
-            borderColor: theme.colors.outline,
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            borderColor: "transparent",
+            backgroundColor: theme.colors.surfaceContainerHigh,
             paddingHorizontal: 16,
         },
         datePickerBtnActive: {
@@ -661,11 +640,11 @@ const createStyles = (theme: any) =>
         datePickerText: {
             fontSize: 14,
             color: theme.colors.placeholder,
-            fontWeight: "400",
+            fontFamily: theme.fonts.regular,
         },
         datePickerTextSelected: {
             color: theme.colors.onSurface,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
         },
         submitBtn: {
             height: 56,
@@ -673,12 +652,12 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             justifyContent: "center",
             marginTop: 4,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            backgroundColor: theme.colors.primary,
         },
         submitBtnText: {
             fontSize: 15,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onPrimary,
             letterSpacing: 0.3,
         },
     });
