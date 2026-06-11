@@ -147,7 +147,7 @@ function PinDot({
         : theme.colors.primaryContainer;
     const ringBorderColor = error
         ? theme.colors.error
-        : theme.colors.outlineVariant;
+        : theme.colors.outline;
 
     return (
         <Animated.View
@@ -220,15 +220,19 @@ function NumKey({
                     {
                         transform: [{ scale: pressAnim }],
                         opacity: disabled ? 0.3 : 1,
-                        backgroundColor: theme.colors.surfaceContainerHigh,
-                        borderColor: theme.colors.outlineVariant,
+                        backgroundColor: theme.colors.surfaceContainerLow,
+                        ...theme.elevation.level1,
+                        shadowColor: theme.colors.shadow,
                     },
                 ]}
             >
                 <Text
                     style={[
                         keypadStyles.label,
-                        { color: theme.colors.onSurface },
+                        {
+                            color: theme.colors.onSurface,
+                            fontFamily: theme.fonts.regular,
+                        },
                     ]}
                 >
                     {label}
@@ -340,10 +344,10 @@ export default function LockScreen({
     const BiometricIcon = biometricType === "Face ID" ? ScanFace : Fingerprint;
     const deleteIconColor = isLockedOut || pin.length === 0
         ? theme.colors.outlineVariant
-        : theme.colors.onSurfaceVariant;
+        : theme.colors.onSurface;
     const biometricIconColor = isLockedOut
         ? theme.colors.outlineVariant
-        : theme.colors.onSurfaceVariant;
+        : theme.colors.onSurface;
 
     if (showRecovery) {
         return (
@@ -374,7 +378,7 @@ export default function LockScreen({
                             styles.logoContainer,
                             {
                                 backgroundColor: theme.colors.surfaceContainerLow,
-                                ...theme.elevation.level2,
+                                ...theme.elevation.level1,
                                 shadowColor: theme.colors.shadow,
                             },
                         ]}
@@ -388,7 +392,10 @@ export default function LockScreen({
                     <Text
                         style={[
                             styles.title,
-                            { color: theme.colors.onSurface },
+                            {
+                                color: theme.colors.onSurface,
+                                fontFamily: theme.fonts.semibold,
+                            },
                         ]}
                     >
                         {isLockedOut ? "Too Many Attempts" : "Enter PIN"}
@@ -400,7 +407,10 @@ export default function LockScreen({
                         <Text
                             style={[
                                 styles.lockoutText,
-                                { color: theme.colors.error },
+                                {
+                                    color: theme.colors.error,
+                                    fontFamily: theme.fonts.semibold,
+                                },
                             ]}
                         >
                             Try again in {lockoutRemaining}s
@@ -442,7 +452,10 @@ export default function LockScreen({
                             <Text
                                 style={[
                                     styles.attemptsText,
-                                    { color: theme.colors.error },
+                                    {
+                                        color: theme.colors.error,
+                                        fontFamily: theme.fonts.regular,
+                                    },
                                 ]}
                             >
                                 {MAX_ATTEMPTS - attempts} attempt
@@ -505,7 +518,10 @@ export default function LockScreen({
                     <Text
                         style={[
                             styles.forgotText,
-                            { color: theme.colors.primary },
+                            {
+                                color: theme.colors.primary,
+                                fontFamily: theme.fonts.semibold,
+                            },
                         ]}
                     >
                         Forgot PIN?
@@ -667,14 +683,15 @@ function PinRecoveryScreen({
                     style={[
                         styles.backButton,
                         {
-                            backgroundColor: theme.colors.surfaceContainerHigh,
-                            borderColor: theme.colors.outlineVariant,
+                            backgroundColor: theme.colors.surfaceContainerLow,
+                            ...theme.elevation.level1,
+                            shadowColor: theme.colors.shadow,
                         },
                     ]}
                     onPress={onBack}
                     hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
                 >
-                    <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
+                    <ArrowLeft size={22} color={theme.colors.onSurface} />
                 </TouchableOpacity>
                 <KeyboardAvoidingView
                     style={{ flex: 1 }}
@@ -697,7 +714,10 @@ function PinRecoveryScreen({
                         <Text
                             style={[
                                 recoveryStyles.title,
-                                { color: theme.colors.onSurface },
+                                {
+                                    color: theme.colors.onSurface,
+                                    fontFamily: theme.fonts.semibold,
+                                },
                             ]}
                         >
                             Recover Your PIN
@@ -705,7 +725,10 @@ function PinRecoveryScreen({
                         <Text
                             style={[
                                 recoveryStyles.subtitle,
-                                { color: theme.colors.onSurfaceVariant },
+                                {
+                                    color: theme.colors.onSurfaceVariant,
+                                    fontFamily: theme.fonts.regular,
+                                },
                             ]}
                         >
                             Answer your security questions to reset your PIN
@@ -715,7 +738,10 @@ function PinRecoveryScreen({
                             <Text
                                 style={[
                                     recoveryStyles.label,
-                                    { color: theme.colors.onSurfaceVariant },
+                                    {
+                                        color: theme.colors.onSurfaceVariant,
+                                        fontFamily: theme.fonts.semibold,
+                                    },
                                 ]}
                             >
                                 {questions.q1}
@@ -724,9 +750,9 @@ function PinRecoveryScreen({
                                 style={[
                                     recoveryStyles.input,
                                     {
-                                        backgroundColor: theme.colors.surfaceContainerHighest,
-                                        borderColor: theme.colors.outline,
+                                        backgroundColor: theme.colors.surfaceContainerHigh,
                                         color: theme.colors.onSurface,
+                                        fontFamily: theme.fonts.regular,
                                     },
                                 ]}
                                 placeholder="Your answer"
@@ -757,7 +783,10 @@ function PinRecoveryScreen({
                             <Text
                                 style={[
                                     recoveryStyles.label,
-                                    { color: theme.colors.onSurfaceVariant },
+                                    {
+                                        color: theme.colors.onSurfaceVariant,
+                                        fontFamily: theme.fonts.semibold,
+                                    },
                                 ]}
                             >
                                 {questions.q2}
@@ -766,9 +795,9 @@ function PinRecoveryScreen({
                                 style={[
                                     recoveryStyles.input,
                                     {
-                                        backgroundColor: theme.colors.surfaceContainerHighest,
-                                        borderColor: theme.colors.outline,
+                                        backgroundColor: theme.colors.surfaceContainerHigh,
                                         color: theme.colors.onSurface,
+                                        fontFamily: theme.fonts.regular,
                                     },
                                 ]}
                                 placeholder="Your answer"
@@ -796,7 +825,15 @@ function PinRecoveryScreen({
                         </View>
 
                         {errorMsg ? (
-                            <Text style={[recoveryStyles.error, { color: theme.colors.error }]}>
+                            <Text
+                                style={[
+                                    recoveryStyles.error,
+                                    {
+                                        color: theme.colors.error,
+                                        fontFamily: theme.fonts.semibold,
+                                    },
+                                ]}
+                            >
                                 {errorMsg}
                             </Text>
                         ) : null}
@@ -818,6 +855,7 @@ function PinRecoveryScreen({
                                 style={[
                                     recoveryStyles.submitBtnText,
                                     {
+                                        fontFamily: theme.fonts.semibold,
                                         color:
                                             !canSubmit || verifying
                                                 ? theme.colors.onSurfaceVariant
@@ -843,7 +881,7 @@ function PinRecoveryScreen({
     const pinKeys = ["1", "2", "3", "4", "5", "6", "7", "8", "9"];
     const deleteIconColor = currentPin.length === 0
         ? theme.colors.outlineVariant
-        : theme.colors.onSurfaceVariant;
+        : theme.colors.onSurface;
 
     return (
         <View
@@ -862,8 +900,9 @@ function PinRecoveryScreen({
                 style={[
                     styles.backButton,
                     {
-                        backgroundColor: theme.colors.surfaceContainerHigh,
-                        borderColor: theme.colors.outlineVariant,
+                        backgroundColor: theme.colors.surfaceContainerLow,
+                        ...theme.elevation.level1,
+                        shadowColor: theme.colors.shadow,
                     },
                 ]}
                 onPress={() => {
@@ -879,17 +918,28 @@ function PinRecoveryScreen({
                 }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
+                <ArrowLeft size={22} color={theme.colors.onSurface} />
             </TouchableOpacity>
 
             <View style={styles.content}>
-                <Text style={[styles.title, { color: theme.colors.onSurface }]}>
+                <Text
+                    style={[
+                        styles.title,
+                        {
+                            color: theme.colors.onSurface,
+                            fontFamily: theme.fonts.semibold,
+                        },
+                    ]}
+                >
                     {pinTitle}
                 </Text>
                 <Text
                     style={[
                         recoveryStyles.pinSubtitle,
-                        { color: theme.colors.onSurfaceVariant },
+                        {
+                            color: theme.colors.onSurfaceVariant,
+                            fontFamily: theme.fonts.regular,
+                        },
                     ]}
                 >
                     {pinSub}
@@ -909,7 +959,7 @@ function PinRecoveryScreen({
                                 {
                                     borderColor: pinError
                                         ? theme.colors.error
-                                        : theme.colors.outlineVariant,
+                                        : theme.colors.outline,
                                 },
                                 i < currentPin.length && {
                                     backgroundColor: pinError
@@ -928,7 +978,10 @@ function PinRecoveryScreen({
                     <Text
                         style={[
                             recoveryStyles.pinErrorText,
-                            { color: theme.colors.error },
+                            {
+                                color: theme.colors.error,
+                                fontFamily: theme.fonts.semibold,
+                            },
                         ]}
                     >
                         {pinError}
@@ -1020,12 +1073,10 @@ const keypadStyles = StyleSheet.create({
         borderRadius: KEY_SIZE / 2,
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: 1,
     },
     label: {
-        fontSize: 26,
-        fontWeight: "300",
-        letterSpacing: 0.5,
+        fontSize: 24,
+        fontVariant: ["tabular-nums"],
     },
     actionKey: {
         width: "100%",
@@ -1063,8 +1114,6 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 20,
-        fontWeight: "600",
-        letterSpacing: 1,
     },
     dotsRow: {
         flexDirection: "row",
@@ -1074,7 +1123,6 @@ const styles = StyleSheet.create({
     attemptsText: {
         fontSize: 12,
         marginTop: 4,
-        letterSpacing: 0.5,
     },
     lockoutContainer: {
         alignItems: "center",
@@ -1082,9 +1130,7 @@ const styles = StyleSheet.create({
     },
     lockoutText: {
         fontSize: 14,
-        fontWeight: "600",
         marginBottom: 12,
-        letterSpacing: 0.5,
     },
     lockoutBar: {
         width: 160,
@@ -1103,8 +1149,6 @@ const styles = StyleSheet.create({
     },
     forgotText: {
         fontSize: 13,
-        fontWeight: "600",
-        letterSpacing: 0.3,
     },
     backButton: {
         position: "absolute",
@@ -1113,8 +1157,7 @@ const styles = StyleSheet.create({
         zIndex: 10,
         width: 40,
         height: 40,
-        borderRadius: 14,
-        borderWidth: 1,
+        borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -1137,13 +1180,10 @@ const recoveryStyles = StyleSheet.create({
     },
     title: {
         fontSize: 20,
-        fontWeight: "600",
-        letterSpacing: 1,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 13,
-        letterSpacing: 0.5,
         marginBottom: 36,
         textAlign: "center",
     },
@@ -1153,19 +1193,16 @@ const recoveryStyles = StyleSheet.create({
     },
     label: {
         fontSize: 13,
-        fontWeight: "600",
         marginBottom: 8,
     },
     input: {
         borderRadius: 12,
-        borderWidth: 1,
         paddingHorizontal: 16,
         height: 52,
         fontSize: 14,
     },
     error: {
         fontSize: 13,
-        fontWeight: "600",
         marginBottom: 16,
         textAlign: "center",
     },
@@ -1179,12 +1216,9 @@ const recoveryStyles = StyleSheet.create({
     },
     submitBtnText: {
         fontSize: 15,
-        fontWeight: "700",
-        letterSpacing: 0.3,
     },
     pinSubtitle: {
         fontSize: 13,
-        letterSpacing: 0.5,
         marginBottom: 28,
     },
     dot: {
@@ -1195,7 +1229,6 @@ const recoveryStyles = StyleSheet.create({
     },
     pinErrorText: {
         fontSize: 12,
-        letterSpacing: 0.5,
         marginTop: 4,
         height: 22,
     },

@@ -136,7 +136,7 @@ function PinDot({
         : theme.colors.primaryContainer;
     const ringBorderColor = error
         ? theme.colors.error
-        : theme.colors.outlineVariant;
+        : theme.colors.outline;
 
     return (
         <Animated.View
@@ -209,15 +209,19 @@ function NumKey({
                     {
                         transform: [{ scale: pressAnim }],
                         opacity: disabled ? 0.3 : 1,
-                        backgroundColor: theme.colors.surfaceContainerHigh,
-                        borderColor: theme.colors.outlineVariant,
+                        backgroundColor: theme.colors.surfaceContainerLow,
+                        ...theme.elevation.level1,
+                        shadowColor: theme.colors.shadow,
                     },
                 ]}
             >
                 <Text
                     style={[
                         keypadStyles.label,
-                        { color: theme.colors.onSurface },
+                        {
+                            color: theme.colors.onSurface,
+                            fontFamily: theme.fonts.regular,
+                        },
                     ]}
                 >
                     {label}
@@ -280,14 +284,15 @@ function SecurityQuestionsStep({
                 style={[
                     styles.backButton,
                     {
-                        backgroundColor: theme.colors.surfaceContainerHigh,
-                        borderColor: theme.colors.outlineVariant,
+                        backgroundColor: theme.colors.surfaceContainerLow,
+                        ...theme.elevation.level1,
+                        shadowColor: theme.colors.shadow,
                     },
                 ]}
                 onPress={onQuestionsBack}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
+                <ArrowLeft size={22} color={theme.colors.onSurface} />
             </TouchableOpacity>
 
             <KeyboardAvoidingView
@@ -311,7 +316,10 @@ function SecurityQuestionsStep({
                     <Text
                         style={[
                             sqStyles.title,
-                            { color: theme.colors.onSurface },
+                            {
+                                color: theme.colors.onSurface,
+                                fontFamily: theme.fonts.semibold,
+                            },
                         ]}
                     >
                         Security Questions
@@ -319,7 +327,10 @@ function SecurityQuestionsStep({
                     <Text
                         style={[
                             sqStyles.subtitle,
-                            { color: theme.colors.onSurfaceVariant },
+                            {
+                                color: theme.colors.onSurfaceVariant,
+                                fontFamily: theme.fonts.regular,
+                            },
                         ]}
                     >
                         These will help you recover your PIN if you forget it
@@ -329,7 +340,10 @@ function SecurityQuestionsStep({
                         <Text
                             style={[
                                 sqStyles.label,
-                                { color: theme.colors.onSurfaceVariant },
+                                {
+                                    color: theme.colors.onSurfaceVariant,
+                                    fontFamily: theme.fonts.semibold,
+                                },
                             ]}
                         >
                             Question 1
@@ -337,10 +351,7 @@ function SecurityQuestionsStep({
                         <TouchableOpacity
                             style={[
                                 sqStyles.picker,
-                                {
-                                    backgroundColor: theme.colors.surfaceContainerHighest,
-                                    borderColor: theme.colors.outline,
-                                },
+                                { backgroundColor: theme.colors.surfaceContainerHigh },
                             ]}
                             onPress={() => {
                                 setShowQ1Picker(!showQ1Picker);
@@ -350,7 +361,10 @@ function SecurityQuestionsStep({
                             <Text
                                 style={[
                                     sqStyles.pickerText,
-                                    { color: theme.colors.onSurface },
+                                    {
+                                        color: theme.colors.onSurface,
+                                        fontFamily: theme.fonts.regular,
+                                    },
                                     !q1 && { color: theme.colors.onSurfaceVariant },
                                 ]}
                             >
@@ -363,8 +377,8 @@ function SecurityQuestionsStep({
                                 style={[
                                     sqStyles.dropdown,
                                     {
-                                        backgroundColor: theme.colors.surfaceContainerLow,
-                                        borderColor: theme.colors.outlineVariant,
+                                        backgroundColor: theme.colors.card,
+                                        borderColor: theme.colors.border,
                                     },
                                 ]}
                             >
@@ -387,10 +401,13 @@ function SecurityQuestionsStep({
                                         <Text
                                             style={[
                                                 sqStyles.dropdownText,
-                                                { color: theme.colors.onSurfaceVariant },
+                                                {
+                                                    color: theme.colors.onSurfaceVariant,
+                                                    fontFamily: theme.fonts.regular,
+                                                },
                                                 q === q1 && {
                                                     color: theme.colors.onPrimaryContainer,
-                                                    fontWeight: "600",
+                                                    fontFamily: theme.fonts.semibold,
                                                 },
                                             ]}
                                         >
@@ -407,9 +424,9 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.input,
                                 {
-                                    backgroundColor: theme.colors.surfaceContainerHighest,
-                                    borderColor: theme.colors.outline,
+                                    backgroundColor: theme.colors.surfaceContainerHigh,
                                     color: theme.colors.onSurface,
+                                    fontFamily: theme.fonts.regular,
                                 },
                             ]}
                             placeholder="Your answer"
@@ -436,7 +453,10 @@ function SecurityQuestionsStep({
                         <Text
                             style={[
                                 sqStyles.label,
-                                { color: theme.colors.onSurfaceVariant },
+                                {
+                                    color: theme.colors.onSurfaceVariant,
+                                    fontFamily: theme.fonts.semibold,
+                                },
                             ]}
                         >
                             Question 2
@@ -444,10 +464,7 @@ function SecurityQuestionsStep({
                         <TouchableOpacity
                             style={[
                                 sqStyles.picker,
-                                {
-                                    backgroundColor: theme.colors.surfaceContainerHighest,
-                                    borderColor: theme.colors.outline,
-                                },
+                                { backgroundColor: theme.colors.surfaceContainerHigh },
                             ]}
                             onPress={() => {
                                 setShowQ2Picker(!showQ2Picker);
@@ -457,7 +474,10 @@ function SecurityQuestionsStep({
                             <Text
                                 style={[
                                     sqStyles.pickerText,
-                                    { color: theme.colors.onSurface },
+                                    {
+                                        color: theme.colors.onSurface,
+                                        fontFamily: theme.fonts.regular,
+                                    },
                                     !q2 && { color: theme.colors.onSurfaceVariant },
                                 ]}
                             >
@@ -470,8 +490,8 @@ function SecurityQuestionsStep({
                                 style={[
                                     sqStyles.dropdown,
                                     {
-                                        backgroundColor: theme.colors.surfaceContainerLow,
-                                        borderColor: theme.colors.outlineVariant,
+                                        backgroundColor: theme.colors.card,
+                                        borderColor: theme.colors.border,
                                     },
                                 ]}
                             >
@@ -493,10 +513,13 @@ function SecurityQuestionsStep({
                                         <Text
                                             style={[
                                                 sqStyles.dropdownText,
-                                                { color: theme.colors.onSurfaceVariant },
+                                                {
+                                                    color: theme.colors.onSurfaceVariant,
+                                                    fontFamily: theme.fonts.regular,
+                                                },
                                                 q === q2 && {
                                                     color: theme.colors.onPrimaryContainer,
-                                                    fontWeight: "600",
+                                                    fontFamily: theme.fonts.semibold,
                                                 },
                                             ]}
                                         >
@@ -513,9 +536,9 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.input,
                                 {
-                                    backgroundColor: theme.colors.surfaceContainerHighest,
-                                    borderColor: theme.colors.outline,
+                                    backgroundColor: theme.colors.surfaceContainerHigh,
                                     color: theme.colors.onSurface,
+                                    fontFamily: theme.fonts.regular,
                                 },
                             ]}
                             placeholder="Your answer"
@@ -554,6 +577,7 @@ function SecurityQuestionsStep({
                             style={[
                                 sqStyles.continueBtnText,
                                 {
+                                    fontFamily: theme.fonts.semibold,
                                     color: canContinue
                                         ? theme.colors.onPrimary
                                         : theme.colors.onSurfaceVariant,
@@ -602,7 +626,7 @@ export default function PinSetupScreen({
 
     const deleteIconColor = saving || pin.length === 0
         ? theme.colors.outlineVariant
-        : theme.colors.onSurfaceVariant;
+        : theme.colors.onSurface;
 
     useEffect(() => {
         Animated.timing(fadeIn, {
@@ -740,8 +764,9 @@ export default function PinSetupScreen({
                 style={[
                     styles.backButton,
                     {
-                        backgroundColor: theme.colors.surfaceContainerHigh,
-                        borderColor: theme.colors.outlineVariant,
+                        backgroundColor: theme.colors.surfaceContainerLow,
+                        ...theme.elevation.level1,
+                        shadowColor: theme.colors.shadow,
                     },
                 ]}
                 onPress={() => {
@@ -754,7 +779,7 @@ export default function PinSetupScreen({
                 }}
                 hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
             >
-                <ArrowLeft size={22} color={theme.colors.onSurfaceVariant} />
+                <ArrowLeft size={22} color={theme.colors.onSurface} />
             </TouchableOpacity>
 
             <Animated.View style={[styles.content, { opacity: fadeIn }]}>
@@ -764,7 +789,10 @@ export default function PinSetupScreen({
                     <Text
                         style={[
                             styles.title,
-                            { color: theme.colors.onSurface },
+                            {
+                                color: theme.colors.onSurface,
+                                fontFamily: theme.fonts.semibold,
+                            },
                         ]}
                     >
                         {title}
@@ -772,7 +800,10 @@ export default function PinSetupScreen({
                     <Text
                         style={[
                             styles.subtitle,
-                            { color: theme.colors.onSurfaceVariant },
+                            {
+                                color: theme.colors.onSurfaceVariant,
+                                fontFamily: theme.fonts.regular,
+                            },
                         ]}
                     >
                         {subtitle}
@@ -795,7 +826,10 @@ export default function PinSetupScreen({
                         <Text
                             style={[
                                 styles.errorText,
-                                { color: theme.colors.error },
+                                {
+                                    color: theme.colors.error,
+                                    fontFamily: theme.fonts.semibold,
+                                },
                             ]}
                         >
                             {errorMessage}
@@ -888,12 +922,10 @@ const keypadStyles = StyleSheet.create({
         borderRadius: KEY_SIZE / 2,
         alignItems: "center",
         justifyContent: "center",
-        borderWidth: 1,
     },
     label: {
-        fontSize: 26,
-        fontWeight: "300",
-        letterSpacing: 0.5,
+        fontSize: 24,
+        fontVariant: ["tabular-nums"],
     },
     actionKey: {
         width: "100%",
@@ -914,8 +946,7 @@ const styles = StyleSheet.create({
         zIndex: 10,
         width: 40,
         height: 40,
-        borderRadius: 14,
-        borderWidth: 1,
+        borderRadius: 12,
         alignItems: "center",
         justifyContent: "center",
     },
@@ -927,14 +958,10 @@ const styles = StyleSheet.create({
     },
     title: {
         fontSize: 20,
-        fontWeight: "600",
-        letterSpacing: 1,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 13,
-        fontWeight: "400",
-        letterSpacing: 0.5,
         marginBottom: 32,
     },
     dotsRow: {
@@ -944,7 +971,6 @@ const styles = StyleSheet.create({
     },
     errorText: {
         fontSize: 12,
-        letterSpacing: 0.5,
         marginTop: 4,
         height: 18,
     },
@@ -970,13 +996,10 @@ const sqStyles = StyleSheet.create({
     },
     title: {
         fontSize: 20,
-        fontWeight: "600",
-        letterSpacing: 1,
         marginBottom: 8,
     },
     subtitle: {
         fontSize: 13,
-        letterSpacing: 0.5,
         marginBottom: 36,
         textAlign: "center",
     },
@@ -986,7 +1009,6 @@ const sqStyles = StyleSheet.create({
     },
     label: {
         fontSize: 12,
-        fontWeight: "700",
         textTransform: "uppercase",
         letterSpacing: 0.8,
         marginBottom: 8,
@@ -996,7 +1018,6 @@ const sqStyles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "space-between",
         borderRadius: 12,
-        borderWidth: 1,
         paddingHorizontal: 16,
         height: 52,
         marginBottom: 10,
@@ -1007,7 +1028,7 @@ const sqStyles = StyleSheet.create({
     },
     dropdown: {
         borderRadius: 12,
-        borderWidth: 1,
+        borderWidth: StyleSheet.hairlineWidth,
         marginBottom: 10,
         overflow: "hidden",
     },
@@ -1024,7 +1045,6 @@ const sqStyles = StyleSheet.create({
     },
     input: {
         borderRadius: 12,
-        borderWidth: 1,
         paddingHorizontal: 16,
         height: 52,
         fontSize: 14,
@@ -1039,7 +1059,5 @@ const sqStyles = StyleSheet.create({
     },
     continueBtnText: {
         fontSize: 15,
-        fontWeight: "700",
-        letterSpacing: 0.3,
     },
 });
