@@ -50,6 +50,7 @@ import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nat
 const Tab = createBottomTabNavigator();
 
 export default function App() {
+    const scheme = useColorScheme();
     const [fontsLoaded] = useFonts({
         Manrope_300Light,
         Manrope_400Regular,
@@ -58,7 +59,11 @@ export default function App() {
     });
 
     if (!fontsLoaded) {
-        return <View style={{ flex: 1, backgroundColor: "#F7F4EF" }} />;
+        return (
+            <View
+                style={{ flex: 1, backgroundColor: scheme === "dark" ? "#15130F" : "#F7F4EF" }}
+            />
+        );
     }
 
     return (

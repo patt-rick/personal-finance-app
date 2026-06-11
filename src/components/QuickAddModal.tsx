@@ -57,6 +57,25 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate }
 
     if (!visible) return null;
 
+    if (businesses.length === 0) {
+        return (
+            <AppModal visible onClose={onClose} title="No cashbooks yet">
+                <Text
+                    style={{
+                        fontFamily: theme.fonts.regular,
+                        fontSize: 14,
+                        lineHeight: 21,
+                        color: theme.colors.onSurfaceVariant,
+                        paddingBottom: 12,
+                    }}
+                >
+                    Create a cashbook in the Books tab first, then you can add transactions from
+                    anywhere.
+                </Text>
+            </AppModal>
+        );
+    }
+
     if (!selected) {
         return (
             <AppModal visible onClose={onClose} title="Add to which cashbook?">
