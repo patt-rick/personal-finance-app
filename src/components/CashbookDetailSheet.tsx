@@ -232,7 +232,7 @@ function SheetHeader({
                     <TextInput
                         style={[
                             s.renameInput,
-                            { color: theme.colors.onSurface, borderColor: theme.colors.primary, backgroundColor: theme.colors.surfaceContainerHighest },
+                            { color: theme.colors.onSurface, backgroundColor: theme.colors.surfaceContainerHigh },
                         ]}
                         value={renameValue}
                         onChangeText={setRenameValue}
@@ -244,7 +244,7 @@ function SheetHeader({
                         onPress={handleSaveEdits}
                         style={[s.renameSave, { backgroundColor: theme.colors.primary }]}
                     >
-                        <Text style={{ color: theme.colors.onPrimary, fontWeight: "700", fontSize: 13 }}>Save</Text>
+                        <Text style={{ color: theme.colors.onPrimary, fontFamily: theme.fonts.semibold, fontSize: 13 }}>Save</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => setIsRenaming(false)} style={s.renameCancel}>
                         <X size={18} color={theme.colors.onSurfaceVariant} />
@@ -321,7 +321,7 @@ function SheetHeader({
 function BalanceCard({ sheetData, theme, s }: any) {
     return (
         <LinearGradient
-            colors={[theme.colors.gradientStart, theme.colors.gradientMid, theme.colors.gradientEnd]}
+            colors={[theme.colors.gradientStart, theme.colors.gradientEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={s.balanceCard}
@@ -344,7 +344,7 @@ function BalanceCard({ sheetData, theme, s }: any) {
                     </Text>
                 </View>
                 <View style={[s.balanceMini, { marginLeft: 16 }]}>
-                    <TrendingDown size={12} color={theme.colors.error} />
+                    <TrendingDown size={12} color="rgba(255,255,255,0.85)" />
                     <Text style={s.balanceMiniText}>
                         {sheetData.symbol}
                         {sheetData.expense.toLocaleString()}
@@ -399,7 +399,7 @@ function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: an
                         <Text style={[s.legendLbl, { color: theme.colors.onSurfaceVariant }]}>In</Text>
                     </View>
                     <View style={s.legendItem}>
-                        <View style={[s.legendDot, { backgroundColor: theme.colors.expense }]} />
+                        <View style={[s.legendDot, { backgroundColor: theme.colors.chart[3] }]} />
                         <Text style={[s.legendLbl, { color: theme.colors.onSurfaceVariant }]}>
                             Out
                         </Text>
@@ -413,7 +413,7 @@ function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: an
                     expenseData={expenseData}
                     currencySymbol={symbol}
                     incomeColor={theme.colors.income}
-                    expenseColor={theme.colors.expense}
+                    expenseColor={theme.colors.chart[3]}
                 />
             </View>
         </View>
@@ -447,25 +447,24 @@ const createStyles = (theme: any) =>
             justifyContent: "space-between",
             marginBottom: 16,
         },
-        title: { fontSize: 20, fontWeight: "700", letterSpacing: -0.3 },
-        subtitle: { fontSize: 12, marginTop: 2, fontWeight: "500" },
+        title: { fontSize: 20, fontFamily: theme.fonts.semibold, letterSpacing: -0.3 },
+        subtitle: { fontSize: 12, marginTop: 2, fontFamily: theme.fonts.regular },
         currencyBadge: {
             paddingHorizontal: 10,
             paddingVertical: 5,
             borderRadius: theme.shape.small,
         },
-        currencyBadgeText: { fontSize: 12, fontWeight: "700" },
+        currencyBadgeText: { fontSize: 12, fontFamily: theme.fonts.semibold },
 
         editContainer: { marginBottom: 16 },
         renameRow: { flexDirection: "row", alignItems: "center", gap: 8 },
         renameInput: {
             flex: 1,
             height: 48,
-            borderWidth: 1,
             borderRadius: theme.shape.medium,
             paddingHorizontal: 12,
             fontSize: 15,
-            fontWeight: "600",
+            fontFamily: theme.fonts.regular,
         },
         renameSave: {
             height: 48,
@@ -477,7 +476,7 @@ const createStyles = (theme: any) =>
         renameCancel: { padding: 8 },
         editFieldLabel: {
             fontSize: 11,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginTop: 14,
@@ -493,8 +492,8 @@ const createStyles = (theme: any) =>
             borderWidth: 1,
             borderColor: "transparent",
         },
-        currSym: { fontSize: 18, fontWeight: "700" },
-        currCode: { fontSize: 10, fontWeight: "600", marginTop: 2 },
+        currSym: { fontSize: 18, fontFamily: theme.fonts.semibold },
+        currCode: { fontSize: 10, fontFamily: theme.fonts.semibold, marginTop: 2 },
 
         balanceCard: {
             borderRadius: theme.shape.large,
@@ -504,20 +503,26 @@ const createStyles = (theme: any) =>
         },
         balanceLabel: {
             fontSize: 11,
-            color: "rgba(255,255,255,0.7)",
-            fontWeight: "600",
+            color: "rgba(255,255,255,0.85)",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.5,
         },
         balanceValue: {
             fontSize: 28,
-            fontWeight: "800",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
             color: "#FFFFFF",
             letterSpacing: -0.5,
             marginTop: 2,
         },
         balanceRow: { flexDirection: "row", marginTop: 10 },
         balanceMini: { flexDirection: "row", alignItems: "center", gap: 4 },
-        balanceMiniText: { fontSize: 12, color: "rgba(255,255,255,0.7)", fontWeight: "600" },
+        balanceMiniText: {
+            fontSize: 12,
+            color: "rgba(255,255,255,0.7)",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
+        },
 
         statsGrid: { flexDirection: "row", gap: 10, marginBottom: 14 },
         statBox: {
@@ -527,8 +532,12 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             gap: 4,
         },
-        statNum: { fontSize: 15, fontWeight: "700" },
-        statLbl: { fontSize: 10, fontWeight: "500" },
+        statNum: {
+            fontSize: 15,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
+        },
+        statLbl: { fontSize: 10, fontFamily: theme.fonts.regular },
 
         chartSection: { marginBottom: 14 },
         chartHeaderRow: {
@@ -537,11 +546,11 @@ const createStyles = (theme: any) =>
             alignItems: "center",
             marginBottom: 8,
         },
-        chartSectionTitle: { fontSize: 14, fontWeight: "700" },
+        chartSectionTitle: { fontSize: 14, fontFamily: theme.fonts.semibold },
         chartLegend: { flexDirection: "row", gap: 10 },
         legendItem: { flexDirection: "row", alignItems: "center", gap: 3 },
         legendDot: { width: 6, height: 6, borderRadius: 3 },
-        legendLbl: { fontSize: 9, fontWeight: "500" },
+        legendLbl: { fontSize: 9, fontFamily: theme.fonts.regular },
         chartBox: {
             borderRadius: theme.shape.medium,
             padding: 12,
@@ -556,8 +565,13 @@ const createStyles = (theme: any) =>
             padding: 10,
             alignItems: "center",
         },
-        topCatName: { fontSize: 12, fontWeight: "600" },
-        topCatAmt: { fontSize: 10, marginTop: 2 },
+        topCatName: { fontSize: 12, fontFamily: theme.fonts.semibold },
+        topCatAmt: {
+            fontSize: 10,
+            marginTop: 2,
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
+        },
 
         actions: { flexDirection: "row", gap: 10, marginTop: 4 },
         actionMain: {
@@ -568,10 +582,8 @@ const createStyles = (theme: any) =>
             gap: 8,
             height: 52,
             borderRadius: theme.shape.full,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
-        actionMainText: { color: theme.colors.onPrimary, fontSize: 14, fontWeight: "700" },
+        actionMainText: { color: theme.colors.onPrimary, fontSize: 14, fontFamily: theme.fonts.semibold },
         actionIcon: {
             width: 52,
             height: 52,
