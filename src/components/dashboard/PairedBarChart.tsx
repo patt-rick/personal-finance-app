@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, StyleSheet, Dimensions } from "react-native";
 import Svg, { Rect, Line, G } from "react-native-svg";
 import { useTheme } from "../../theme/theme";
@@ -28,6 +28,7 @@ export default function PairedBarChart({
     currencySymbol,
 }: PairedBarChartProps) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const [tooltip, setTooltip] = useState<{ index: number; type: "primary" | "secondary" } | null>(null);
 
     const allValues = [...primaryData, ...secondaryData];
@@ -157,46 +158,48 @@ export default function PairedBarChart({
     );
 }
 
-const styles = StyleSheet.create({
-    wrapper: {
-        alignItems: "center",
-        position: "relative",
-        paddingTop: 32,
-        paddingHorizontal: H_PADDING,
-    },
-    tooltip: {
-        position: "absolute",
-        paddingHorizontal: 10,
-        paddingVertical: 5,
-        borderRadius: 8,
-        zIndex: 10,
-        alignItems: "center",
-    },
-    tooltipText: {
-        fontSize: 12,
-        fontWeight: "700",
-    },
-    tooltipArrow: {
-        position: "absolute",
-        bottom: -5,
-        width: 0,
-        height: 0,
-        borderLeftWidth: 5,
-        borderRightWidth: 5,
-        borderTopWidth: 5,
-        borderLeftColor: "transparent",
-        borderRightColor: "transparent",
-    },
-    labelsRow: {
-        position: "relative",
-        height: 20,
-        marginTop: 6,
-    },
-    dayLabel: {
-        position: "absolute",
-        fontSize: 9,
-        fontWeight: "500",
-        width: 36,
-        textAlign: "center",
-    },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        wrapper: {
+            alignItems: "center",
+            position: "relative",
+            paddingTop: 32,
+            paddingHorizontal: H_PADDING,
+        },
+        tooltip: {
+            position: "absolute",
+            paddingHorizontal: 10,
+            paddingVertical: 5,
+            borderRadius: 8,
+            zIndex: 10,
+            alignItems: "center",
+        },
+        tooltipText: {
+            fontSize: 12,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
+        },
+        tooltipArrow: {
+            position: "absolute",
+            bottom: -5,
+            width: 0,
+            height: 0,
+            borderLeftWidth: 5,
+            borderRightWidth: 5,
+            borderTopWidth: 5,
+            borderLeftColor: "transparent",
+            borderRightColor: "transparent",
+        },
+        labelsRow: {
+            position: "relative",
+            height: 20,
+            marginTop: 6,
+        },
+        dayLabel: {
+            position: "absolute",
+            fontSize: 9,
+            fontFamily: theme.fonts.regular,
+            width: 36,
+            textAlign: "center",
+        },
+    });

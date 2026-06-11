@@ -161,6 +161,7 @@ export default function DebtEntryModal({
                     <Text
                         style={[
                             styles.typeBtnText,
+                            isOwedToMe ? styles.typeBtnTextActive : null,
                             { color: isOwedToMe ? theme.colors.onIncomeContainer : theme.colors.onSurfaceVariant },
                         ]}
                     >
@@ -179,7 +180,8 @@ export default function DebtEntryModal({
                     <Text
                         style={[
                             styles.typeBtnText,
-                            { color: !isOwedToMe ? theme.colors.onExpenseContainer : theme.colors.onSurfaceVariant },
+                            !isOwedToMe ? styles.typeBtnTextActive : null,
+                            { color: !isOwedToMe ? theme.colors.onGoldContainer : theme.colors.onSurfaceVariant },
                         ]}
                     >
                         I Owe
@@ -227,15 +229,7 @@ export default function DebtEntryModal({
             <View style={styles.dateFieldWrap}>
                 <View style={styles.dateRow}>
                     <TouchableOpacity
-                        style={[
-                            styles.dateBtn,
-                            {
-                                borderColor: showDatePicker
-                                    ? theme.colors.primary
-                                    : theme.colors.outline,
-                                backgroundColor: theme.colors.surfaceContainerHighest,
-                            },
-                        ]}
+                        style={styles.dateBtn}
                         onPress={() => setShowDatePicker(!showDatePicker)}
                     >
                         <Calendar
@@ -274,7 +268,7 @@ export default function DebtEntryModal({
             </View>
 
             <TouchableOpacity
-                style={dashStyles.submitBtnModern}
+                style={[dashStyles.submitBtnModern, { backgroundColor: theme.colors.primary }]}
                 onPress={handleSubmit}
             >
                 <Text style={dashStyles.submitBtnTextModern}>Save Debt</Text>
@@ -293,9 +287,9 @@ const createStyles = (theme: any) =>
         typeBtn: {
             flex: 1,
             paddingVertical: 12,
-            borderRadius: theme.shape.small,
+            borderRadius: theme.shape.full,
             alignItems: "center",
-            borderWidth: 1.5,
+            borderWidth: 1,
         },
         typeBtnInactive: {
             backgroundColor: "transparent",
@@ -306,12 +300,15 @@ const createStyles = (theme: any) =>
             borderColor: theme.colors.incomeContainer,
         },
         typeBtnActiveExpense: {
-            backgroundColor: theme.colors.expenseContainer,
-            borderColor: theme.colors.expenseContainer,
+            backgroundColor: theme.colors.goldContainer,
+            borderColor: theme.colors.goldContainer,
         },
         typeBtnText: {
             fontSize: 13,
-            fontWeight: "600",
+            fontFamily: theme.fonts.regular,
+        },
+        typeBtnTextActive: {
+            fontFamily: theme.fonts.semibold,
         },
         dateFieldWrap: {
             marginBottom: 24,
@@ -328,11 +325,11 @@ const createStyles = (theme: any) =>
             gap: 10,
             height: 52,
             borderRadius: theme.shape.medium,
-            borderWidth: 1,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             paddingHorizontal: 16,
         },
         dateBtnText: {
             fontSize: 14,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
         },
     });

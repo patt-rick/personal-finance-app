@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Circle } from "react-native-svg";
 import { useTheme } from "../../theme/theme";
@@ -33,6 +33,7 @@ export default function DonutChart({
     midTotal,
 }: DonutChartProps) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
 
     const gapPerSegment = data.length > 1 ? GAP_DEGREES / 360 : 0;
     const totalGap = gapPerSegment * data.length;
@@ -133,52 +134,55 @@ export default function DonutChart({
     );
 }
 
-const styles = StyleSheet.create({
-    container: {
-        alignItems: "center",
-        gap: 16,
-    },
-    chartWrap: {
-        width: SIZE,
-        height: SIZE,
-        alignItems: "center",
-        justifyContent: "center",
-    },
-    centerLabel: {
-        position: "absolute",
-        alignItems: "center",
-    },
-    centerSmall: {
-        fontSize: 11,
-        fontWeight: "500",
-    },
-    centerBig: {
-        fontSize: 18,
-        fontWeight: "800",
-        letterSpacing: -0.3,
-    },
-    legendRow: {
-        flexDirection: "row",
-        flexWrap: "wrap",
-        justifyContent: "center",
-        gap: 12,
-    },
-    legendItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 6,
-    },
-    legendDot: {
-        width: 8,
-        height: 8,
-        borderRadius: 4,
-    },
-    legendLabel: {
-        fontSize: 11,
-        fontWeight: "500",
-    },
-    legendPct: {
-        fontSize: 12,
-        fontWeight: "700",
-    },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        container: {
+            alignItems: "center",
+            gap: 16,
+        },
+        chartWrap: {
+            width: SIZE,
+            height: SIZE,
+            alignItems: "center",
+            justifyContent: "center",
+        },
+        centerLabel: {
+            position: "absolute",
+            alignItems: "center",
+        },
+        centerSmall: {
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
+        },
+        centerBig: {
+            fontSize: 18,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
+            letterSpacing: -0.3,
+        },
+        legendRow: {
+            flexDirection: "row",
+            flexWrap: "wrap",
+            justifyContent: "center",
+            gap: 12,
+        },
+        legendItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 6,
+        },
+        legendDot: {
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+        },
+        legendLabel: {
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
+        },
+        legendPct: {
+            fontSize: 12,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
+        },
+    });

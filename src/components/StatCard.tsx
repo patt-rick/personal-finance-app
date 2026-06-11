@@ -14,16 +14,16 @@ export default function StatCard({ type, amount }: StatCardProps) {
   const isIncome = type === 'income';
 
   return (
-    <View style={[styles.statCard, isIncome ? styles.incomeCard : styles.expenseCard]}>
-      <View style={[styles.iconWrap, { backgroundColor: isIncome ? theme.colors.incomeContainer : theme.colors.expenseContainer }]}>
+    <View style={styles.statCard}>
+      <View style={[styles.iconWrap, { backgroundColor: isIncome ? theme.colors.incomeContainer : theme.colors.surfaceContainerHigh }]}>
         {isIncome ? (
-          <TrendingUp size={18} color={theme.colors.onIncomeContainer} />
+          <TrendingUp size={18} color={theme.colors.income} />
         ) : (
-          <TrendingDown size={18} color={theme.colors.onExpenseContainer} />
+          <TrendingDown size={18} color={theme.colors.onSurfaceVariant} />
         )}
       </View>
       <Text style={styles.statLabel}>{isIncome ? 'Income' : 'Expense'}</Text>
-      <Text style={[styles.statValue, { color: isIncome ? theme.colors.income : theme.colors.expense }]}>
+      <Text style={[styles.statValue, { color: isIncome ? theme.colors.income : theme.colors.onSurface }]}>
         ${amount.toFixed(2)}
       </Text>
     </View>
@@ -35,18 +35,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     statCard: {
       flex: 1,
       padding: theme.spacing.l,
-      borderRadius: theme.shape.large,
-      backgroundColor: theme.colors.surfaceContainerLow,
-      ...theme.elevation.level1,
-      shadowColor: theme.colors.shadow,
-    },
-    incomeCard: {
-      borderLeftWidth: 3,
-      borderLeftColor: theme.colors.income,
-    },
-    expenseCard: {
-      borderLeftWidth: 3,
-      borderLeftColor: theme.colors.expense,
+      borderRadius: 14,
+      backgroundColor: theme.colors.card,
+      borderColor: theme.colors.border,
+      borderWidth: StyleSheet.hairlineWidth,
     },
     iconWrap: {
       width: 36,
@@ -60,11 +52,12 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
       fontSize: 12,
       color: theme.colors.onSurfaceVariant,
       marginBottom: theme.spacing.xs,
-      fontWeight: '500',
+      fontFamily: theme.fonts.regular,
     },
     statValue: {
       fontSize: 20,
-      fontWeight: '700',
+      fontFamily: theme.fonts.semibold,
+      fontVariant: ['tabular-nums'],
       letterSpacing: -0.3,
     },
   });

@@ -235,7 +235,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         card: {
             borderRadius: theme.shape.extraLarge,
             padding: 24,
-            backgroundColor: theme.colors.surfaceContainerHigh,
+            backgroundColor: theme.colors.surfaceContainerLow,
             ...theme.elevation.level3,
             shadowColor: theme.colors.shadow,
         },
@@ -270,7 +270,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         title: {
             fontSize: 17,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: -0.2,
             marginBottom: 6,
             textAlign: "center",
@@ -278,6 +278,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         description: {
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             lineHeight: 20,
             textAlign: "center",
             paddingHorizontal: 4,
@@ -294,7 +295,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         skipText: {
             fontSize: 14,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurfaceVariant,
         },
         nextBtn: {
@@ -305,12 +306,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: theme.colors.primary,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         nextText: {
             fontSize: 14,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onPrimary,
         },
     });

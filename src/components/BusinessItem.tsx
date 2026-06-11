@@ -51,21 +51,22 @@ export default function BusinessItem({ business, isActive, onPress, onDelete }: 
 const createStyles = (theme: any) => StyleSheet.create({
   businessItem: {
     padding: theme.spacing.l,
-    backgroundColor: theme.colors.surfaceContainerLow,
-    borderRadius: theme.shape.large,
+    backgroundColor: theme.colors.card,
+    borderColor: theme.colors.border,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderRadius: 14,
     marginBottom: theme.spacing.m,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    ...theme.elevation.level1,
-    shadowColor: theme.colors.shadow,
   },
   businessItemActive: {
     backgroundColor: theme.colors.secondaryContainer,
+    borderColor: theme.colors.secondaryContainer,
   },
   businessName: {
     fontSize: 16,
-    fontWeight: '600',
+    fontFamily: theme.fonts.semibold,
     color: theme.colors.onSurface,
   },
   businessNameActive: {
@@ -73,6 +74,7 @@ const createStyles = (theme: any) => StyleSheet.create({
   },
   businessMeta: {
     fontSize: 12,
+    fontFamily: theme.fonts.regular,
     marginTop: theme.spacing.xs,
     color: theme.colors.onSurfaceVariant,
   },

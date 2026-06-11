@@ -73,6 +73,7 @@ export default function DebtPaymentModal({
                 style={{
                     ...theme.typescale.bodyMedium,
                     color: theme.colors.onSurfaceVariant,
+                    fontVariant: ["tabular-nums"],
                     marginBottom: 20,
                 }}
             >
@@ -101,7 +102,7 @@ export default function DebtPaymentModal({
             />
 
             <TouchableOpacity
-                style={styles.submitBtnModern}
+                style={[styles.submitBtnModern, { backgroundColor: theme.colors.primary }]}
                 onPress={handleSubmit}
             >
                 <Text style={styles.submitBtnTextModern}>Record Payment</Text>

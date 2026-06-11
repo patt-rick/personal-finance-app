@@ -163,9 +163,9 @@ export default function RecurringTransactionsScreen({
 
     const renderItem = (item: RecurringTransaction) => {
         const isIncome = item.type === "income";
-        const amountColor = isIncome ? theme.colors.income : theme.colors.expense;
-        const iconBg = isIncome ? theme.colors.incomeContainer : theme.colors.expenseContainer;
-        const iconColor = isIncome ? theme.colors.onIncomeContainer : theme.colors.onExpenseContainer;
+        const amountColor = isIncome ? theme.colors.income : theme.colors.onSurface;
+        const iconBg = isIncome ? theme.colors.incomeContainer : theme.colors.surfaceContainerHigh;
+        const iconColor = isIncome ? theme.colors.onIncomeContainer : theme.colors.onSurfaceVariant;
 
         return (
             <View key={item.id} style={styles.itemCard}>
@@ -321,31 +321,30 @@ const createStyles = (theme: any) =>
             shadowColor: theme.colors.shadow,
         },
         headerTitle: {
-            fontSize: 26,
-            fontWeight: "800",
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.3,
         },
         section: {
             marginTop: 24,
             paddingHorizontal: 20,
         },
         sectionLabel: {
-            fontSize: 12,
+            fontSize: 11,
             color: theme.colors.onSurfaceVariant,
             textTransform: "uppercase",
             marginBottom: 10,
             marginLeft: 4,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.8,
         },
         itemCard: {
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 14,
             padding: 14,
             marginBottom: 10,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         itemRow: {
             flexDirection: "row",
@@ -364,12 +363,12 @@ const createStyles = (theme: any) =>
         },
         itemTitle: {
             fontSize: 15,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            letterSpacing: -0.1,
         },
         itemMeta: {
             fontSize: 12,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             marginTop: 2,
         },
@@ -378,8 +377,8 @@ const createStyles = (theme: any) =>
         },
         itemAmount: {
             fontSize: 15,
-            fontWeight: "700",
-            letterSpacing: -0.2,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
         },
         freqBadge: {
             paddingHorizontal: 8,
@@ -390,7 +389,7 @@ const createStyles = (theme: any) =>
         },
         freqBadgeText: {
             fontSize: 10,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSecondaryContainer,
             textTransform: "uppercase",
             letterSpacing: 0.3,
@@ -407,7 +406,8 @@ const createStyles = (theme: any) =>
         nextDueText: {
             fontSize: 12,
             color: theme.colors.onSurfaceVariant,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
         },
         itemActions: {
             flexDirection: "row",
@@ -446,12 +446,13 @@ const createStyles = (theme: any) =>
         },
         emptyTitle: {
             fontSize: 17,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
             marginBottom: 8,
         },
         emptySubtitle: {
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             textAlign: "center",
             lineHeight: 20,

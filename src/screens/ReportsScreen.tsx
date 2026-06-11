@@ -15,7 +15,7 @@ import {
 import PairedBarChart from "../components/dashboard/PairedBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import ChartCarousel from "../components/ChartCarousel";
-import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
+import { EmptyScene } from "../components/illustrations";
 
 interface ReportsScreenProps {
     businesses: Business[];
@@ -123,7 +123,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                 title: "Monthly Trends",
                 legend: [
                     { label: "Income", color: theme.colors.income },
-                    { label: "Expense", color: theme.colors.expense },
+                    { label: "Expense", color: theme.colors.chart[3] },
                 ],
                 content: (
                     <PairedBarChart
@@ -131,7 +131,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         primaryData={trends.income}
                         secondaryData={trends.expense}
                         primaryColor={theme.colors.income}
-                        secondaryColor={theme.colors.expense}
+                        secondaryColor={theme.colors.chart[3]}
                         currencySymbol={currencySymbol}
                     />
                 ),
@@ -163,7 +163,6 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
 
     return (
         <View style={styles.container}>
-            <HeaderBackdrop height={240} />
             <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 {onBack && (
                     <TouchableOpacity
@@ -367,8 +366,8 @@ function ComparisonCard({
     const isPositive = value >= 0;
     const Arrow = isPositive ? TrendingUp : TrendingDown;
     const color = label === "Expense"
-        ? (isPositive ? theme.colors.error : theme.colors.income)
-        : (isPositive ? theme.colors.income : theme.colors.error);
+        ? (isPositive ? theme.colors.onSurfaceVariant : theme.colors.income)
+        : (isPositive ? theme.colors.income : theme.colors.onSurfaceVariant);
 
     return (
         <View style={styles.statCard}>
@@ -398,14 +397,13 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             width: 40,
             height: 40,
             borderRadius: theme.shape.medium,
-            backgroundColor: theme.colors.surfaceContainerLow,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             alignItems: "center" as const,
             justifyContent: "center" as const,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         title: {
-            ...theme.typescale.headlineSmall,
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
         chipRow: {
@@ -416,7 +414,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
         chip: {
             paddingHorizontal: 14,
             paddingVertical: 8,
-            borderRadius: theme.shape.small,
+            borderRadius: theme.shape.full,
             borderWidth: 1,
         },
         chipInactive: {
@@ -424,18 +422,19 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             borderColor: theme.colors.outlineVariant,
         },
         chipActive: {
-            backgroundColor: theme.colors.secondaryContainer,
-            borderColor: theme.colors.secondaryContainer,
+            backgroundColor: theme.colors.inverseSurface,
+            borderColor: theme.colors.inverseSurface,
         },
         chipText: {
             fontSize: 13,
-            fontWeight: "600" as const,
         },
         chipTextInactive: {
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
         },
         chipTextActive: {
-            color: theme.colors.onSecondaryContainer,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.inverseOnSurface,
         },
         emptyContainer: {
             padding: 60,
@@ -445,6 +444,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             textAlign: "center" as const,
             fontSize: 14,
             lineHeight: 20,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
         },
         sectionHeader: {
@@ -453,7 +453,8 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             marginBottom: 12,
         },
         sectionTitle: {
-            ...theme.typescale.titleMedium,
+            fontSize: 15,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
         comparisonRow: {
@@ -465,30 +466,31 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             flex: 1,
             alignItems: "center" as const,
             padding: 14,
-            borderRadius: theme.shape.large,
+            borderRadius: 14,
             gap: 6,
-            backgroundColor: theme.colors.surfaceContainerLow,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         statLabel: {
             fontSize: 11,
-            fontWeight: "600" as const,
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase" as const,
             letterSpacing: 0.5,
             color: theme.colors.onSurfaceVariant,
         },
         statValue: {
             fontSize: 16,
-            fontWeight: "800" as const,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
         },
         card: {
             marginHorizontal: 20,
-            borderRadius: theme.shape.large,
+            borderRadius: 14,
             padding: 14,
-            backgroundColor: theme.colors.surfaceContainerLow,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         categoryRow: {
             paddingVertical: 12,
@@ -505,16 +507,18 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
         },
         categoryName: {
             fontSize: 14,
-            fontWeight: "600" as const,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
         categoryCount: {
             fontSize: 11,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
         },
         categoryAmount: {
             fontSize: 14,
-            fontWeight: "700" as const,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
             marginBottom: 6,
             color: theme.colors.onSurface,
         },
@@ -540,18 +544,20 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
         },
         txDesc: {
             fontSize: 14,
-            fontWeight: "600" as const,
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
         txMeta: {
             fontSize: 11,
+            fontFamily: theme.fonts.regular,
             marginTop: 2,
             color: theme.colors.onSurfaceVariant,
         },
         txAmount: {
             fontSize: 14,
-            fontWeight: "700" as const,
-            color: theme.colors.expense,
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
+            color: theme.colors.onSurface,
         },
     });
 }

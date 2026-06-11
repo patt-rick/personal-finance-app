@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useTheme } from "../theme/theme";
 import AppModal from "./AppModal";
@@ -23,6 +23,7 @@ export default function CreateCashbookModal({
     onSubmit,
 }: CreateCashbookModalProps) {
     const theme = useTheme();
+    const s = useMemo(() => createStyles(theme), [theme]);
     const [businessName, setBusinessName] = useState("");
     const [selectedCurrency, setSelectedCurrency] = useState("USD");
 
@@ -38,42 +39,28 @@ export default function CreateCashbookModal({
 
     return (
         <AppModal visible={visible} onClose={onClose} title="New Cashbook" scrollable>
-            <Text style={[s.inputLabel, { color: theme.colors.onSurfaceVariant }]}>Cashbook Name</Text>
+            <Text style={s.inputLabel}>Cashbook Name</Text>
             <TextInput
-                style={[s.input, {
-                    color: theme.colors.onSurface,
-                    borderColor: theme.colors.outline,
-                    backgroundColor: theme.colors.surfaceContainerHighest,
-                }]}
+                style={s.input}
                 placeholder="e.g. My Shop, Personal Expenses"
                 value={businessName}
                 onChangeText={setBusinessName}
                 placeholderTextColor={theme.colors.onSurfaceVariant}
             />
 
-            <Text style={[s.inputLabel, { color: theme.colors.onSurfaceVariant }]}>Currency</Text>
+            <Text style={s.inputLabel}>Currency</Text>
             <View style={s.currencyGrid}>
                 {CURRENCIES.map((curr) => (
                     <TouchableOpacity
                         key={curr.value}
-                        style={[
-                            s.currencyCard,
-                            { backgroundColor: theme.colors.surfaceContainerHigh },
-                            selectedCurrency === curr.value && {
-                                backgroundColor: theme.colors.secondaryContainer,
-                                borderColor: theme.colors.secondaryContainer,
-                            },
-                        ]}
+                        style={[s.currencyCard, selectedCurrency === curr.value && s.currencyCardActive]}
                         onPress={() => setSelectedCurrency(curr.value)}
                         activeOpacity={0.7}
                     >
                         <Text
                             style={[
                                 s.currSym,
-                                { color: theme.colors.onSurface },
-                                selectedCurrency === curr.value && {
-                                    color: theme.colors.onSecondaryContainer,
-                                },
+                                selectedCurrency === curr.value && { color: theme.colors.onPrimary },
                             ]}
                         >
                             {curr.symbol}
@@ -81,9 +68,9 @@ export default function CreateCashbookModal({
                         <Text
                             style={[
                                 s.currCode,
-                                { color: theme.colors.onSurfaceVariant },
                                 selectedCurrency === curr.value && {
-                                    color: theme.colors.onSecondaryContainer,
+                                    color: theme.colors.onPrimary,
+                                    fontFamily: theme.fonts.semibold,
                                 },
                             ]}
                         >
@@ -93,48 +80,70 @@ export default function CreateCashbookModal({
                 ))}
             </View>
 
-            <TouchableOpacity
-                style={[s.submitBtn, { backgroundColor: theme.colors.primary }]}
-                onPress={handleSubmit}
-                activeOpacity={0.85}
-            >
-                <Text style={[s.submitText, { color: theme.colors.onPrimary }]}>
-                    Create Cashbook
-                </Text>
+            <TouchableOpacity style={s.submitBtn} onPress={handleSubmit} activeOpacity={0.85}>
+                <Text style={s.submitText}>Create Cashbook</Text>
             </TouchableOpacity>
         </AppModal>
     );
 }
 
-const s = StyleSheet.create({
-    inputLabel: {
-        fontSize: 12,
-        fontWeight: "600",
-        textTransform: "uppercase",
-        letterSpacing: 0.5,
-        marginBottom: 8,
-        marginTop: 12,
-    },
-    input: {
-        height: 52,
-        borderRadius: 12,
-        borderWidth: 1,
-        paddingHorizontal: 14,
-        fontSize: 15,
-        marginBottom: 12,
-    },
-    currencyGrid: { flexDirection: "row", gap: 10, flexWrap: "wrap", marginBottom: 28 },
-    currencyCard: {
-        width: "22%",
-        height: 64,
-        borderRadius: 12,
-        alignItems: "center",
-        justifyContent: "center",
-        borderWidth: 1,
-        borderColor: "transparent",
-    },
-    currSym: { fontSize: 20, fontWeight: "700" },
-    currCode: { fontSize: 10, fontWeight: "600", marginTop: 2 },
-    submitBtn: { height: 52, borderRadius: 999, alignItems: "center", justifyContent: "center" },
-    submitText: { fontWeight: "700", fontSize: 15 },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        inputLabel: {
+            fontSize: 12,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurfaceVariant,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+            marginBottom: 8,
+            marginTop: 12,
+        },
+        input: {
+            height: 52,
+            borderRadius: 12,
+            paddingHorizontal: 14,
+            fontSize: 15,
+            fontFamily: theme.fonts.regular,
+            marginBottom: 12,
+            backgroundColor: theme.colors.surfaceContainerHigh,
+            color: theme.colors.onSurface,
+        },
+        currencyGrid: { flexDirection: "row", gap: 10, flexWrap: "wrap", marginBottom: 28 },
+        currencyCard: {
+            width: "22%",
+            height: 64,
+            borderRadius: 12,
+            alignItems: "center",
+            justifyContent: "center",
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
+            backgroundColor: "transparent",
+        },
+        currencyCardActive: {
+            backgroundColor: theme.colors.primary,
+            borderColor: theme.colors.primary,
+        },
+        currSym: {
+            fontSize: 20,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurface,
+        },
+        currCode: {
+            fontSize: 10,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
+            marginTop: 2,
+        },
+        submitBtn: {
+            height: 52,
+            borderRadius: theme.shape.full,
+            alignItems: "center",
+            justifyContent: "center",
+            backgroundColor: theme.colors.primary,
+        },
+        submitText: {
+            fontFamily: theme.fonts.semibold,
+            fontSize: 15,
+            color: theme.colors.onPrimary,
+        },
+    });

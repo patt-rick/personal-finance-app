@@ -15,8 +15,8 @@ export default function StatsRow({ totalIncome, totalExpense, netBalance, curren
 
     const stats = [
         { label: "Income", value: totalIncome, color: theme.colors.income },
-        { label: "Expense", value: totalExpense, color: theme.colors.expense },
-        { label: "Net", value: netBalance, color: netBalance >= 0 ? theme.colors.income : theme.colors.expense },
+        { label: "Expense", value: totalExpense, color: theme.colors.onSurface },
+        { label: "Net", value: netBalance, color: netBalance >= 0 ? theme.colors.income : theme.colors.onSurface },
     ];
 
     return (
@@ -48,14 +48,14 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         card: {
             flex: 1,
             padding: 14,
-            borderRadius: theme.shape.large,
-            backgroundColor: theme.colors.surfaceContainerLow,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            borderRadius: 14,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         label: {
             fontSize: 11,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 4,
@@ -63,7 +63,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         value: {
             fontSize: 15,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
             letterSpacing: -0.3,
         },
     });

@@ -15,6 +15,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Save, Wallet, Plus, Trash } from "lucide-react-native";
 import AppModal from "../components/AppModal";
+import MoneyText from "../components/MoneyText";
 import { useTheme } from "../theme/theme";
 import { Business, Budget, Category } from "../types";
 import { loadCategories } from "../utils/storage";
@@ -284,7 +285,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                                 onPress={() => setShowCategoryPicker(true)}
                                 style={s.addCategoryBtn}
                             >
-                                <Plus size={16} color={theme.colors.onSecondaryContainer} />
+                                <Plus size={16} color={theme.colors.onSurfaceVariant} />
                                 <Text style={s.addCategoryBtnText}>
                                     Add
                                 </Text>
@@ -333,56 +334,43 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                     </View>
 
                     {/* Summary */}
-                    <View
-                        style={[
-                            s.summaryCard,
-                            {
-                                backgroundColor: isOverBudget
-                                    ? theme.colors.errorContainer
-                                    : theme.colors.incomeContainer,
-                            },
-                        ]}
-                    >
+                    <View style={s.summaryCard}>
                         <View style={s.summaryRow}>
-                            <Text style={[s.summaryLabel, { color: isOverBudget ? theme.colors.onErrorContainer : theme.colors.onIncomeContainer }]}>
-                                Total Budget:
+                            <Text style={s.summaryLabel}>
+                                Total Budget
                             </Text>
-                            <Text style={[s.summaryValue, { color: isOverBudget ? theme.colors.onErrorContainer : theme.colors.onIncomeContainer }]}>
-                                {business.currency || "₦"}
-                                {totalLimitNum.toFixed(2)}
-                            </Text>
+                            <MoneyText
+                                amount={totalLimitNum}
+                                symbol={business.currency || "₦"}
+                                size={14}
+                                color={theme.colors.onSurface}
+                            />
                         </View>
                         <View style={s.summaryRow}>
-                            <Text style={[s.summaryLabel, { color: isOverBudget ? theme.colors.onErrorContainer : theme.colors.onIncomeContainer }]}>
-                                Allocated:
+                            <Text style={s.summaryLabel}>
+                                Allocated
                             </Text>
-                            <Text
-                                style={[
-                                    s.summaryValue,
-                                    {
-                                        color: isOverBudget
-                                            ? theme.colors.error
-                                            : theme.colors.onIncomeContainer,
-                                        fontWeight: "700",
-                                    },
-                                ]}
-                            >
-                                {business.currency || "₦"}
-                                {categorySum.toFixed(2)}
-                            </Text>
+                            <MoneyText
+                                amount={categorySum}
+                                symbol={business.currency || "₦"}
+                                size={14}
+                                color={isOverBudget ? theme.colors.error : theme.colors.onSurface}
+                            />
                         </View>
                         <View style={s.summaryRow}>
-                            <Text style={[s.summaryLabel, { color: isOverBudget ? theme.colors.onErrorContainer : theme.colors.onIncomeContainer }]}>
-                                Unallocated:
+                            <Text style={s.summaryLabel}>
+                                Unallocated
                             </Text>
-                            <Text style={[s.summaryValue, { color: isOverBudget ? theme.colors.onErrorContainer : theme.colors.onIncomeContainer }]}>
-                                {business.currency || "₦"}
-                                {Math.max(0, totalLimitNum - categorySum).toFixed(2)}
-                            </Text>
+                            <MoneyText
+                                amount={Math.max(0, totalLimitNum - categorySum)}
+                                symbol={business.currency || "₦"}
+                                size={14}
+                                color={theme.colors.onSurface}
+                            />
                         </View>
                         {isOverBudget && (
                             <Text style={[s.errorText, { color: theme.colors.error }]}>
-                                ⚠️ Category budgets exceed total budget
+                                Category budgets exceed total budget
                             </Text>
                         )}
                     </View>
@@ -476,7 +464,7 @@ const createStyles = (theme: any) =>
         },
         headerTitle: {
             fontSize: 18,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
         },
         content: {
             flex: 1,
@@ -486,11 +474,11 @@ const createStyles = (theme: any) =>
             flexDirection: "row",
             alignItems: "center",
             padding: 16,
-            borderRadius: theme.shape.large,
+            borderRadius: 16,
             marginBottom: 24,
-            backgroundColor: theme.colors.surfaceContainerLow,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         businessIconContainer: {
             width: 48,
@@ -506,22 +494,24 @@ const createStyles = (theme: any) =>
         },
         businessName: {
             fontSize: 16,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginBottom: 4,
         },
         businessSubtext: {
             fontSize: 13,
+            fontFamily: theme.fonts.regular,
         },
         section: {
             marginBottom: 24,
         },
         sectionTitle: {
             fontSize: 16,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginBottom: 8,
         },
         sectionSubtitle: {
             fontSize: 13,
+            fontFamily: theme.fonts.regular,
             marginBottom: 12,
         },
         periodContainer: {
@@ -542,29 +532,29 @@ const createStyles = (theme: any) =>
             borderColor: theme.colors.secondaryContainer,
         },
         periodButtonInactive: {
-            backgroundColor: theme.colors.surfaceContainerHigh,
+            backgroundColor: "transparent",
             borderColor: theme.colors.outlineVariant,
         },
         periodButtonText: {
             fontSize: 14,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
         },
         periodButtonTextActive: {
             color: theme.colors.onSecondaryContainer,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
         },
         periodButtonTextInactive: {
             color: theme.colors.onSurfaceVariant,
         },
         input: {
-            borderWidth: 1,
             borderRadius: theme.shape.medium,
             paddingHorizontal: 16,
             paddingVertical: 14,
             fontSize: 16,
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
             height: 52,
-            backgroundColor: theme.colors.surfaceContainerHighest,
-            borderColor: theme.colors.outline,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             color: theme.colors.onSurface,
         },
         categoryHeader: {
@@ -581,6 +571,7 @@ const createStyles = (theme: any) =>
         },
         categoryName: {
             fontSize: 15,
+            fontFamily: theme.fonts.regular,
             flex: 1,
         },
         categoryInputRow: {
@@ -589,15 +580,15 @@ const createStyles = (theme: any) =>
             gap: 12,
         },
         categoryInput: {
-            borderWidth: 1,
             borderRadius: theme.shape.medium,
             paddingHorizontal: 12,
             paddingVertical: 8,
             fontSize: 15,
+            fontFamily: theme.fonts.regular,
+            fontVariant: ["tabular-nums"],
             width: 120,
             textAlign: "right",
-            backgroundColor: theme.colors.surfaceContainerHighest,
-            borderColor: theme.colors.outline,
+            backgroundColor: theme.colors.surfaceContainerHigh,
             color: theme.colors.onSurface,
         },
         removeBtn: {
@@ -610,12 +601,12 @@ const createStyles = (theme: any) =>
             paddingVertical: 8,
             borderRadius: theme.shape.full,
             gap: 4,
-            backgroundColor: theme.colors.secondaryContainer,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         addCategoryBtnText: {
             fontSize: 12,
-            fontWeight: "600",
-            color: theme.colors.onSecondaryContainer,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurfaceVariant,
         },
         emptyStateContainer: {
             borderWidth: 1,
@@ -628,27 +619,31 @@ const createStyles = (theme: any) =>
         },
         emptyStateText: {
             fontSize: 14,
+            fontFamily: theme.fonts.regular,
             textAlign: "center",
         },
         summaryCard: {
             padding: 16,
-            borderRadius: theme.shape.large,
+            borderRadius: 14,
             marginBottom: 24,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
         },
         summaryRow: {
             flexDirection: "row",
             justifyContent: "space-between",
+            alignItems: "center",
             marginBottom: 8,
         },
         summaryLabel: {
             fontSize: 14,
-        },
-        summaryValue: {
-            fontSize: 14,
-            fontWeight: "600",
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
         },
         errorText: {
             fontSize: 13,
+            fontFamily: theme.fonts.semibold,
             marginTop: 8,
             textAlign: "center",
         },
@@ -659,19 +654,16 @@ const createStyles = (theme: any) =>
             minHeight: 52,
             borderRadius: theme.shape.full,
             gap: 8,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         saveButtonActive: {
             backgroundColor: theme.colors.primary,
         },
         saveButtonDisabled: {
             backgroundColor: theme.colors.surfaceContainerHigh,
-            ...theme.elevation.level0,
         },
         saveButtonText: {
             fontSize: 15,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.1,
         },
         modalItem: {
@@ -684,8 +676,10 @@ const createStyles = (theme: any) =>
         },
         modalItemText: {
             fontSize: 16,
+            fontFamily: theme.fonts.regular,
         },
         noCategoriesText: {
+            fontFamily: theme.fonts.regular,
             textAlign: "center",
             padding: 20,
         },

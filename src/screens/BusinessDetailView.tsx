@@ -16,7 +16,6 @@ import {
     Smartphone,
     ArrowLeft,
     Download,
-    Tag,
 } from "lucide-react-native";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
@@ -45,21 +44,12 @@ import DonutChart from "../components/dashboard/DonutChart";
 import TransactionEntryModal from "../components/TransactionEntryModal";
 import TransactionDetailModal from "../components/TransactionDetailModal";
 import DateRangePickerModal from "../components/DateRangePickerModal";
+import CategoryIcon from "../components/CategoryIcon";
+import MoneyText from "../components/MoneyText";
 import { EmptyScene } from "../components/illustrations";
 
 function getChartColors(theme: any): string[] {
-    return [
-        theme.colors.primary,
-        theme.colors.secondary,
-        theme.colors.chartBlue,
-        theme.colors.error,
-        theme.colors.chartPurple,
-        theme.colors.chartPurple,
-        theme.colors.chartGreen,
-        theme.colors.gold,
-        theme.colors.chartBlue,
-        theme.colors.secondary,
-    ];
+    return theme.colors.chart;
 }
 
 export default function BusinessDetailView({
@@ -78,6 +68,7 @@ export default function BusinessDetailView({
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
+    const ls = useMemo(() => createLocalStyles(theme), [theme]);
     const [searchQuery, setSearchQuery] = useState("");
     const [activeModal, setActiveModal] = useState<"none" | "entry" | "detail">("none");
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
@@ -375,15 +366,6 @@ export default function BusinessDetailView({
         }
     };
 
-    const localGetCategoryIcon = (categoryName: string | undefined, color: string) => {
-        if (!categoryName) return <Tag size={20} color={color} />;
-        const name = categoryName.toLowerCase();
-        if (name.includes("shop")) return <ShoppingBag size={20} color={color} />;
-        if (name.includes("food")) return <Coffee size={20} color={color} />;
-        if (name.includes("trans")) return <Car size={20} color={color} />;
-        return <Tag size={20} color={color} />;
-    };
-
     return (
         <KeyboardAvoidingView
             behavior={Platform.OS === "ios" ? "padding" : undefined}
@@ -394,7 +376,7 @@ export default function BusinessDetailView({
                     <TouchableOpacity onPress={onBack} style={styles.detailBackBtn}>
                         <ArrowLeft size={24} color={theme.colors.onSurface} />
                     </TouchableOpacity>
-                    <Text style={styles.detailTitle}>{business.name}</Text>
+                    <Text style={ls.detailTitle}>{business.name}</Text>
                 </View>
 
                 <ScrollView
@@ -425,7 +407,7 @@ export default function BusinessDetailView({
                                     title: "Daily Cash Flow",
                                     legend: [
                                         { label: "In", color: theme.colors.income },
-                                        { label: "Out", color: theme.colors.expense },
+                                        { label: "Out", color: theme.colors.chart[3] },
                                     ],
                                     content: (
                                         <WeeklyBarChart
@@ -434,7 +416,7 @@ export default function BusinessDetailView({
                                             expenseData={dailyChartData.expenseValues}
                                             currencySymbol={symbol}
                                             incomeColor={theme.colors.income}
-                                            expenseColor={theme.colors.expense}
+                                            expenseColor={theme.colors.chart[3]}
                                         />
                                     ),
                                 },
@@ -456,10 +438,15 @@ export default function BusinessDetailView({
                         />
                     )}
 
-                    <View style={styles.detailSearchContainer}>
+                    <View
+                        style={[
+                            styles.detailSearchContainer,
+                            { backgroundColor: theme.colors.surfaceContainerHigh },
+                        ]}
+                    >
                         <Search size={18} color={theme.colors.onSurfaceVariant} />
                         <TextInput
-                            style={styles.detailSearchInput}
+                            style={ls.searchInput}
                             placeholder="Search transactions..."
                             placeholderTextColor={theme.colors.onSurfaceVariant}
                             value={searchQuery}
@@ -478,29 +465,25 @@ export default function BusinessDetailView({
                                     key={range}
                                     onPress={() => setFilterRange(range)}
                                     style={[
-                                        styles.filterChip,
+                                        ls.filterChip,
                                         {
                                             backgroundColor:
                                                 filterRange === range
-                                                    ? theme.colors.secondaryContainer
+                                                    ? theme.colors.inverseSurface
                                                     : "transparent",
                                             borderColor:
                                                 filterRange === range
-                                                    ? theme.colors.secondaryContainer
+                                                    ? theme.colors.inverseSurface
                                                     : theme.colors.outlineVariant,
                                         },
                                     ]}
                                 >
                                     <Text
-                                        style={[
-                                            styles.filterChipText,
-                                            {
-                                                color:
-                                                    filterRange === range
-                                                        ? theme.colors.onSecondaryContainer
-                                                        : theme.colors.onSurfaceVariant,
-                                            },
-                                        ]}
+                                        style={
+                                            filterRange === range
+                                                ? ls.filterChipTextSelected
+                                                : ls.filterChipText
+                                        }
                                     >
                                         {range}
                                     </Text>
@@ -509,15 +492,15 @@ export default function BusinessDetailView({
                             <TouchableOpacity
                                 onPress={() => setShowDateRangePicker(true)}
                                 style={[
-                                    styles.filterChip,
+                                    ls.filterChip,
                                     {
                                         backgroundColor:
                                             filterRange === "custom"
-                                                ? theme.colors.secondaryContainer
+                                                ? theme.colors.inverseSurface
                                                 : "transparent",
                                         borderColor:
                                             filterRange === "custom"
-                                                ? theme.colors.secondaryContainer
+                                                ? theme.colors.inverseSurface
                                                 : theme.colors.outlineVariant,
                                         flexDirection: "row",
                                         alignItems: "center",
@@ -529,20 +512,16 @@ export default function BusinessDetailView({
                                     size={12}
                                     color={
                                         filterRange === "custom"
-                                            ? theme.colors.onSecondaryContainer
+                                            ? theme.colors.inverseOnSurface
                                             : theme.colors.onSurfaceVariant
                                     }
                                 />
                                 <Text
-                                    style={[
-                                        styles.filterChipText,
-                                        {
-                                            color:
-                                                filterRange === "custom"
-                                                    ? theme.colors.onSecondaryContainer
-                                                    : theme.colors.onSurfaceVariant,
-                                        },
-                                    ]}
+                                    style={
+                                        filterRange === "custom"
+                                            ? ls.filterChipTextSelected
+                                            : ls.filterChipText
+                                    }
                                 >
                                     {filterRange === "custom"
                                         ? `${customStartDate.toLocaleDateString(undefined, { day: "numeric", month: "short" })} - ${customEndDate.toLocaleDateString(undefined, { day: "numeric", month: "short" })}`
@@ -551,28 +530,23 @@ export default function BusinessDetailView({
                             </TouchableOpacity>
                         </ScrollView>
 
-                        <TouchableOpacity onPress={exportToCSV} style={styles.exportBtn}>
-                            <Download size={20} color={theme.colors.primary} />
+                        <TouchableOpacity
+                            onPress={exportToCSV}
+                            style={[
+                                styles.exportBtn,
+                                { backgroundColor: theme.colors.surfaceContainerHigh },
+                            ]}
+                        >
+                            <Download size={20} color={theme.colors.onSurfaceVariant} />
                         </TouchableOpacity>
                     </View>
 
                     <View style={styles.detailList}>
-                        <Text style={styles.listLabel}>Recent Transactions</Text>
+                        <Text style={ls.listLabel}>Recent Transactions</Text>
 
                         {groupedTransactions.map((group) => (
                             <View key={group.title} style={{ marginBottom: 20 }}>
-                                <Text
-                                    style={{
-                                        fontSize: 12,
-                                        fontWeight: "600",
-                                        color: theme.colors.onSurfaceVariant,
-                                        marginBottom: 10,
-                                        textTransform: "uppercase",
-                                        letterSpacing: 0.5,
-                                    }}
-                                >
-                                    {group.title}
-                                </Text>
+                                <Text style={ls.dateGroupLabel}>{group.title}</Text>
                                 {group.data.map((t) => (
                                     <TouchableOpacity
                                         key={t.id}
@@ -582,33 +556,21 @@ export default function BusinessDetailView({
                                             setActiveModal("detail");
                                         }}
                                     >
-                                        <View
-                                            style={[
-                                                styles.txIconContainer,
-                                                {
-                                                    backgroundColor:
-                                                        t.type === "income"
-                                                            ? theme.colors.incomeContainer
-                                                            : theme.colors.expenseContainer,
-                                                },
-                                            ]}
-                                        >
-                                            {localGetCategoryIcon(
-                                                t.category,
-                                                t.type === "income"
-                                                    ? theme.colors.onIncomeContainer
-                                                    : theme.colors.onExpenseContainer,
-                                            )}
-                                        </View>
+                                        <CategoryIcon
+                                            category={t.category || t.description}
+                                            type={t.type}
+                                            autoLogged={t.autoLogged}
+                                            size={44}
+                                        />
                                         <View style={styles.txInfo}>
                                             <Text
-                                                style={styles.txTitle}
+                                                style={ls.txTitle}
                                                 numberOfLines={1}
                                                 ellipsizeMode="tail"
                                             >
                                                 {t.remark || t.description}
                                             </Text>
-                                            <Text style={styles.txSubTitle}>
+                                            <Text style={ls.txSubTitle}>
                                                 {t.category || "General"} ·{" "}
                                                 {new Date(t.date).toLocaleTimeString([], {
                                                     hour: "2-digit",
@@ -617,18 +579,17 @@ export default function BusinessDetailView({
                                             </Text>
                                         </View>
                                         <View style={styles.txRight}>
-                                            <Text
-                                                style={[
-                                                    styles.txAmountModern,
+                                            <MoneyText
+                                                amount={t.amount}
+                                                sign={t.type === "income" ? "+" : "-"}
+                                                symbol={symbol}
+                                                size={15}
+                                                color={
                                                     t.type === "income"
-                                                        ? { color: theme.colors.income }
-                                                        : { color: theme.colors.expense },
-                                                ]}
-                                            >
-                                                {t.type === "income" ? "+" : "-"}
-                                                {symbol}
-                                                {t.amount.toLocaleString()}
-                                            </Text>
+                                                        ? theme.colors.income
+                                                        : theme.colors.onSurface
+                                                }
+                                            />
                                         </View>
                                     </TouchableOpacity>
                                 ))}
@@ -638,7 +599,7 @@ export default function BusinessDetailView({
                         {groupedTransactions.length === 0 && (
                             <View style={[styles.emptyState, { alignItems: "center" }]}>
                                 <EmptyScene variant="transactions" size={200} />
-                                <Text style={styles.emptyText}>No transactions found</Text>
+                                <Text style={ls.emptyText}>No transactions found</Text>
                             </View>
                         )}
                         <View style={{ height: 200 }} />
@@ -662,7 +623,7 @@ export default function BusinessDetailView({
                             setActiveModal("entry");
                         }}
                     >
-                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.onIncomeContainer }]}>
+                        <Text style={[ls.bigActionBtnText, { color: theme.colors.onIncomeContainer }]}>
                             CASH IN
                         </Text>
                     </TouchableOpacity>
@@ -677,7 +638,7 @@ export default function BusinessDetailView({
                             setActiveModal("entry");
                         }}
                     >
-                        <Text style={[styles.bigActionBtnTextModern, { color: theme.colors.onExpenseContainer }]}>
+                        <Text style={[ls.bigActionBtnText, { color: theme.colors.onExpenseContainer }]}>
                             CASH OUT
                         </Text>
                     </TouchableOpacity>
@@ -737,31 +698,72 @@ function BalanceCard({
 }) {
     return (
         <LinearGradient
-            colors={[theme.colors.gradientStart, theme.colors.gradientMid, theme.colors.gradientEnd]}
+            colors={[theme.colors.gradientStart, theme.colors.gradientEnd]}
             start={{ x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
-            style={styles.modernBalanceCard}
+            style={bc.card}
         >
-            <View style={styles.cardGlow} />
-            <View style={styles.balanceHeader}>
-                <Text style={styles.balanceTitle}>
-                    {symbol}
-                    {totalBalance.toLocaleString()}
+            <Text style={[bc.label, { fontFamily: theme.fonts.semibold }]}>Current Balance</Text>
+            <MoneyText
+                amount={totalBalance}
+                sign={totalBalance < 0 ? "-" : ""}
+                symbol={symbol}
+                size={28}
+                color="#FFFFFF"
+                decimalColor="rgba(255,255,255,0.6)"
+                weight="semibold"
+                numberOfLines={1}
+                adjustsFontSizeToFit
+            />
+            <View style={bc.footer}>
+                <Text style={[bc.footerText, { fontFamily: theme.fonts.semibold }]}>
+                    {currency} Cashbook
                 </Text>
-            </View>
-            <Text style={styles.balanceSubtitle}>Current Balance</Text>
-            <View style={styles.cardFooter}>
-                <Text style={styles.cardNumber}>{currency} Cashbook</Text>
-                <View style={styles.mastercardLogo}>
-                    <View style={[styles.circle, { backgroundColor: theme.colors.error }]} />
+                <View style={bc.roundelRow}>
+                    <View style={[bc.roundel, { backgroundColor: "rgba(255,255,255,0.85)" }]} />
                     <View
-                        style={[styles.circle, { backgroundColor: theme.colors.gold, marginLeft: -10 }]}
+                        style={[
+                            bc.roundel,
+                            bc.roundelOverlap,
+                            { backgroundColor: "rgba(255,210,80,0.85)" },
+                        ]}
                     />
                 </View>
             </View>
         </LinearGradient>
     );
 }
+
+const bc = StyleSheet.create({
+    card: {
+        marginHorizontal: 20,
+        marginTop: 10,
+        borderRadius: 16,
+        padding: 18,
+        height: 175,
+        justifyContent: "space-between",
+        overflow: "hidden",
+    },
+    label: {
+        fontSize: 11,
+        letterSpacing: 1.6,
+        textTransform: "uppercase",
+        color: "rgba(255,255,255,0.85)",
+    },
+    footer: {
+        flexDirection: "row",
+        justifyContent: "space-between",
+        alignItems: "flex-end",
+    },
+    footerText: {
+        fontSize: 11,
+        letterSpacing: 0.5,
+        color: "rgba(255,255,255,0.9)",
+    },
+    roundelRow: { flexDirection: "row", alignItems: "center" },
+    roundel: { width: 18, height: 18, borderRadius: 9 },
+    roundelOverlap: { marginLeft: -8 },
+});
 
 function IncomeExpenseCards({
     symbol,
@@ -776,31 +778,129 @@ function IncomeExpenseCards({
     theme: any;
     styles: any;
 }) {
+    const statCard = {
+        flex: 1,
+        padding: 16,
+        borderRadius: 14,
+        backgroundColor: theme.colors.card,
+        borderColor: theme.colors.border,
+        borderWidth: StyleSheet.hairlineWidth,
+    } as const;
+    const statLabel = {
+        fontSize: 12,
+        color: theme.colors.onSurfaceVariant,
+        marginBottom: 2,
+        fontFamily: theme.fonts.regular,
+    } as const;
     return (
         <View style={styles.statsContainer}>
-            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.surfaceContainerLow }]}>
+            <View style={statCard}>
                 <View style={[styles.statIconContainer, { backgroundColor: theme.colors.incomeContainer }]}>
                     <Plus size={20} color={theme.colors.onIncomeContainer} />
                 </View>
-                <Text style={styles.statLabel}>Total In</Text>
-                <Text style={[styles.statValue, { color: theme.colors.income }]}>
-                    {symbol}
-                    {totalIncome.toLocaleString()}
-                </Text>
+                <Text style={statLabel}>Total In</Text>
+                <MoneyText
+                    amount={totalIncome}
+                    symbol={symbol}
+                    size={18}
+                    color={theme.colors.income}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                />
             </View>
-            <View style={[styles.statCardFixed, { backgroundColor: theme.colors.surfaceContainerLow }]}>
-                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.expenseContainer }]}>
-                    <MinusIcon size={20} color={theme.colors.onExpenseContainer} />
+            <View style={statCard}>
+                <View style={[styles.statIconContainer, { backgroundColor: theme.colors.surfaceContainerHigh }]}>
+                    <MinusIcon size={20} color={theme.colors.onSurfaceVariant} />
                 </View>
-                <Text style={styles.statLabel}>Total Out</Text>
-                <Text style={[styles.statValue, { color: theme.colors.expense }]}>
-                    {symbol}
-                    {totalExpense.toLocaleString()}
-                </Text>
+                <Text style={statLabel}>Total Out</Text>
+                <MoneyText
+                    amount={totalExpense}
+                    symbol={symbol}
+                    size={18}
+                    color={theme.colors.onSurface}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                />
             </View>
         </View>
     );
 }
+
+const createLocalStyles = (theme: any) =>
+    StyleSheet.create({
+        detailTitle: {
+            fontSize: 22,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurface,
+            letterSpacing: -0.2,
+        },
+        searchInput: {
+            flex: 1,
+            marginLeft: 8,
+            fontSize: 14,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurface,
+        },
+        filterChip: {
+            paddingHorizontal: 14,
+            paddingVertical: 8,
+            borderRadius: theme.shape.full,
+            marginRight: 8,
+            borderWidth: 1,
+        },
+        filterChipText: {
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
+            textTransform: "uppercase",
+            letterSpacing: 0.3,
+        },
+        filterChipTextSelected: {
+            fontSize: 11,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.inverseOnSurface,
+            textTransform: "uppercase",
+            letterSpacing: 0.3,
+        },
+        listLabel: {
+            fontSize: 15,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurface,
+            marginBottom: 14,
+            letterSpacing: -0.1,
+        },
+        dateGroupLabel: {
+            fontSize: 12,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurfaceVariant,
+            marginBottom: 10,
+            textTransform: "uppercase",
+            letterSpacing: 0.5,
+        },
+        txTitle: {
+            fontSize: 14,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurface,
+        },
+        txSubTitle: {
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
+            marginTop: 2,
+        },
+        emptyText: {
+            color: theme.colors.onSurfaceVariant,
+            textAlign: "center",
+            fontSize: 14,
+            lineHeight: 20,
+            fontFamily: theme.fonts.regular,
+        },
+        bigActionBtnText: {
+            fontSize: 14,
+            fontFamily: theme.fonts.semibold,
+            letterSpacing: 0.5,
+        },
+    });
 
 export const getCategoryIcon = (category: string | undefined, color: string) => {
     switch (category?.toLowerCase()) {

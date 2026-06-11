@@ -155,17 +155,7 @@ function DateField({
     return (
         <View style={styles.dateFieldContainer}>
             <Text style={styles.dateFieldLabel}>{label}</Text>
-            <TouchableOpacity
-                style={[
-                    styles.dateFieldBtn,
-                    {
-                        borderColor: isActive
-                            ? theme.colors.primary
-                            : theme.colors.outline,
-                    },
-                ]}
-                onPress={onPress}
-            >
+            <TouchableOpacity style={styles.dateFieldBtn} onPress={onPress}>
                 <Calendar
                     size={16}
                     color={isActive ? theme.colors.primary : theme.colors.onSurfaceVariant}
@@ -195,7 +185,7 @@ const createStyles = (theme: any) =>
         },
         dateFieldLabel: {
             fontSize: 12,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 8,
@@ -207,13 +197,12 @@ const createStyles = (theme: any) =>
             gap: 8,
             paddingHorizontal: 14,
             paddingVertical: 14,
-            borderRadius: theme.shape.medium,
-            borderWidth: 1,
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            borderRadius: 12,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         dateFieldText: {
             fontSize: 14,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
         },
         applyBtn: {
             height: 52,
@@ -222,12 +211,10 @@ const createStyles = (theme: any) =>
             justifyContent: "center",
             marginTop: 16,
             backgroundColor: theme.colors.primary,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         applyBtnText: {
             fontSize: 15,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.1,
             color: theme.colors.onPrimary,
         },
