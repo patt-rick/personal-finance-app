@@ -1,4 +1,4 @@
-import React, { useRef, useState, useCallback } from "react";
+import React, { useRef, useState, useCallback, useMemo } from "react";
 import {
     View,
     ScrollView,
@@ -24,6 +24,7 @@ interface ChartCarouselProps {
 
 export default function ChartCarousel({ pages }: ChartCarouselProps) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const [activeIndex, setActiveIndex] = useState(0);
     const cardGap = 12;
     const cardWidth = SCREEN_WIDTH - 40; // 20px padding each side
@@ -49,7 +50,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
         return (
             <View style={styles.wrapper}>
                 <View style={styles.headerRow}>
-                    <Text style={[styles.title, { color: theme.colors.text }]}>{page.title}</Text>
+                    <Text style={styles.title}>{page.title}</Text>
                     {page.legend && (
                         <View style={styles.legendRow}>
                             {page.legend.map((l, i) => (
@@ -57,22 +58,13 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                                     <View
                                         style={[styles.legendDot, { backgroundColor: l.color }]}
                                     />
-                                    <Text
-                                        style={[
-                                            styles.legendText,
-                                            { color: theme.colors.textSecondary },
-                                        ]}
-                                    >
-                                        {l.label}
-                                    </Text>
+                                    <Text style={styles.legendText}>{l.label}</Text>
                                 </View>
                             ))}
                         </View>
                     )}
                 </View>
-                <View style={[styles.card, theme.elevation.level1, { backgroundColor: theme.colors.surfaceContainerLow, shadowColor: theme.colors.shadow }]}>
-                    {page.content}
-                </View>
+                <View style={styles.card}>{page.content}</View>
             </View>
         );
     }
@@ -81,7 +73,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
         <View style={styles.wrapper}>
             {/* Active page header */}
             <View style={styles.headerRow}>
-                <Text style={[styles.title, { color: theme.colors.text }]}>
+                <Text style={styles.title}>
                     {pages[activeIndex].title}
                 </Text>
                 {pages[activeIndex].legend && (
@@ -89,14 +81,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                         {pages[activeIndex].legend!.map((l, i) => (
                             <View key={i} style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: l.color }]} />
-                                <Text
-                                    style={[
-                                        styles.legendText,
-                                        { color: theme.colors.textSecondary },
-                                    ]}
-                                >
-                                    {l.label}
-                                </Text>
+                                <Text style={styles.legendText}>{l.label}</Text>
                             </View>
                         ))}
                     </View>
@@ -116,14 +101,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                 contentContainerStyle={{ gap: cardGap }}
             >
                 {pages.map((page, index) => (
-                    <View
-                        key={index}
-                        style={[
-                            styles.card,
-                            theme.elevation.level1,
-                            { backgroundColor: theme.colors.surfaceContainerLow, shadowColor: theme.colors.shadow, width: cardWidth },
-                        ]}
-                    >
+                    <View key={index} style={[styles.card, { width: cardWidth }]}>
                         {page.content}
                     </View>
                 ))}
@@ -151,55 +129,61 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
     );
 }
 
-const styles = StyleSheet.create({
-    wrapper: {
-        paddingHorizontal: 20,
-        marginTop: 16,
-        marginBottom: 4,
-    },
-    headerRow: {
-        flexDirection: "row",
-        justifyContent: "space-between",
-        alignItems: "center",
-        marginBottom: 10,
-    },
-    title: {
-        fontSize: 15,
-        fontWeight: "700",
-        letterSpacing: -0.1,
-    },
-    legendRow: {
-        flexDirection: "row",
-        gap: 10,
-    },
-    legendItem: {
-        flexDirection: "row",
-        alignItems: "center",
-        gap: 4,
-    },
-    legendDot: {
-        width: 7,
-        height: 7,
-        borderRadius: 3.5,
-    },
-    legendText: {
-        fontSize: 10,
-        fontWeight: "500",
-    },
-    card: {
-        borderRadius: 24,
-        padding: 16,
-        justifyContent: "center",
-    },
-    dotsRow: {
-        flexDirection: "row",
-        justifyContent: "center",
-        alignItems: "center",
-        marginTop: 10,
-        gap: 5,
-    },
-    dot: {
-        height: 6,
-        borderRadius: 3,
-    },
-});
+const createStyles = (theme: ReturnType<typeof useTheme>) =>
+    StyleSheet.create({
+        wrapper: {
+            paddingHorizontal: 20,
+            marginTop: 16,
+            marginBottom: 4,
+        },
+        headerRow: {
+            flexDirection: "row",
+            justifyContent: "space-between",
+            alignItems: "center",
+            marginBottom: 10,
+        },
+        title: {
+            fontSize: 15,
+            fontFamily: theme.fonts.semibold,
+            letterSpacing: -0.1,
+            color: theme.colors.onSurface,
+        },
+        legendRow: {
+            flexDirection: "row",
+            gap: 10,
+        },
+        legendItem: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 4,
+        },
+        legendDot: {
+            width: 7,
+            height: 7,
+            borderRadius: 3.5,
+        },
+        legendText: {
+            fontSize: 10,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
+        },
+        card: {
+            borderRadius: 16,
+            padding: 16,
+            justifyContent: "center",
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+        },
+        dotsRow: {
+            flexDirection: "row",
+            justifyContent: "center",
+            alignItems: "center",
+            marginTop: 10,
+            gap: 5,
+        },
+        dot: {
+            height: 6,
+            borderRadius: 3,
+        },
+    });
