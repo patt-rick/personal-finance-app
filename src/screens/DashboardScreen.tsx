@@ -26,7 +26,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
-import BalanceCard, { CurrencyBalance } from "../components/dashboard/BalanceCard";
+import PaymentCard, { CurrencyBalance } from "../components/dashboard/PaymentCard";
 import TourOverlay from "../components/TourOverlay";
 import { EmptyScene, HeaderBackdrop } from "../components/illustrations";
 import { maybeRequestReview } from "../utils/storeReview";
@@ -403,9 +403,8 @@ function DashboardHome({
                     />
                 }
             >
-                <BalanceCard
+                <PaymentCard
                     currencies={currencyBalances}
-                    weeklyGrowth={weeklyGrowth}
                     onPageChange={setActiveCurrencyIndex}
                 />
 
