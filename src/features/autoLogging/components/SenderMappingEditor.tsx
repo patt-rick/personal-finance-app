@@ -121,9 +121,11 @@ function BusinessOption({
         <TouchableOpacity style={[styles.bizOption, selected && styles.bizOptionSelected]} onPress={onPress}>
             <View style={{ flex: 1 }}>
                 <Text style={[styles.bizOptionLabel, selected && styles.bizOptionLabelSelected]}>{label}</Text>
-                {sub ? <Text style={styles.bizOptionSub}>{sub}</Text> : null}
+                {sub ? (
+                    <Text style={[styles.bizOptionSub, selected && styles.bizOptionSubSelected]}>{sub}</Text>
+                ) : null}
             </View>
-            {selected ? <Check size={18} color={theme.colors.primary} /> : null}
+            {selected ? <Check size={18} color={theme.colors.inverseOnSurface} /> : null}
         </TouchableOpacity>
     );
 }
@@ -132,7 +134,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         fieldLabel: {
             fontSize: 11,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             marginBottom: 8,
@@ -141,12 +143,11 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         input: {
             height: 52,
             borderRadius: theme.shape.medium,
-            borderWidth: 1,
-            borderColor: theme.colors.outline,
             paddingHorizontal: 14,
             fontSize: 15,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurface,
-            backgroundColor: theme.colors.surfaceContainerHighest,
+            backgroundColor: theme.colors.surfaceContainerHigh,
         },
         senderKeyPill: {
             marginTop: 8,
@@ -160,44 +161,49 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         senderKeyLabel: {
             fontSize: 11,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.5,
             color: theme.colors.onSurfaceVariant,
         },
         senderKeyValue: {
             fontSize: 13,
-            fontWeight: "700",
-            color: theme.colors.primary,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurface,
         },
         businessList: { gap: 8 },
         bizOption: {
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 14,
+            paddingHorizontal: 16,
             paddingVertical: 14,
-            borderRadius: theme.shape.medium,
-            backgroundColor: theme.colors.surfaceContainerHigh,
-            borderWidth: 1.5,
-            borderColor: "transparent",
+            borderRadius: theme.shape.full,
+            backgroundColor: "transparent",
+            borderWidth: 1,
+            borderColor: theme.colors.outlineVariant,
         },
         bizOptionSelected: {
-            borderColor: theme.colors.primary,
-            backgroundColor: theme.colors.secondaryContainer,
+            borderColor: theme.colors.inverseSurface,
+            backgroundColor: theme.colors.inverseSurface,
         },
         bizOptionLabel: {
             fontSize: 14,
-            fontWeight: "600",
-            color: theme.colors.onSurface,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
         },
         bizOptionLabelSelected: {
-            color: theme.colors.onSecondaryContainer,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.inverseOnSurface,
         },
         bizOptionSub: {
             fontSize: 11,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             marginTop: 2,
+        },
+        bizOptionSubSelected: {
+            color: theme.colors.inverseOnSurface,
+            opacity: 0.7,
         },
         actions: {
             flexDirection: "row",
@@ -218,7 +224,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         deleteText: {
             fontSize: 14,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
         },
         saveBtn: {
             flex: 1,
@@ -229,12 +235,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             alignItems: "center",
             justifyContent: "center",
             gap: 6,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         saveText: {
             fontSize: 14,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onPrimary,
         },
     });

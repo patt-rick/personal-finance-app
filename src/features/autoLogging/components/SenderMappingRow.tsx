@@ -71,7 +71,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         title: {
             fontSize: 15,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: -0.1,
             color: theme.colors.onSurface,
         },
@@ -83,7 +83,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         meta: {
             fontSize: 12,
-            fontWeight: "500",
+            fontFamily: theme.fonts.regular,
         },
         badge: {
             paddingHorizontal: 6,
@@ -93,7 +93,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         badgeText: {
             fontSize: 10,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: 0.3,
             color: theme.colors.onSecondaryContainer,
         },

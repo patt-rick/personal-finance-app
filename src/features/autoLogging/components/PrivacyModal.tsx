@@ -143,13 +143,14 @@ const createStyles = (theme: any) =>
         },
         lead: {
             fontSize: 17,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
             letterSpacing: -0.2,
             marginBottom: 8,
         },
         paragraph: {
             fontSize: 13,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             lineHeight: 19,
             marginBottom: 20,
@@ -159,7 +160,7 @@ const createStyles = (theme: any) =>
         },
         sectionTitle: {
             fontSize: 11,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             textTransform: "uppercase",
             letterSpacing: 0.8,
             marginBottom: 10,
@@ -180,6 +181,7 @@ const createStyles = (theme: any) =>
         bulletText: {
             flex: 1,
             fontSize: 13,
+            fontFamily: theme.fonts.regular,
             lineHeight: 19,
         },
     });

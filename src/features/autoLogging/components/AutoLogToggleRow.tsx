@@ -74,12 +74,13 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         title: {
             fontSize: 15,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             letterSpacing: -0.1,
             color: theme.colors.onSurface,
         },
         subtitle: {
             fontSize: 12,
+            fontFamily: theme.fonts.regular,
             marginTop: 1,
             color: theme.colors.onSurfaceVariant,
         },

@@ -82,11 +82,11 @@ function Cell({ label, value, styles, theme }: CellProps) {
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         card: {
-            backgroundColor: theme.colors.surfaceContainerLow,
-            borderRadius: theme.shape.large,
+            backgroundColor: theme.colors.card,
+            borderColor: theme.colors.border,
+            borderWidth: StyleSheet.hairlineWidth,
+            borderRadius: 14,
             padding: theme.spacing.l,
-            ...theme.elevation.level1,
-            shadowColor: theme.colors.shadow,
         },
         cardHead: {
             flexDirection: "row",
@@ -105,7 +105,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         cardTitle: {
             flex: 1,
             fontSize: 14,
-            fontWeight: "700",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
             letterSpacing: -0.1,
         },
@@ -120,7 +120,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         resetText: {
             fontSize: 11,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurfaceVariant,
         },
         grid: {
@@ -138,22 +138,25 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         cellValue: {
             fontSize: 20,
-            fontWeight: "800",
+            fontFamily: theme.fonts.semibold,
+            fontVariant: ["tabular-nums"],
             letterSpacing: -0.5,
         },
         cellLabel: {
             fontSize: 11,
-            fontWeight: "600",
+            fontFamily: theme.fonts.semibold,
             marginTop: 2,
             letterSpacing: 0.3,
         },
         footerText: {
             fontSize: 11,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             marginTop: 10,
         },
         emptyText: {
             fontSize: 12,
+            fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             lineHeight: 18,
         },
