@@ -3,4 +3,7 @@ env
 .expo
 /ios
 /credentials
-@patt-rick__finance-tracker.bak.jks.superpowers/
+*.jks
+*.keystore
+.superpowers/
+.claude/settings.local.json

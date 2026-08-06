@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Finance Tracker — Store Asset Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #F7F4EF;
+    --ink: #26231D;
+    --taupe: #6E6A61;
+    --blue: #0066FF;
+    --blue-deep: #0047B8;
+    --surface: #F1EDE5;
+    --surface-high: #EDE8DD;
+    --outline: #E7E2D8;
+    --card: #FFFFFF;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Manrope", system-ui, sans-serif;
+    padding: 48px 40px 96px;
+  }
+  .wrap { max-width: 1240px; margin: 0 auto; }
+  header { margin-bottom: 40px; }
+  .eyebrow {
+    font-size: 12px; font-weight: 600; letter-spacing: 0.22em;
+    color: var(--blue); text-transform: uppercase; margin-bottom: 10px;
+  }
+  h1 { font-size: 34px; font-weight: 800; letter-spacing: -0.02em; }
+  header p { color: var(--taupe); font-size: 15px; margin-top: 8px; max-width: 640px; line-height: 1.55; }
+  section { margin-top: 56px; }
+  h2 { font-size: 20px; font-weight: 700; letter-spacing: -0.01em; }
+  .spec { color: var(--taupe); font-size: 13px; margin-top: 4px; }
+  .panel {
+    margin-top: 20px; background: var(--card); border: 1px solid var(--outline);
+    border-radius: 24px; padding: 28px;
+  }
+  canvas { display: block; border-radius: 12px; box-shadow: 0 4px 18px rgba(74,63,40,0.12); }
+  #featureCanvas { width: 640px; max-width: 100%; }
+  .feature-row { display: flex; gap: 32px; flex-wrap: wrap; align-items: flex-start; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
+  button {
+    font-family: inherit; font-size: 14px; font-weight: 600; cursor: pointer;
+    border-radius: 999px; padding: 11px 22px; border: none; transition: filter .15s;
+  }
+  button:hover { filter: brightness(0.94); }
+  button:focus-visible { outline: 3px solid var(--blue); outline-offset: 2px; }
+  .primary { background: var(--blue); color: #fff; }
+  .tonal { background: var(--surface-high); color: var(--ink); }
+  .grid {
+    margin-top: 20px; display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 24px;
+  }
+  .frame-card {
+    background: var(--card); border: 1px solid var(--outline);
+    border-radius: 24px; padding: 18px; display: flex; flex-direction: column; gap: 14px;
+  }
+  .frame-card canvas { width: 100%; }
+  .frame-title { font-size: 14px; font-weight: 700; }
+  .frame-capture { font-size: 12.5px; color: var(--taupe); line-height: 1.5; }
+  .frame-capture strong { color: var(--ink); font-weight: 600; }
+  .frame-actions { display: flex; gap: 8px; }
+  .frame-actions button { padding: 9px 16px; font-size: 13px; flex: 1; }
+  input[type="file"] { display: none; }
+  .note {
+    margin-top: 14px; font-size: 13px; color: var(--taupe); line-height: 1.6; max-width: 720px;
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Finance Tracker · Play Store assets</div>
+    <h1>Store Asset Studio</h1>
+    <p>Feature graphic is ready to download as-is. For the 8 screenshots, capture the listed
+       app screen on a phone (9:16, dark bars cropped), load it into its frame, and download
+       the composed 1080 × 1920 PNG. Everything renders locally — nothing is uploaded.</p>
+  </header>
+
+  <section>
+    <h2>Feature graphic</h2>
+    <div class="spec">1024 × 500 · JPG, opaque (Play Console requires no alpha)</div>
+    <div class="panel feature-row">
+      <canvas id="featureCanvas" width="1024" height="500"></canvas>
+      <div>
+        <div class="actions">
+          <button class="primary" id="dlFeature">Download JPG</button>
+        </div>
+        <p class="note">Hook: app name + the three differentiators, carried by the app's own
+           payment-card motif in the GHS, NGN and USD gradients. Minimal text — Play crops
+           and overlays UI on this image in several placements.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Screenshots — 8 frames</h2>
+    <div class="spec">1080 × 1920 (9:16) · PNG · benefit headline over your real UI capture</div>
+    <div class="actions">
+      <button class="tonal" id="dlAll">Download all frames</button>
+    </div>
+    <div class="grid" id="frameGrid"></div>
+    <p class="note">Frame 1 is a pure trust card — no capture needed. Take captures on the
+       production build with the light (warm paper) theme so the store shows the current
+       Wallet redesign. Status bar: use demo mode or a clean bar (full battery, no notifications).</p>
+  </section>
+</div>
+
+<script>
+const C = {
+  paper: "#F7F4EF", ink: "#26231D", taupe: "#6E6A61", white: "#FFFFFF",
+  blue: "#0066FF", blueDeep: "#0047B8",
+  green: "#0E7C52", greenDeep: "#085C3B",
+  graphite: "#3A3F4A", graphiteDeep: "#23272F",
+  goldChip: "#F2E2B3", goldChipEdge: "#D9C58A",
+  surfaceHigh: "#EDE8DD", outline: "#E7E2D8", placeholder: "#9B968B",
+};
+
+const FRAMES = [
+  { id: "01-trust", eyebrow: "Finance Tracker", headline: "", special: "trust",
+    title: "1 · Trust hook", capture: "No capture needed — generated." },
+  { id: "02-dashboard", eyebrow: "Smart Dashboard", accent: "#0066FF",
+    headline: "Your Complete Financial Picture",
+    title: "2 · Dashboard", capture: "Capture: <strong>Dashboard</strong> — net balance, income vs expense, charts." },
+  { id: "03-cashbooks", eyebrow: "Multiple Cashbooks", accent: "#6D3FA0",
+    headline: "Separate Cashbooks for Every Area of Your Life",
+    title: "3 · Cashbooks", capture: "Capture: <strong>Home</strong> — several cashbook cards visible." },
+  { id: "04-currency", eyebrow: "Multi-Currency", accent: "#0E7C52",
+    headline: "Manage GHS, NGN, USD, EUR & GBP — All in One App",
+    title: "4 · Multi-currency", capture: "Capture: <strong>currency picker</strong> in Create Cashbook (₵ ₦ $ € £)." },
+  { id: "05-budgets", eyebrow: "Budgets & Reports", accent: "#8C6A14",
+    headline: "Set Budgets. See Exactly Where You Overspend.",
+    title: "5 · Budgets & reports", capture: "Capture: <strong>Reports</strong> — donut chart + category breakdown." },
+  { id: "06-debt", eyebrow: "Debt Tracker", accent: "#A8392E",
+    headline: "Track What You Owe and What You’re Owed — to the Penny",
+    title: "6 · Debt tracker", capture: "Capture: <strong>Debt Tracker</strong> — people list with partial payments." },
+  { id: "07-security", eyebrow: "Privacy & Security", accent: "#2E5339",
+    headline: "Bank-Level Security. 100% Offline. Nothing Leaves Your Phone.",
+    title: "7 · Security & privacy", capture: "Capture: <strong>PIN / biometric</strong> lock screen." },
+  { id: "08-autolog", eyebrow: "Automatic Logging", accent: "#0E6E7C",
+    headline: "Your Phone Logs Expenses For You",
+    title: "8 · Auto-logging", capture: "Capture: <strong>Settings → Automatic Logging</strong> — providers list (MTN MoMo, banks) or the Review Queue." },
+];
+
+function rr(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+}
+
+function drawCard(ctx, opts) {
+  const { x, y, w, h, rot, from, to, symbol, code } = opts;
+  const r = h * 0.13;
+  ctx.save();
+  ctx.translate(x + w / 2, y + h / 2);
+  ctx.rotate((rot * Math.PI) / 180);
+  ctx.translate(-w / 2, -h / 2);
+
+  ctx.save();
+  ctx.shadowColor = "rgba(38,35,29,0.28)";
+  ctx.shadowBlur = h * 0.18;
+  ctx.shadowOffsetY = h * 0.06;
+  const g = ctx.createLinearGradient(0, 0, w, h);
+  g.addColorStop(0, from);
+  g.addColorStop(1, to);
+  ctx.fillStyle = g;
+  rr(ctx, 0, 0, w, h, r);
+  ctx.fill();
+  ctx.restore();
+
+  const sheen = ctx.createLinearGradient(0, 0, w, h);
+  sheen.addColorStop(0, "rgba(255,255,255,0.14)");
+  sheen.addColorStop(0.45, "rgba(255,255,255,0)");
+  ctx.fillStyle = sheen;
+  rr(ctx, 0, 0, w, h, r);
+  ctx.fill();
+
+  const chipW = w * 0.15, chipH = chipW * 0.74;
+  const chipX = w * 0.085, chipY = h * 0.14;
+  const cg = ctx.createLinearGradient(chipX, chipY, chipX + chipW, chipY + chipH);
+  cg.addColorStop(0, C.goldChip);
+  cg.addColorStop(1, C.goldChipEdge);
+  ctx.fillStyle = cg;
+  rr(ctx, chipX, chipY, chipW, chipH, chipW * 0.2);
+  ctx.fill();
+  ctx.strokeStyle = "rgba(38,35,29,0.25)";
+  ctx.lineWidth = Math.max(1, w * 0.004);
+  ctx.beginPath();
+  ctx.moveTo(chipX + chipW * 0.5, chipY);
+  ctx.lineTo(chipX + chipW * 0.5, chipY + chipH);
+  ctx.moveTo(chipX, chipY + chipH * 0.5);
+  ctx.lineTo(chipX + chipW, chipY + chipH * 0.5);
+  ctx.stroke();
+
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = `600 ${h * 0.085}px Manrope`;
+  ctx.textAlign = "right";
+  ctx.textBaseline = "top";
+  ctx.letterSpacing = `${h * 0.02}px`;
+  ctx.fillText(code, w - w * 0.085, h * 0.15);
+  ctx.letterSpacing = "0px";
+
+  ctx.fillStyle = C.white;
+  ctx.font = `800 ${h * 0.30}px Manrope`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillText(symbol, w * 0.085, h * 0.87);
+
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.font = `600 ${h * 0.068}px Manrope`;
+  ctx.textAlign = "right";
+  ctx.letterSpacing = `${h * 0.016}px`;
+  ctx.fillText("FINANCE TRACKER", w - w * 0.085, h * 0.87);
+  ctx.letterSpacing = "0px";
+  ctx.restore();
+}
+
+function drawLogoMark(ctx, x, y, s, textColor) {
+  drawCard(ctx, { x, y: y - s * 0.34, w: s, h: s * 0.68, rot: -8, from: C.blue, to: C.blueDeep, symbol: "", code: "" });
+  ctx.fillStyle = textColor;
+  ctx.font = `600 ${s * 0.42}px Manrope`;
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.letterSpacing = `${s * 0.13}px`;
+  ctx.fillText("FINANCE TRACKER", x + s * 1.5, y + s * 0.03);
+  ctx.letterSpacing = "0px";
+}
+
+function drawFeature(ctx) {
+  const W = 1024, H = 500;
+  ctx.clearRect(0, 0, W, H);
+  ctx.fillStyle = C.paper;
+  ctx.fillRect(0, 0, W, H);
+
+  const glow = ctx.createRadialGradient(W * 0.82, H * 0.5, 40, W * 0.82, H * 0.5, 420);
+  glow.addColorStop(0, "rgba(0,102,255,0.07)");
+  glow.addColorStop(1, "rgba(0,102,255,0)");
+  ctx.fillStyle = glow;
+  ctx.fillRect(0, 0, W, H);
+
+  drawLogoMark(ctx, 72, 96, 40, C.taupe);
+
+  ctx.fillStyle = C.ink;
+  ctx.font = "800 80px Manrope";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.letterSpacing = "-2px";
+  ctx.fillText("Free forever.", 68, 258);
+  ctx.letterSpacing = "0px";
+
+  ctx.font = "600 31px Manrope";
+  ctx.fillStyle = C.taupe;
+  ctx.fillText("No ads. No account. No subscription.", 72, 322);
+
+  const chips = ["100% offline", "GHS · NGN · USD · EUR · GBP"];
+  let cx = 72;
+  const cy = 372;
+  for (const label of chips) {
+    ctx.font = "600 21px Manrope";
+    const tw = ctx.measureText(label).width;
+    ctx.fillStyle = C.surfaceHigh;
+    rr(ctx, cx, cy, tw + 44, 46, 23);
+    ctx.fill();
+    ctx.fillStyle = C.ink;
+    ctx.textBaseline = "middle";
+    ctx.fillText(label, cx + 22, cy + 24);
+    ctx.textBaseline = "alphabetic";
+    cx += tw + 44 + 14;
+  }
+
+  drawCard(ctx, { x: 716, y: 118, w: 290, h: 182, rot: 14, from: C.graphite, to: C.graphiteDeep, symbol: "$", code: "USD" });
+  drawCard(ctx, { x: 690, y: 152, w: 290, h: 182, rot: 5, from: C.green, to: C.greenDeep, symbol: "₦", code: "NGN" });
+  drawCard(ctx, { x: 664, y: 190, w: 290, h: 182, rot: -5, from: C.blue, to: C.blueDeep, symbol: "₵", code: "GHS" });
+}
+
+function wrapLines(ctx, text, font, maxWidth) {
+  ctx.font = font;
+  const words = text.split(" ");
+  const lines = [];
+  let line = "";
+  for (const word of words) {
+    const test = line ? line + " " + word : word;
+    if (ctx.measureText(test).width > maxWidth && line) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = test;
+    }
+  }
+  if (line) lines.push(line);
+  return lines;
+}
+
+function drawPhone(ctx, img) {
+  const W = 1080, H = 1920;
+  const pw = 820, px = (W - pw) / 2, py = 700;
+  const ph = H - py + 80;
+  const bezel = 16, rOuter = 76, rInner = 58;
+
+  ctx.save();
+  ctx.shadowColor = "rgba(38,35,29,0.30)";
+  ctx.shadowBlur = 60;
+  ctx.shadowOffsetY = 24;
+  ctx.fillStyle = C.ink;
+  rr(ctx, px, py, pw, ph, rOuter);
+  ctx.fill();
+  ctx.restore();
+
+  const sx = px + bezel, sy = py + bezel, sw = pw - bezel * 2, sh = ph - bezel * 2;
+  ctx.save();
+  rr(ctx, sx, sy, sw, sh, rInner);
+  ctx.clip();
+  if (img) {
+    const scale = Math.max(sw / img.width, sh / img.height);
+    const dw = img.width * scale, dh = img.height * scale;
+    ctx.drawImage(img, sx + (sw - dw) / 2, sy, dw, dh);
+  } else {
+    ctx.fillStyle = C.paper;
+    ctx.fillRect(sx, sy, sw, sh);
+    ctx.strokeStyle = C.placeholder;
+    ctx.lineWidth = 3;
+    ctx.setLineDash([14, 12]);
+    rr(ctx, sx + 40, sy + 40, sw - 80, sh - 200, 32);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.fillStyle = C.placeholder;
+    ctx.font = "600 34px Manrope";
+    ctx.textAlign = "center";
+    ctx.fillText("Load your app screenshot", sx + sw / 2, sy + 380);
+    ctx.font = "400 28px Manrope";
+    ctx.fillText("9:16 phone capture, light theme", sx + sw / 2, sy + 434);
+  }
+  ctx.restore();
+}
+
+function drawTrustFrame(ctx) {
+  const W = 1080, H = 1920;
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, C.blue);
+  g.addColorStop(1, C.blueDeep);
+  ctx.fillStyle = g;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = "rgba(255,255,255,0.85)";
+  ctx.font = "600 34px Manrope";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.letterSpacing = "10px";
+  ctx.fillText("FINANCE TRACKER", W / 2, 210);
+  ctx.letterSpacing = "0px";
+
+  const lines = ["Free Forever.", "No Ads.", "No Account.", "No Subscription."];
+  const alphas = [1, 0.88, 0.76, 0.64];
+  ctx.textAlign = "center";
+  lines.forEach((line, i) => {
+    ctx.font = i === 0 ? "800 118px Manrope" : "800 104px Manrope";
+    ctx.fillStyle = `rgba(255,255,255,${alphas[i]})`;
+    ctx.letterSpacing = "-2px";
+    ctx.fillText(line, W / 2, 460 + i * 150);
+    ctx.letterSpacing = "0px";
+  });
+
+  ctx.fillStyle = "rgba(255,255,255,0.9)";
+  ctx.font = "600 36px Manrope";
+  ctx.fillText("Your money data stays on your phone. Always.", W / 2, 1180);
+
+  drawCard(ctx, { x: 390, y: 1330, w: 460, h: 288, rot: 12, from: C.graphite, to: C.graphiteDeep, symbol: "$", code: "USD" });
+  drawCard(ctx, { x: 330, y: 1400, w: 460, h: 288, rot: 4, from: C.green, to: C.greenDeep, symbol: "₦", code: "NGN" });
+  drawCard(ctx, { x: 270, y: 1490, w: 460, h: 288, rot: -6, from: "#4D8DFF", to: "#1F5FD6", symbol: "₵", code: "GHS" });
+}
+
+function drawFrame(ctx, frame, img) {
+  const W = 1080, H = 1920;
+  ctx.clearRect(0, 0, W, H);
+  if (frame.special === "trust") { drawTrustFrame(ctx); return; }
+
+  ctx.fillStyle = C.paper;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = frame.accent;
+  ctx.font = "600 33px Manrope";
+  ctx.textAlign = "center";
+  ctx.textBaseline = "alphabetic";
+  ctx.letterSpacing = "9px";
+  ctx.fillText(frame.eyebrow.toUpperCase(), W / 2, 170);
+  ctx.letterSpacing = "0px";
+
+  let size = 84;
+  let font = `800 ${size}px Manrope`;
+  let lines = wrapLines(ctx, frame.headline, font, 900);
+  if (lines.length > 3) {
+    size = 72;
+    font = `800 ${size}px Manrope`;
+    lines = wrapLines(ctx, frame.headline, font, 900);
+  }
+  const lh = size * 1.18;
+  ctx.fillStyle = C.ink;
+  ctx.font = font;
+  ctx.letterSpacing = "-1.5px";
+  lines.forEach((line, i) => ctx.fillText(line, W / 2, 280 + i * lh));
+  ctx.letterSpacing = "0px";
+
+  drawPhone(ctx, img);
+}
+
+const featureCanvas = document.getElementById("featureCanvas");
+const frameGrid = document.getElementById("frameGrid");
+const frameState = FRAMES.map(() => ({ img: null, canvas: null }));
+
+function renderAll() {
+  drawFeature(featureCanvas.getContext("2d"));
+  FRAMES.forEach((frame, i) => {
+    const st = frameState[i];
+    if (st.canvas) drawFrame(st.canvas.getContext("2d"), frame, st.img);
+  });
+}
+
+function download(canvas, filename, type, quality) {
+  canvas.toBlob((blob) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  }, type, quality);
+}
+
+FRAMES.forEach((frame, i) => {
+  const card = document.createElement("div");
+  card.className = "frame-card";
+
+  const title = document.createElement("div");
+  title.className = "frame-title";
+  title.textContent = frame.title;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = 1080;
+  canvas.height = 1920;
+  frameState[i].canvas = canvas;
+
+  const capture = document.createElement("div");
+  capture.className = "frame-capture";
+  capture.innerHTML = frame.capture;
+
+  const actions = document.createElement("div");
+  actions.className = "frame-actions";
+
+  const dl = document.createElement("button");
+  dl.className = "primary";
+  dl.textContent = "Download PNG";
+  dl.onclick = () => download(canvas, `screenshot-${frame.id}-1080x1920.png`, "image/png");
+
+  actions.appendChild(dl);
+
+  if (!frame.special) {
+    const input = document.createElement("input");
+    input.type = "file";
+    input.accept = "image/*";
+    input.onchange = () => {
+      const file = input.files[0];
+      if (!file) return;
+      const img = new Image();
+      img.onload = () => {
+        frameState[i].img = img;
+        drawFrame(canvas.getContext("2d"), frame, img);
+      };
+      img.src = URL.createObjectURL(file);
+    };
+    const up = document.createElement("button");
+    up.className = "tonal";
+    up.textContent = "Load capture";
+    up.onclick = () => input.click();
+    actions.prepend(up);
+    card.appendChild(input);
+  }
+
+  card.append(title, canvas, capture, actions);
+  frameGrid.appendChild(card);
+});
+
+document.getElementById("dlFeature").onclick = () =>
+  download(featureCanvas, "feature-graphic-1024x500.jpg", "image/jpeg", 0.95);
+
+document.getElementById("dlAll").onclick = () => {
+  FRAMES.forEach((frame, i) => {
+    setTimeout(() => download(frameState[i].canvas, `screenshot-${frame.id}-1080x1920.png`, "image/png"), i * 350);
+  });
+};
+
+document.fonts.load('800 92px Manrope')
+  .then(() => Promise.all([
+    document.fonts.load('600 34px Manrope'),
+    document.fonts.load('400 28px Manrope'),
+  ]))
+  .then(renderAll)
+  .catch(renderAll);
+</script>
+</body>
+</html>
