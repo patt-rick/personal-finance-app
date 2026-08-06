@@ -28,18 +28,20 @@ All of these are edits in **Play Console → Main store listing**. They go live 
 
 ### 2.1 Title (HIGH)
 
+> ⚠️ **Correction:** the audit assumed a 50-char title limit; Google Play's limit has been **30 characters** since 2021. The §6 title variants also exceed 30 and need rework before use. Machine-verified copies of all three fields live in `store-assets/play-listing.txt`.
+
 | Field | Value |
 |---|---|
 | Current | `Finance Tracker` |
-| New | `Expense Tracker: Budget App, No Ads` |
-| Length | 49 / 50 chars |
+| New | `Expense Tracker: Budget No Ads` |
+| Length | 30 / 30 chars |
 
 ### 2.2 Short description (HIGH)
 
 | Field | Value |
 |---|---|
-| New | `Track expenses & budgets offline. Free forever — no ads, no account, no subscription.` |
-| Length | 79 / 80 chars |
+| New | `Expenses & budgets, offline. Free forever. No ads, no account, no subscription.` |
+| Length | 79 / 80 chars (the audit's original draft measured 84 — over the limit) |
 
 ### 2.3 Long description (HIGH)
 
