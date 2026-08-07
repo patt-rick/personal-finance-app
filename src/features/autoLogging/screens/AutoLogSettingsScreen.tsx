@@ -60,6 +60,24 @@ interface Props {
     onDataChanged?: () => Promise<void> | void;
 }
 
+function alertCaptureUnavailable(): boolean {
+    if (Platform.OS !== "android") {
+        Alert.alert(
+            "Android only",
+            "Automatic logging is currently available on Android. iOS support is on the roadmap.",
+        );
+        return true;
+    }
+    if (!autoLogNative.isAvailable()) {
+        Alert.alert(
+            "Full app required",
+            "This preview (Expo Go) can't capture SMS or notifications. Automatic Logging works in the installed app from the Play Store or a development build.",
+        );
+        return true;
+    }
+    return false;
+}
+
 export default function AutoLogSettingsScreen({ businesses, onBack, onDataChanged }: Props) {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
@@ -148,13 +166,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     const handleCaptureSms = useCallback(
         async (next: boolean) => {
             if (next) {
-                if (Platform.OS !== "android" || !autoLogNative.isAvailable()) {
-                    Alert.alert(
-                        "Android only",
-                        "Automatic logging is currently available on Android. iOS support is on the roadmap.",
-                    );
-                    return;
-                }
+                if (alertCaptureUnavailable()) return;
                 const granted = await ensureSmsPermission();
                 if (!granted) return;
                 if (!captureActive) {
@@ -174,13 +186,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     const handleCaptureNotifications = useCallback(
         async (next: boolean) => {
             if (next) {
-                if (Platform.OS !== "android" || !autoLogNative.isAvailable()) {
-                    Alert.alert(
-                        "Android only",
-                        "Automatic logging is currently available on Android. iOS support is on the roadmap.",
-                    );
-                    return;
-                }
+                if (alertCaptureUnavailable()) return;
                 const granted = await ensureNotificationListenerAccess();
                 if (!granted) return;
                 if (!captureActive) {
