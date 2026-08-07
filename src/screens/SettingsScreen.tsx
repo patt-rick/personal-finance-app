@@ -13,7 +13,7 @@ import {
     BackHandler,
     Animated,
 } from "react-native";
-import { useFocusEffect } from "@react-navigation/native";
+import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     User,
@@ -99,6 +99,12 @@ export default function SettingsScreen({
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [showExportVerify, setShowExportVerify] = useState(false);
+
+    const route = useRoute();
+    const openAutoLogParam = (route.params as { openAutoLog?: number } | undefined)?.openAutoLog;
+    useEffect(() => {
+        if (openAutoLogParam) setShowAutoLog(true);
+    }, [openAutoLogParam]);
 
     useFocusEffect(
         useCallback(() => {

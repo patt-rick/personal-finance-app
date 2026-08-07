@@ -139,7 +139,7 @@ export async function isBiometricsEnabled(): Promise<boolean> {
 
 export async function authenticateWithBiometrics(): Promise<boolean> {
     const result = await LocalAuthentication.authenticateAsync({
-        promptMessage: "Unlock Finance Tracker",
+        promptMessage: "Unlock Expense Tracker",
         cancelLabel: "Use PIN",
         disableDeviceFallback: true,
     });

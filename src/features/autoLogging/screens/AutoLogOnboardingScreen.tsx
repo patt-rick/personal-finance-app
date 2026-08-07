@@ -146,7 +146,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
                     </View>
                     <Text style={styles.heroTitle}>Capture expenses automatically</Text>
                     <Text style={styles.heroBody}>
-                        Finance Tracker reads incoming financial SMS and notifications on-device and suggests entries. Nothing
+                        Expense Tracker reads incoming financial SMS and notifications on-device and suggests entries. Nothing
                         leaves your phone.
                     </Text>
                 </View>

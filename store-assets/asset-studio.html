@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Finance Tracker — Store Asset Studio</title>
+<title>Expense Tracker — Store Asset Studio</title>
 <link rel="preconnect" href="https://fonts.googleapis.com" />
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;600;700;800&display=swap" rel="stylesheet" />
@@ -77,7 +77,7 @@
 <body>
 <div class="wrap">
   <header>
-    <div class="eyebrow">Finance Tracker · Play Store assets</div>
+    <div class="eyebrow">Expense Tracker · Play Store assets</div>
     <h1>Store Asset Studio</h1>
     <p>Feature graphic is ready to download as-is. For the 8 screenshots, capture the listed
        app screen on a phone (9:16, dark bars cropped), load it into its frame, and download
@@ -124,7 +124,7 @@ const C = {
 };
 
 const FRAMES = [
-  { id: "01-trust", eyebrow: "Finance Tracker", headline: "", special: "trust",
+  { id: "01-trust", eyebrow: "Expense Tracker", headline: "", special: "trust",
     title: "1 · Trust hook", capture: "No capture needed — generated." },
   { id: "02-dashboard", eyebrow: "Smart Dashboard", accent: "#0066FF",
     headline: "Your Complete Financial Picture",
@@ -216,7 +216,7 @@ function drawCard(ctx, opts) {
   ctx.font = `600 ${h * 0.068}px Manrope`;
   ctx.textAlign = "right";
   ctx.letterSpacing = `${h * 0.016}px`;
-  ctx.fillText("FINANCE TRACKER", w - w * 0.085, h * 0.87);
+  ctx.fillText("EXPENSE TRACKER", w - w * 0.085, h * 0.87);
   ctx.letterSpacing = "0px";
   ctx.restore();
 }
@@ -228,7 +228,7 @@ function drawLogoMark(ctx, x, y, s, textColor) {
   ctx.textAlign = "left";
   ctx.textBaseline = "middle";
   ctx.letterSpacing = `${s * 0.13}px`;
-  ctx.fillText("FINANCE TRACKER", x + s * 1.5, y + s * 0.03);
+  ctx.fillText("EXPENSE TRACKER", x + s * 1.5, y + s * 0.03);
   ctx.letterSpacing = "0px";
 }
 
@@ -352,7 +352,7 @@ function drawTrustFrame(ctx) {
   ctx.textAlign = "center";
   ctx.textBaseline = "alphabetic";
   ctx.letterSpacing = "10px";
-  ctx.fillText("FINANCE TRACKER", W / 2, 210);
+  ctx.fillText("EXPENSE TRACKER", W / 2, 210);
   ctx.letterSpacing = "0px";
 
   const lines = ["Free Forever.", "No Ads.", "No Account.", "No Subscription."];

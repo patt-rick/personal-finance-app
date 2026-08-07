@@ -56,7 +56,7 @@ export async function ensureNotificationListenerAccess(): Promise<boolean> {
     return new Promise<boolean>((resolve) => {
         Alert.alert(
             "Notification Access",
-            "Finance Tracker needs Notification Access to capture financial notifications. You will be taken to Android settings — flip the switch for Finance Tracker, then come back.",
+            "Expense Tracker needs Notification Access to capture financial notifications. You will be taken to Android settings — flip the switch for Expense Tracker, then come back.",
             [
                 { text: "Cancel", style: "cancel", onPress: () => resolve(false) },
                 {

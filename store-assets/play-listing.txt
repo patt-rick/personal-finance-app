@@ -4,18 +4,19 @@ APP NAME / TITLE  (30/30 chars)
 Expense Tracker: Budget No Ads
 
 ========================================
-SHORT DESCRIPTION  (79/80 chars)
+SHORT DESCRIPTION  (76/80 chars)
 ========================================
-Expenses & budgets, offline. Free forever. No ads, no account, no subscription.
+Auto-log expenses from bank & MoMo SMS. Offline, free forever. No ads, ever.
 
 ========================================
 FULL DESCRIPTION  (under 4000 chars)
 ========================================
 THE ONLY COMPLETELY FREE EXPENSE TRACKER - NO ADS, NO ACCOUNT, NO SUBSCRIPTION, EVER.
 
-Your money data stays on your phone. Always. Finance Tracker is a beautifully crafted offline expense tracker and budget app for people who are tired of paywalled finance apps - the ones that hide basic features behind a subscription, fill your screen with ads, or demand an account and a cloud sync you never wanted.
+Expense Tracker is a beautifully crafted offline expense tracker and budget app that logs your spending FOR you: with your permission, it reads your bank and mobile money SMS on your phone and turns them into transactions automatically, so your books stay up to date without typing. Your money data stays on your device. Always. No ads, no account, no subscription, no cloud sync you never wanted.
 
-Free forever. No credit card. No account. No tracking. No surprises.
+AUTOMATIC EXPENSE LOGGING FROM SMS (ANDROID)
+The heart of Expense Tracker: let your phone do the typing. The app reads incoming bank SMS and mobile money notifications - MTN MoMo, Telecel Cash, AirtelTigo, Ecobank, GCB, Fidelity, Absa, Stanbic, ECG, DSTV, Netflix, Spotify and more - and turns them into expense and income entries automatically. Routed to the right cashbook. Deduplicated across SMS and app notifications. Held in a Review Queue when the parser isn't sure. Parsing happens 100% on your phone: your messages are never uploaded, and you can pause or turn it off anytime.
 
 YOUR DATA, YOUR CONTROL
 • 100% offline - nothing leaves your phone
@@ -25,19 +26,16 @@ YOUR DATA, YOUR CONTROL
 • Export any cashbook as CSV any time you want
 
 MULTIPLE CASHBOOKS - ONE APP, EVERY AREA OF YOUR LIFE
-Most expense tracker and budget apps lock you into a single wallet. Finance Tracker gives you separate cashbooks for personal spending, side hustles, a small business, savings goals - anything you want to keep apart. Each cashbook has its own currency, its own categories, and its own running balance. A real cashbook app, not a single-budget tool with a "tag" workaround.
+Most expense tracker and budget apps lock you into a single wallet. Expense Tracker gives you separate cashbooks for personal spending, side hustles, a small business, savings goals - anything you want to keep apart. Each cashbook has its own currency, its own categories, and its own running balance. A real cashbook app, not a single-budget tool with a "tag" workaround.
 
 FIVE CURRENCIES, NO COMPROMISES
 GHS, NGN, USD, EUR and GBP - each cashbook holds its own, and you can change a cashbook's currency any time. Built for freelancers, migrants, students, and small businesses managing money across more than one currency. The Ghana budget app and the Naira (₦) expense tracker that the big finance apps still don't take seriously.
 
-AUTOMATIC EXPENSE LOGGING (ANDROID)
-Let your phone do the typing. Finance Tracker can read your bank SMS and mobile money notifications - MTN MoMo, Telecel Cash, AirtelTigo, Ecobank, GCB, Fidelity, Absa, Stanbic, ECG, DSTV, Netflix, Spotify and more - and turn them into transactions automatically. Routed to the right cashbook. Deduplicated across SMS and app notifications. Held in a Review Queue when the parser isn't sure. Everything runs on your phone, nothing is ever uploaded, and the feature is off by default until you turn it on.
-
 SMART DASHBOARD
-Your complete financial picture in one screen. Net balance, income vs expense, weekly growth, top categories, recent activity - all grouped by currency, all animated, all clean. See exactly where your money went without scrolling through a dozen tabs.
+Your complete financial picture in one screen. Net balance, income vs expense, weekly growth, top categories, recent activity - all grouped by currency, all animated, all clean.
 
 BUDGETS THAT ACTUALLY WORK
-Set weekly or monthly limits per category. A gentle nudge appears the moment you cross a limit - no popups, no nag screens, just a quick heads-up. See exactly where you overspend with category breakdowns and donut charts.
+Set weekly or monthly limits per category. A gentle nudge appears the moment you cross a limit - no popups, no nag screens. See exactly where you overspend with category breakdowns and donut charts.
 
 RECURRING TRANSACTIONS
 Salary, rent, subscriptions, recurring bills - set them once and they log themselves on schedule. A genuine recurring expense tracker built into the app, not a buried add-on.
@@ -49,17 +47,17 @@ BANK-LEVEL SECURITY
 Your PIN is encrypted inside your device's secure enclave. Biometric unlock uses fingerprint or Face ID through the system API - your biometric never leaves your phone. The app locks automatically when you switch away.
 
 REMINDERS THAT ACTUALLY MAKE YOU SMILE
-Daily reminders in a rotating mix of tones - funny, motivational, gentle, and serious. Sometimes a laugh, sometimes a push, always a nudge to keep your money story up to date.
+Daily reminders in a rotating mix of tones - funny, motivational, gentle, and serious. Always a nudge to keep your money story up to date.
 
 LIGHT, DARK, OR AUTOMATIC THEME
 Easy on the eyes, day and night.
 
 PERFECT FOR
+• MoMo and bank users who want every transaction captured automatically
 • Freelancers tracking income across currencies
 • Small business owners running multiple cashbooks
 • Couples and families splitting expenses
 • Privacy-focused users who refuse to hand their money data to a cloud finance app
-• Anyone tired of "free" apps that aren't actually free
 
-DOWNLOAD FINANCE TRACKER TODAY
+DOWNLOAD EXPENSE TRACKER TODAY
 Turn money management into a habit you'll actually enjoy. Free forever. No credit card, no account, no surprises.

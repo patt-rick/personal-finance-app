@@ -1,6 +1,6 @@
 # Privacy Policy
 
-Last updated: April 24, 2026
+Last updated: August 7, 2026
 
 This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.
 
@@ -19,11 +19,11 @@ For the purposes of this Privacy Policy:
 - __Account__ means a unique account created for You to access our Service or parts of our Service.
 - __Affiliate__ means an entity that controls, is controlled by, or is under common control with a party, where "control" means ownership of 50% or more of the shares, equity interest or other securities entitled to vote for election of directors or other managing authority.
 
-- __Application__ refers to Finance Tracker, the software program provided by the Company.
+- __Application__ refers to Expense Tracker, the software program provided by the Company.
 
 
 
-- __Company__ (referred to as either "the Company", "We", "Us" or "Our" in this Privacy Policy) refers to Finance Tracker.
+- __Company__ (referred to as either "the Company", "We", "Us" or "Our" in this Privacy Policy) refers to Expense Tracker.
 
 
 
@@ -88,11 +88,11 @@ We may also collect information that Your browser sends whenever You visit Our S
 
 ### Automatic Logging (Optional Feature)
 
-Finance Tracker includes an optional Automatic Logging feature that can suggest expense entries by reading incoming SMS messages and posted notifications on Your device. This feature is __off by default__ and must be enabled explicitly in __Settings → Features → Automatic Logging__.
+Expense Tracker includes an optional Automatic Logging feature that can suggest expense entries by reading incoming SMS messages and posted notifications on Your device. This feature is __off by default__ and must be enabled explicitly in __Settings → Automatic Logging__.
 
 #### What Is Captured
 
-When Automatic Logging is enabled, and only for the senders and apps that You place on the allowlist, Finance Tracker reads:
+When Automatic Logging is enabled, and only for the senders and apps that You place on the allowlist, Expense Tracker reads:
 
 - __SMS:__ the sender identifier and the message body.
 - __Notifications:__ the source application's package name, the notification title, and the notification text.
@@ -106,7 +106,7 @@ When Automatic Logging is enabled, and only for the senders and apps that You pl
 
 #### What We Do Not Do
 
-- __Nothing is uploaded.__ Finance Tracker does not send the contents of Your SMS or notifications to any server. We do not operate any server associated with this feature.
+- __Nothing is uploaded.__ Expense Tracker does not send the contents of Your SMS or notifications to any server. We do not operate any server associated with this feature.
 - __No advertising or analytics.__ Captured text is never used for advertising, profiling, or training any model.
 - __No sharing.__ Captured text is never shared with third parties.
 
@@ -114,18 +114,18 @@ When Automatic Logging is enabled, and only for the senders and apps that You pl
 
 - `READ_SMS` and `RECEIVE_SMS` — to read financial SMS from senders You allow.
 - `BIND_NOTIFICATION_LISTENER_SERVICE` — to read notifications from apps You allow. You grant this once in Android's Notification Access settings.
-- `POST_NOTIFICATIONS` (Android 13+) — only if You ask Finance Tracker to notify You when a new auto-logged entry appears.
+- `POST_NOTIFICATIONS` (Android 13+) — only if You ask Expense Tracker to notify You when a new auto-logged entry appears.
 
 #### Your Controls
 
 - Turn Automatic Logging off at any time from the Automatic Logging settings screen.
 - Remove individual senders or apps from the allowlist to stop capturing from them.
-- Revoke SMS or Notification Access from Android's app settings at any time. Finance Tracker will detect this and disable capture until You re-grant.
+- Revoke SMS or Notification Access from Android's app settings at any time. Expense Tracker will detect this and disable capture until You re-grant.
 - Clear Your auto-logged data by removing the affected transactions or by using the in-app __Clear All Data__ action.
 
 #### Retention of Automatic Logging Data
 
-- Auto-logged transactions and their original captured text are retained locally on Your device for as long as You keep them in Finance Tracker.
+- Auto-logged transactions and their original captured text are retained locally on Your device for as long as You keep them in Expense Tracker.
 - Uninstalling the app removes all captured data. If You back up the app via export/import, the backup contains the captured text; protect that file accordingly.
 
 ### Use of Your Personal Data

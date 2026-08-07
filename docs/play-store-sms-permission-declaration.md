@@ -1,46 +1,48 @@
-# Play Console — SMS Permission Declaration
+# Play Console — SMS Permission Declaration (v2, post-rejection)
 
-Answers to the Permissions Declaration form for `READ_SMS` / `RECEIVE_SMS` and the Notification Listener access used by Finance Tracker's Automatic Logging feature.
+Answers for the Permissions Declaration form for `READ_SMS` / `RECEIVE_SMS`. Rewritten after the August 2026 rejection: the original declaration selected **"SMS-based financial transactions (OTP account verification / fraud detection)"**, which is for apps that conduct or verify transactions over SMS. Expense Tracker does neither. The correct permitted use is **"SMS-based money management"** — Google's policy describes it as "apps that track and manage budget", with `READ_SMS` and `RECEIVE_SMS` both eligible.
 
-## Core functionality
+## Use case selection (the dropdown)
 
-**Which permission(s) is your app using?**
+**Selected permitted use:** SMS-based money management
+
+Do NOT select "SMS-based financial transactions" — that is the OTP/UPI/fraud-detection use case and was the cause of the rejection ("your in-app experience does not match the core functionality for your declared use case").
+
+## Which permissions is the app using?
+
 - `READ_SMS`
 - `RECEIVE_SMS`
-- `BIND_NOTIFICATION_LISTENER_SERVICE` (declared in manifest; granted by the user through Android's Notification Access settings)
+- Notification Listener access (`BIND_NOTIFICATION_LISTENER_SERVICE`) — granted by the user through Android's Notification Access settings; not part of the SMS permission group but disclosed here for completeness.
 
-**What feature in your app uses these permissions?**
-Automatic Logging, an opt-in feature that suggests expense entries by parsing financial SMS messages (e.g. bank alerts, mobile-money transactions) and posted notifications from banking / wallet apps on the user's device.
+## What core feature uses these permissions?
 
-**Core use case**
-Financial management — specifically, automatic transaction capture and expense tracking. The app is an offline personal finance tracker. SMS and notification capture replaces manual entry for transactions that already arrive on the user's device via SMS or notifications from banks and mobile-money providers.
+Automatic Expense Logging — the app's flagship capture feature. Expense Tracker reads incoming financial SMS (bank alerts, mobile-money transaction messages from providers such as MTN MoMo, Telecel Cash, AirtelTigo, Ecobank, GCB, Fidelity, Absa, Stanbic) and turns them into expense and income entries in the user's cashbooks, replacing manual entry. This is money management / budget tracking in the exact sense of the permitted use case: the SMS content is used solely to keep the user's budget and expense records up to date.
 
-## User-facing description
+## Where the feature appears (prominence)
 
-"Finance Tracker can read your incoming bank and mobile-money SMS messages and notifications to suggest new expense entries automatically. Nothing leaves your device — parsing happens locally and you choose which senders and apps to read from."
-
-## Is the use prominently featured in your app?
-
-Yes. Automatic Logging appears as a first-class feature in Settings → Features, is off by default, and is explicitly enabled by the user through an onboarding screen that explains the permission and requests runtime consent.
+- **Store listing:** featured in the short description ("Auto-log expenses from bank & MoMo SMS") and as the first feature section of the full description; shown in an early screenshot.
+- **In-app:** introduced in the first-run dashboard tour, promoted on the dashboard until enabled, and configurable under Settings → Automatic Logging. The user explicitly enables it through an onboarding screen that explains each permission before the runtime request.
+- **Demo video:** [link to unlisted YouTube video — see play-resubmission-plan.md for the recording script]
 
 ## How the data is used
 
-- Text is parsed on-device to extract amount, merchant, and transaction type.
-- Parsed suggestions are either saved to the user's chosen cashbook or queued for user review.
-- The original captured text is stored locally alongside each transaction so the user can verify the parse.
-- **No server-side processing occurs.** Finance Tracker does not operate any backend that receives SMS or notification content.
+- SMS text is parsed **on-device** to extract amount, merchant, and transaction type.
+- Parsed entries are saved to the user's chosen cashbook or held in a Review Queue for user confirmation.
+- The captured text is stored locally alongside each transaction so the user can verify the parse.
+- Only messages from user-allowlisted financial senders are processed; other SMS are ignored.
+- **No server-side processing occurs.** Expense Tracker has no backend and makes no network calls with SMS content.
 
 ## Is the data shared off-device?
 
-No. Finance Tracker does not transmit SMS or notification content to any server. The app has no backend. User data stays on the device unless the user explicitly exports a backup to local storage.
+No. SMS and notification content never leaves the device. The app has no backend, no analytics SDKs, and no third-party SDKs that receive SMS data. Data leaves the device only if the user explicitly exports a local backup file.
 
 ## Does the app use a Default SMS Handler?
 
-No. Finance Tracker does **not** set itself as the default SMS app. It uses the `SMS_RECEIVED` broadcast alongside the user's existing SMS app.
+No. Expense Tracker does not set itself as the default SMS app. It listens to the `SMS_RECEIVED` broadcast alongside the user's existing SMS app.
 
 ## Alternatives considered
 
-We considered asking users to copy-paste messages or forward them to a parser, but that defeats the purpose of automation. We also considered using OCR or bank API integrations, which either require camera/storage permissions with a similar privacy profile or are unavailable for the mobile-money providers our target users rely on (MTN MoMo, Vodafone Cash, etc.). Reading SMS and notifications on-device, with an explicit per-sender allowlist, is the most private option for this user base.
+Manual entry defeats the purpose of automatic capture. Bank APIs / open-banking aggregators do not exist for the mobile-money providers our users rely on (MTN MoMo, Telecel Cash, AirtelTigo); SMS is the only machine-readable record of these transactions. The Notification Listener alone misses SMS that the user's messaging app truncates or groups. On-device SMS parsing with a per-sender allowlist is the most private workable option for this user base.
 
 ## Security
 
@@ -52,6 +54,6 @@ We considered asking users to copy-paste messages or forward them to a parser, b
 ## Revocability
 
 Users can:
-- Turn off Automatic Logging at any time from the Settings screen.
+- Turn off Automatic Logging at any time from Settings.
 - Remove individual senders / apps from the allowlist.
-- Revoke `READ_SMS` and Notification Access from Android's system settings. The app detects revocation on next foreground and surfaces a recovery banner.
+- Revoke `READ_SMS` and Notification Access from Android system settings; the app detects revocation on next foreground and shows a recovery banner.

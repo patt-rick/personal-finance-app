@@ -33,7 +33,7 @@ export default function PrivacyModal({ visible, onClose }: Props) {
             <Text style={styles.lead}>Everything stays on this device.</Text>
             <Text style={styles.paragraph}>
                 Captured SMS and notification text is parsed locally and stored alongside your transactions.
-                Finance Tracker does not run a server and does not upload the contents of your messages.
+                Expense Tracker does not run a server and does not upload the contents of your messages.
             </Text>
 
             <Section title="What is captured" styles={styles} theme={theme}>

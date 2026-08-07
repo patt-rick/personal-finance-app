@@ -9,7 +9,7 @@ const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
 const CARD_WIDTH = Math.min(230, SCREEN_WIDTH * 0.62);
 const CARD_HEIGHT = CARD_WIDTH / 1.586;
-const WORDMARK = "Finance Tracker";
+const WORDMARK = "Expense Tracker";
 
 function Contactless({ size = 18 }: { size?: number }) {
     return (

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Finance Tracker",
+    "name": "Expense Tracker",
     "slug": "finance-tracker",
     "scheme": "financetracker",
     "version": "1.3.0",
