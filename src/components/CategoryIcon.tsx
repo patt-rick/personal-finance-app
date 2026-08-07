@@ -1,6 +1,7 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import {
+    ArrowLeftRight,
     Briefcase,
     Utensils,
     Bus,
@@ -26,7 +27,8 @@ const RULES: { match: RegExp; Icon: React.ComponentType<any> }[] = [
     { match: /bill|utilit|electric|water|rent/i, Icon: ReceiptText },
     { match: /health|medic|hospital|pharmac/i, Icon: HeartPulse },
     { match: /school|educat|tuition|book/i, Icon: GraduationCap },
-    { match: /momo|airtime|data|phone|transfer/i, Icon: Smartphone },
+    { match: /transfer/i, Icon: ArrowLeftRight },
+    { match: /momo|airtime|data|phone/i, Icon: Smartphone },
     { match: /home|house/i, Icon: Home },
     { match: /gift|donat/i, Icon: Gift },
     { match: /recur|subscript/i, Icon: Repeat },

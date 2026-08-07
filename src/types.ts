@@ -25,12 +25,13 @@ export interface Transaction {
     subCategory?: string;
     paymentMode?: string;
     remark?: string;
-    source?: "manual" | "recurring" | "sms" | "notification";
+    source?: "manual" | "recurring" | "sms" | "notification" | "transfer";
     sourceApp?: string;
     rawText?: string;
     autoLogged?: boolean;
     confidence?: number;
     reviewStatus?: "pending" | "confirmed" | "rejected";
+    transferId?: string;
 }
 
 export interface Category {

@@ -3,6 +3,7 @@ import { Business, Transaction, Category } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import { hapticSuccess, hapticError, hapticWarning } from "../utils/haptics";
 import {
+    ArrowLeftRight,
     Calendar,
     Car,
     Coffee,
@@ -17,6 +18,7 @@ import {
     ArrowLeft,
     Download,
 } from "lucide-react-native";
+import * as Crypto from "expo-crypto";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import React, { useState, useMemo, useEffect } from "react";
@@ -43,6 +45,8 @@ import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import TransactionEntryModal from "../components/TransactionEntryModal";
 import TransactionDetailModal from "../components/TransactionDetailModal";
+import TransferModal from "../components/TransferModal";
+import { createTransferPair, removeTransactionWithPair } from "../utils/transfers";
 import DateRangePickerModal from "../components/DateRangePickerModal";
 import CategoryIcon from "../components/CategoryIcon";
 import MoneyText from "../components/MoneyText";
@@ -54,12 +58,14 @@ function getChartColors(theme: any): string[] {
 
 export default function BusinessDetailView({
     business,
+    businesses,
     transactions,
     allTransactions,
     onBack,
     saveTransactions,
 }: {
     business: Business;
+    businesses: Business[];
     transactions: Transaction[];
     allTransactions: Transaction[];
     onBack: () => void;
@@ -70,7 +76,9 @@ export default function BusinessDetailView({
     const styles = useMemo(() => createDashboardStyles(theme), [theme]);
     const ls = useMemo(() => createLocalStyles(theme), [theme]);
     const [searchQuery, setSearchQuery] = useState("");
-    const [activeModal, setActiveModal] = useState<"none" | "entry" | "detail">("none");
+    const [activeModal, setActiveModal] = useState<"none" | "entry" | "detail" | "transfer">(
+        "none",
+    );
     const [selectedTx, setSelectedTx] = useState<Transaction | null>(null);
     const [entryType, setEntryType] = useState<"income" | "expense">("income");
     const [editingTx, setEditingTx] = useState<Transaction | null>(null);
@@ -298,7 +306,7 @@ export default function BusinessDetailView({
 
         if (!data.editingTxId) {
             const manualCount = updatedTransactions.filter(
-                (t) => !t.autoLogged && t.source !== "recurring",
+                (t) => !t.autoLogged && t.source !== "recurring" && t.source !== "transfer",
             ).length;
             setTimeout(() => {
                 maybeRequestReview({ kind: "transaction", totalTransactions: manualCount });
@@ -308,24 +316,59 @@ export default function BusinessDetailView({
 
     const handleStartEdit = () => {
         if (!selectedTx) return;
+        if (selectedTx.transferId) {
+            Alert.alert(
+                "Transfer entry",
+                "This entry is one half of a transfer between cashbooks, so it can't be edited. Delete the transfer and create a new one instead.",
+            );
+            return;
+        }
         setEntryType(selectedTx.type);
         setEditingTx(selectedTx);
         setActiveModal("entry");
     };
 
     const handleDeleteTx = (id: string) => {
-        Alert.alert("Delete Transaction", "Are you sure you want to delete this transaction?", [
-            { text: "Cancel", style: "cancel" },
-            {
-                text: "Delete",
-                style: "destructive",
-                onPress: () => {
-                    saveTransactions(allTransactions.filter((t) => t.id !== id));
-                    hapticError();
-                    setActiveModal("none");
+        const target = allTransactions.find((t) => t.id === id);
+        const isTransfer = !!target?.transferId;
+        Alert.alert(
+            isTransfer ? "Delete Transfer" : "Delete Transaction",
+            isTransfer
+                ? "This entry is part of a transfer between cashbooks. Both sides of the transfer will be deleted."
+                : "Are you sure you want to delete this transaction?",
+            [
+                { text: "Cancel", style: "cancel" },
+                {
+                    text: "Delete",
+                    style: "destructive",
+                    onPress: () => {
+                        saveTransactions(removeTransactionWithPair(allTransactions, id));
+                        hapticError();
+                        setActiveModal("none");
+                    },
                 },
-            },
-        ]);
+            ],
+        );
+    };
+
+    const handleTransferSubmit = (data: { to: Business; amount: number; remark: string }) => {
+        const { outgoing, incoming } = createTransferPair({
+            from: business,
+            to: data.to,
+            amount: data.amount,
+            remark: data.remark,
+            date: new Date().toISOString(),
+            makeId: () => Crypto.randomUUID(),
+        });
+        saveTransactions([...allTransactions, outgoing, incoming]);
+        hapticSuccess();
+        setActiveModal("none");
+        if (Platform.OS === "android") {
+            ToastAndroid.show(
+                `Transferred ${symbol} ${data.amount.toLocaleString()} to ${data.to.name}`,
+                ToastAndroid.SHORT,
+            );
+        }
     };
 
     const exportToCSV = async () => {
@@ -642,6 +685,13 @@ export default function BusinessDetailView({
                             CASH OUT
                         </Text>
                     </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[ls.transferBtn, { backgroundColor: theme.colors.primary }]}
+                        onPress={() => setActiveModal("transfer")}
+                        accessibilityLabel="Transfer to another cashbook"
+                    >
+                        <ArrowLeftRight size={20} color={theme.colors.onPrimary} />
+                    </TouchableOpacity>
                 </View>
 
                 <TransactionEntryModal
@@ -655,6 +705,15 @@ export default function BusinessDetailView({
                         setEditingTx(null);
                     }}
                     onSubmit={handleEntrySubmit}
+                />
+
+                <TransferModal
+                    visible={activeModal === "transfer"}
+                    from={business}
+                    businesses={businesses}
+                    symbol={symbol}
+                    onClose={() => setActiveModal("none")}
+                    onSubmit={handleTransferSubmit}
                 />
 
                 <TransactionDetailModal
@@ -899,6 +958,13 @@ const createLocalStyles = (theme: any) =>
             fontSize: 14,
             fontFamily: theme.fonts.semibold,
             letterSpacing: 0.5,
+        },
+        transferBtn: {
+            width: 52,
+            height: 52,
+            borderRadius: theme.shape.full,
+            alignItems: "center",
+            justifyContent: "center",
         },
     });
 

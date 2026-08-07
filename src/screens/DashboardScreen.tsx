@@ -7,10 +7,12 @@ import {
     TrendingUp,
     Hash,
     Star,
+    Zap,
 } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
     BackHandler,
+    Platform,
     RefreshControl,
     ScrollView,
     Text,
@@ -25,6 +27,7 @@ import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import PaymentCard, { CurrencyBalance } from "../components/dashboard/PaymentCard";
+import AutoLogPromoCard from "../components/dashboard/AutoLogPromoCard";
 import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
 import { maybeRequestReview } from "../utils/storeReview";
@@ -402,6 +405,12 @@ function DashboardHome({
                     </Text>
                 ) : null}
 
+                <AutoLogPromoCard
+                    onSetUp={() =>
+                        (navigation as any).navigate("Settings", { openAutoLog: Date.now() })
+                    }
+                />
+
                 <QuickStats
                     businesses={businesses}
                     transactions={transactions}
@@ -501,6 +510,16 @@ function DashboardHome({
                         description:
                             "All your cashbooks are listed here with their balances. Tap any cashbook to view its transactions in detail.",
                     },
+                    ...(Platform.OS === "android"
+                        ? [
+                              {
+                                  title: "Automatic Expense Logging",
+                                  icon: <Zap size={24} color={theme.colors.primary} />,
+                                  description:
+                                      "Expense Tracker can read your bank and MoMo SMS on this phone and log expenses for you. Turn it on in Settings → Automatic Logging.",
+                              },
+                          ]
+                        : []),
                 ]}
                 onComplete={() => {
                     setTimeout(() => {
@@ -730,6 +749,7 @@ export default function DashboardScreen({
         return (
             <BusinessDetailView
                 business={currentBusiness}
+                businesses={businesses}
                 transactions={transactions.filter((t) => t.businessId === currentBusiness.id)}
                 allTransactions={transactions}
                 onBack={() => setCurrentBusiness(null)}
