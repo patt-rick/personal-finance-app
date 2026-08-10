@@ -53,19 +53,21 @@ export function BudgetWidget({
                     width: "match_parent",
                     backgroundColor: colors.outlineVariant,
                     borderRadius: 999,
+                    flexDirection: "row",
                 }}
             >
                 <FlexWidget
                     style={{
                         height: 10,
-                        // react-native-android-widget's SizeStyleProps only types width as
-                        // 'wrap_content' | 'match_parent' | number — no percentage strings.
-                        // Cast is required to compile; revisit at device-QA time and switch
-                        // to a numeric/px-based fill (e.g. measured container width * pct/100)
-                        // for correct native rendering.
-                        width: `${pct}%` as unknown as number,
+                        flex: Math.max(0, Math.round(pct)),
                         backgroundColor: barColor,
                         borderRadius: 999,
+                    }}
+                />
+                <FlexWidget
+                    style={{
+                        height: 10,
+                        flex: Math.max(0, Math.round(100 - pct)),
                     }}
                 />
             </FlexWidget>
