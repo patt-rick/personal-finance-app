@@ -38,7 +38,50 @@
       "@react-native-community/datetimepicker",
       "expo-notifications",
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      [
+        "react-native-android-widget",
+        {
+          "widgets": [
+            {
+              "name": "BalanceWidget",
+              "label": "Cashbook Balance",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "description": "Balance for a chosen cashbook",
+              "previewImage": "./src/icon.png",
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable"
+            },
+            {
+              "name": "BudgetWidget",
+              "label": "Budget Progress",
+              "minWidth": "180dp",
+              "minHeight": "110dp",
+              "targetCellWidth": 3,
+              "targetCellHeight": 2,
+              "description": "Budget usage for a chosen cashbook",
+              "previewImage": "./src/icon.png",
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable"
+            },
+            {
+              "name": "QuickAddWidget",
+              "label": "Quick Add Expense",
+              "minWidth": "110dp",
+              "minHeight": "40dp",
+              "targetCellWidth": 2,
+              "targetCellHeight": 1,
+              "description": "Tap to log an expense",
+              "previewImage": "./src/icon.png",
+              "resizeMode": "horizontal|vertical",
+              "widgetFeatures": "reconfigurable"
+            }
+          ]
+        }
+      ]
     ],
     "notification": {
       "icon": "./src/icon.png",
