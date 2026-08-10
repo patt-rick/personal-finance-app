@@ -1,13 +1,15 @@
 import React from "react";
-import { FlexWidget, TextWidget } from "react-native-android-widget";
+import { FlexWidget, TextWidget, SvgWidget } from "react-native-android-widget";
 import { WidgetColors } from "../theme/widgetTheme";
+import { QuickAddView } from "../services/widgetData";
+import { cashbookIconSvg } from "../../cashbooks/appearance/iconSvg";
 
 export function QuickAddWidget({
-    cashbookName,
+    view,
     colors,
     clickAction,
 }: {
-    cashbookName: string;
+    view: QuickAddView;
     colors: WidgetColors;
     clickAction: string;
 }) {
@@ -25,9 +27,10 @@ export function QuickAddWidget({
             }}
             clickAction={clickAction}
         >
-            <TextWidget text="+ Add expense" style={{ fontSize: 16, color: colors.onPrimary }} />
+            <SvgWidget svg={cashbookIconSvg(view.iconKey, colors.onPrimary, 20)} style={{ width: 20, height: 20 }} />
+            <TextWidget text="+ Add expense" style={{ fontSize: 16, color: colors.onPrimary, marginTop: 4 }} />
             <TextWidget
-                text={cashbookName}
+                text={view.cashbookName}
                 style={{ fontSize: 11, color: colors.onPrimary, marginTop: 2 }}
             />
         </FlexWidget>

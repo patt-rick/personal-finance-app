@@ -1,7 +1,9 @@
 import React from "react";
-import { FlexWidget, TextWidget } from "react-native-android-widget";
+import { FlexWidget, TextWidget, SvgWidget } from "react-native-android-widget";
 import { BalanceView } from "../services/widgetData";
 import { WidgetColors } from "../theme/widgetTheme";
+import { cashbookIconSvg } from "../../cashbooks/appearance/iconSvg";
+import { withAlpha } from "../../cashbooks/appearance/resolve";
 
 const fmt = (symbol: string, n: number) =>
     `${symbol}${Math.abs(n).toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -28,10 +30,25 @@ export function BalanceWidget({
             }}
             clickAction={clickAction}
         >
-            <TextWidget
-                text={view.cashbookName}
-                style={{ fontSize: 12, color: colors.onSurfaceVariant }}
-            />
+            <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+                <FlexWidget
+                    style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 6,
+                        backgroundColor: withAlpha(view.accent, "22"),
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 6,
+                    }}
+                >
+                    <SvgWidget svg={cashbookIconSvg(view.iconKey, view.accent, 14)} style={{ width: 14, height: 14 }} />
+                </FlexWidget>
+                <TextWidget
+                    text={view.cashbookName}
+                    style={{ fontSize: 12, color: colors.onSurfaceVariant }}
+                />
+            </FlexWidget>
             <TextWidget
                 text={`${view.balance < 0 ? "-" : ""}${fmt(view.currencySymbol, view.balance)}`}
                 style={{ fontSize: 24, color: colors.onSurface }}

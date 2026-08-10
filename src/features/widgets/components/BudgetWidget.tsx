@@ -1,8 +1,10 @@
 import React from "react";
-import { FlexWidget, TextWidget } from "react-native-android-widget";
+import { FlexWidget, TextWidget, SvgWidget } from "react-native-android-widget";
 import { BudgetView } from "../services/widgetData";
 import { WidgetColors, budgetBarColor } from "../theme/widgetTheme";
 import { MessageWidget } from "./WidgetStates";
+import { cashbookIconSvg } from "../../cashbooks/appearance/iconSvg";
+import { withAlpha } from "../../cashbooks/appearance/resolve";
 
 const fmt = (symbol: string, n: number) =>
     `${symbol}${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
@@ -39,10 +41,25 @@ export function BudgetWidget({
             }}
             clickAction={clickAction}
         >
-            <TextWidget
-                text={view.cashbookName}
-                style={{ fontSize: 12, color: colors.onSurfaceVariant }}
-            />
+            <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
+                <FlexWidget
+                    style={{
+                        width: 20,
+                        height: 20,
+                        borderRadius: 6,
+                        backgroundColor: withAlpha(view.accent, "22"),
+                        alignItems: "center",
+                        justifyContent: "center",
+                        marginRight: 6,
+                    }}
+                >
+                    <SvgWidget svg={cashbookIconSvg(view.iconKey, view.accent, 13)} style={{ width: 13, height: 13 }} />
+                </FlexWidget>
+                <TextWidget
+                    text={view.cashbookName}
+                    style={{ fontSize: 12, color: colors.onSurfaceVariant }}
+                />
+            </FlexWidget>
             <TextWidget
                 text={view.periodLabel}
                 style={{ fontSize: 11, color: colors.onSurfaceVariant, marginBottom: 6 }}
