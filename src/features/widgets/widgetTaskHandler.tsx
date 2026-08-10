@@ -2,11 +2,10 @@ import React from "react";
 import type { WidgetTaskHandlerProps } from "react-native-android-widget";
 import { Linking } from "react-native";
 import { loadBusinesses, loadTransactions, loadBudgets, loadCategories } from "../../utils/storage";
-import { calculateBudgetData } from "../../utils/budgetCalculations";
-import { WIDGET_NAMES, WIDGET_CLICK } from "./constants";
+import { WIDGET_NAMES, WIDGET_CLICK, WIDGET_MESSAGES } from "./constants";
 import { getWidgetBusinessId, removeWidgetMapping } from "./services/widgetConfig";
 import { resolveWidgetColors } from "./theme/widgetTheme";
-import { buildBalanceView, buildBudgetView } from "./services/widgetData";
+import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "./services/widgetData";
 import { buildQuickAddLink } from "./services/deepLink";
 import { BalanceWidget } from "./components/BalanceWidget";
 import { BudgetWidget } from "./components/BudgetWidget";
@@ -33,7 +32,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     const colors = await resolveWidgetColors();
     const businessId = await getWidgetBusinessId(widgetId);
     if (!businessId) {
-        props.renderWidget(<MessageWidget message="Tap to set up" colors={colors} />);
+        props.renderWidget(<MessageWidget message={WIDGET_MESSAGES.UNSET} colors={colors} />);
         return;
     }
 
@@ -41,7 +40,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     const business = businesses.find((b) => b.id === businessId) ?? null;
     if (!business) {
         props.renderWidget(
-            <MessageWidget message="Cashbook removed — tap to reconfigure" colors={colors} />,
+            <MessageWidget message={WIDGET_MESSAGES.CASHBOOK_REMOVED} colors={colors} />,
         );
         return;
     }
@@ -66,8 +65,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     if (widgetName === WIDGET_NAMES.BUDGET) {
         const [budgets, categories] = await Promise.all([loadBudgets(), loadCategories()]);
         const budget = budgets.find((b) => b.businessId === businessId) ?? null;
-        const cashbookTx = transactions.filter((t) => t.businessId === businessId);
-        const budgetData = budget ? calculateBudgetData(budget, cashbookTx, categories) : [];
+        const budgetData = budgetDataForCashbook(budget, transactions, categories, businessId);
         const view = buildBudgetView(business, budget, budgetData);
         props.renderWidget(
             <BudgetWidget view={view} colors={colors} clickAction={WIDGET_CLICK.OPEN_QUICK_ADD} />,

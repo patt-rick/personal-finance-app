@@ -1,5 +1,9 @@
-import { Business, Budget, CategoryBudgetSpent, Transaction } from "../../src/types";
-import { buildBalanceView, buildBudgetView } from "../../src/features/widgets/services/widgetData";
+import { Business, Budget, Category, CategoryBudgetSpent, Transaction } from "../../src/types";
+import {
+    buildBalanceView,
+    buildBudgetView,
+    budgetDataForCashbook,
+} from "../../src/features/widgets/services/widgetData";
 
 const business = (over: Partial<Business> = {}): Business => ({
     id: "b1",
@@ -73,5 +77,34 @@ describe("buildBudgetView", () => {
             currencySymbol: "₵",
             noBudget: true,
         });
+    });
+});
+
+describe("budgetDataForCashbook", () => {
+    const categories: Category[] = [{ id: "6", name: "Food", type: "expense" }];
+    const budget: Budget = {
+        id: "bud1",
+        businessId: "b1",
+        period: "monthly",
+        totalLimit: 1000,
+        categoryBudgets: { "6": { limit: 400 } },
+        createdAt: "2026-08-01T00:00:00.000Z",
+        updatedAt: "2026-08-01T00:00:00.000Z",
+    };
+
+    it("scopes spend to the pinned cashbook before aggregating", () => {
+        const today = new Date().toISOString();
+        const txns = [
+            tx({ id: "a", businessId: "b1", category: "Food", amount: 250, date: today }),
+            tx({ id: "b", businessId: "b2", category: "Food", amount: 999, date: today }),
+        ];
+        const result = budgetDataForCashbook(budget, txns, categories, "b1");
+        expect(result).toHaveLength(1);
+        expect(result[0].categoryName).toBe("Food");
+        expect(result[0].spent).toBe(250);
+    });
+
+    it("returns an empty array when the budget is null", () => {
+        expect(budgetDataForCashbook(null, [], categories, "b1")).toEqual([]);
     });
 });

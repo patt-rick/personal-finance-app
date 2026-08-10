@@ -19,3 +19,9 @@ export const DEEP_LINK_SCHEME = "financetracker";
 export const WIDGET_CLICK = {
     OPEN_QUICK_ADD: "OPEN_QUICK_ADD",
 } as const;
+
+// User-facing placeholder messages shown when a widget can't render its data.
+export const WIDGET_MESSAGES = {
+    UNSET: "Tap to set up",
+    CASHBOOK_REMOVED: "Cashbook removed — tap to reconfigure",
+} as const;

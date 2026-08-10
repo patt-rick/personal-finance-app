@@ -1,17 +1,15 @@
 import React from "react";
 import { Platform } from "react-native";
 import { requestWidgetUpdate } from "react-native-android-widget";
-import { WIDGET_NAMES } from "../constants";
+import { WIDGET_NAMES, WIDGET_CLICK, WIDGET_MESSAGES } from "../constants";
 import { loadBusinesses, loadTransactions, loadBudgets, loadCategories } from "../../../utils/storage";
-import { calculateBudgetData } from "../../../utils/budgetCalculations";
 import { readAllWidgetMappings } from "./widgetConfig";
 import { resolveWidgetColors, WidgetColors } from "../theme/widgetTheme";
-import { buildBalanceView, buildBudgetView } from "./widgetData";
+import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "./widgetData";
 import { BalanceWidget } from "../components/BalanceWidget";
 import { BudgetWidget } from "../components/BudgetWidget";
 import { MessageWidget } from "../components/WidgetStates";
 import { Business, Transaction, Budget, Category } from "../../../types";
-import { WIDGET_CLICK } from "../constants";
 
 interface Snapshot {
     colors: WidgetColors;
@@ -24,8 +22,9 @@ interface Snapshot {
 
 const renderBalance = (snap: Snapshot, widgetId: number): React.ReactElement => {
     const businessId = snap.mappings[String(widgetId)];
-    const business = businessId ? snap.businesses.find((b) => b.id === businessId) : undefined;
-    if (!business) return React.createElement(MessageWidget, { message: "Tap to set up", colors: snap.colors });
+    if (!businessId) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.UNSET, colors: snap.colors });
+    const business = snap.businesses.find((b) => b.id === businessId);
+    if (!business) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.CASHBOOK_REMOVED, colors: snap.colors });
     return React.createElement(BalanceWidget, {
         view: buildBalanceView(business, snap.transactions),
         colors: snap.colors,
@@ -35,11 +34,11 @@ const renderBalance = (snap: Snapshot, widgetId: number): React.ReactElement => 
 
 const renderBudget = (snap: Snapshot, widgetId: number): React.ReactElement => {
     const businessId = snap.mappings[String(widgetId)];
-    const business = businessId ? snap.businesses.find((b) => b.id === businessId) : undefined;
-    if (!business) return React.createElement(MessageWidget, { message: "Tap to set up", colors: snap.colors });
+    if (!businessId) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.UNSET, colors: snap.colors });
+    const business = snap.businesses.find((b) => b.id === businessId);
+    if (!business) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.CASHBOOK_REMOVED, colors: snap.colors });
     const budget = snap.budgets.find((b) => b.businessId === business.id) ?? null;
-    const cashbookTx = snap.transactions.filter((t) => t.businessId === business.id);
-    const budgetData = budget ? calculateBudgetData(budget, cashbookTx, snap.categories) : [];
+    const budgetData = budgetDataForCashbook(budget, snap.transactions, snap.categories, business.id);
     return React.createElement(BudgetWidget, {
         view: buildBudgetView(business, budget, budgetData),
         colors: snap.colors,

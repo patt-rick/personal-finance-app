@@ -1,9 +1,10 @@
-import { Business, Budget, CategoryBudgetSpent } from "../../../types";
+import { Business, Budget, CategoryBudgetSpent, Category } from "../../../types";
 import { Transaction } from "../../../types";
 import { computeCashbookBalance, computeMonthFlows } from "../../../utils/cashbookBalance";
 import {
     calculateTotalSpent,
     getPeriodDisplayName,
+    calculateBudgetData,
 } from "../../../utils/budgetCalculations";
 import { getCurrencySymbol } from "../../../utils/_helpers";
 
@@ -44,6 +45,20 @@ export const buildBalanceView = (
         monthIncome: income,
         monthExpense: expense,
     };
+};
+
+// Budget spend scoped to one cashbook. calculateBudgetData filters by category
+// name + date only, so transactions must be pre-filtered by businessId or the
+// widget would blend spend across cashbooks.
+export const budgetDataForCashbook = (
+    budget: Budget | null,
+    transactions: Transaction[],
+    categories: Category[],
+    businessId: string,
+): CategoryBudgetSpent[] => {
+    if (!budget) return [];
+    const cashbookTx = transactions.filter((t) => t.businessId === businessId);
+    return calculateBudgetData(budget, cashbookTx, categories);
 };
 
 export const buildBudgetView = (
