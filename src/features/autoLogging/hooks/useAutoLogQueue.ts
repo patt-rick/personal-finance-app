@@ -3,6 +3,7 @@ import { Transaction } from "../../../types";
 import { ReviewItem } from "../types";
 import { loadReviewQueue, removeReviewItem } from "../services/persistence/reviewQueue";
 import { loadTransactions, saveTransactions } from "../../../utils/storage";
+import { refreshCashbookWidgets } from "../../widgets/services/widgetSync";
 
 export interface UseAutoLogQueue {
     items: ReviewItem[];
@@ -54,6 +55,7 @@ export function useAutoLogQueue(): UseAutoLogQueue {
             const existing = await loadTransactions();
             await saveTransactions([...existing, tx]);
             await removeReviewItem(item.id);
+            void refreshCashbookWidgets();
             setItems((prev) => prev.filter((i) => i.id !== item.id));
         },
         [],
