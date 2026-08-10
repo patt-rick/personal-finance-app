@@ -3,7 +3,6 @@ import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { Trash2 } from 'lucide-react-native';
 import { Business } from '../types';
 import { useTheme } from '../theme/theme';
-import CashbookIconBadge from "./CashbookIconBadge";
 
 interface BusinessItemProps {
   business: Business;
@@ -25,8 +24,7 @@ export default function BusinessItem({ business, isActive, onPress, onDelete }: 
       onPress={onPress}
       activeOpacity={0.7}
     >
-      <CashbookIconBadge business={business} size={40} />
-      <View style={{ flex: 1, marginLeft: theme.spacing.m }}>
+      <View style={{ flex: 1 }}>
         <Text style={[
           styles.businessName,
           isActive && styles.businessNameActive,

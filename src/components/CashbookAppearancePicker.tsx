@@ -50,7 +50,7 @@ export default function CashbookAppearancePicker({
                                 s.iconCell,
                                 {
                                     backgroundColor: selected
-                                        ? `${color}22`
+                                        ? `${color.slice(0, 7)}22`
                                         : theme.colors.surfaceContainerHigh,
                                     borderColor: selected ? color : "transparent",
                                 },

@@ -24,7 +24,8 @@ export default function CashbookIconBadge({
                     alignItems: "center",
                     justifyContent: "center",
                     // Tint derived from the cashbook's own color (feature data).
-                    backgroundColor: `${color}22`,
+                    // slice(0,7) keeps a 6-digit base so RN gets a valid #RRGGBBAA.
+                    backgroundColor: `${color.slice(0, 7)}22`,
                 },
             }),
         [size, color],
