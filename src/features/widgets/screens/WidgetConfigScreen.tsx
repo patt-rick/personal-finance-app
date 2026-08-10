@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-native";
 import type { WidgetConfigurationScreenProps } from "react-native-android-widget";
-import { useTheme } from "../../../theme/theme";
+import { lightTheme, AppTheme } from "../../../theme/theme";
 import { getCurrencySymbol } from "../../../utils/_helpers";
 import { loadBusinesses, loadTransactions, loadBudgets, loadCategories } from "../../../utils/storage";
 import { Business } from "../../../types";
 import { setWidgetBusinessId } from "../services/widgetConfig";
 import { WIDGET_NAMES, WIDGET_CLICK } from "../constants";
-import { resolveWidgetColors } from "../theme/widgetTheme";
+import { resolveWidgetColors, resolveWidgetTheme } from "../theme/widgetTheme";
 import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "../services/widgetData";
 import { BalanceWidget } from "../components/BalanceWidget";
 import { BudgetWidget } from "../components/BudgetWidget";
@@ -58,16 +58,22 @@ async function renderInitialFrame(
 }
 
 export function WidgetConfigScreen(props: WidgetConfigurationScreenProps) {
-    const theme = useTheme();
-    const [businesses, setBusinesses] = useState<Business[]>([]);
+    const [theme, setTheme] = useState<AppTheme>(lightTheme);
+    const [businesses, setBusinesses] = useState<Business[] | null>(null);
 
     useEffect(() => {
+        resolveWidgetTheme().then(setTheme);
         loadBusinesses().then(setBusinesses);
     }, []);
 
     const choose = async (business: Business) => {
-        await setWidgetBusinessId(props.widgetInfo.widgetId, business.id);
-        await renderInitialFrame(props, business);
+        try {
+            await setWidgetBusinessId(props.widgetInfo.widgetId, business.id);
+            await renderInitialFrame(props, business);
+        } catch {
+            // still finish below so the config Activity doesn't hang; an
+            // unmapped widget renders the "Tap to set up" placeholder.
+        }
         props.setResult("ok");
     };
 
@@ -76,22 +82,34 @@ export function WidgetConfigScreen(props: WidgetConfigurationScreenProps) {
             <Text style={[styles.title, { color: theme.colors.onSurface, fontFamily: theme.fonts.bold }]}>
                 Choose a cashbook
             </Text>
-            <ScrollView>
-                {businesses.map((b) => (
-                    <TouchableOpacity
-                        key={b.id}
-                        style={[styles.row, { backgroundColor: theme.colors.surfaceContainer }]}
-                        onPress={() => choose(b)}
-                    >
-                        <Text style={{ color: theme.colors.onSurface, fontFamily: theme.fonts.semibold, fontSize: 15 }}>
-                            {b.name}
-                        </Text>
-                        <Text style={{ color: theme.colors.onSurfaceVariant, fontFamily: theme.fonts.regular }}>
-                            {getCurrencySymbol(b.currency)} {b.currency ?? "USD"}
-                        </Text>
-                    </TouchableOpacity>
-                ))}
-            </ScrollView>
+            {businesses !== null && businesses.length === 0 ? (
+                <Text
+                    style={{
+                        color: theme.colors.onSurfaceVariant,
+                        fontFamily: theme.fonts.regular,
+                        fontSize: 14,
+                    }}
+                >
+                    No cashbooks yet — open the app to create one first.
+                </Text>
+            ) : (
+                <ScrollView>
+                    {(businesses ?? []).map((b) => (
+                        <TouchableOpacity
+                            key={b.id}
+                            style={[styles.row, { backgroundColor: theme.colors.surfaceContainer }]}
+                            onPress={() => choose(b)}
+                        >
+                            <Text style={{ color: theme.colors.onSurface, fontFamily: theme.fonts.semibold, fontSize: 15 }}>
+                                {b.name}
+                            </Text>
+                            <Text style={{ color: theme.colors.onSurfaceVariant, fontFamily: theme.fonts.regular }}>
+                                {getCurrencySymbol(b.currency)} {b.currency ?? "USD"}
+                            </Text>
+                        </TouchableOpacity>
+                    ))}
+                </ScrollView>
+            )}
         </View>
     );
 }

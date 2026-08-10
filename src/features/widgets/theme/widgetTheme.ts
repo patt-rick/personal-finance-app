@@ -47,7 +47,7 @@ export const budgetBarColor = (percentage: number, c: WidgetColors): HexColor =>
     return c.error;
 };
 
-export const resolveWidgetColors = async (): Promise<WidgetColors> => {
+export const resolveWidgetTheme = async (): Promise<AppTheme> => {
     let mode: string | null = null;
     try {
         mode = await AsyncStorage.getItem(THEME_STORAGE_KEY);
@@ -56,5 +56,7 @@ export const resolveWidgetColors = async (): Promise<WidgetColors> => {
     }
     const isDark =
         mode === "dark" || ((mode === "system" || !mode) && Appearance.getColorScheme() === "dark");
-    return pick(isDark ? darkTheme : lightTheme);
+    return isDark ? darkTheme : lightTheme;
 };
+
+export const resolveWidgetColors = async (): Promise<WidgetColors> => pick(await resolveWidgetTheme());
