@@ -279,6 +279,9 @@ function MainApp() {
                     if (result.saved > 0 || result.queued > 0) {
                         await refreshData();
                     }
+                    if (result.saved > 0) {
+                        await refreshCashbookWidgets();
+                    }
                 } catch {
                     // swallow — drain errors must not crash the UI
                 }
