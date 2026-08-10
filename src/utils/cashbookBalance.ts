@@ -20,6 +20,7 @@ export const computeMonthFlows = (
     for (const t of transactions) {
         if (t.businessId !== businessId) continue;
         const d = new Date(t.date);
+        if (Number.isNaN(d.getTime())) continue;
         if (d < start || d > now) continue;
         if (t.type === "income") income += t.amount;
         else expense += t.amount;

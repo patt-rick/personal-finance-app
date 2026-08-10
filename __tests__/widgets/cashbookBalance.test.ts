@@ -38,4 +38,20 @@ describe("computeMonthFlows", () => {
         ];
         expect(computeMonthFlows(txns, "b1", now)).toEqual({ income: 200, expense: 50 });
     });
+
+    it("excludes transactions dated later this month than now", () => {
+        const txns = [
+            tx({ id: "1", type: "expense", amount: 40, date: "2026-08-10T00:00:00.000Z" }),
+            tx({ id: "2", type: "expense", amount: 500, date: "2026-08-20T00:00:00.000Z" }),
+        ];
+        expect(computeMonthFlows(txns, "b1", now)).toEqual({ income: 0, expense: 40 });
+    });
+
+    it("ignores transactions with an unparseable date", () => {
+        const txns = [
+            tx({ id: "1", type: "income", amount: 100, date: "2026-08-05T00:00:00.000Z" }),
+            tx({ id: "2", type: "expense", amount: 999, date: "not-a-real-date" }),
+        ];
+        expect(computeMonthFlows(txns, "b1", now)).toEqual({ income: 100, expense: 0 });
+    });
 });
