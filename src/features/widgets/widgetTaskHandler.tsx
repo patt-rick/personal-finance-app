@@ -5,7 +5,7 @@ import { loadBusinesses, loadTransactions, loadBudgets, loadCategories } from ".
 import { WIDGET_NAMES, WIDGET_CLICK, WIDGET_MESSAGES } from "./constants";
 import { getWidgetBusinessId, removeWidgetMapping } from "./services/widgetConfig";
 import { resolveWidgetColors } from "./theme/widgetTheme";
-import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "./services/widgetData";
+import { buildBalanceView, buildBudgetView, budgetDataForCashbook, buildQuickAddView } from "./services/widgetData";
 import { buildQuickAddLink } from "./services/deepLink";
 import { BalanceWidget } from "./components/BalanceWidget";
 import { BudgetWidget } from "./components/BudgetWidget";
@@ -47,7 +47,7 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
 
     if (widgetName === WIDGET_NAMES.QUICK_ADD) {
         props.renderWidget(
-            <QuickAddWidget cashbookName={business.name} colors={colors} clickAction={WIDGET_CLICK.OPEN_QUICK_ADD} />,
+            <QuickAddWidget view={buildQuickAddView(business)} colors={colors} clickAction={WIDGET_CLICK.OPEN_QUICK_ADD} />,
         );
         return;
     }

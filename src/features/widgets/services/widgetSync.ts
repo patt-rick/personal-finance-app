@@ -5,7 +5,7 @@ import { WIDGET_NAMES, WIDGET_CLICK, WIDGET_MESSAGES } from "../constants";
 import { loadBusinesses, loadTransactions, loadBudgets, loadCategories } from "../../../utils/storage";
 import { readAllWidgetMappings } from "./widgetConfig";
 import { resolveWidgetColors, WidgetColors } from "../theme/widgetTheme";
-import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "./widgetData";
+import { buildBalanceView, buildBudgetView, budgetDataForCashbook, buildQuickAddView } from "./widgetData";
 import { BalanceWidget } from "../components/BalanceWidget";
 import { BudgetWidget } from "../components/BudgetWidget";
 import { QuickAddWidget } from "../components/QuickAddWidget";
@@ -53,7 +53,7 @@ const renderQuickAdd = (snap: Snapshot, widgetId: number): React.ReactElement =>
     const business = snap.businesses.find((b) => b.id === businessId);
     if (!business) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.CASHBOOK_REMOVED, colors: snap.colors });
     return React.createElement(QuickAddWidget, {
-        cashbookName: business.name,
+        view: buildQuickAddView(business),
         colors: snap.colors,
         clickAction: WIDGET_CLICK.OPEN_QUICK_ADD,
     });

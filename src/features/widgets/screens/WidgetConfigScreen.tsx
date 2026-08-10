@@ -8,7 +8,7 @@ import { Business } from "../../../types";
 import { setWidgetBusinessId } from "../services/widgetConfig";
 import { WIDGET_NAMES, WIDGET_CLICK } from "../constants";
 import { resolveWidgetColors, resolveWidgetTheme } from "../theme/widgetTheme";
-import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "../services/widgetData";
+import { buildBalanceView, buildBudgetView, budgetDataForCashbook, buildQuickAddView } from "../services/widgetData";
 import { BalanceWidget } from "../components/BalanceWidget";
 import { BudgetWidget } from "../components/BudgetWidget";
 import { QuickAddWidget } from "../components/QuickAddWidget";
@@ -27,7 +27,7 @@ async function renderInitialFrame(
     if (widgetName === WIDGET_NAMES.QUICK_ADD) {
         props.renderWidget(
             <QuickAddWidget
-                cashbookName={business.name}
+                view={buildQuickAddView(business)}
                 colors={colors}
                 clickAction={WIDGET_CLICK.OPEN_QUICK_ADD}
             />,
