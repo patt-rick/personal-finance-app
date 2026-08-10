@@ -7,6 +7,8 @@ import {
     calculateBudgetData,
 } from "../../../utils/budgetCalculations";
 import { getCurrencySymbol } from "../../../utils/_helpers";
+import type { HexColor } from "react-native-android-widget";
+import { resolveCashbookColor, resolveCashbookIconKey } from "../../cashbooks/appearance/resolve";
 
 export interface BalanceView {
     cashbookName: string;
@@ -14,6 +16,8 @@ export interface BalanceView {
     balance: number;
     monthIncome: number;
     monthExpense: number;
+    accent: HexColor;
+    iconKey: string;
 }
 
 export type BudgetView =
@@ -25,12 +29,28 @@ export type BudgetView =
           totalLimit: number;
           percentage: number;
           noBudget: false;
+          accent: HexColor;
+          iconKey: string;
       }
     | {
           cashbookName: string;
           currencySymbol: string;
           noBudget: true;
+          accent: HexColor;
+          iconKey: string;
       };
+
+export interface QuickAddView {
+    cashbookName: string;
+    accent: HexColor;
+    iconKey: string;
+}
+
+export const buildQuickAddView = (business: Business): QuickAddView => ({
+    cashbookName: business.name,
+    accent: resolveCashbookColor(business),
+    iconKey: resolveCashbookIconKey(business),
+});
 
 export const buildBalanceView = (
     business: Business,
@@ -44,6 +64,8 @@ export const buildBalanceView = (
         balance: computeCashbookBalance(transactions, business.id),
         monthIncome: income,
         monthExpense: expense,
+        accent: resolveCashbookColor(business),
+        iconKey: resolveCashbookIconKey(business),
     };
 };
 
@@ -67,8 +89,10 @@ export const buildBudgetView = (
     budgetData: CategoryBudgetSpent[],
 ): BudgetView => {
     const currencySymbol = getCurrencySymbol(business.currency);
+    const accent = resolveCashbookColor(business);
+    const iconKey = resolveCashbookIconKey(business);
     if (!budget) {
-        return { cashbookName: business.name, currencySymbol, noBudget: true };
+        return { cashbookName: business.name, currencySymbol, noBudget: true, accent, iconKey };
     }
     const totalSpent = calculateTotalSpent(budgetData);
     const totalLimit = budget.totalLimit;
@@ -81,5 +105,7 @@ export const buildBudgetView = (
         totalLimit,
         percentage,
         noBudget: false,
+        accent,
+        iconKey,
     };
 };

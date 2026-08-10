@@ -3,7 +3,12 @@ import {
     buildBalanceView,
     buildBudgetView,
     budgetDataForCashbook,
+    buildQuickAddView,
 } from "../../src/features/widgets/services/widgetData";
+import {
+    resolveCashbookColor,
+    resolveCashbookIconKey,
+} from "../../src/features/cashbooks/appearance/resolve";
 
 const business = (over: Partial<Business> = {}): Business => ({
     id: "b1",
@@ -36,6 +41,8 @@ describe("buildBalanceView", () => {
             balance: 180,
             monthIncome: 300,
             monthExpense: 120,
+            accent: resolveCashbookColor(business()),
+            iconKey: resolveCashbookIconKey(business()),
         });
     });
 
@@ -68,6 +75,8 @@ describe("buildBudgetView", () => {
             totalLimit: 1000,
             percentage: 25,
             noBudget: false,
+            accent: resolveCashbookColor(business()),
+            iconKey: resolveCashbookIconKey(business()),
         });
     });
 
@@ -76,6 +85,19 @@ describe("buildBudgetView", () => {
             cashbookName: "Personal",
             currencySymbol: "₵",
             noBudget: true,
+            accent: resolveCashbookColor(business()),
+            iconKey: resolveCashbookIconKey(business()),
+        });
+    });
+});
+
+describe("buildQuickAddView", () => {
+    it("carries the cashbook name, accent, and icon key", () => {
+        const b = business({ color: "#26A69A", icon: "shopping-cart" });
+        expect(buildQuickAddView(b)).toEqual({
+            cashbookName: "Personal",
+            accent: "#26A69A",
+            iconKey: "shopping-cart",
         });
     });
 });
