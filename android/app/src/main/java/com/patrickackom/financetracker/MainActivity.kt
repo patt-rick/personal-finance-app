@@ -1,4 +1,4 @@
-package com.yourcompany.financetracker
+package com.patrickackom.financetracker
 
 import android.os.Build
 import android.os.Bundle

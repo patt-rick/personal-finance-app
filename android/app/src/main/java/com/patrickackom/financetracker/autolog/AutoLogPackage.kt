@@ -1,4 +1,4 @@
-package com.yourcompany.financetracker.autolog
+package com.patrickackom.financetracker.autolog
 
 import com.facebook.react.ReactPackage
 import com.facebook.react.bridge.NativeModule

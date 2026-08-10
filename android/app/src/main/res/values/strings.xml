@@ -1,5 +1,8 @@
-﻿<resources>
+<resources>
   <string name="app_name">Expense Tracker</string>
   <string name="expo_splash_screen_resize_mode" translatable="false">contain</string>
   <string name="expo_splash_screen_status_bar_translucent" translatable="false">false</string>
+  <string name="widget_balancewidget_description" translatable="false">Balance for a chosen cashbook</string>
+  <string name="widget_budgetwidget_description" translatable="false">Budget usage for a chosen cashbook</string>
+  <string name="widget_quickaddwidget_description" translatable="false">Tap to log an expense</string>
 </resources>

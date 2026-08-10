@@ -1,4 +1,4 @@
-package com.yourcompany.financetracker
+package com.patrickackom.financetracker
 
 import android.app.Application
 import android.content.res.Configuration
@@ -16,7 +16,7 @@ import com.facebook.react.defaults.DefaultReactNativeHost
 import expo.modules.ApplicationLifecycleDispatcher
 import expo.modules.ReactNativeHostWrapper
 
-import com.yourcompany.financetracker.autolog.AutoLogPackage
+import com.patrickackom.financetracker.autolog.AutoLogPackage
 
 class MainApplication : Application(), ReactApplication {
 

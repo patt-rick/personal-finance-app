@@ -1,4 +1,4 @@
-package com.yourcompany.financetracker.autolog
+package com.patrickackom.financetracker.autolog
 
 import com.facebook.react.bridge.Arguments
 import com.facebook.react.bridge.ReactApplicationContext

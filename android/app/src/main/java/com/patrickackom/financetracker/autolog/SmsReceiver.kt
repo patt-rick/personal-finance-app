@@ -1,4 +1,4 @@
-package com.yourcompany.financetracker.autolog
+package com.patrickackom.financetracker.autolog
 
 import android.content.BroadcastReceiver
 import android.content.Context
