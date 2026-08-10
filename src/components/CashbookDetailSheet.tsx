@@ -22,6 +22,9 @@ import { getCurrencySymbol } from "../utils/_helpers";
 import WeeklyBarChart from "./dashboard/WeeklyBarChart";
 import { LinearGradient } from "expo-linear-gradient";
 import AppModal from "./AppModal";
+import CashbookAppearancePicker from "./CashbookAppearancePicker";
+import CashbookIconBadge from "./CashbookIconBadge";
+import { resolveCashbookColor, resolveCashbookIconKey } from "../features/cashbooks/appearance/resolve";
 
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
@@ -39,6 +42,7 @@ interface CashbookDetailSheetProps {
     onDelete: (businessId: string) => void;
     onRename: (businessId: string, newName: string) => void;
     onUpdateCurrency: (businessId: string, newCurrency: string) => void;
+    onUpdateAppearance: (businessId: string, color: string, iconKey: string) => void;
 }
 
 export default function CashbookDetailSheet({
@@ -49,6 +53,7 @@ export default function CashbookDetailSheet({
     onDelete,
     onRename,
     onUpdateCurrency,
+    onUpdateAppearance,
 }: CashbookDetailSheetProps) {
     const theme = useTheme();
     const s = useMemo(() => createStyles(theme), [theme]);
@@ -56,6 +61,8 @@ export default function CashbookDetailSheet({
     const [isRenaming, setIsRenaming] = useState(false);
     const [renameValue, setRenameValue] = useState("");
     const [currencyValue, setCurrencyValue] = useState("USD");
+    const [colorValue, setColorValue] = useState("#7E57C2");
+    const [iconValue, setIconValue] = useState("wallet");
 
     const sheetData = useMemo(() => {
         if (!business) return null;
@@ -133,6 +140,12 @@ export default function CashbookDetailSheet({
         if (currencyValue !== (business.currency ?? "USD")) {
             onUpdateCurrency(business.id, currencyValue);
         }
+        if (
+            colorValue !== resolveCashbookColor(business) ||
+            iconValue !== resolveCashbookIconKey(business)
+        ) {
+            onUpdateAppearance(business.id, colorValue, iconValue);
+        }
         setIsRenaming(false);
     };
 
@@ -147,6 +160,8 @@ export default function CashbookDetailSheet({
             setIsRenaming(false);
             setRenameValue(business.name);
             setCurrencyValue(business.currency ?? "USD");
+            setColorValue(resolveCashbookColor(business));
+            setIconValue(resolveCashbookIconKey(business));
         }
     }, [business]);
 
@@ -162,6 +177,10 @@ export default function CashbookDetailSheet({
                         setRenameValue={setRenameValue}
                         currencyValue={currencyValue}
                         setCurrencyValue={setCurrencyValue}
+                        colorValue={colorValue}
+                        setColorValue={setColorValue}
+                        iconValue={iconValue}
+                        setIconValue={setIconValue}
                         handleSaveEdits={handleSaveEdits}
                         setIsRenaming={setIsRenaming}
                         theme={theme}
@@ -220,6 +239,10 @@ function SheetHeader({
     setRenameValue,
     currencyValue,
     setCurrencyValue,
+    colorValue,
+    setColorValue,
+    iconValue,
+    setIconValue,
     handleSaveEdits,
     setIsRenaming,
     theme,
@@ -292,12 +315,22 @@ function SheetHeader({
                         );
                     })}
                 </View>
+
+                <CashbookAppearancePicker
+                    color={colorValue}
+                    iconKey={iconValue}
+                    onChangeColor={setColorValue}
+                    onChangeIcon={setIconValue}
+                />
             </View>
         );
     }
 
     return (
         <View style={s.header}>
+            <View style={{ marginRight: 12 }}>
+                <CashbookIconBadge business={business} size={40} />
+            </View>
             <View style={{ flex: 1 }}>
                 <Text style={[s.title, { color: theme.colors.onSurface }]}>{business.name}</Text>
                 <Text style={[s.subtitle, { color: theme.colors.onSurfaceVariant }]}>

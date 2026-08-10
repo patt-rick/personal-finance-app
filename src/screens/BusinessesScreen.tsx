@@ -390,6 +390,14 @@ export default function BusinessesScreen({
         setSheetBusiness((prev) => (prev ? { ...prev, currency: newCurrency } : null));
     };
 
+    const handleUpdateAppearance = (businessId: string, color: string, iconKey: string) => {
+        const updated = businesses.map((b) =>
+            b.id === businessId ? { ...b, color, icon: iconKey } : b,
+        );
+        saveBusinesses(updated);
+        setSheetBusiness((prev) => (prev ? { ...prev, color, icon: iconKey } : null));
+    };
+
     return (
         <View style={styles.container}>
             <View style={[s.header, { paddingTop: Math.max(insets.top, 40) }]}>
@@ -527,6 +535,7 @@ export default function BusinessesScreen({
                 onDelete={deleteBusiness}
                 onRename={handleRename}
                 onUpdateCurrency={handleUpdateCurrency}
+                onUpdateAppearance={handleUpdateAppearance}
             />
 
             <CreateCashbookModal
