@@ -10,13 +10,14 @@ import {
     Animated,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus, Wallet, Landmark, ArrowRightLeft } from "lucide-react-native";
+import { Plus, Landmark, ArrowRightLeft } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import { getCurrencySymbol } from "../utils/_helpers";
 import CashbookDetailSheet from "../components/CashbookDetailSheet";
+import CashbookIconBadge from "../components/CashbookIconBadge";
 import CreateCashbookModal from "../components/CreateCashbookModal";
 import TransferCashbookModal from "../components/TransferCashbookModal";
 import TourOverlay from "../components/TourOverlay";
@@ -445,26 +446,8 @@ export default function BusinessesScreen({
                                 activeOpacity={0.7}
                             >
                                 <View style={s.cardTop}>
-                                    <View
-                                        style={[
-                                            s.cardIcon,
-                                            {
-                                                backgroundColor:
-                                                    balance >= 0
-                                                        ? theme.colors.incomeContainer
-                                                        : theme.colors.surfaceContainerHigh,
-                                            },
-                                        ]}
-                                    >
-                                        <Wallet
-                                            size={17}
-                                            strokeWidth={2}
-                                            color={
-                                                balance >= 0
-                                                    ? theme.colors.income
-                                                    : theme.colors.onSurfaceVariant
-                                            }
-                                        />
+                                    <View style={{ marginRight: 12 }}>
+                                        <CashbookIconBadge business={biz} size={38} />
                                     </View>
                                     <View style={{ flex: 1 }}>
                                         <Text style={[s.cardName, { color: theme.colors.onSurface }]}>
