@@ -87,6 +87,7 @@ function MainApp() {
     const [isLocked, setIsLocked] = useState(false);
     const [quickAddVisible, setQuickAddVisible] = useState(false);
     const [quickAddBusinessId, setQuickAddBusinessId] = useState<string | undefined>(undefined);
+    const quickAddVisibleRef = useRef(false);
     const [pinEnabled, setPinEnabled] = useState(false);
     const [biometricsAvailable, setBiometricsAvailable] = useState(false);
     const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -201,13 +202,20 @@ function MainApp() {
     }, [pinEnabled]);
 
     useEffect(() => {
+        quickAddVisibleRef.current = quickAddVisible;
+    }, [quickAddVisible]);
+
+    useEffect(() => {
         const openFromUrl = (url: string | null) => {
             const link = parseQuickAddLink(url);
             if (!link) return;
+            if (quickAddVisibleRef.current) return; // don't hijack an already-open modal
             setQuickAddBusinessId(link.businessId ?? undefined);
             setQuickAddVisible(true);
         };
-        Linking.getInitialURL().then(openFromUrl);
+        Linking.getInitialURL()
+            .then(openFromUrl)
+            .catch(() => {});
         const sub = Linking.addEventListener("url", (e) => openFromUrl(e.url));
         return () => sub.remove();
     }, []);
