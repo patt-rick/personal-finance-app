@@ -46,6 +46,8 @@ import {
 import QuickAddModal from "./src/components/QuickAddModal";
 import { drainNativeQueue } from "./src/features/autoLogging/services/ingestion/drainNativeQueue";
 import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nativeBridge";
+import { refreshCashbookWidgets } from "./src/features/widgets/services/widgetSync";
+import { removeMappingsForBusiness } from "./src/features/widgets/services/widgetConfig";
 
 const Tab = createBottomTabNavigator();
 
@@ -212,13 +214,19 @@ function MainApp() {
     }, [loadSecuritySettings]);
 
     const handleSaveBusinesses = async (newBusinesses: Business[]) => {
+        const removedIds = businesses
+            .filter((b) => !newBusinesses.some((n) => n.id === b.id))
+            .map((b) => b.id);
         setBusinesses(newBusinesses);
         await saveBusinesses(newBusinesses);
+        for (const id of removedIds) await removeMappingsForBusiness(id);
+        await refreshCashbookWidgets();
     };
 
     const handleSaveTransactions = async (newTransactions: Transaction[]) => {
         setTransactions(newTransactions);
         await saveTransactions(newTransactions);
+        await refreshCashbookWidgets();
     };
 
     const handleSaveUserProfile = async (profile: UserProfile) => {

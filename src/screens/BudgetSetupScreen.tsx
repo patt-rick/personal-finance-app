@@ -21,6 +21,7 @@ import { Business, Budget, Category } from "../types";
 import { loadCategories } from "../utils/storage";
 import { saveBudget, getBudgetByBusinessId } from "../utils/storage";
 import { validateBudget } from "../utils/budgetCalculations";
+import { refreshCashbookWidgets } from "../features/widgets/services/widgetSync";
 
 interface BudgetSetupScreenProps {
     business: Business;
@@ -150,6 +151,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         setSaving(false);
 
         if (success) {
+            await refreshCashbookWidgets();
             hapticSuccess();
             Alert.alert(
                 "Success",

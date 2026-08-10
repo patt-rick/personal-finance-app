@@ -16,6 +16,11 @@ const writeMap = async (map: WidgetMap): Promise<void> => {
     await AsyncStorage.setItem(WIDGET_CASHBOOK_MAP_KEY, JSON.stringify(map));
 };
 
+export const readAllWidgetMappings = async (): Promise<Record<string, string>> => {
+    // Exposes the raw widgetId -> businessId map for batch rendering.
+    return readMap();
+};
+
 export const getWidgetBusinessId = async (widgetId: number): Promise<string | null> => {
     const map = await readMap();
     return map[String(widgetId)] ?? null;
