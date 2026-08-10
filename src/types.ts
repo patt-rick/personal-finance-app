@@ -6,6 +6,8 @@ export interface Business {
     hasNewActivity?: boolean;
     lastUpdated?: string;
     currency?: string; // e.g., 'USD', 'GHS', 'EUR'
+    color?: string; // hex, e.g. "#7E57C2"
+    icon?: string; // icon key, e.g. "shopping-cart"
 }
 
 export interface UserProfile {
