@@ -1,6 +1,7 @@
 import type { HexColor } from "react-native-android-widget";
 import { Business } from "../../../types";
 import { CASHBOOK_COLORS } from "./palette";
+import { CASHBOOK_ICON_NODES } from "./icons.data";
 
 export const DEFAULT_CASHBOOK_ICON = "wallet";
 
@@ -23,11 +24,14 @@ export const resolveCashbookColor = (
     return CASHBOOK_COLORS[hashToIndex(business.id || "", CASHBOOK_COLORS.length)];
 };
 
-// Overridden in Task 4 to also validate against the icon registry. For now it
-// only needs the default so the palette task can land independently.
 export const resolveCashbookIconKey = (
-    _business: Pick<Business, "icon">,
-): string => DEFAULT_CASHBOOK_ICON;
+    business: Pick<Business, "icon">,
+): string => {
+    if (business.icon && business.icon in CASHBOOK_ICON_NODES) {
+        return business.icon;
+    }
+    return DEFAULT_CASHBOOK_ICON;
+};
 
 // Produce an #AARRGGBB color from a 6- or 8-digit hex, using the last 6 digits.
 export const withAlpha = (hex: string, alpha2: string): HexColor =>

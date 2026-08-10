@@ -32,6 +32,14 @@ describe("resolveCashbookIconKey", () => {
         expect(resolveCashbookIconKey({})).toBe(DEFAULT_CASHBOOK_ICON);
         expect(DEFAULT_CASHBOOK_ICON).toBe("wallet");
     });
+
+    it("returns a stored key that exists in the registry", () => {
+        expect(resolveCashbookIconKey({ icon: "shopping-cart" })).toBe("shopping-cart");
+    });
+
+    it("falls back to the default for an unknown stored key", () => {
+        expect(resolveCashbookIconKey({ icon: "totally-unknown" })).toBe(DEFAULT_CASHBOOK_ICON);
+    });
 });
 
 describe("withAlpha", () => {
