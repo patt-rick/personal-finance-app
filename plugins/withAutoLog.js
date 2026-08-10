@@ -16,6 +16,16 @@ const path = require("path");
 
 const SRC_DIR = "autolog-src";
 
+// Launcher icons this project commits as hand-composed .png (see commit af9c960).
+// prebuild regenerates them as .webp from android.adaptiveIcon, and Android's
+// resource merger then fails because ic_launcher.webp and ic_launcher.png resolve
+// to the same resource name.
+const GENERATED_LAUNCHER_WEBP = [
+    "ic_launcher.webp",
+    "ic_launcher_foreground.webp",
+    "ic_launcher_round.webp",
+];
+
 const AUTOLOG_PERMISSIONS = [
     "android.permission.READ_SMS",
     "android.permission.RECEIVE_SMS",
@@ -154,9 +164,44 @@ function withAutoLogManifest(config) {
     });
 }
 
+// 4. Delete the .webp launcher icons prebuild regenerates, keeping the committed
+// .png set. This is a dangerous mod registered by a user plugin, so it runs after
+// the core withAndroidIcons base mod that writes the .webp files.
+function withStripLauncherWebp(config) {
+    return withDangerousMod(config, [
+        "android",
+        async (config) => {
+            const resDir = path.join(
+                config.modRequest.platformProjectRoot,
+                "app/src/main/res",
+            );
+            if (!fs.existsSync(resDir)) return config;
+
+            let removed = 0;
+            for (const dir of fs.readdirSync(resDir)) {
+                if (!dir.startsWith("mipmap-")) continue;
+                for (const name of GENERATED_LAUNCHER_WEBP) {
+                    const file = path.join(resDir, dir, name);
+                    if (fs.existsSync(file)) {
+                        fs.rmSync(file);
+                        removed += 1;
+                    }
+                }
+            }
+            if (removed > 0) {
+                console.log(
+                    `[withAutoLog] stripped ${removed} generated launcher .webp icon(s) to keep the committed .png icons and avoid duplicate-resource clashes`,
+                );
+            }
+            return config;
+        },
+    ]);
+}
+
 module.exports = function withAutoLog(config) {
     config = withAutoLogSources(config);
     config = withAutoLogPackageRegistration(config);
     config = withAutoLogManifest(config);
+    config = withStripLauncherWebp(config);
     return config;
 };
