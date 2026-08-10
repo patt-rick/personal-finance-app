@@ -1,7 +1,7 @@
 import { registerRootComponent } from "expo";
+import { registerWidgetTaskHandler } from "react-native-android-widget";
 import App from "./App";
+import { widgetTaskHandler } from "./src/features/widgets/widgetTaskHandler";
 
-// Widget registration is added in a later task (registerWidgetTaskHandler /
-// registerWidgetConfigurationScreen). Keeping app registration isolated here
-// mirrors what expo/AppEntry.js does.
 registerRootComponent(App);
+registerWidgetTaskHandler(widgetTaskHandler);
