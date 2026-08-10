@@ -38,7 +38,8 @@ const renderBudget = (snap: Snapshot, widgetId: number): React.ReactElement => {
     const business = businessId ? snap.businesses.find((b) => b.id === businessId) : undefined;
     if (!business) return React.createElement(MessageWidget, { message: "Tap to set up", colors: snap.colors });
     const budget = snap.budgets.find((b) => b.businessId === business.id) ?? null;
-    const budgetData = budget ? calculateBudgetData(budget, snap.transactions, snap.categories) : [];
+    const cashbookTx = snap.transactions.filter((t) => t.businessId === business.id);
+    const budgetData = budget ? calculateBudgetData(budget, cashbookTx, snap.categories) : [];
     return React.createElement(BudgetWidget, {
         view: buildBudgetView(business, budget, budgetData),
         colors: snap.colors,

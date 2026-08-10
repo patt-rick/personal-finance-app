@@ -66,7 +66,8 @@ export async function widgetTaskHandler(props: WidgetTaskHandlerProps) {
     if (widgetName === WIDGET_NAMES.BUDGET) {
         const [budgets, categories] = await Promise.all([loadBudgets(), loadCategories()]);
         const budget = budgets.find((b) => b.businessId === businessId) ?? null;
-        const budgetData = budget ? calculateBudgetData(budget, transactions, categories) : [];
+        const cashbookTx = transactions.filter((t) => t.businessId === businessId);
+        const budgetData = budget ? calculateBudgetData(budget, cashbookTx, categories) : [];
         const view = buildBudgetView(business, budget, budgetData);
         props.renderWidget(
             <BudgetWidget view={view} colors={colors} clickAction={WIDGET_CLICK.OPEN_QUICK_ADD} />,
