@@ -29,4 +29,9 @@ describe("parseQuickAddLink", () => {
         expect(parseQuickAddLink(buildQuickAddLink("b1"))).toEqual({ businessId: "b1" });
         expect(parseQuickAddLink(buildQuickAddLink())).toEqual({ businessId: null });
     });
+
+    it("parses without the URL constructor (RN-safe): extra slashes and encoded id", () => {
+        expect(parseQuickAddLink("financetracker:///quick-add")).toEqual({ businessId: null });
+        expect(parseQuickAddLink("financetracker://quick-add?businessId=a%20b")).toEqual({ businessId: "a b" });
+    });
 });
