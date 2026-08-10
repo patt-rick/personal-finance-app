@@ -1,8 +1,13 @@
-import { QUICK_ADD_PATH } from "../constants";
+import { QUICK_ADD_PATH, DEEP_LINK_SCHEME } from "../constants";
 
 export interface QuickAddLink {
     businessId: string | null;
 }
+
+export const buildQuickAddLink = (businessId?: string | null): string => {
+    const suffix = businessId ? `?businessId=${encodeURIComponent(businessId)}` : "";
+    return `${DEEP_LINK_SCHEME}://${QUICK_ADD_PATH}${suffix}`;
+};
 
 // Parses financetracker://quick-add?businessId=<id>. Returns null if the URL is
 // not a quick-add link or cannot be parsed.
