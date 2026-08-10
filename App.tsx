@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Alert, Platform, View, useColorScheme, AppState } from "react-native";
+import { Alert, Platform, View, useColorScheme, AppState, Linking } from "react-native";
 
 import { StatusBar } from "expo-status-bar";
 import {
@@ -48,6 +48,7 @@ import { drainNativeQueue } from "./src/features/autoLogging/services/ingestion/
 import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nativeBridge";
 import { refreshCashbookWidgets } from "./src/features/widgets/services/widgetSync";
 import { removeMappingsForBusiness } from "./src/features/widgets/services/widgetConfig";
+import { parseQuickAddLink } from "./src/features/widgets/services/deepLink";
 
 const Tab = createBottomTabNavigator();
 
@@ -85,6 +86,7 @@ function MainApp() {
     const [currentBusiness, setCurrentBusiness] = useState<Business | null>(null);
     const [isLocked, setIsLocked] = useState(false);
     const [quickAddVisible, setQuickAddVisible] = useState(false);
+    const [quickAddBusinessId, setQuickAddBusinessId] = useState<string | undefined>(undefined);
     const [pinEnabled, setPinEnabled] = useState(false);
     const [biometricsAvailable, setBiometricsAvailable] = useState(false);
     const [biometricsEnabled, setBiometricsEnabled] = useState(false);
@@ -197,6 +199,18 @@ function MainApp() {
         });
         return () => subscription.remove();
     }, [pinEnabled]);
+
+    useEffect(() => {
+        const openFromUrl = (url: string | null) => {
+            const link = parseQuickAddLink(url);
+            if (!link) return;
+            setQuickAddBusinessId(link.businessId ?? undefined);
+            setQuickAddVisible(true);
+        };
+        Linking.getInitialURL().then(openFromUrl);
+        const sub = Linking.addEventListener("url", (e) => openFromUrl(e.url));
+        return () => sub.remove();
+    }, []);
 
     const handleUnlock = useCallback(() => {
         setIsLocked(false);
@@ -439,7 +453,11 @@ function MainApp() {
                 <QuickAddModal
                     visible={quickAddVisible}
                     businesses={businesses}
-                    onClose={() => setQuickAddVisible(false)}
+                    initialBusinessId={quickAddBusinessId}
+                    onClose={() => {
+                        setQuickAddVisible(false);
+                        setQuickAddBusinessId(undefined);
+                    }}
                     onCreate={(tx) => handleSaveTransactions([...transactions, tx])}
                 />
             </View>

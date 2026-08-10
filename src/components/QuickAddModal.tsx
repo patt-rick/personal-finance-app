@@ -14,9 +14,10 @@ interface QuickAddModalProps {
     businesses: Business[];
     onClose: () => void;
     onCreate: (tx: Transaction) => void;
+    initialBusinessId?: string;
 }
 
-export default function QuickAddModal({ visible, businesses, onClose, onCreate }: QuickAddModalProps) {
+export default function QuickAddModal({ visible, businesses, onClose, onCreate, initialBusinessId }: QuickAddModalProps) {
     const theme = useTheme();
     const [categories, setCategories] = useState<Category[]>([]);
     const [selected, setSelected] = useState<Business | null>(null);
@@ -32,6 +33,13 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate }
     useEffect(() => {
         if (visible && businesses.length === 1) setSelected(businesses[0]);
     }, [visible, businesses]);
+
+    useEffect(() => {
+        if (visible && initialBusinessId) {
+            const match = businesses.find((b) => b.id === initialBusinessId);
+            if (match) setSelected(match);
+        }
+    }, [visible, initialBusinessId, businesses]);
 
     const handleSubmit = (data: {
         amount: number;
