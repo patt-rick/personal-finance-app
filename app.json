@@ -39,6 +39,7 @@
       "expo-notifications",
       "expo-secure-store",
       "expo-font",
+      "./plugins/withAutoLog",
       [
         "react-native-android-widget",
         {
