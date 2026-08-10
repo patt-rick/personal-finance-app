@@ -8,6 +8,7 @@ import { resolveWidgetColors, WidgetColors } from "../theme/widgetTheme";
 import { buildBalanceView, buildBudgetView, budgetDataForCashbook } from "./widgetData";
 import { BalanceWidget } from "../components/BalanceWidget";
 import { BudgetWidget } from "../components/BudgetWidget";
+import { QuickAddWidget } from "../components/QuickAddWidget";
 import { MessageWidget } from "../components/WidgetStates";
 import { Business, Transaction, Budget, Category } from "../../../types";
 
@@ -46,6 +47,18 @@ const renderBudget = (snap: Snapshot, widgetId: number): React.ReactElement => {
     });
 };
 
+const renderQuickAdd = (snap: Snapshot, widgetId: number): React.ReactElement => {
+    const businessId = snap.mappings[String(widgetId)];
+    if (!businessId) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.UNSET, colors: snap.colors });
+    const business = snap.businesses.find((b) => b.id === businessId);
+    if (!business) return React.createElement(MessageWidget, { message: WIDGET_MESSAGES.CASHBOOK_REMOVED, colors: snap.colors });
+    return React.createElement(QuickAddWidget, {
+        cashbookName: business.name,
+        colors: snap.colors,
+        clickAction: WIDGET_CLICK.OPEN_QUICK_ADD,
+    });
+};
+
 export const refreshCashbookWidgets = async (): Promise<void> => {
     if (Platform.OS !== "android") return;
     try {
@@ -67,6 +80,11 @@ export const refreshCashbookWidgets = async (): Promise<void> => {
         await requestWidgetUpdate({
             widgetName: WIDGET_NAMES.BUDGET,
             renderWidget: ({ widgetId }: { widgetId: number }) => renderBudget(snap, widgetId),
+            widgetNotFound: () => {},
+        });
+        await requestWidgetUpdate({
+            widgetName: WIDGET_NAMES.QUICK_ADD,
+            renderWidget: ({ widgetId }: { widgetId: number }) => renderQuickAdd(snap, widgetId),
             widgetNotFound: () => {},
         });
     } catch {
