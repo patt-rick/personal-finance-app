@@ -2,6 +2,9 @@ import React, { useMemo, useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { useTheme } from "../theme/theme";
 import AppModal from "./AppModal";
+import CashbookAppearancePicker from "./CashbookAppearancePicker";
+import { CASHBOOK_COLORS } from "../features/cashbooks/appearance/palette";
+import { DEFAULT_CASHBOOK_ICON } from "../features/cashbooks/appearance/resolve";
 
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
@@ -14,7 +17,7 @@ const CURRENCIES = [
 interface CreateCashbookModalProps {
     visible: boolean;
     onClose: () => void;
-    onSubmit: (name: string, currency: string) => void;
+    onSubmit: (name: string, currency: string, color: string, iconKey: string) => void;
 }
 
 export default function CreateCashbookModal({
@@ -26,15 +29,19 @@ export default function CreateCashbookModal({
     const s = useMemo(() => createStyles(theme), [theme]);
     const [businessName, setBusinessName] = useState("");
     const [selectedCurrency, setSelectedCurrency] = useState("USD");
+    const [color, setColor] = useState<string>(CASHBOOK_COLORS[0]);
+    const [iconKey, setIconKey] = useState<string>(DEFAULT_CASHBOOK_ICON);
 
     const handleSubmit = () => {
         if (!businessName.trim()) {
             Alert.alert("Error", "Please enter a business name");
             return;
         }
-        onSubmit(businessName.trim(), selectedCurrency);
+        onSubmit(businessName.trim(), selectedCurrency, color, iconKey);
         setBusinessName("");
         setSelectedCurrency("USD");
+        setColor(CASHBOOK_COLORS[0]);
+        setIconKey(DEFAULT_CASHBOOK_ICON);
     };
 
     return (
@@ -79,6 +86,13 @@ export default function CreateCashbookModal({
                     </TouchableOpacity>
                 ))}
             </View>
+
+            <CashbookAppearancePicker
+                color={color}
+                iconKey={iconKey}
+                onChangeColor={setColor}
+                onChangeIcon={setIconKey}
+            />
 
             <TouchableOpacity style={s.submitBtn} onPress={handleSubmit} activeOpacity={0.85}>
                 <Text style={s.submitText}>Create Cashbook</Text>

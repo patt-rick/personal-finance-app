@@ -304,12 +304,19 @@ export default function BusinessesScreen({
     const [sheetBusiness, setSheetBusiness] = useState<Business | null>(null);
     const [transferModalBusinessId, setTransferModalBusinessId] = useState<string | null>(null);
 
-    const handleCreateCashbook = (name: string, currency: string) => {
+    const handleCreateCashbook = (
+        name: string,
+        currency: string,
+        color: string,
+        iconKey: string,
+    ) => {
         const newBusiness: Business = {
             id: Date.now().toString(),
             name,
             createdAt: new Date().toISOString(),
             currency,
+            color,
+            icon: iconKey,
             memberCount: 1,
         };
         saveBusinesses([...businesses, newBusiness]);
