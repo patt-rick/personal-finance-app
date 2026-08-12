@@ -5,14 +5,13 @@ import {
     TextInput,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,
-    Alert,
-    Platform,
+    ScrollView,    Platform,
     KeyboardAvoidingView,
     ActivityIndicator,
     BackHandler,
     Animated,
 } from "react-native";
+import { appAlert } from "../components/dialog";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
@@ -167,7 +166,7 @@ export default function SettingsScreen({
 
     const handleSave = useCallback(() => {
         if (!name.trim()) {
-            Alert.alert("Error", "Name cannot be empty");
+            appAlert("Error", "Name cannot be empty");
             return;
         }
         saveUserProfile({ name: name.trim(), email: email.trim() });
@@ -185,10 +184,10 @@ export default function SettingsScreen({
         try {
             const success = await exportAllData();
             if (!success) {
-                Alert.alert("Error", "Sharing is not available on this device.");
+                appAlert("Error", "Sharing is not available on this device.");
             }
         } catch {
-            Alert.alert("Error", "Failed to export data.");
+            appAlert("Error", "Failed to export data.");
         } finally {
             setIsExporting(false);
         }
@@ -209,7 +208,7 @@ export default function SettingsScreen({
     }, [doExport]);
 
     const handleImport = useCallback(() => {
-        Alert.alert(
+        appAlert(
             "Import Data",
             "This will replace all your current data with the imported backup. This action cannot be undone. Continue?",
             [
@@ -226,10 +225,10 @@ export default function SettingsScreen({
                                 const imported = await loadUserProfile();
                                 setName(imported?.name || "");
                                 setEmail(imported?.email || "");
-                                Alert.alert("Success", "Data imported successfully. Your app data has been restored.");
+                                appAlert("Success", "Data imported successfully. Your app data has been restored.");
                             }
                         } catch {
-                            Alert.alert("Error", "Failed to import data. Please make sure you selected a valid backup file.");
+                            appAlert("Error", "Failed to import data. Please make sure you selected a valid backup file.");
                         } finally {
                             setIsImporting(false);
                         }
@@ -600,7 +599,7 @@ export default function SettingsScreen({
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => {
                                     resetAllTours();
-                                    Alert.alert("Tours Reset", "The guided tours will show again on each page.");
+                                    appAlert("Tours Reset", "The guided tours will show again on each page.");
                                 }}
                             >
                                 <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>

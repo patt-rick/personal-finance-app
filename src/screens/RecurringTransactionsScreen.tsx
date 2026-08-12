@@ -5,9 +5,8 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,
-    Alert,
-} from "react-native";
+    ScrollView,} from "react-native";
+import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Plus, Repeat, Pause, Play, Pencil, Trash2 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
@@ -75,7 +74,7 @@ export default function RecurringTransactionsScreen({
 
     const handleDelete = useCallback(
         (item: RecurringTransaction) => {
-            Alert.alert("Delete Recurring", `Remove "${item.description}"?`, [
+            appAlert("Delete Recurring", `Remove "${item.description}"?`, [
                 { text: "Cancel", style: "cancel" },
                 {
                     text: "Delete",

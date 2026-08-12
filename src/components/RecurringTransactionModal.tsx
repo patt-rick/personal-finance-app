@@ -5,10 +5,9 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
-    StyleSheet,
-    Alert,
-    Platform,
+    StyleSheet,    Platform,
 } from "react-native";
+import { appAlert } from "./dialog";
 import { X, Calendar } from "lucide-react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { RecurringTransaction, RecurrenceFrequency, Business, Category } from "../types";
@@ -178,11 +177,11 @@ export default function RecurringTransactionModal({
 
     const handleSubmit = () => {
         if (!amount || isNaN(parseFloat(amount))) {
-            Alert.alert("Error", "Please enter a valid amount");
+            appAlert("Error", "Please enter a valid amount");
             return;
         }
         if (!selectedBusiness) {
-            Alert.alert("Error", "Please select a business");
+            appAlert("Error", "Please select a business");
             return;
         }
 

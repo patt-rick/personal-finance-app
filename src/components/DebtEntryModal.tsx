@@ -4,11 +4,10 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    ScrollView,
-    Alert,
-    Platform,
+    ScrollView,    Platform,
     StyleSheet,
 } from "react-native";
+import { appAlert } from "./dialog";
 import { X, Calendar } from "lucide-react-native";
 import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/datetimepicker";
 import { Debt } from "../types";
@@ -91,11 +90,11 @@ export default function DebtEntryModal({
 
     const handleSubmit = () => {
         if (!personName.trim()) {
-            Alert.alert("Error", "Please enter a person name");
+            appAlert("Error", "Please enter a person name");
             return;
         }
         if (!amount || isNaN(parseFloat(amount)) || parseFloat(amount) <= 0) {
-            Alert.alert("Error", "Please enter a valid amount");
+            appAlert("Error", "Please enter a valid amount");
             return;
         }
         onSubmit({

@@ -1,4 +1,5 @@
-import { Alert, PermissionsAndroid, Platform } from "react-native";
+import { PermissionsAndroid, Platform } from "react-native";
+import { appAlert } from "../../../../components/dialog";
 import { autoLogNative } from "../ingestion/nativeBridge";
 
 export async function ensureSmsPermission(): Promise<boolean> {
@@ -54,7 +55,7 @@ export async function ensureNotificationListenerAccess(): Promise<boolean> {
     const granted = await hasNotificationListenerAccess();
     if (granted) return true;
     return new Promise<boolean>((resolve) => {
-        Alert.alert(
+        appAlert(
             "Notification Access",
             "Expense Tracker needs Notification Access to capture financial notifications. You will be taken to Android settings — flip the switch for Expense Tracker, then come back.",
             [

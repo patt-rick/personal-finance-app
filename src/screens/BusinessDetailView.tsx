@@ -23,9 +23,7 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import React, { useState, useMemo, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import {
-    Alert,
-    ScrollView,
+import {    ScrollView,
     StyleSheet,
     Text,
     TextInput,
@@ -35,6 +33,7 @@ import {
     Platform,
     ToastAndroid,
 } from "react-native";
+import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
@@ -249,7 +248,7 @@ export default function BusinessDetailView({
                 if (Platform.OS === "android") {
                     ToastAndroid.show(message, ToastAndroid.LONG);
                 } else {
-                    Alert.alert("Budget Update", message);
+                    appAlert("Budget Update", message);
                 }
             }
         } catch (error) {
@@ -317,7 +316,7 @@ export default function BusinessDetailView({
     const handleStartEdit = () => {
         if (!selectedTx) return;
         if (selectedTx.transferId) {
-            Alert.alert(
+            appAlert(
                 "Transfer entry",
                 "This entry is one half of a transfer between cashbooks, so it can't be edited. Delete the transfer and create a new one instead.",
             );
@@ -331,7 +330,7 @@ export default function BusinessDetailView({
     const handleDeleteTx = (id: string) => {
         const target = allTransactions.find((t) => t.id === id);
         const isTransfer = !!target?.transferId;
-        Alert.alert(
+        appAlert(
             isTransfer ? "Delete Transfer" : "Delete Transaction",
             isTransfer
                 ? "This entry is part of a transfer between cashbooks. Both sides of the transfer will be deleted."
@@ -373,7 +372,7 @@ export default function BusinessDetailView({
 
     const exportToCSV = async () => {
         if (filteredTransactions.length === 0) {
-            Alert.alert("No transactions", "There are no transactions to export.");
+            appAlert("No transactions", "There are no transactions to export.");
             return;
         }
 
@@ -401,11 +400,11 @@ export default function BusinessDetailView({
                     UTI: "public.comma-separated-values-text",
                 });
             } else {
-                Alert.alert("Error", "Sharing is not available on this device");
+                appAlert("Error", "Sharing is not available on this device");
             }
         } catch (error) {
             console.error(error);
-            Alert.alert("Error", "Failed to export CSV");
+            appAlert("Error", "Failed to export CSV");
         }
     };
 

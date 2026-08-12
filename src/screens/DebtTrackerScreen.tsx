@@ -5,9 +5,8 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,
-    Alert,
-} from "react-native";
+    ScrollView,} from "react-native";
+import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     ArrowLeft,
@@ -153,7 +152,7 @@ export default function DebtTrackerScreen({
             setPaymentDebt(null);
 
             if (totalPaidAfter >= paymentDebt.amount) {
-                Alert.alert(
+                appAlert(
                     "Debt Fully Paid",
                     "This debt has been fully paid. Mark as settled?",
                     [
@@ -179,7 +178,7 @@ export default function DebtTrackerScreen({
 
     const handleMarkSettled = useCallback(
         (debtId: string) => {
-            Alert.alert("Mark Settled", "Are you sure you want to mark this debt as settled?", [
+            appAlert("Mark Settled", "Are you sure you want to mark this debt as settled?", [
                 { text: "Cancel", style: "cancel" },
                 {
                     text: "Settle",
@@ -199,7 +198,7 @@ export default function DebtTrackerScreen({
 
     const handleDelete = useCallback(
         (debtId: string) => {
-            Alert.alert("Delete Debt", "Are you sure you want to delete this debt?", [
+            appAlert("Delete Debt", "Are you sure you want to delete this debt?", [
                 { text: "Cancel", style: "cancel" },
                 {
                     text: "Delete",

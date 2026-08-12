@@ -4,11 +4,10 @@ import {
     View,
     Text,
     TouchableOpacity,
-    ScrollView,
-    Alert,
-    StyleSheet,
+    ScrollView,    StyleSheet,
     Animated,
 } from "react-native";
+import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Plus, Landmark, ArrowRightLeft } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
@@ -337,7 +336,7 @@ export default function BusinessesScreen({
         const hasOtherCashbooks = businesses.filter((b) => b.id !== businessId).length > 0;
 
         if (txCount === 0) {
-            Alert.alert("Delete Cashbook", "This cashbook has no transactions. Delete it?", [
+            appAlert("Delete Cashbook", "This cashbook has no transactions. Delete it?", [
                 { text: "Cancel", style: "cancel" },
                 { text: "Delete", style: "destructive", onPress: () => removeBusiness(businessId) },
             ]);
@@ -362,7 +361,7 @@ export default function BusinessesScreen({
             },
         });
 
-        Alert.alert(
+        appAlert(
             "Delete Cashbook",
             `This cashbook has ${txCount} transaction${txCount !== 1 ? "s" : ""}. Would you like to transfer them to another cashbook or delete everything?`,
             buttons,

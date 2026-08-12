@@ -2,9 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
     Text,
     TextInput,
-    TouchableOpacity,
-    Alert,
-} from "react-native";
+    TouchableOpacity,} from "react-native";
+import { appAlert } from "./dialog";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import AppModal from "./AppModal";
@@ -40,11 +39,11 @@ export default function DebtPaymentModal({
     const handleSubmit = () => {
         const parsed = parseFloat(amount);
         if (!amount || isNaN(parsed) || parsed <= 0) {
-            Alert.alert("Error", "Please enter a valid amount");
+            appAlert("Error", "Please enter a valid amount");
             return;
         }
         if (parsed > remainingAmount) {
-            Alert.alert(
+            appAlert(
                 "Error",
                 `Amount cannot exceed remaining balance of ${currencySymbol}${remainingAmount.toFixed(2)}`,
             );

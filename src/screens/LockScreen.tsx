@@ -10,10 +10,9 @@ import {
     TextInput,
     ScrollView,
     KeyboardAvoidingView,
-    Platform,
-    Alert,
-    useColorScheme,
+    Platform,    useColorScheme,
 } from "react-native";
+import { appAlert } from "../components/dialog";
 import { StatusBar } from "expo-status-bar";
 import Svg, { Path } from "react-native-svg";
 import {
@@ -567,7 +566,7 @@ function PinRecoveryScreen({
     useEffect(() => {
         getSecurityQuestions().then((qs) => {
             if (!qs) {
-                Alert.alert(
+                appAlert(
                     "No Recovery Available",
                     "Security questions were not set up. You cannot recover your PIN.",
                     [{ text: "OK", onPress: onBack }]

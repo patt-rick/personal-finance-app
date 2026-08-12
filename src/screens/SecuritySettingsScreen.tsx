@@ -5,12 +5,11 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,
-    Alert,
-    Switch,
+    ScrollView,    Switch,
     BackHandler,
     Animated,
 } from "react-native";
+import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Lock, Fingerprint, ScanFace, Trash2, Delete } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
@@ -100,7 +99,7 @@ export default function SecuritySettingsScreen({ onBack, onPinChanged }: Securit
         hapticSuccess();
         onPinChanged();
         if (await isBiometricsAvailable()) {
-            Alert.alert(
+            appAlert(
                 `Enable ${biometricType}?`,
                 `Use ${biometricType.toLowerCase()} to unlock the app instead of entering your PIN each time.`,
                 [

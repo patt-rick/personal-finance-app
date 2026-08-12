@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { Alert, Platform, View, useColorScheme, AppState, Linking } from "react-native";
+import { Platform, View, useColorScheme, AppState, Linking } from "react-native";
+import { appAlert } from "./src/components/dialog";
 
 import { StatusBar } from "expo-status-bar";
 import {
@@ -179,7 +180,7 @@ function MainApp() {
                     const result = await ExpoInAppUpdates.checkForUpdate();
                     if (!result.updateAvailable) return;
 
-                    Alert.alert(
+                    appAlert(
                         "Update Available",
                         `A new version (${result.storeVersion}) is available. Update now for the latest features and improvements.`,
                         [

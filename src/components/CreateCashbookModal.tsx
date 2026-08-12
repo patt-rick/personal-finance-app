@@ -1,5 +1,6 @@
 import React, { useMemo, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { appAlert } from "./dialog";
 import { useTheme } from "../theme/theme";
 import AppModal from "./AppModal";
 import CashbookAppearancePicker from "./CashbookAppearancePicker";
@@ -43,7 +44,7 @@ export default function CreateCashbookModal({
 
     const handleSubmit = () => {
         if (!businessName.trim()) {
-            Alert.alert("Error", "Please enter a business name");
+            appAlert("Error", "Please enter a business name");
             return;
         }
         onSubmit(businessName.trim(), selectedCurrency, color, iconKey);

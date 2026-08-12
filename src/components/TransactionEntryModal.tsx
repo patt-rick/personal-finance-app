@@ -4,11 +4,10 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    ScrollView,
-    Alert,
-    Keyboard,
+    ScrollView,    Keyboard,
     StyleSheet,
 } from "react-native";
+import { appAlert } from "./dialog";
 import { Transaction, Category } from "../types";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
@@ -81,7 +80,7 @@ export default function TransactionEntryModal({
 
     const handleSubmit = () => {
         if (!amount || isNaN(parseFloat(amount))) {
-            Alert.alert("Error", "Please enter a valid amount");
+            appAlert("Error", "Please enter a valid amount");
             return;
         }
         onSubmit({

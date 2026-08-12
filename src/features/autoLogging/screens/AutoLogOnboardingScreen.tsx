@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-    Alert,
-    BackHandler,
+import {    BackHandler,
     Platform,
     ScrollView,
     StyleSheet,
@@ -9,6 +7,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { appAlert } from "../../../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     ArrowLeft,
@@ -77,7 +76,7 @@ export default function AutoLogOnboardingScreen({ onDone, onCancel }: Props) {
             const ok = await ensureSmsPermission();
             setSms(ok ? "granted" : "pending");
             if (!ok) {
-                Alert.alert(
+                appAlert(
                     "SMS permission not granted",
                     "You can still use Notifications capture — or re-run this step anytime from settings.",
                 );

@@ -6,9 +6,8 @@ import {
     StyleSheet,
     TouchableOpacity,
     FlatList,
-    TextInput,
-    Alert,
-} from "react-native";
+    TextInput,} from "react-native";
+import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Plus, Edit2, Trash2, Menu } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
@@ -41,7 +40,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
 
     const handleSave = async () => {
         if (!categoryName.trim()) {
-            Alert.alert("Error", "Category name cannot be empty");
+            appAlert("Error", "Category name cannot be empty");
             return;
         }
 
@@ -70,7 +69,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
     };
 
     const handleDelete = (id: string) => {
-        Alert.alert("Delete Category", "Are you sure you want to delete this category?", [
+        appAlert("Delete Category", "Are you sure you want to delete this category?", [
             { text: "Cancel", style: "cancel" },
             {
                 text: "Delete",

@@ -6,12 +6,11 @@ import {
     StyleSheet,
     ScrollView,
     TextInput,
-    TouchableOpacity,
-    Alert,
-    ActivityIndicator,
+    TouchableOpacity,    ActivityIndicator,
     KeyboardAvoidingView,
     Platform,
 } from "react-native";
+import { appAlert } from "../components/dialog";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ArrowLeft, Save, Wallet, Plus, Trash } from "lucide-react-native";
 import AppModal from "../components/AppModal";
@@ -112,7 +111,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
     const handleSave = async () => {
         const totalLimitNum = parseFloat(totalLimit);
         if (isNaN(totalLimitNum) || totalLimitNum <= 0) {
-            Alert.alert("Invalid Input", "Please enter a valid total budget amount");
+            appAlert("Invalid Input", "Please enter a valid total budget amount");
             return;
         }
 
@@ -130,7 +129,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         // Validate
         const validation = validateBudget(totalLimitNum, categoryBudgets);
         if (!validation.valid) {
-            Alert.alert("Validation Error", validation.error || "Invalid budget configuration");
+            appAlert("Validation Error", validation.error || "Invalid budget configuration");
             return;
         }
 
@@ -153,7 +152,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
         if (success) {
             await refreshCashbookWidgets();
             hapticSuccess();
-            Alert.alert(
+            appAlert(
                 "Success",
                 existingBudget ? "Budget updated successfully" : "Budget created successfully",
                 [
@@ -167,7 +166,7 @@ export default function BudgetSetupScreen({ business, onBack, onSave }: BudgetSe
                 ],
             );
         } else {
-            Alert.alert("Error", "Failed to save budget. Please try again.");
+            appAlert("Error", "Failed to save budget. Please try again.");
         }
     };
 

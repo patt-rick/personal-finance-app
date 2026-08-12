@@ -1,7 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {
-    Alert,
-    BackHandler,
+import {    BackHandler,
     Platform,
     ScrollView,
     StyleSheet,
@@ -9,6 +7,7 @@ import {
     TouchableOpacity,
     View,
 } from "react-native";
+import { appAlert } from "../../../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     ArrowLeft,
@@ -62,14 +61,14 @@ interface Props {
 
 function alertCaptureUnavailable(): boolean {
     if (Platform.OS !== "android") {
-        Alert.alert(
+        appAlert(
             "Android only",
             "Automatic logging is currently available on Android. iOS support is on the roadmap.",
         );
         return true;
     }
     if (!autoLogNative.isAvailable()) {
-        Alert.alert(
+        appAlert(
             "Full app required",
             "This preview (Expo Go) can't capture SMS or notifications. Automatic Logging works in the installed app from the Play Store or a development build.",
         );
@@ -213,7 +212,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         await refreshPendingCount();
         await refreshStats();
         await onDataChanged?.();
-        Alert.alert(
+        appAlert(
             "Seeded sample events",
             `Attempted ${result.attempted}. Saved ${result.saved}, queued ${result.queued}, filtered ${result.filtered}, dropped ${result.dropped}.`,
         );
