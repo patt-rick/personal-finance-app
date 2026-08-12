@@ -13,6 +13,7 @@ export const iconNodeToSvg = (
     const inner = nodes
         .map(([tag, attrs]) => {
             const a = Object.entries(attrs)
+                .filter(([k]) => k !== "key")
                 .map(([k, v]) => `${k}="${v}"`)
                 .join(" ");
             return `<${tag} ${a} />`;

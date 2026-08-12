@@ -33,11 +33,9 @@ for (const key of ICON_KEYS) {
     // The literal uses unquoted keys (d:, key:), so evaluate it in a sandboxed
     // Function rather than JSON.parse. Source is a trusted installed package.
     const raw = new Function(`return ${m[1]};`)();
-    // Drop the React "key" prop; keep only SVG attributes.
-    nodes[key] = raw.map(([tag, attrs]) => [
-        tag,
-        Object.fromEntries(Object.entries(attrs).filter(([k]) => k !== "key")),
-    ]);
+    // Keep the "key" attr: lucide's <Icon> uses it as the React key when it
+    // maps iconNode children. iconSvg.ts filters it out of widget SVG strings.
+    nodes[key] = raw;
 }
 
 const out =
