@@ -40,7 +40,7 @@ export default function AppDialog({ tone, title, message, buttons, onButtonPress
                 <TouchableOpacity
                     key={index}
                     onPress={() => onButtonPress(button)}
-                    style={[s.textButton, stacked && s.stackedButton]}
+                    style={[s.textButton, stacked ? s.stackedButton : s.rowButton]}
                     accessibilityRole="button"
                 >
                     <Text style={s.textButtonLabel}>{button.text}</Text>
@@ -54,7 +54,7 @@ export default function AppDialog({ tone, title, message, buttons, onButtonPress
                 style={[
                     s.filledButton,
                     { backgroundColor: isDestructive ? theme.colors.error : theme.colors.primary },
-                    stacked && s.stackedButton,
+                    stacked ? s.stackedButton : s.rowButton,
                 ]}
                 accessibilityRole="button"
             >
@@ -132,6 +132,10 @@ const createStyles = (theme: AppTheme) =>
         },
         stackedButton: {
             alignSelf: "stretch",
+            alignItems: "center",
+        },
+        rowButton: {
+            flex: 1,
             alignItems: "center",
         },
         filledButton: {
