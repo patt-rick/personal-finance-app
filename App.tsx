@@ -50,6 +50,7 @@ import { refreshCashbookWidgets } from "./src/features/widgets/services/widgetSy
 import { removeMappingsForBusiness } from "./src/features/widgets/services/widgetConfig";
 import { parseQuickAddLink } from "./src/features/widgets/services/deepLink";
 import WidgetPreviewScreen from "./src/features/widgets/screens/WidgetPreviewScreen";
+import { AppDialogHost } from "./src/components/dialog";
 
 // TEMP: flip to true (in a dev build) to preview the widgets, then revert.
 const PREVIEW_WIDGETS = false;
@@ -80,6 +81,7 @@ export default function App() {
     return (
         <ThemeProvider>
             <MainApp />
+            <AppDialogHost />
         </ThemeProvider>
     );
 }
