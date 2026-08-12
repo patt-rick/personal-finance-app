@@ -63,12 +63,18 @@ export default function AppModal({
     const showHandleBar = showHandle ?? isBottomSheet;
     const hasHeader = !!title || showCloseButton || !!headerRight;
 
-    const [keyboardVisible, setKeyboardVisible] = React.useState(false);
+    // Android: KeyboardAvoidingView inside a statusBarTranslucent Modal is
+    // unreliable under RN 0.81 edge-to-edge — it overshoots by the bottom
+    // inset while open and leaves stale padding after the keyboard hides.
+    // Drive the padding directly from keyboard events instead; the required
+    // lift equals the reported keyboard height exactly (device-verified).
+    const [androidKbPadding, setAndroidKbPadding] = React.useState(0);
     React.useEffect(() => {
-        const showEvt = Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow";
-        const hideEvt = Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide";
-        const showSub = Keyboard.addListener(showEvt, () => setKeyboardVisible(true));
-        const hideSub = Keyboard.addListener(hideEvt, () => setKeyboardVisible(false));
+        if (Platform.OS !== "android") return;
+        const showSub = Keyboard.addListener("keyboardDidShow", (e) =>
+            setAndroidKbPadding(e.endCoordinates.height),
+        );
+        const hideSub = Keyboard.addListener("keyboardDidHide", () => setAndroidKbPadding(0));
         return () => {
             showSub.remove();
             hideSub.remove();
@@ -82,16 +88,11 @@ export default function AppModal({
         if (dismissOnBackdrop) onClose();
     };
 
-    const Container = avoidKeyboard ? KeyboardAvoidingView : View;
-    // Android reports the keyboard frame shifted up by the bottom inset under
-    // edge-to-edge (RN 0.81), so the KAV overshoots by exactly that inset and
-    // leaves a gap under the sheet. Compensate with a negative offset.
-    const containerProps = avoidKeyboard
-        ? {
-              behavior: "padding" as const,
-              keyboardVerticalOffset: Platform.OS === "android" ? -insets.bottom : 0,
-          }
-        : {};
+    const useKav = avoidKeyboard && Platform.OS === "ios";
+    const Container = useKav ? KeyboardAvoidingView : View;
+    const containerProps = useKav ? { behavior: "padding" as const } : {};
+    const androidAvoidStyle =
+        avoidKeyboard && Platform.OS === "android" ? { paddingBottom: androidKbPadding } : null;
 
     const ContentWrapper = scrollable ? ScrollView : View;
     const contentWrapperProps = scrollable
@@ -113,7 +114,7 @@ export default function AppModal({
         >
             <Container
                 {...containerProps}
-                style={[s.flexFill, isBottomSheet ? s.bottomAlign : s.centerAlign]}
+                style={[s.flexFill, isBottomSheet ? s.bottomAlign : s.centerAlign, androidAvoidStyle]}
             >
                 <TouchableWithoutFeedback onPress={handleBackdropPress}>
                     <View style={[s.backdrop, overlayStyle]} />
