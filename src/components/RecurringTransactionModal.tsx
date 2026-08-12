@@ -5,7 +5,8 @@ import {
     TextInput,
     TouchableOpacity,
     ScrollView,
-    StyleSheet,    Platform,
+    StyleSheet,
+    Platform,
 } from "react-native";
 import { appAlert } from "./dialog";
 import { X, Calendar } from "lucide-react-native";

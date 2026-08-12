@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import {    BackHandler,
+import {
+    BackHandler,
     Platform,
     ScrollView,
     StyleSheet,

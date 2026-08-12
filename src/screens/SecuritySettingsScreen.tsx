@@ -5,7 +5,8 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,    Switch,
+    ScrollView,
+    Switch,
     BackHandler,
     Animated,
 } from "react-native";

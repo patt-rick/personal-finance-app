@@ -4,7 +4,8 @@ import {
     Text,
     TextInput,
     TouchableOpacity,
-    ScrollView,    Platform,
+    ScrollView,
+    Platform,
     StyleSheet,
 } from "react-native";
 import { appAlert } from "./dialog";

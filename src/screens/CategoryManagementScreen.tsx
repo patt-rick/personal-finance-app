@@ -6,7 +6,8 @@ import {
     StyleSheet,
     TouchableOpacity,
     FlatList,
-    TextInput,} from "react-native";
+    TextInput,
+} from "react-native";
 import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Plus, Edit2, Trash2, Menu } from "lucide-react-native";

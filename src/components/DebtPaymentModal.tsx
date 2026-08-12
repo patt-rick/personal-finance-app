@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import {
     Text,
     TextInput,
-    TouchableOpacity,} from "react-native";
+    TouchableOpacity,
+} from "react-native";
 import { appAlert } from "./dialog";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";

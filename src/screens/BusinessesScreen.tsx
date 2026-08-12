@@ -4,7 +4,8 @@ import {
     View,
     Text,
     TouchableOpacity,
-    ScrollView,    StyleSheet,
+    ScrollView,
+    StyleSheet,
     Animated,
 } from "react-native";
 import { appAlert } from "../components/dialog";

@@ -23,7 +23,8 @@ import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system/legacy";
 import React, { useState, useMemo, useEffect } from "react";
 import { LinearGradient } from "expo-linear-gradient";
-import {    ScrollView,
+import {
+    ScrollView,
     StyleSheet,
     Text,
     TextInput,

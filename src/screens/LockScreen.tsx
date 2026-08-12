@@ -10,7 +10,8 @@ import {
     TextInput,
     ScrollView,
     KeyboardAvoidingView,
-    Platform,    useColorScheme,
+    Platform,
+    useColorScheme,
 } from "react-native";
 import { appAlert } from "../components/dialog";
 import { StatusBar } from "expo-status-bar";

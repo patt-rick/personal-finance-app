@@ -5,7 +5,8 @@ import {
     Text,
     TouchableOpacity,
     StyleSheet,
-    ScrollView,} from "react-native";
+    ScrollView,
+} from "react-native";
 import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
