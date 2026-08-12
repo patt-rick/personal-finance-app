@@ -1,10 +1,14 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { View, Text, TouchableOpacity, StyleSheet } from "react-native";
 import { Check } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { CASHBOOK_COLORS } from "../features/cashbooks/appearance/palette";
 import { CASHBOOK_ICON_KEYS } from "../features/cashbooks/appearance/icons.data";
 import { CashbookIcon } from "../features/cashbooks/appearance/icons";
+
+const GRID_GAP = 10;
+const SWATCH_COLS = 6;
+const ICON_COLS = 5;
 
 export default function CashbookAppearancePicker({
     color,
@@ -19,9 +23,14 @@ export default function CashbookAppearancePicker({
 }) {
     const theme = useTheme();
     const s = useMemo(() => createStyles(theme), [theme]);
+    const [gridWidth, setGridWidth] = useState(0);
+
+    const swatchSize =
+        gridWidth > 0 ? (gridWidth - GRID_GAP * (SWATCH_COLS - 1)) / SWATCH_COLS : 40;
+    const iconSize = gridWidth > 0 ? (gridWidth - GRID_GAP * (ICON_COLS - 1)) / ICON_COLS : 44;
 
     return (
-        <View>
+        <View onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
             <Text style={s.label}>Color</Text>
             <View style={s.grid}>
                 {CASHBOOK_COLORS.map((c) => {
@@ -29,7 +38,16 @@ export default function CashbookAppearancePicker({
                     return (
                         <TouchableOpacity
                             key={c}
-                            style={[s.swatch, { backgroundColor: c }, selected && s.swatchSelected]}
+                            style={[
+                                s.swatch,
+                                {
+                                    width: swatchSize,
+                                    height: swatchSize,
+                                    borderRadius: swatchSize / 2,
+                                    backgroundColor: c,
+                                },
+                                selected && s.swatchSelected,
+                            ]}
                             onPress={() => onChangeColor(c)}
                             activeOpacity={0.8}
                         >
@@ -49,6 +67,8 @@ export default function CashbookAppearancePicker({
                             style={[
                                 s.iconCell,
                                 {
+                                    width: iconSize,
+                                    height: iconSize,
                                     backgroundColor: selected
                                         ? `${color.slice(0, 7)}22`
                                         : theme.colors.surfaceContainerHigh,
@@ -82,11 +102,8 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             marginBottom: 8,
             marginTop: 12,
         },
-        grid: { flexDirection: "row", flexWrap: "wrap", gap: 10 },
+        grid: { flexDirection: "row", flexWrap: "wrap", gap: GRID_GAP },
         swatch: {
-            width: 40,
-            height: 40,
-            borderRadius: 20,
             alignItems: "center",
             justifyContent: "center",
             borderWidth: 2,
@@ -94,8 +111,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
         },
         swatchSelected: { borderColor: theme.colors.onSurface },
         iconCell: {
-            width: 44,
-            height: 44,
             borderRadius: 12,
             alignItems: "center",
             justifyContent: "center",

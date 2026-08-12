@@ -83,9 +83,7 @@ export default function AppModal({
     };
 
     const Container = avoidKeyboard ? KeyboardAvoidingView : View;
-    const containerProps = avoidKeyboard
-        ? { behavior: Platform.OS === "ios" ? ("padding" as const) : ("height" as const) }
-        : {};
+    const containerProps = avoidKeyboard ? { behavior: "padding" as const } : {};
 
     const ContentWrapper = scrollable ? ScrollView : View;
     const contentWrapperProps = scrollable

@@ -49,6 +49,10 @@ import { autoLogNative } from "./src/features/autoLogging/services/ingestion/nat
 import { refreshCashbookWidgets } from "./src/features/widgets/services/widgetSync";
 import { removeMappingsForBusiness } from "./src/features/widgets/services/widgetConfig";
 import { parseQuickAddLink } from "./src/features/widgets/services/deepLink";
+import WidgetPreviewScreen from "./src/features/widgets/screens/WidgetPreviewScreen";
+
+// TEMP: flip to true (in a dev build) to preview the widgets, then revert.
+const PREVIEW_WIDGETS = false;
 
 const Tab = createBottomTabNavigator();
 
@@ -67,6 +71,10 @@ export default function App() {
                 style={{ flex: 1, backgroundColor: scheme === "dark" ? "#15130F" : "#F7F4EF" }}
             />
         );
+    }
+
+    if (PREVIEW_WIDGETS) {
+        return <WidgetPreviewScreen />;
     }
 
     return (

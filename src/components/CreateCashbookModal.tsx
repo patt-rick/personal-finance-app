@@ -6,6 +6,9 @@ import CashbookAppearancePicker from "./CashbookAppearancePicker";
 import { CASHBOOK_COLORS } from "../features/cashbooks/appearance/palette";
 import { DEFAULT_CASHBOOK_ICON } from "../features/cashbooks/appearance/resolve";
 
+const CURRENCY_GAP = 10;
+const CURRENCY_COLS = 4;
+
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
     { label: "Ghana Cedi", value: "GHS", symbol: "₵" },
@@ -31,6 +34,12 @@ export default function CreateCashbookModal({
     const [selectedCurrency, setSelectedCurrency] = useState("USD");
     const [color, setColor] = useState<string>(CASHBOOK_COLORS[0]);
     const [iconKey, setIconKey] = useState<string>(DEFAULT_CASHBOOK_ICON);
+    const [gridWidth, setGridWidth] = useState(0);
+
+    const currencyCardWidth =
+        gridWidth > 0
+            ? (gridWidth - CURRENCY_GAP * (CURRENCY_COLS - 1)) / CURRENCY_COLS
+            : undefined;
 
     const handleSubmit = () => {
         if (!businessName.trim()) {
@@ -56,11 +65,15 @@ export default function CreateCashbookModal({
             />
 
             <Text style={s.inputLabel}>Currency</Text>
-            <View style={s.currencyGrid}>
+            <View style={s.currencyGrid} onLayout={(e) => setGridWidth(e.nativeEvent.layout.width)}>
                 {CURRENCIES.map((curr) => (
                     <TouchableOpacity
                         key={curr.value}
-                        style={[s.currencyCard, selectedCurrency === curr.value && s.currencyCardActive]}
+                        style={[
+                            s.currencyCard,
+                            currencyCardWidth != null && { width: currencyCardWidth },
+                            selectedCurrency === curr.value && s.currencyCardActive,
+                        ]}
                         onPress={() => setSelectedCurrency(curr.value)}
                         activeOpacity={0.7}
                     >
@@ -122,7 +135,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             backgroundColor: theme.colors.surfaceContainerHigh,
             color: theme.colors.onSurface,
         },
-        currencyGrid: { flexDirection: "row", gap: 10, flexWrap: "wrap", marginBottom: 28 },
+        currencyGrid: { flexDirection: "row", gap: CURRENCY_GAP, flexWrap: "wrap", marginBottom: 28 },
         currencyCard: {
             width: "22%",
             height: 64,
@@ -149,6 +162,7 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             marginTop: 2,
         },
         submitBtn: {
+            marginTop: 28,
             height: 52,
             borderRadius: theme.shape.full,
             alignItems: "center",

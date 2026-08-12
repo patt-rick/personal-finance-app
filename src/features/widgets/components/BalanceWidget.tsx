@@ -24,7 +24,7 @@ export function BalanceWidget({
                 width: "match_parent",
                 backgroundColor: colors.surface,
                 borderRadius: 16,
-                padding: 12,
+                padding: 8,
                 flexDirection: "column",
                 justifyContent: "center",
             }}
@@ -33,8 +33,8 @@ export function BalanceWidget({
             <FlexWidget style={{ flexDirection: "row", alignItems: "center", marginBottom: 2 }}>
                 <FlexWidget
                     style={{
-                        width: 22,
-                        height: 22,
+                        width: 20,
+                        height: 20,
                         borderRadius: 6,
                         backgroundColor: withAlpha(view.accent, "22"),
                         alignItems: "center",
@@ -51,9 +51,9 @@ export function BalanceWidget({
             </FlexWidget>
             <TextWidget
                 text={`${view.balance < 0 ? "-" : ""}${fmt(view.currencySymbol, view.balance)}`}
-                style={{ fontSize: 24, color: colors.onSurface }}
+                style={{ fontSize: 22, color: colors.onSurface }}
             />
-            <FlexWidget style={{ flexDirection: "row", marginTop: 4 }}>
+            <FlexWidget style={{ flexDirection: "row", marginTop: 2 }}>
                 <TextWidget
                     text={`↑ ${fmt(view.currencySymbol, view.monthIncome)}`}
                     style={{ fontSize: 12, color: colors.income, marginRight: 10 }}

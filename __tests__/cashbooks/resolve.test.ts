@@ -4,6 +4,7 @@ import {
     resolveCashbookIconKey,
     DEFAULT_CASHBOOK_ICON,
     withAlpha,
+    readableOn,
 } from "../../src/features/cashbooks/appearance/resolve";
 
 describe("resolveCashbookColor", () => {
@@ -46,5 +47,21 @@ describe("withAlpha", () => {
     it("prefixes an alpha byte and keeps the last 6 hex digits", () => {
         expect(withAlpha("#7E57C2", "22")).toBe("#227E57C2");
         expect(withAlpha("#FF7E57C2", "22")).toBe("#227E57C2");
+    });
+});
+
+describe("readableOn", () => {
+    it("uses white text on dark fills and dark text on light fills", () => {
+        expect(readableOn("#000000")).toBe("#FFFFFF");
+        expect(readableOn("#FFFFFF")).toBe("#1A1A1A");
+    });
+
+    it("keeps mid-tone palette accents legible", () => {
+        expect(readableOn("#42A5F5")).toBe("#FFFFFF"); // blue reads as dark
+        expect(readableOn("#FFA726")).toBe("#1A1A1A"); // orange reads as light
+    });
+
+    it("ignores a leading alpha byte and reads the RGB channels", () => {
+        expect(readableOn("#22FFA726")).toBe("#1A1A1A");
     });
 });

@@ -36,3 +36,15 @@ export const resolveCashbookIconKey = (
 // Produce an #AARRGGBB color from a 6- or 8-digit hex, using the last 6 digits.
 export const withAlpha = (hex: string, alpha2: string): HexColor =>
     `#${alpha2}${hex.slice(-6)}` as HexColor;
+
+// Pick a foreground (text/icon) color that stays legible on a solid `hex` fill,
+// using the perceived-brightness (YIQ) threshold so arbitrary accent colors get
+// dark text on light fills and white text on dark fills.
+export const readableOn = (hex: string): HexColor => {
+    const c = hex.slice(-6);
+    const r = parseInt(c.slice(0, 2), 16);
+    const g = parseInt(c.slice(2, 4), 16);
+    const b = parseInt(c.slice(4, 6), 16);
+    const brightness = (r * 299 + g * 587 + b * 114) / 1000;
+    return brightness >= 150 ? "#1A1A1A" : "#FFFFFF";
+};
