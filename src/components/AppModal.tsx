@@ -83,7 +83,15 @@ export default function AppModal({
     };
 
     const Container = avoidKeyboard ? KeyboardAvoidingView : View;
-    const containerProps = avoidKeyboard ? { behavior: "padding" as const } : {};
+    // Android reports the keyboard frame shifted up by the bottom inset under
+    // edge-to-edge (RN 0.81), so the KAV overshoots by exactly that inset and
+    // leaves a gap under the sheet. Compensate with a negative offset.
+    const containerProps = avoidKeyboard
+        ? {
+              behavior: "padding" as const,
+              keyboardVerticalOffset: Platform.OS === "android" ? -insets.bottom : 0,
+          }
+        : {};
 
     const ContentWrapper = scrollable ? ScrollView : View;
     const contentWrapperProps = scrollable
