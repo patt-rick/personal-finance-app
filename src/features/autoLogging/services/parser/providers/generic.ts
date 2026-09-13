@@ -33,7 +33,7 @@ export const genericRefund: ProviderTemplate = {
     priority: 60,
     senderMatch: /.*/,
     bodyMatch: [
-        /\b(?:refund(?:ed)?|has\s+been\s+reversed|been\s+reversed|reversal\s+successful|successfully\s+reversed|reversed\s+successfully)\b/i,
+        /\b(?:refund(?:ed)?|(?:has|have|had|was|were)\s+(?:been\s+)?reversed|been\s+reversed|reversal\s+(?:successful|completed|processed)|successfully\s+reversed|reversed\s+successfully|reversed\s+(?:to|into)\s+your)\b/i,
     ],
     parse: (input) =>
         REFUND_OUTFLOW_RE.test(input.text)

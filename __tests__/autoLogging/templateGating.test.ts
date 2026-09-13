@@ -155,4 +155,25 @@ describe("reversal sign + transfer guard (CF5)", () => {
         expect(d!.type).toBe("income");
         expect(d!.amount).toBe(50);
     });
+
+    it("treats a plain 'was reversed' payment as a refund, not a fresh debit", () => {
+        const d = parseEvent(ev("MTN", "Your payment of GHS 50.00 to SHOP was reversed"), CATEGORIES);
+        expect(d).not.toBeNull();
+        expect(d!.type).not.toBe("expense");
+        expect(d!.type).toBe("income");
+        expect(d!.amount).toBe(50);
+    });
+
+    it("does not silently drop a 'was reversed' transaction", () => {
+        const d = parseEvent(ev("MTN", "Your transaction of GHS 50.00 to Ama was reversed"), CATEGORIES);
+        expect(d).not.toBeNull();
+        expect(d!.amount).toBe(50);
+    });
+
+    it("treats 'reversed to your wallet' as income", () => {
+        const d = parseEvent(ev("MTN", "GHS 50.00 reversed to your wallet. Ref 999"), CATEGORIES);
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("income");
+        expect(d!.amount).toBe(50);
+    });
 });

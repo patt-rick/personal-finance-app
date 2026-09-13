@@ -82,4 +82,12 @@ describe("extractAmount — nearest-only balance flagging (N1)", () => {
         expect(extractAmount("GHS 50.00 debited, balance GHS 900"))
             .toEqual({ amount: 50, currencyCode: "GHS" });
     });
+
+    it("does not suppress the only amount when a distant balance word shares the sentence", () => {
+        expect(
+            extractAmount(
+                "You sent GHS 50.00 to Kofi Mensah for October rent payment, remaining balance to be paid next month",
+            ),
+        ).toEqual({ amount: 50, currencyCode: "GHS" });
+    });
 });

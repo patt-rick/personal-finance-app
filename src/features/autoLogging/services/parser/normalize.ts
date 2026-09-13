@@ -173,7 +173,7 @@ function markBalanceCandidates(text: string, candidates: AmountCandidate[]): voi
         }
         if (after && afterGap <= BALANCE_PROXIMITY) {
             after.suspectedBalance = true;
-        } else if (before) {
+        } else if (before && beforeGap <= BALANCE_PROXIMITY) {
             before.suspectedBalance = true;
         }
     }
