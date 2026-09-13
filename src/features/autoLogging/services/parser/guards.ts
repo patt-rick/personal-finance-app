@@ -1,12 +1,7 @@
 export const MAX_PLAUSIBLE_AMOUNT = 1_000_000_000;
 
-export const SPAM_PATTERNS: RegExp[] = [
-    /\b(?:congratulations|congrats)\b/i,
+const STRONG_SPAM: RegExp[] = [
     /\b(?:you\s+won|winner)\b/i,
-    /\b(?:promo|promotion|promotional)\b/i,
-    /\boffer\b/i,
-    /\breward\b/i,
-    /\bdiscount\b/i,
     /\blottery\b/i,
     /\bclick\s+here\b/i,
     /\bclaim\s+now\b/i,
@@ -33,39 +28,63 @@ export const SPAM_PATTERNS: RegExp[] = [
     /(?:^|[^A-Za-z0-9])(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\//i,
 ];
 
-const PROMO_PATTERNS: RegExp[] = [
-    /\bfree\b/i,
+const SOFT_PROMO: RegExp[] = [
+    /\b(?:congratulations|congrats)\b/i,
+    /\b(?:promo|promotion|promotional)\b/i,
+    /\boffer\b/i,
+    /\breward\b/i,
+    /\bdiscount\b/i,
     /\bt&cs?\b/i,
     /\bterms\s+(?:and|&)\s+conditions\b/i,
     /\bunlimited\b/i,
+    /\bfree\s+(?:gift|data|airtime|bundle|transfers?)\b/i,
     /\b\d+\s?(?:mb|gb)\s+(?:free|bonus|data|bundle)\b/i,
     /\benjoy\b[^.!?]{0,40}\bbonus\b/i,
 ];
 
-const COMPLETION_RE =
-    /\b(debited|credited|withdrawn|deducted|reversed|received|was\s+(?:paid|sent|charged)|has\s+been\s+(?:paid|sent|charged|debited|credited)|successful(?:ly)?|completed)\b/i;
+export const SPAM_PATTERNS: RegExp[] = STRONG_SPAM;
+
+const COMPLETION_RE = new RegExp(
+    [
+        "(?:has|have|had|was|were|been)\\s+(?:been\\s+)?(?:debited|credited|paid|sent|charged|received|deducted|reversed|withdrawn|deposited|transferred)",
+        "(?<!\\bbe\\s)\\b(?:debited|credited|withdrawn|deducted|deposited)\\b",
+        "\\bpayment\\s+(?:received|confirmed|successful)\\b",
+        "\\b(?:successful(?:ly)?|completed)\\b",
+        "\\bthank\\s+you\\s+for\\s+your\\s+payment\\b",
+        "\\bcash[\\s-]?(?:out|in)\\s+made\\b",
+        "\\bcash[\\s-]?(?:out|in)\\b[^.!?]{0,20}\\bsuccessful\\b",
+        "\\b(?:debit|credit)\\s+alert\\b",
+        "\\breceipt\\b",
+    ].join("|"),
+    "i",
+);
+
 const FUTURE_DEBIT_RE = /\bwill\s+be\s+(?:debited|charged|deducted)\b/i;
 const PREAUTH_RE =
-    /\b(otp|one[\s-]?time\s?(?:pass(?:word|code)|code|pin)|do not share|about\s+to\s+(?:pay|send)|authoriz|authoris)\b/i;
+    /\b(?:otp|one[\s-]?time\s?(?:pass(?:word|code)|code|pin)|do not share|about\s+to\s+(?:pay|send)|authoriz(?:e|ed|ing|ation)?|authoris(?:e|ed|ing|ation)?|enter\s+your\s+(?:pin|otp|passcode|password)|to\s+(?:confirm|approve|authoriz))\b/i;
 const REVERSAL_RE = /\b(reversed|reversal)\b/i;
 const REMINDER_RE =
     /\b(reminder|is\s+due|due\s+on|avoid\s+disconnection|kindly\s+pay|please\s+pay|pay\s+before|outstanding\s+balance|overdue)\b/i;
+
+export function hasCompletionVerb(text: string): boolean {
+    return COMPLETION_RE.test(text);
+}
 
 export function isImplausibleAmount(n: number): boolean {
     return !Number.isFinite(n) || n <= 0 || n > MAX_PLAUSIBLE_AMOUNT;
 }
 
 export function isPromo(text: string): boolean {
-    return PROMO_PATTERNS.some((pattern) => pattern.test(text));
+    return SOFT_PROMO.some((pattern) => pattern.test(text)) && !hasCompletionVerb(text);
 }
 
 export function isSpam(text: string): boolean {
-    return SPAM_PATTERNS.some((pattern) => pattern.test(text)) || isPromo(text);
+    if (STRONG_SPAM.some((pattern) => pattern.test(text))) return true;
+    return SOFT_PROMO.some((pattern) => pattern.test(text)) && !hasCompletionVerb(text);
 }
 
 export function isPreAuthPrompt(text: string): boolean {
-    if (FUTURE_DEBIT_RE.test(text)) return true;
-    return PREAUTH_RE.test(text) && !COMPLETION_RE.test(text);
+    return (FUTURE_DEBIT_RE.test(text) || PREAUTH_RE.test(text)) && !hasCompletionVerb(text);
 }
 
 export function isReversalDebit(text: string): boolean {
@@ -73,5 +92,5 @@ export function isReversalDebit(text: string): boolean {
 }
 
 export function isBillReminder(text: string): boolean {
-    return REMINDER_RE.test(text) && !COMPLETION_RE.test(text);
+    return REMINDER_RE.test(text) && !hasCompletionVerb(text);
 }

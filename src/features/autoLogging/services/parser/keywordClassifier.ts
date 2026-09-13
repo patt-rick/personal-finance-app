@@ -6,7 +6,7 @@ import { normalizeSender } from "../routing/normalizeSender";
 import { deriveDisplayName } from "../routing/displayName";
 import { categorize } from "./categorize";
 import { scoreConfidence } from "./confidence";
-import { SPAM_PATTERNS, MAX_PLAUSIBLE_AMOUNT, isPreAuthPrompt, isBillReminder, isPromo } from "./guards";
+import { SPAM_PATTERNS, isImplausibleAmount, isPreAuthPrompt, isBillReminder, isPromo } from "./guards";
 
 const FINANCIAL_PATTERNS: RegExp[] = [
     /\bdebit(?:ed)?\b/i,
@@ -103,7 +103,7 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
 
     const amountResult = extractAmount(text);
     if (amountResult.amount === null) return null;
-    if (amountResult.amount > MAX_PLAUSIBLE_AMOUNT) return null;
+    if (isImplausibleAmount(amountResult.amount)) return null;
 
     const merchant = extractMerchant(text);
     const reference = extractReference(text) ?? undefined;
