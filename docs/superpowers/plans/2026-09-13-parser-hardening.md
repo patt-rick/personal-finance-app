@@ -192,6 +192,18 @@ All CF1-CF11 confirmed fixed; these are NEW regressions from the remediation. TD
 
 ### End of Round 2 — orchestrator: full jest, tsc, Fable spot-check, then Phase 2.
 
+## REMEDIATION ROUND 3 (final Fable review of full branch, C-1..C-6)
+TDD, one commit each, both wrong/keep cases; full jest + tsc after each.
+
+- **C-1 (HIGH) balance-label adjacency** — `normalize.ts markBalanceCandidates`: balance labels precede their value ("Bal: GHS X"), but an amount immediately before the label wins the current distance metric. Fix: for each hint, mark the nearest candidate AFTER the hint (candStart ≥ hintEnd) within a window; only if none exists after, mark the nearest candidate BEFORE (within the sentence). Tests: `"Debit Amt: GHS500.00 Bal: GHS1,200.00 Ref: 123456"` → amount 500; `parseEvent(GCB,"Acct XX1234 debited with GHS500.00 Avail Bal: GHS1,200.00 Ref: 4567890")` → expense 500 (not null, not 1200); `"Sent GHS 50.00 Bal GHS 60.00"` → 50. KEEP: `"GHS 1,250.00 is your available balance. Dial *170#"` → null; `"wallet balance after this cash out transaction is GHS 900.00"` → null; `"…GHS 45.00 at Melcom on 2026-04-23. New Bal: GHS 200.00"` → 45; all existing amountSelection/parser cases.
+- **C-2 (HIGH) null/dead sender mapping** — `resolveBusiness.ts` (+ `saveDraft.ts`, `ResolveResult`): (a) mapping with `businessId === null` ("Unassigned") → return `{ ignore: true }`; `planSaveDraft` returns `{ outcome:"drop" }` (no business, no history write). (b) mapping whose `businessId` is set but not in `businesses` (deleted) → recreate the business ONCE and return a `newMapping` that repairs the mapping (overwrite), so it isn't recreated per-event. (c) no mapping → unchanged (create + append). Tests (routing/resolve): null-mapping → ignore/drop, no newBusiness; dead-businessId → newBusiness + newMapping(repair) once, second call reuses; valid mapping unchanged.
+- **C-3 (MED) reminder "sent to your email"** — `guards.ts`: don't count `sent/paid/transferred … to your (e-?mail|phone|inbox|number|sms|line|statement)` as a completion verb (add a negative lookahead; remove bare `sent` from the been-X alt so "has been sent to your email" no longer completes). Tests: `"Your ECG bill for GHS 120.00 has been sent to your email. Kindly pay before 30 Sept…"` → null/reminder-drop; KEEP `"GHS 50.00 sent to Ama"` → outflow; `"salary has been credited"` → completion/kept.
+- **C-4 (MED) bare reversal flips sign** — `guards.ts isReversalDebit` + `generic.ts genericRefund.bodyMatch`: require completed-reversal phrasing (`has been reversed|been reversed|reversal successful|successfully reversed|reversed successfully`), not the bare noun. Tests: `parseEvent(MTN,"Cash Out Made for GHS 300.00 to AGT KOJO. Fee charged: GHS 3.00. If you did not initiate this, call 100 to request a reversal.")` → expense 300 (not income); KEEP `"Payment of GHS 50.00 to VENDOR has been reversed"` → income/refund; clawback `"Reversal successful. GHS 50.00 has been deducted from your wallet…"` → expense 50.
+- **C-5 (MED) title-only fallback** — `engine.ts` + `keywordClassifier.classifyEvent`: pass the composed (title+body) text into the keyword fallback for notifications. Test: notification `title:"Credit alert: GHS 500.00 salary received", body:""`, unknown package → income 500; SMS unchanged.
+- **C-6 (MED) dead toggle** — `src/screens/…/AutoLogSettingsScreen.tsx`: remove the `reviewLowConfidenceOnly` Switch row (behavior no longer reads it). Leave the settings field/type in place. No test (UI); verify tsc.
+
+### End of Round 3 — orchestrator: full jest, tsc, final security/fresh-eyes, Fable confirm.
+
 ---
 
 # PHASE 2 — Medium
