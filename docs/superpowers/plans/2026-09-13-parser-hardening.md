@@ -182,6 +182,16 @@ Define a shared `hasCompletionVerb(text)` in guards.ts. It must match at least:
 
 ### End of Remediation — orchestrator: full jest, tsc, Fable re-review of remediation diff before proceeding to Phase 2.
 
+## REMEDIATION ROUND 2 (Fable review of remediation diff, N1-N4)
+All CF1-CF11 confirmed fixed; these are NEW regressions from the remediation. TDD, one commit, both drop+keep cases; full jest + tsc after.
+
+- **N1 (HIGH) balance over-suppression** — `normalize.ts` balance detection: flag as balance ONLY the amount candidate nearest each BALANCE_HINT occurrence (not every candidate in the sentence). Rewrite: after collecting+sorting candidates, for each balance-hint match index, mark the single nearest candidate (within ~40 chars) as suspectedBalance. KEEP-primary tests: `"Debit GHS50.00 Acc:1234 Desc:POS PURCHASE Bal:GHS900.00"` → 50; `"You have received GHS 200.00 from KOFI, your new balance is GHS 450.00"` → income 200; `"GHS 50.00 debited, balance GHS 900"` → 50. KEEP-null: `"Your deposit was successful. GHS 1,250.00 is your available balance. Dial *170#"` → null; `"Your wallet balance after this cash out transaction is GHS 900.00"` → null. KEEP: `"Debit Alert: GHS 45.00 at Melcom on 2026-04-23. New Bal: GHS 200.00"` → 45.
+- **N2 (HIGH) completion list gaps** — `guards.ts` COMPLETION_RE: add `payment\s+made` and `\b(?:sent|paid|transferred)\b[^.!?]{0,30}\bto\b`. KEEP tests: `"Payment made for GHS 50.00 to SHOP. Get 10% discount on your next purchase"` → expense 50; `"Sent GHS 50.00 to Ama. Enjoy unlimited data offers this weekend"` → expense 50; `"Payment made for GHS 320.00 to ECG. Your next bill is due on 05 Nov"` → expense 320. STILL-DROP (verify not broken): OTP authorize prompt, enter-PIN prompt, pure promo without completion.
+- **N3 (MED/HIGH) strong-ref shape** — `normalize.ts` extractStrongReference (or fingerprint): require the cleaned strong reference to contain a digit AND no internal whitespace. Test: `"Salary credited. Ref: SALARY PAYMENT"` two months apart → DIFFERENT fingerprints; `"Payment. Txn ID: 80855322501"` → SAME; existing ABC123/TX9988 still strong.
+- **N4 (MED) history poisoning on R6 drop** — `saveDraft.ts`: the two mustReview replace→drop branches must NOT record raw history. Return `{ outcome: "drop" }` WITHOUT `fingerprint` (persistHistoryEntry early-returns when `!plan.fingerprint`), so the existing fingerprint→txId link is preserved. Test: after a low-confidence draft drops a would-be replace, the prior rawHistory entry (with its txId) is unchanged / a later high-confidence draft can still replace.
+
+### End of Round 2 — orchestrator: full jest, tsc, Fable spot-check, then Phase 2.
+
 ---
 
 # PHASE 2 — Medium
