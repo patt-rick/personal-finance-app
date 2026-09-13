@@ -72,7 +72,7 @@ describe("extractAmount", () => {
 });
 
 describe("parse with fee-bearing SMS", () => {
-    it("adds the fee to the principal for an MTN MoMo Cash Out", () => {
+    it("splits the fee from the principal for an MTN MoMo Cash Out", () => {
         const event = makeEvent({
             body:
                 "Cash Out made for GHS1600.00 to VANTHELMA VENTURES. Current Balance: GHS256.82 " +
@@ -81,7 +81,8 @@ describe("parse with fee-bearing SMS", () => {
         });
         const draft = parse(event, DEFAULT_CATEGORIES);
         expect(draft).not.toBeNull();
-        expect(draft!.amount).toBe(1616);
+        expect(draft!.amount).toBe(1600);
+        expect(draft!.fee).toBe(16);
         expect(draft!.currencyCode).toBe("GHS");
         expect(draft!.type).toBe("expense");
     });
@@ -93,6 +94,7 @@ describe("parse with fee-bearing SMS", () => {
         const draft = parse(event, DEFAULT_CATEGORIES);
         expect(draft).not.toBeNull();
         expect(draft!.amount).toBe(1000);
+        expect(draft!.fee).toBeUndefined();
         expect(draft!.type).toBe("income");
     });
 });
