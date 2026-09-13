@@ -99,7 +99,7 @@ export function planSaveDraft(input: PlanInput): Plan {
 
     const { settings } = input;
     const lowConfidence = input.draft.confidence < settings.minConfidenceForAutoSave;
-    const mustReview = settings.askBeforeSaving || (settings.reviewLowConfidenceOnly && lowConfidence);
+    const mustReview = settings.askBeforeSaving || lowConfidence;
 
     if (mustReview) {
         const reviewItem: ReviewItem = {

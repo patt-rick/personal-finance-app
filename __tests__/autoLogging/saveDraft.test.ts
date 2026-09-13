@@ -124,6 +124,34 @@ describe("planSaveDraft — review routing", () => {
         });
         expect(plan.outcome).toBe("save");
     });
+
+    it("routes a below-threshold draft to review under DEFAULT settings (F13)", () => {
+        const plan = planSaveDraft({
+            draft: makeDraft({ confidence: 0.5 }),
+            settings: makeSettings(),
+            businesses: [],
+            transactions: [],
+            mappings: [],
+            now: fixedNow,
+            idGenerator: fixedIdGen,
+        });
+        expect(plan.outcome).toBe("review");
+        expect(plan.reviewItem).toBeDefined();
+        expect(plan.transaction).toBeUndefined();
+    });
+
+    it("auto-saves an at/above-threshold draft under DEFAULT settings (F13)", () => {
+        const plan = planSaveDraft({
+            draft: makeDraft({ confidence: 0.9 }),
+            settings: makeSettings(),
+            businesses: [],
+            transactions: [],
+            mappings: [],
+            now: fixedNow,
+            idGenerator: fixedIdGen,
+        });
+        expect(plan.outcome).toBe("save");
+    });
 });
 
 describe("planSaveDraft — dedupe", () => {
