@@ -3,6 +3,13 @@ import { normalizeMerchantKey } from "../parser/normalize";
 
 const TIME_BUCKET_MS = 2 * 60 * 1000;
 
+export function isStrongReference(reference: string): boolean {
+    const value = reference.trim();
+    if (value.length < 6) return false;
+    if (/\s/.test(value)) return false;
+    return /\d/.test(value);
+}
+
 export function fingerprint(draft: ParsedDraft): string {
     const sender = draft.senderKey || "?";
     const currency = draft.currencyCode ?? "?";
@@ -11,7 +18,7 @@ export function fingerprint(draft: ParsedDraft): string {
     const merchant = normalizeMerchantKey(draft.merchant);
     const occurred = new Date(draft.occurredAt).getTime();
 
-    if (reference) {
+    if (reference && isStrongReference(reference)) {
         return ["v1", sender, currency, amount, "r", reference].join("|");
     }
     const bucket = Number.isFinite(occurred) ? Math.floor(occurred / TIME_BUCKET_MS) : 0;

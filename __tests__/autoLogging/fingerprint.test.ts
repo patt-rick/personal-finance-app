@@ -50,6 +50,24 @@ describe("fingerprint", () => {
         expect(a).not.toBe(b);
     });
 
+    it("does not dedupe a narration-derived reference across months (P1.7)", () => {
+        const march = fingerprint(makeDraft({ reference: "SALARY", occurredAt: new Date("2026-03-25T09:00:00Z").toISOString() }));
+        const april = fingerprint(makeDraft({ reference: "SALARY", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
+        expect(march).not.toBe(april);
+    });
+
+    it("keeps the time-independent path for a genuine txn id across months (P1.7)", () => {
+        const march = fingerprint(makeDraft({ reference: "80855322501", occurredAt: new Date("2026-03-25T09:00:00Z").toISOString() }));
+        const april = fingerprint(makeDraft({ reference: "80855322501", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
+        expect(march).toBe(april);
+    });
+
+    it("still collides a same-transaction re-parse within 2 min for a weak reference (P1.7)", () => {
+        const first = fingerprint(makeDraft({ reference: "SALARY", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
+        const reparse = fingerprint(makeDraft({ reference: "SALARY", occurredAt: new Date("2026-04-25T09:01:30Z").toISOString() }));
+        expect(first).toBe(reparse);
+    });
+
     it("collapses SMS + notification of the same MoMo TxnID via reference match", () => {
         const sms = makeDraft({
             source: "sms",
