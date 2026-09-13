@@ -32,7 +32,9 @@ export const genericRefund: ProviderTemplate = {
     id: "generic-refund",
     priority: 60,
     senderMatch: /.*/,
-    bodyMatch: [/\b(refund(?:ed)?|reversed|reversal)\b/i],
+    bodyMatch: [
+        /\b(?:refund(?:ed)?|has\s+been\s+reversed|been\s+reversed|reversal\s+successful|successfully\s+reversed|reversed\s+successfully)\b/i,
+    ],
     parse: (input) =>
         REFUND_OUTFLOW_RE.test(input.text)
             ? buildDebit(input, {

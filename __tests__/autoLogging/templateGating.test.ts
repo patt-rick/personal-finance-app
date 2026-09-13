@@ -136,6 +136,19 @@ describe("reversal sign + transfer guard (CF5)", () => {
         expect(d!.amount).toBe(50);
     });
 
+    it("keeps a cash-out with a 'request a reversal' footer as an expense (C-4)", () => {
+        const d = parseEvent(
+            ev(
+                "MTN",
+                "Cash Out Made for GHS 300.00 to AGT KOJO. Fee charged: GHS 3.00. If you did not initiate this, call 100 to request a reversal.",
+            ),
+            CATEGORIES,
+        );
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("expense");
+        expect(d!.amount).toBe(300);
+    });
+
     it("keeps a genuine refund credit as income (50)", () => {
         const d = parseEvent(ev("MTN", "Refund of GHS 50.00 has been credited to your account"), CATEGORIES);
         expect(d).not.toBeNull();

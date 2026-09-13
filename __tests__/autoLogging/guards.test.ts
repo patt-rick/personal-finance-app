@@ -59,6 +59,12 @@ describe("isReversalDebit", () => {
         expect(isReversalDebit("Payment of GHS 50 to VENDOR")).toBe(false);
         expect(isReversalDebit("Refund of GHS 50 received")).toBe(false);
     });
+
+    it("requires completed-reversal phrasing, not a bare mention (C-4)", () => {
+        expect(isReversalDebit("If you did not initiate this, call 100 to request a reversal")).toBe(false);
+        expect(isReversalDebit("Reversal successful. GHS 50.00 has been deducted")).toBe(true);
+        expect(isReversalDebit("GHS 50 was reversed successfully")).toBe(true);
+    });
 });
 
 describe("isBillReminder", () => {

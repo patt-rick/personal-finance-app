@@ -64,7 +64,8 @@ const COMPLETION_RE = new RegExp(
 const FUTURE_DEBIT_RE = /\bwill\s+be\s+(?:debited|charged|deducted)\b/i;
 const PREAUTH_RE =
     /\b(?:otp|one[\s-]?time\s?(?:pass(?:word|code)|code|pin)|do not share|about\s+to\s+(?:pay|send)|authoriz(?:e|ed|ing|ation)?|authoris(?:e|ed|ing|ation)?|enter\s+your\s+(?:pin|otp|passcode|password)|to\s+(?:confirm|approve|authoriz))\b/i;
-const REVERSAL_RE = /\b(reversed|reversal)\b/i;
+const REVERSAL_RE =
+    /\b(?:has\s+been\s+reversed|been\s+reversed|reversal\s+successful|successfully\s+reversed|reversed\s+successfully)\b/i;
 const REMINDER_RE =
     /\b(reminder|is\s+due|due\s+on|avoid\s+disconnection|kindly\s+pay|please\s+pay|pay\s+before|outstanding\s+balance|overdue)\b/i;
 
