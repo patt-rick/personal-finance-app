@@ -132,6 +132,22 @@ time-independent path (compounds F16).
 - Same-ms business-id collision (`resolveBusiness.ts:23` uses `now.getTime().toString()`).
 - SMS sender spoofing: alphanumeric "MTN" spoofable; template path trusts at 0.9 base conf.
 
+## Resolution status (2026-09-13)
+All CONFIRMED findings F1–F22 and the plausibles were fixed on branch `fix/parser-hardening`
+(Phases 1–3 + 3 remediation rounds driven by repeated Fable review). Verified: `tsc -b` clean,
+371 jest tests pass.
+
+### Known limitations remaining (documented, not fixed — low severity)
+- Title-only notifications parse the amount from the title but store an empty `rawText`/`remark`.
+- `"Airtime balance top-up of GHS 10.00 successful"` (a balance-word adjacent to the real amount)
+  is dropped — pre-existing, both before and after hardening.
+- Recurring standing orders that reuse the SAME strong `Ref:` id + amount every month share a
+  time-independent fingerprint and dedupe across months (rawHistory has no age pruning). Consider
+  age-pruning reference fingerprints if this proves real.
+- Dead-mapping repair recreates the business once and overwrites the mapping's display name /
+  `autoCreated` flag (acceptable — the target business no longer exists).
+- SMS sender spoofing (alphanumeric "MTN") remains an inherent limit of SMS trust.
+
 ## Suggested priority
 1. F13 + F9 (gate auto-save + template spam/cap) — stops promo/chat/OTP/balance fakes.
 2. F1–F4 (amount selection) — sort by index, prefer first primary, bidirectional balance, no
