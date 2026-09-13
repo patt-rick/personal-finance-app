@@ -4,6 +4,7 @@ import { Transaction, Business } from '../types';
 import { useTheme } from '../theme/theme';
 import CategoryIcon from './CategoryIcon';
 import MoneyText from './MoneyText';
+import { grossAmount } from '../utils/transactionAmount';
 
 interface TransactionItemProps {
   transaction: Transaction;
@@ -35,7 +36,7 @@ export default function TransactionItem({ transaction, business, symbol = '' }: 
       </View>
 
       <MoneyText
-        amount={transaction.amount}
+        amount={grossAmount(transaction)}
         symbol={symbol}
         sign={isIncome ? '+' : '-'}
         size={14}

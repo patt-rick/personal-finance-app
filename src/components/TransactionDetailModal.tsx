@@ -24,6 +24,7 @@ import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import AppModal from "./AppModal";
 import CategoryIcon from "./CategoryIcon";
+import { grossAmount } from "../utils/transactionAmount";
 
 interface TransactionDetailModalProps {
     visible: boolean;
@@ -76,7 +77,7 @@ export default function TransactionDetailModal({
                             >
                                 {transaction.type === "income" ? "+" : "-"}
                                 {symbol}
-                                {transaction.amount.toLocaleString()}
+                                {grossAmount(transaction).toLocaleString()}
                             </Text>
                             <Text style={styles.txDetailDescription}>
                                 {transaction.description}
@@ -117,6 +118,22 @@ export default function TransactionDetailModal({
                                 value={transaction.category || "General"}
                                 styles={styles}
                             />
+                            {transaction.fee && transaction.fee > 0 ? (
+                                <>
+                                    <DetailRow
+                                        icon={<Tag size={18} color={theme.colors.onSurfaceVariant} />}
+                                        label="Amount (excl. fees)"
+                                        value={`${symbol}${transaction.amount.toLocaleString()}`}
+                                        styles={styles}
+                                    />
+                                    <DetailRow
+                                        icon={<Info size={18} color={theme.colors.onSurfaceVariant} />}
+                                        label="Fees & Taxes"
+                                        value={`${symbol}${transaction.fee.toLocaleString()}`}
+                                        styles={styles}
+                                    />
+                                </>
+                            ) : null}
                             <DetailRow
                                 icon={<Calendar size={18} color={theme.colors.onSurfaceVariant} />}
                                 label="Date & Time"

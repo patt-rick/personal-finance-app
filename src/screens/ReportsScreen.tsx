@@ -12,6 +12,7 @@ import {
     getTopCategories,
     getBiggestTransactions,
 } from "../utils/reportCalculations";
+import { grossAmount } from "../utils/transactionAmount";
 import PairedBarChart from "../components/dashboard/PairedBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import ChartCarousel from "../components/ChartCarousel";
@@ -338,7 +339,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                                                 </Text>
                                             </View>
                                             <Text style={styles.txAmount}>
-                                                -{currencySymbol}{tx.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                                -{currencySymbol}{grossAmount(tx).toLocaleString(undefined, { maximumFractionDigits: 0 })}
                                             </Text>
                                         </View>
                                     ))}

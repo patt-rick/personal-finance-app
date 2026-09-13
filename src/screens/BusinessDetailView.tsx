@@ -627,7 +627,7 @@ export default function BusinessDetailView({
                                         </View>
                                         <View style={styles.txRight}>
                                             <MoneyText
-                                                amount={t.amount}
+                                                amount={grossAmount(t)}
                                                 sign={t.type === "income" ? "+" : "-"}
                                                 symbol={symbol}
                                                 size={15}

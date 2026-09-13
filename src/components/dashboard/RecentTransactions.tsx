@@ -4,6 +4,7 @@ import { useTheme } from "../../theme/theme";
 import { Transaction } from "../../types";
 import CategoryIcon from "../CategoryIcon";
 import MoneyText from "../MoneyText";
+import { grossAmount } from "../../utils/transactionAmount";
 
 function formatTimeAgo(date: Date | string): string {
     const d = new Date(date);
@@ -61,7 +62,7 @@ export default function RecentTransactions({ transactions }: RecentTransactionsP
                             <Text style={styles.txTime}>{formatTimeAgo(tx.date)}</Text>
                         </View>
                         <MoneyText
-                            amount={tx.amount}
+                            amount={grossAmount(tx)}
                             symbol="$"
                             sign={isIncome ? "+" : "-"}
                             size={15}
