@@ -1,12 +1,20 @@
-import { ProviderTemplate } from "./types";
+import { ParseInput, ParseOutput, ProviderTemplate } from "./types";
 import { buildCredit, buildDebit } from "./helpers";
+import { extractReference } from "../normalize";
+
+function requireFinancialSignal(input: ParseInput, output: ParseOutput | null): ParseOutput | null {
+    if (!output) return null;
+    if (output.currencyCode === null && extractReference(input.text) === null) return null;
+    return output;
+}
 
 export const genericPaymentReceived: ProviderTemplate = {
     id: "generic-payment-received",
     priority: 30,
     senderMatch: /.*/,
     bodyMatch: [/\b(payment\s+received|received\s+payment|you\s+have\s+received)\b/i],
-    parse: (input) => buildCredit(input, { bodyMatch: [], baseConfidence: 0.65, merchantHint: "from" }),
+    parse: (input) =>
+        requireFinancialSignal(input, buildCredit(input, { bodyMatch: [], baseConfidence: 0.65, merchantHint: "from" })),
 };
 
 export const genericPaymentSent: ProviderTemplate = {
@@ -14,7 +22,8 @@ export const genericPaymentSent: ProviderTemplate = {
     priority: 30,
     senderMatch: /.*/,
     bodyMatch: [/\b(you\s+have\s+sent|payment\s+sent|paid\s+to|sent\s+to)\b/i],
-    parse: (input) => buildDebit(input, { bodyMatch: [], baseConfidence: 0.65, merchantHint: "to" }),
+    parse: (input) =>
+        requireFinancialSignal(input, buildDebit(input, { bodyMatch: [], baseConfidence: 0.65, merchantHint: "to" })),
 };
 
 export const genericRefund: ProviderTemplate = {
