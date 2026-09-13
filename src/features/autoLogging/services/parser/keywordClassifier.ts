@@ -141,9 +141,9 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
     const cls = classify(text);
     if (!cls) return null;
 
-    const finalAmount = (cls.type === "expense" || cls.type === "transfer")
-        ? amountResult.amount + (amountResult.fee ?? 0)
-        : amountResult.amount;
+    const isOutflow = cls.type === "expense" || cls.type === "transfer";
+    const finalAmount = amountResult.amount;
+    const fee = isOutflow ? amountResult.fee : undefined;
 
     const category = categorize(merchant, text, cls.type, categories, undefined, reference);
 
@@ -163,6 +163,7 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
 
     return {
         amount: finalAmount,
+        fee,
         currencyCode: amountResult.currencyCode,
         merchant,
         type: cls.type,

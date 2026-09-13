@@ -81,6 +81,7 @@ function buildDraft(
 
     return {
         amount: output.amount,
+        fee: output.fee,
         currencyCode: output.currencyCode,
         merchant: output.merchant,
         type: persistedType,

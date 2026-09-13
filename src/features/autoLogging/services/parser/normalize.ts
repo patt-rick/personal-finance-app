@@ -54,7 +54,7 @@ const SUFFIX_RE = new RegExp(
 
 const BALANCE_HINT_RE = /\b(bal(?:ance)?|avail(?:able)?|new\s+bal|remaining)\b/i;
 const ACCOUNT_NUMBER_HINT_RE = /\b(acc(?:t|ount)?(?:\s*(?:no|number))?|a\/c)\b\s*[:#]?\s*$/i;
-const FEE_HINT_RE = /\b(fee|fees|commission|levy|surcharge|stamp\s*duty|vat|service\s*charge|transaction\s*charge)\b/i;
+const FEE_HINT_RE = /\b(fee|fees|commission|levy|surcharge|stamp\s*duty|vat|service\s*charge|transaction\s*charge|tax|withholding)\b/i;
 
 interface AmountCandidate {
     amount: number;
