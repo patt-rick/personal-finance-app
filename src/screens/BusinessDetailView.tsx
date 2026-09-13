@@ -267,6 +267,7 @@ export default function BusinessDetailView({
         remark: string;
         entryType: "income" | "expense";
         editingTxId: string | null;
+        fee?: number;
     }) => {
         let updatedTransactions: Transaction[];
 
@@ -279,6 +280,7 @@ export default function BusinessDetailView({
                         type: data.entryType,
                         category: data.category,
                         remark: data.remark,
+                        fee: data.entryType === "expense" ? data.fee : undefined,
                     };
                 }
                 return t;
@@ -294,6 +296,7 @@ export default function BusinessDetailView({
                 category: data.category,
                 paymentMode: "Cash",
                 remark: data.remark,
+                fee: data.entryType === "expense" ? data.fee : undefined,
             };
             updatedTransactions = [...allTransactions, newTransaction];
         }

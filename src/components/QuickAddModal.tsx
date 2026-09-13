@@ -47,6 +47,7 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate, 
         remark: string;
         entryType: "income" | "expense";
         editingTxId: string | null;
+        fee?: number;
     }) => {
         if (!selected) return;
         onCreate({
@@ -120,6 +121,7 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate, 
             visible
             entryType="expense"
             showTypeToggle
+            showFeeInput={false}
             editingTx={null}
             categories={categories}
             symbol={getCurrencySymbol(selected.currency)}

@@ -21,6 +21,7 @@ interface TransactionEntryModalProps {
     categories: Category[];
     symbol: string;
     showTypeToggle?: boolean;
+    showFeeInput?: boolean;
     onClose: () => void;
     onSubmit: (data: {
         amount: number;
@@ -28,6 +29,7 @@ interface TransactionEntryModalProps {
         remark: string;
         entryType: "income" | "expense";
         editingTxId: string | null;
+        fee?: number;
     }) => void;
 }
 
@@ -38,6 +40,7 @@ export default function TransactionEntryModal({
     categories,
     symbol,
     showTypeToggle,
+    showFeeInput = true,
     onClose,
     onSubmit,
 }: TransactionEntryModalProps) {
@@ -48,6 +51,7 @@ export default function TransactionEntryModal({
         t === "income" ? "Other Income" : "Other Expense";
 
     const [amount, setAmount] = useState("");
+    const [fee, setFee] = useState("");
     const [remark, setRemark] = useState("");
     const [selectedCategory, setSelectedCategory] = useState(
         defaultCategoryForType(entryType),
@@ -57,6 +61,7 @@ export default function TransactionEntryModal({
     useEffect(() => {
         if (editingTx) {
             setAmount(editingTx.amount.toString());
+            setFee(editingTx.fee?.toString() ?? "");
             setSelectedCategory(
                 editingTx.category || defaultCategoryForType(editingTx.type),
             );
@@ -64,6 +69,7 @@ export default function TransactionEntryModal({
             setCurrentType(editingTx.type);
         } else {
             setAmount("");
+            setFee("");
             setRemark("");
             setSelectedCategory(defaultCategoryForType(entryType));
             setCurrentType(entryType);
@@ -73,6 +79,7 @@ export default function TransactionEntryModal({
     const handleTypeChange = (next: "income" | "expense") => {
         if (next === currentType) return;
         setCurrentType(next);
+        if (next === "income") setFee("");
         const stillValid = categories.some(
             (c) => c.type === next && c.name === selectedCategory,
         );
@@ -84,21 +91,36 @@ export default function TransactionEntryModal({
             appAlert("Error", "Please enter a valid amount");
             return;
         }
+        if (currentType === "expense" && fee.trim() !== "") {
+            const parsedFee = parseFloat(fee);
+            if (!Number.isFinite(parsedFee) || parsedFee < 0) {
+                appAlert("Error", "Please enter a valid fee");
+                return;
+            }
+        }
         onSubmit({
             amount: parseFloat(amount),
             category: selectedCategory,
             remark,
             entryType: currentType,
             editingTxId: editingTx?.id ?? null,
+            fee:
+                currentType === "expense" &&
+                fee.trim() !== "" &&
+                Number.isFinite(parseFloat(fee))
+                    ? parseFloat(fee)
+                    : undefined,
         });
         Keyboard.dismiss();
         setAmount("");
+        setFee("");
         setRemark("");
     };
 
     const handleClose = () => {
         Keyboard.dismiss();
         setAmount("");
+        setFee("");
         setRemark("");
         onClose();
     };
@@ -168,6 +190,20 @@ export default function TransactionEntryModal({
                 onChangeText={setAmount}
                 autoFocus
             />
+
+            {showFeeInput && currentType === "expense" ? (
+                <>
+                    <Text style={styles.inputLabelModern}>Fee / tax ({symbol})</Text>
+                    <TextInput
+                        style={styles.modalInputModern}
+                        placeholder="0.00"
+                        placeholderTextColor={theme.colors.placeholder}
+                        keyboardType="decimal-pad"
+                        value={fee}
+                        onChangeText={setFee}
+                    />
+                </>
+            ) : null}
 
             <Text style={styles.inputLabelModern}>Category</Text>
             <ScrollView

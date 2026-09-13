@@ -6,6 +6,7 @@ import { Business } from "../../../types";
 import MoneyText from "../../../components/MoneyText";
 import { ReviewItem } from "../types";
 import { getCurrencySymbol } from "../../../utils/_helpers";
+import { grossAmount } from "../../../utils/transactionAmount";
 import { ConfirmEdits } from "../hooks/useAutoLogQueue";
 
 interface Props {
@@ -20,6 +21,7 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [expanded, setExpanded] = useState(false);
     const [amount, setAmount] = useState(item.draft.amount.toString());
+    const [fee, setFee] = useState(item.draft.fee?.toString() ?? "");
     const [description, setDescription] = useState(item.draft.merchant ?? "");
 
     const symbol = getCurrencySymbol(business?.currency ?? item.draft.currencyCode ?? undefined);
@@ -30,6 +32,14 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
         const edits: Partial<ConfirmEdits> = {};
         if (Number.isFinite(parsedAmount) && parsedAmount !== item.draft.amount) edits.amount = parsedAmount;
         if (description.trim() && description.trim() !== item.draft.merchant) edits.description = description.trim();
+        if (item.draft.type !== "income") {
+            const parsedFee = parseFloat(fee);
+            if (fee.trim() === "") {
+                if (item.draft.fee != null) edits.fee = 0;
+            } else if (Number.isFinite(parsedFee) && parsedFee !== item.draft.fee) {
+                edits.fee = parsedFee;
+            }
+        }
         onConfirm(Object.keys(edits).length ? edits : undefined);
     };
 
@@ -65,7 +75,7 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                     </Text>
                 </View>
                 <MoneyText
-                    amount={item.draft.amount}
+                    amount={grossAmount(item.draft)}
                     symbol={symbol}
                     size={18}
                     color={item.draft.type === "income" ? theme.colors.income : theme.colors.onSurface}
@@ -82,6 +92,19 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                         keyboardType="decimal-pad"
                         placeholderTextColor={theme.colors.onSurfaceVariant}
                     />
+                    {item.draft.type !== "income" ? (
+                        <>
+                            <Text style={styles.label}>Fee / tax</Text>
+                            <TextInput
+                                style={styles.input}
+                                value={fee}
+                                onChangeText={setFee}
+                                keyboardType="decimal-pad"
+                                placeholder="0.00"
+                                placeholderTextColor={theme.colors.onSurfaceVariant}
+                            />
+                        </>
+                    ) : null}
                     <Text style={styles.label}>Description</Text>
                     <TextInput
                         style={styles.input}
