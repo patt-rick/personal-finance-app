@@ -71,6 +71,33 @@ describe("extractAmount", () => {
     });
 });
 
+describe("extractAmount — number/currency token boundaries (P2.1)", () => {
+    it("does not treat a bare space as thousands when a unit follows (F5)", () => {
+        expect(extractAmount("Buy the GHS 5 500MB bundle now"))
+            .toEqual({ amount: 5, currencyCode: "GHS" });
+    });
+
+    it("does not match a currency code embedded in an alphanumeric id (F6)", () => {
+        expect(extractAmount("Approved. ID: XKUSD500TZ"))
+            .toEqual({ amount: null, currencyCode: null });
+    });
+
+    it("keeps comma-grouped thousands", () => {
+        expect(extractAmount("Charged USD 12,345.00 at Acme"))
+            .toEqual({ amount: 12345, currencyCode: "USD" });
+        expect(extractAmount("USD 12,345.00"))
+            .toEqual({ amount: 12345, currencyCode: "USD" });
+    });
+
+    it("keeps plain code-prefixed amounts", () => {
+        expect(extractAmount("GHS 100.00")).toEqual({ amount: 100, currencyCode: "GHS" });
+    });
+
+    it("keeps compound-symbol amounts", () => {
+        expect(extractAmount("GH₵50")).toEqual({ amount: 50, currencyCode: "GHS" });
+    });
+});
+
 describe("parse with fee-bearing SMS", () => {
     it("splits the fee from the principal for an MTN MoMo Cash Out", () => {
         const event = makeEvent({

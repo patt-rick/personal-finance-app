@@ -38,17 +38,19 @@ export function lowerKey(input: string): string {
     return normalizeText(input).toLowerCase();
 }
 
-const NUMBER_BODY = String.raw`\d{1,3}(?:[,\s]\d{3})+(?:\.\d{1,2})?|\d+(?:\.\d{1,2})?`;
+const NUMBER_BODY = String.raw`\d{1,3}(?:,\d{3})+(?:\.\d{1,2})?|\d{1,3}(?:\s\d{3})+(?:\.\d{1,2})?(?![A-Za-z])|\d+(?:\.\d{1,2})?`;
 const SYMBOL_GROUP = String.raw`GH₵|GH¢|US\$|[$€£₵₦]`;
 const CODE_GROUP = String.raw`GHS|GHC|USD|EUR|GBP|NGN|KES`;
+const PREFIX_CURRENCY = String.raw`\b(?:${CODE_GROUP})|${SYMBOL_GROUP}`;
+const SUFFIX_CURRENCY = String.raw`(?:${CODE_GROUP})\b|${SYMBOL_GROUP}`;
 const MAGNITUDE = String.raw`(?:\s*([kKmM])\b)?`;
 
 const PREFIX_RE = new RegExp(
-    String.raw`(${CODE_GROUP}|${SYMBOL_GROUP})\s*(${NUMBER_BODY})${MAGNITUDE}`,
+    String.raw`(${PREFIX_CURRENCY})\s*(${NUMBER_BODY})${MAGNITUDE}`,
     "gi",
 );
 const SUFFIX_RE = new RegExp(
-    String.raw`(${NUMBER_BODY})${MAGNITUDE}\s*(${CODE_GROUP}|${SYMBOL_GROUP})`,
+    String.raw`(${NUMBER_BODY})${MAGNITUDE}\s*(${SUFFIX_CURRENCY})`,
     "gi",
 );
 
