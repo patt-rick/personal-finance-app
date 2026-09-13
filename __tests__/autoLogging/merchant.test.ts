@@ -24,4 +24,10 @@ describe("extractMerchant — sentence-boundary stop (P1.6)", () => {
             extractMerchant("Sent GHS 30 to K.O. VENTURES on 2026-01-01", "to"),
         ).toBe("K.O. VENTURES");
     });
+
+    it("captures a lowercase counterparty (F19)", () => {
+        expect(
+            extractMerchant("Payment made for GHS 10.00 to kofi mensah.", "to"),
+        ).toBe("kofi mensah");
+    });
 });

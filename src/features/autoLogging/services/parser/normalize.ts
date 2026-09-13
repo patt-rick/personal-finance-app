@@ -313,12 +313,12 @@ function cleanReferenceValue(raw: string): string | null {
 }
 
 const MERCHANT_PATTERNS: RegExp[] = [
-    /\bpaid\s+to\s+([A-Z][A-Za-z0-9&'.\- ]{1,60})/,
-    /\bpurchase\s+at\s+([A-Z][A-Za-z0-9&'.\- ]{1,60})/,
-    /\bat\s+([A-Z][A-Za-z0-9&'.\- ]{1,60})/,
-    /\bto\s+([A-Z][A-Za-z0-9&'.\- ]{1,60})/,
-    /\bfrom\s+([A-Z][A-Za-z0-9&'.\- ]{1,60})/,
-    /@\s*([A-Z][A-Za-z0-9&'.\- ]{1,60})/,
+    /\bpaid\s+to\s+([A-Za-z][A-Za-z0-9&'.\- ]{1,60})/,
+    /\bpurchase\s+at\s+([A-Za-z][A-Za-z0-9&'.\- ]{1,60})/,
+    /\bat\s+([A-Za-z][A-Za-z0-9&'.\- ]{1,60})/,
+    /\bto\s+([A-Za-z][A-Za-z0-9&'.\- ]{1,60})/,
+    /\bfrom\s+([A-Za-z][A-Za-z0-9&'.\- ]{1,60})/,
+    /@\s*([A-Za-z][A-Za-z0-9&'.\- ]{1,60})/,
 ];
 
 const MERCHANT_STOP_WORDS = new Set([
