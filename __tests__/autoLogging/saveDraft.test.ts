@@ -2,6 +2,8 @@ import { Business, Transaction } from "../../src/types";
 import { AutoLogSettings, ParsedDraft, SenderMapping } from "../../src/features/autoLogging/types";
 import { DEFAULT_AUTO_LOG_SETTINGS } from "../../src/features/autoLogging/services/persistence/settings";
 import { planSaveDraft } from "../../src/features/autoLogging/services/ingestion/saveDraft";
+import { fingerprint } from "../../src/features/autoLogging/services/dedupe/fingerprint";
+import { indexRawHistory, RawHistoryEntry } from "../../src/features/autoLogging/services/persistence/rawEvents";
 
 function makeDraft(overrides: Partial<ParsedDraft> = {}): ParsedDraft {
     return {
@@ -225,5 +227,85 @@ describe("planSaveDraft — dedupe", () => {
             idGenerator: fixedIdGen,
         });
         expect(plan.outcome).toBe("save");
+    });
+
+    describe("confidence gate on replace paths (CF10)", () => {
+        it("drops (keeps existing) a below-threshold draft that would replace a lower-confidence dedupe candidate", () => {
+            const plan = planSaveDraft({
+                draft: makeDraft({ confidence: 0.5 }),
+                settings: makeSettings(),
+                businesses: [biz],
+                transactions: [existingTx({ confidence: 0.4 })],
+                mappings: [mapping],
+                now: fixedNow,
+                idGenerator: fixedIdGen,
+            });
+            expect(plan.outcome).toBe("drop");
+            expect(plan.transaction).toBeUndefined();
+            expect(plan.replaceTransactionId).toBeUndefined();
+        });
+
+        it("still replaces a lower-confidence dedupe candidate with a high-confidence draft", () => {
+            const plan = planSaveDraft({
+                draft: makeDraft({ confidence: 0.9 }),
+                settings: makeSettings(),
+                businesses: [biz],
+                transactions: [existingTx({ confidence: 0.4 })],
+                mappings: [mapping],
+                now: fixedNow,
+                idGenerator: fixedIdGen,
+            });
+            expect(plan.outcome).toBe("replace");
+            expect(plan.replaceTransactionId).toBe("tx-1");
+        });
+
+        it("drops (keeps existing) a below-threshold draft that would upgrade a lower-confidence rawHistory fingerprint", () => {
+            const draft = makeDraft({ confidence: 0.5 });
+            const draftFp = fingerprint(draft);
+            const entry: RawHistoryEntry = {
+                rawHash: "hash-a",
+                fingerprint: draftFp,
+                txId: "raw-tx-1",
+                occurredAt: fixedNow.getTime(),
+                confidence: 0.4,
+            };
+            const plan = planSaveDraft({
+                draft,
+                settings: makeSettings(),
+                businesses: [biz],
+                transactions: [],
+                mappings: [mapping],
+                rawHistory: indexRawHistory([entry]),
+                now: fixedNow,
+                idGenerator: fixedIdGen,
+            });
+            expect(plan.outcome).toBe("drop");
+            expect(plan.transaction).toBeUndefined();
+            expect(plan.replaceTransactionId).toBeUndefined();
+        });
+
+        it("still upgrades a lower-confidence rawHistory fingerprint with a high-confidence draft", () => {
+            const draft = makeDraft({ confidence: 0.9 });
+            const draftFp = fingerprint(draft);
+            const entry: RawHistoryEntry = {
+                rawHash: "hash-b",
+                fingerprint: draftFp,
+                txId: "raw-tx-1",
+                occurredAt: fixedNow.getTime(),
+                confidence: 0.4,
+            };
+            const plan = planSaveDraft({
+                draft,
+                settings: makeSettings(),
+                businesses: [biz],
+                transactions: [],
+                mappings: [mapping],
+                rawHistory: indexRawHistory([entry]),
+                now: fixedNow,
+                idGenerator: fixedIdGen,
+            });
+            expect(plan.outcome).toBe("replace");
+            expect(plan.replaceTransactionId).toBe("raw-tx-1");
+        });
     });
 });

@@ -37,6 +37,10 @@ export function planSaveDraft(input: PlanInput): Plan {
 
     const draftFp = fingerprint(input.draft);
 
+    const { settings } = input;
+    const lowConfidence = input.draft.confidence < settings.minConfidenceForAutoSave;
+    const mustReview = settings.askBeforeSaving || lowConfidence;
+
     const historyHit = checkRawHistory(input, draftFp);
     if (historyHit && historyHit.outcome === "drop") return { ...historyHit, fingerprint: draftFp };
 
@@ -51,6 +55,7 @@ export function planSaveDraft(input: PlanInput): Plan {
     const transaction = draftToTransaction(input.draft, resolve.businessId, idGen());
 
     if (historyHit && historyHit.outcome === "replace" && historyHit.replaceTransactionId) {
+        if (mustReview) return { outcome: "drop", fingerprint: draftFp };
         return {
             outcome: "replace",
             newBusiness: resolve.newBusiness,
@@ -85,6 +90,7 @@ export function planSaveDraft(input: PlanInput): Plan {
     const hit = findDuplicate(input.draft, candidates);
     if (hit) {
         if (hit.shouldReplace) {
+            if (mustReview) return { outcome: "drop", fingerprint: draftFp };
             return {
                 outcome: "replace",
                 newBusiness: resolve.newBusiness,
@@ -96,10 +102,6 @@ export function planSaveDraft(input: PlanInput): Plan {
         }
         return { outcome: "drop", fingerprint: draftFp };
     }
-
-    const { settings } = input;
-    const lowConfidence = input.draft.confidence < settings.minConfidenceForAutoSave;
-    const mustReview = settings.askBeforeSaving || lowConfidence;
 
     if (mustReview) {
         const reviewItem: ReviewItem = {
