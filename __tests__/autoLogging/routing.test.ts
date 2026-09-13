@@ -158,4 +158,31 @@ describe("resolveBusiness", () => {
         );
         expect(result.newBusiness!.currency).toBe("GHS");
     });
+
+    it("does not overwrite an existing mapping whose businessId is null (P3.5)", () => {
+        const nullMapping: SenderMapping = {
+            senderKey: "mtn",
+            displayName: "MTN MoMo",
+            businessId: null,
+            autoCreated: false,
+            sampleSenders: ["MTN"],
+            createdAt: "2026-01-01T00:00:00Z",
+        };
+        const result = resolveBusiness(makeDraft(), makeSettings(), [], [nullMapping], fixedNow);
+        expect(result.newMapping).toBeUndefined();
+    });
+
+    it("uses the injected idGenerator for the new business id (P3.5)", () => {
+        const result = resolveBusiness(
+            makeDraft(),
+            makeSettings(),
+            [],
+            [],
+            fixedNow,
+            () => "gen-id-123",
+        );
+        expect(result.businessId).toBe("gen-id-123");
+        expect(result.newBusiness!.id).toBe("gen-id-123");
+        expect(result.newMapping!.businessId).toBe("gen-id-123");
+    });
 });

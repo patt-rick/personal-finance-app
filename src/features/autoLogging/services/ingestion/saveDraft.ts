@@ -50,6 +50,7 @@ export function planSaveDraft(input: PlanInput): Plan {
         input.businesses,
         input.mappings,
         now,
+        idGen,
     );
 
     const transaction = draftToTransaction(input.draft, resolve.businessId, idGen());

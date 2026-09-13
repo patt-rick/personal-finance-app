@@ -7,8 +7,8 @@ const FIDELITY = /\b(fidelity|fidelitybank|fidelitygh)\b/i;
 const ABSA = /\b(absa|absabank|absagh)\b/i;
 const STANBIC = /\b(stanbic|stanbicbank)\b/i;
 const ZENITH = /\b(zenith|zenithbank)\b/i;
-const CAL = /\b(cal|calbank|calbankgh)\b/i;
-const ACCESS = /\b(access|accessbank)\b/i;
+const CAL = /\bcal\s?bank(?:gh)?\b/i;
+const ACCESS = /\baccess\s?bank\b/i;
 
 const DEBIT_BODY: RegExp[] = [/\b(debit|debited|withdrawn|paid|purchase|spent|charged)\b/i];
 const CREDIT_BODY: RegExp[] = [/\b(credit|credited|received|deposit|salary|payroll|inward|incoming)\b/i];

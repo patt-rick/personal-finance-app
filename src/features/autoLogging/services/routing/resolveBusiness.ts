@@ -13,6 +13,7 @@ export function resolveBusiness(
     businesses: Business[],
     mappings: SenderMapping[],
     now: Date = new Date(),
+    idGenerator: () => string = () => now.getTime().toString(),
 ): ResolveResult {
     const mapping = mappings.find((m) => m.senderKey === draft.senderKey);
 
@@ -20,7 +21,7 @@ export function resolveBusiness(
         return { businessId: mapping.businessId };
     }
 
-    const businessId = now.getTime().toString();
+    const businessId = idGenerator();
     const createdAt = now.toISOString();
 
     const newBusiness: Business = {
@@ -30,14 +31,18 @@ export function resolveBusiness(
         currency: draft.currencyCode || settings.defaultCurrency,
     };
 
-    const newMapping: SenderMapping = {
-        senderKey: draft.senderKey,
-        displayName: draft.senderDisplay,
-        businessId,
-        autoCreated: true,
-        sampleSenders: [draft.senderDisplay],
-        createdAt,
-    };
+    // Only append a mapping when the sender has none yet. Never overwrite an
+    // existing mapping — including a user-set businessId:null "ignore" mapping.
+    const newMapping: SenderMapping | undefined = mapping
+        ? undefined
+        : {
+              senderKey: draft.senderKey,
+              displayName: draft.senderDisplay,
+              businessId,
+              autoCreated: true,
+              sampleSenders: [draft.senderDisplay],
+              createdAt,
+          };
 
     return { businessId, newBusiness, newMapping };
 }
