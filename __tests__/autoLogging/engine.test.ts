@@ -141,6 +141,23 @@ describe("engine — notification source", () => {
         expect(draft!.type).toBe("income");
     });
 
+    it("uses the notification title for the keyword fallback on unknown packages (C-5)", () => {
+        const draft = parseEvent(
+            makeEvent({
+                source: "notification",
+                sender: undefined,
+                packageName: "com.some.finance",
+                title: "GHS 500.00 salary received",
+                body: "",
+            }),
+            CATEGORIES,
+        );
+        expect(draft).not.toBeNull();
+        expect(draft!.providerId).toBeUndefined();
+        expect(draft!.type).toBe("income");
+        expect(draft!.amount).toBe(500);
+    });
+
     it("does not fold a title into SMS parsing (F21 — SMS unchanged)", () => {
         const draft = parseEvent(
             makeEvent({

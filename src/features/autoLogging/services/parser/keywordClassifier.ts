@@ -100,8 +100,12 @@ export function classify(text: string): ClassifyResult | null {
     };
 }
 
-export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDraft | null {
-    const text = normalizeText(event.body ?? "");
+export function classifyEvent(
+    event: RawEvent,
+    categories: Category[],
+    bodyText: string = event.body ?? "",
+): ParsedDraft | null {
+    const text = normalizeText(bodyText);
     if (!text) return null;
 
     if (isPreAuthPrompt(text) || isBillReminder(text) || isPromo(text)) return null;

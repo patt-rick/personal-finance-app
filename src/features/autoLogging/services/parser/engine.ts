@@ -46,7 +46,7 @@ export function parseEvent(event: RawEvent, categories: Category[]): ParsedDraft
         return buildDraft(event, output, template.id, senderKey, rawSenderId, categories);
     }
 
-    return classifyEvent(event, categories);
+    return classifyEvent(event, categories, parseText);
 }
 
 function matchesAllBody(lower: string, patterns: RegExp[]): boolean {
