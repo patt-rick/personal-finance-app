@@ -156,6 +156,33 @@ describe("planSaveDraft — review routing", () => {
     });
 });
 
+describe("planSaveDraft — ignore mapping (C-2)", () => {
+    it("drops without writing history when the sender maps to null (unassigned)", () => {
+        const nullMapping: SenderMapping = {
+            senderKey: "mtn",
+            displayName: "MTN MoMo",
+            businessId: null,
+            autoCreated: false,
+            sampleSenders: ["MTN"],
+            createdAt: "2026-01-01T00:00:00Z",
+        };
+        const plan = planSaveDraft({
+            draft: makeDraft({ confidence: 0.9 }),
+            settings: makeSettings(),
+            businesses: [],
+            transactions: [],
+            mappings: [nullMapping],
+            now: fixedNow,
+            idGenerator: fixedIdGen,
+        });
+        expect(plan.outcome).toBe("drop");
+        expect(plan.fingerprint).toBeUndefined();
+        expect(plan.newBusiness).toBeUndefined();
+        expect(plan.newMapping).toBeUndefined();
+        expect(plan.transaction).toBeUndefined();
+    });
+});
+
 describe("planSaveDraft — dedupe", () => {
     const biz: Business = {
         id: "biz-1",

@@ -172,6 +172,58 @@ describe("resolveBusiness", () => {
         expect(result.newMapping).toBeUndefined();
     });
 
+    it("returns an ignore result for an explicit null (unassigned) mapping (C-2)", () => {
+        const nullMapping: SenderMapping = {
+            senderKey: "mtn",
+            displayName: "MTN MoMo",
+            businessId: null,
+            autoCreated: false,
+            sampleSenders: ["MTN"],
+            createdAt: "2026-01-01T00:00:00Z",
+        };
+        const result = resolveBusiness(makeDraft(), makeSettings(), [], [nullMapping], fixedNow);
+        expect(result.ignore).toBe(true);
+        expect(result.newBusiness).toBeUndefined();
+        expect(result.newMapping).toBeUndefined();
+    });
+
+    it("recreates a deleted business once and repairs the mapping (C-2)", () => {
+        const staleMapping: SenderMapping = {
+            senderKey: "mtn",
+            displayName: "MTN MoMo",
+            businessId: "biz-deleted",
+            autoCreated: true,
+            sampleSenders: ["MTN"],
+            createdAt: "2026-01-01T00:00:00Z",
+        };
+        const first = resolveBusiness(
+            makeDraft(),
+            makeSettings(),
+            [],
+            [staleMapping],
+            fixedNow,
+            () => "biz-new",
+        );
+        expect(first.newBusiness).toBeDefined();
+        expect(first.newBusiness!.id).toBe("biz-new");
+        expect(first.newMapping).toBeDefined();
+        expect(first.newMapping!.senderKey).toBe("mtn");
+        expect(first.newMapping!.businessId).toBe("biz-new");
+        expect(first.newMapping!.autoCreated).toBe(true);
+        expect(first.ignore).toBeFalsy();
+
+        const second = resolveBusiness(
+            makeDraft(),
+            makeSettings(),
+            [first.newBusiness!],
+            [first.newMapping!],
+            fixedNow,
+        );
+        expect(second.businessId).toBe("biz-new");
+        expect(second.newBusiness).toBeUndefined();
+        expect(second.newMapping).toBeUndefined();
+    });
+
     it("uses the injected idGenerator for the new business id (P3.5)", () => {
         const result = resolveBusiness(
             makeDraft(),

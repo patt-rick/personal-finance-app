@@ -53,6 +53,10 @@ export function planSaveDraft(input: PlanInput): Plan {
         idGen,
     );
 
+    // Sender is mapped to "unassigned": drop silently, no history so the sender
+    // can be reassigned later without a stale fingerprint blocking it.
+    if (resolve.ignore) return { outcome: "drop" };
+
     const transaction = draftToTransaction(input.draft, resolve.businessId, idGen());
 
     if (historyHit && historyHit.outcome === "replace" && historyHit.replaceTransactionId) {
