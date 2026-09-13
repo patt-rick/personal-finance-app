@@ -4,6 +4,7 @@ import {
     extractMerchant,
     extractReference,
 } from "../normalize";
+import { isSpam, isImplausibleAmount, isPreAuthPrompt, isBillReminder, isReversalDebit } from "../guards";
 
 const OUTGOING_TOKENS_RE = /\b(paid\s+to|sent\s+to|transferred\s+to|debit(?:ed)?|withdrawn|spent|charged)\b/i;
 const INCOMING_TOKENS_RE = /\b(received\s+from|credit(?:ed)?|deposit|payment\s+from|inward)\b/i;
@@ -19,6 +20,7 @@ export interface BaseDebitOpts {
 }
 
 export function buildDebit(input: ParseInput, opts: BaseDebitOpts): ParseOutput | null {
+    if (isReversalDebit(input.text)) return null;
     if (hasConflict(input.text)) return null;
     if (STRONG_CREDIT_RE.test(input.text) && !STRONG_DEBIT_RE.test(input.text)) return null;
     return buildBase(input, {
@@ -54,8 +56,9 @@ export function buildTransfer(input: ParseInput, opts: BaseDebitOpts): ParseOutp
 }
 
 function buildBase(input: ParseInput, opts: Required<Pick<BaseDebitOpts, "type" | "semanticType" | "baseConfidence">> & { merchantHint?: string }): ParseOutput | null {
+    if (isSpam(input.text) || isPreAuthPrompt(input.text) || isBillReminder(input.text)) return null;
     const amount = extractAmount(input.text);
-    if (amount.amount === null) return null;
+    if (amount.amount === null || isImplausibleAmount(amount.amount)) return null;
     const merchant = extractMerchant(input.text, opts.merchantHint);
     const reference = extractReference(input.text) ?? undefined;
     const isOutflow = opts.type === "expense" || opts.type === "transfer";
