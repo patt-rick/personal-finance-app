@@ -22,7 +22,6 @@ const CURRENCY_CODES = ["GHS", "USD", "EUR", "GBP", "NGN", "KES"] as const;
 const ZERO_WIDTH_RE = /[​-‍﻿]/g;
 const CURLY_QUOTES_RE = /[‘’]/g;
 const DOUBLE_CURLY_QUOTES_RE = /[“”]/g;
-const CEDIS_TOKEN_RE = /\b(?:gh¢|gh₵|ghc|ghs|cedis?)\b/gi;
 
 export function normalizeText(input: string): string {
     if (!input) return "";
@@ -411,13 +410,4 @@ export function normalizeMerchantKey(merchant: string | null | undefined): strin
     return (merchant ?? "")
         .toLowerCase()
         .replace(/[^a-z0-9]/g, "");
-}
-
-export function normalizeCedisTokens(rawText: string): string {
-    return normalizeText(rawText).replace(CEDIS_TOKEN_RE, (m) => {
-        const lower = m.toLowerCase();
-        if (lower === "ghc" || lower === "gh¢" || lower === "gh₵") return "GHS";
-        if (lower.startsWith("cedi")) return "GHS";
-        return m.toUpperCase();
-    });
 }

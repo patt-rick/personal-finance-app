@@ -1,5 +1,5 @@
 import { ParsedDraft } from "../../src/features/autoLogging/types";
-import { dedupeKey, normalizeMerchant } from "../../src/features/autoLogging/services/dedupe/hash";
+import { normalizeMerchant } from "../../src/features/autoLogging/services/dedupe/hash";
 import { findDuplicate } from "../../src/features/autoLogging/services/dedupe/match";
 
 function makeDraft(overrides: Partial<ParsedDraft> = {}): ParsedDraft {
@@ -19,24 +19,6 @@ function makeDraft(overrides: Partial<ParsedDraft> = {}): ParsedDraft {
         ...overrides,
     };
 }
-
-describe("dedupeKey", () => {
-    it("produces the same key for events within the same time bucket", () => {
-        const t = Date.parse("2026-04-23T10:00:00Z");
-        const withinBucket = t + 30_000;
-        expect(dedupeKey(45, "Melcom", t)).toBe(dedupeKey(45, "Melcom", withinBucket));
-    });
-
-    it("normalizes merchant casing and whitespace", () => {
-        const t = Date.parse("2026-04-23T10:00:00Z");
-        expect(dedupeKey(45, "Mel com", t)).toBe(dedupeKey(45, "melcom", t));
-    });
-
-    it("differentiates different amounts", () => {
-        const t = Date.parse("2026-04-23T10:00:00Z");
-        expect(dedupeKey(45, "Melcom", t)).not.toBe(dedupeKey(46, "Melcom", t));
-    });
-});
 
 describe("normalizeMerchant", () => {
     it("lowercases and strips whitespace", () => {

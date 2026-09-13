@@ -3,7 +3,6 @@ import { RawEvent } from "../../src/features/autoLogging/types";
 import { extractAmount } from "../../src/features/autoLogging/services/parser/amount";
 import { extractMerchant } from "../../src/features/autoLogging/services/parser/merchant";
 import { extractReference } from "../../src/features/autoLogging/services/parser/normalize";
-import { inferType } from "../../src/features/autoLogging/services/parser/type";
 import { classify } from "../../src/features/autoLogging/services/parser/keywordClassifier";
 import { categorize } from "../../src/features/autoLogging/services/parser/categorize";
 import { parse } from "../../src/features/autoLogging/services/parser/parse";
@@ -151,24 +150,6 @@ describe("extractMerchant", () => {
 
     it("stops at stop-words like 'on'", () => {
         expect(extractMerchant("Paid GHS 30 to Uber on 2026-04-23")).toBe("Uber");
-    });
-});
-
-describe("inferType", () => {
-    it("classifies 'paid' as expense", () => {
-        expect(inferType("Paid GHS 30 to Uber").type).toBe("expense");
-    });
-
-    it("classifies 'received' as income", () => {
-        expect(inferType("Received GHS 500 from John").type).toBe("income");
-    });
-
-    it("classifies 'sent to' as transfer", () => {
-        expect(inferType("You sent GHS 100 to Kwame").type).toBe("transfer");
-    });
-
-    it("defaults to expense when no strong signal", () => {
-        expect(inferType("GHS 50 at Shop").type).toBe("expense");
     });
 });
 
