@@ -4,6 +4,7 @@ import { extractAmount } from "../../src/features/autoLogging/services/parser/am
 import { extractMerchant } from "../../src/features/autoLogging/services/parser/merchant";
 import { extractReference } from "../../src/features/autoLogging/services/parser/normalize";
 import { inferType } from "../../src/features/autoLogging/services/parser/type";
+import { classify } from "../../src/features/autoLogging/services/parser/keywordClassifier";
 import { categorize } from "../../src/features/autoLogging/services/parser/categorize";
 import { parse } from "../../src/features/autoLogging/services/parser/parse";
 
@@ -168,6 +169,17 @@ describe("inferType", () => {
 
     it("defaults to expense when no strong signal", () => {
         expect(inferType("GHS 50 at Shop").type).toBe("expense");
+    });
+});
+
+describe("classify (income/expense tie-break — F14)", () => {
+    it("breaks an income/expense tie toward income when a strong income token is present", () => {
+        expect(classify("A payment of GHS 50 was received into your account")!.type).toBe("income");
+    });
+
+    it("still classifies a debit payment as expense", () => {
+        expect(classify("Paid GHS 30 to Uber")!.type).toBe("expense");
+        expect(classify("Payment of GHS 100 to SHOP")!.type).toBe("expense");
     });
 });
 

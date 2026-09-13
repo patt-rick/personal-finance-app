@@ -62,6 +62,8 @@ const TRANSFER_PATTERNS: RegExp[] = [
     /\bp2p\b/i,
 ];
 
+const STRONG_INCOME_RE = /\b(received|credited|deposit(?:ed)?)\b/i;
+
 const MAX_FALLBACK_CONFIDENCE = 0.5;
 
 interface ClassifyResult {
@@ -78,6 +80,14 @@ export function classify(text: string): ClassifyResult | null {
     if (expenseHits === 0 && incomeHits === 0 && transferHits === 0) return null;
 
     if (incomeHits > expenseHits && incomeHits > transferHits) {
+        return { type: "income", semanticType: "income", strength: Math.min(1, incomeHits / 2) };
+    }
+    if (
+        incomeHits > 0 &&
+        incomeHits === expenseHits &&
+        incomeHits >= transferHits &&
+        STRONG_INCOME_RE.test(text)
+    ) {
         return { type: "income", semanticType: "income", strength: Math.min(1, incomeHits / 2) };
     }
     if (transferHits > 0 && transferHits >= expenseHits && transferHits >= incomeHits) {
