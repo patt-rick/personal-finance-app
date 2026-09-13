@@ -305,26 +305,37 @@ function orderPatternsByHint(patterns: RegExp[], hint: string | undefined): RegE
     return [...preferred, ...rest];
 }
 
-const SENTENCE_BOUNDARY_RE = /[.!?](?:\s|[A-Z])/;
+const SENTENCE_BOUNDARY_RE = /[.!?](?:\s|[A-Z])/g;
+const PRECEDING_TOKEN_RE = /([A-Za-z]+)$/;
 
 function cleanCandidate(raw: string): string | null {
     let bounded = raw;
-    const sentenceBoundary = SENTENCE_BOUNDARY_RE.exec(bounded);
-    if (sentenceBoundary && sentenceBoundary.index > 0) {
-        bounded = bounded.slice(0, sentenceBoundary.index);
+    SENTENCE_BOUNDARY_RE.lastIndex = 0;
+    let boundary: RegExpExecArray | null;
+    while ((boundary = SENTENCE_BOUNDARY_RE.exec(bounded)) !== null) {
+        if (boundary.index <= 0) continue;
+        const precedingToken = PRECEDING_TOKEN_RE.exec(bounded.slice(0, boundary.index));
+        if (precedingToken && precedingToken[1].length >= 3) {
+            bounded = bounded.slice(0, boundary.index);
+            break;
+        }
     }
     const trimmed = bounded.replace(MERCHANT_TAIL_RE, "").trim();
     const words = trimmed.split(/\s+/);
     const keep: string[] = [];
     for (const word of words) {
-        const stripped = word.replace(/[.,;:!?]+$/, "");
-        if (!stripped) break;
-        if (MERCHANT_STOP_WORDS.has(stripped.toLowerCase())) break;
-        if (/^\d/.test(stripped)) break;
-        keep.push(stripped);
+        const bare = word.replace(/[.,;:!?]+$/, "");
+        if (!bare) break;
+        if (MERCHANT_STOP_WORDS.has(bare.toLowerCase())) break;
+        if (/^\d/.test(bare)) break;
+        keep.push(preserveAbbreviationDots(word));
     }
     const result = keep.join(" ").trim();
     return result.length >= 2 ? result : null;
+}
+
+function preserveAbbreviationDots(word: string): string {
+    return word.replace(/([A-Za-z]{3,})\.+$/, "$1").replace(/[,;:!?]+$/, "");
 }
 
 export function normalizeMerchantKey(merchant: string | null | undefined): string {
