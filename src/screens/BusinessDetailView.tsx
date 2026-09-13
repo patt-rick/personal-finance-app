@@ -385,11 +385,11 @@ export default function BusinessDetailView({
         }
 
         try {
-            const header = "Date,Type,Amount,Description,Category,Remark\n";
+            const header = "Date,Type,Amount,Fee,Total,Description,Category,Remark\n";
             const rows = filteredTransactions
                 .map((t) => {
                     const date = new Date(t.date).toLocaleDateString();
-                    return `${date},${t.type},${t.amount},"${(t.description || "").replace(/"/g, '""')}",${t.category || ""},"${(t.remark || "").replace(/"/g, '""')}"`;
+                    return `${date},${t.type},${t.amount},${t.fee ?? 0},${grossAmount(t)},"${(t.description || "").replace(/"/g, '""')}",${t.category || ""},"${(t.remark || "").replace(/"/g, '""')}"`;
                 })
                 .join("\n");
 

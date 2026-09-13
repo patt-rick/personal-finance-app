@@ -116,6 +116,17 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         [filteredTransactions, start, end],
     );
 
+    const feesTotal = useMemo(
+        () =>
+            filteredTransactions
+                .filter((t) => {
+                    const td = new Date(t.date);
+                    return t.type === "expense" && td >= start && td <= end;
+                })
+                .reduce((sum, t) => sum + (t.fee ?? 0), 0),
+        [filteredTransactions, start, end],
+    );
+
     const chartPages = useMemo(() => {
         const pages: { title: string; legend?: { label: string; color: string }[]; content: React.ReactNode }[] = [];
 
@@ -282,6 +293,18 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                                 styles={styles}
                             />
                         </View>
+
+                        {feesTotal > 0 && (
+                            <View style={[styles.comparisonRow, { marginTop: 10 }]}>
+                                <View style={styles.statCard}>
+                                    <Text style={styles.statLabel}>Fees & Taxes</Text>
+                                    <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
+                                        {currencySymbol}
+                                        {feesTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                                    </Text>
+                                </View>
+                            </View>
+                        )}
 
                         {topCategories.length > 0 && (
                             <>
