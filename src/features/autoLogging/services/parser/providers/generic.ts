@@ -2,6 +2,8 @@ import { ParseInput, ParseOutput, ProviderTemplate } from "./types";
 import { buildCredit, buildDebit } from "./helpers";
 import { extractReference } from "../normalize";
 
+const REFUND_OUTFLOW_RE = /\b(deducted|debited|reversed)\s+from\s+your\b/i;
+
 function requireFinancialSignal(input: ParseInput, output: ParseOutput | null): ParseOutput | null {
     if (!output) return null;
     if (output.currencyCode === null && extractReference(input.text) === null) return null;
@@ -32,10 +34,18 @@ export const genericRefund: ProviderTemplate = {
     senderMatch: /.*/,
     bodyMatch: [/\b(refund(?:ed)?|reversed|reversal)\b/i],
     parse: (input) =>
-        buildCredit(input, {
-            bodyMatch: [],
-            semanticType: "refund",
-            baseConfidence: 0.75,
-            merchantHint: "from",
-        }),
+        REFUND_OUTFLOW_RE.test(input.text)
+            ? buildDebit(input, {
+                  bodyMatch: [],
+                  semanticType: "refund",
+                  baseConfidence: 0.75,
+                  merchantHint: "to",
+                  allowReversal: true,
+              })
+            : buildCredit(input, {
+                  bodyMatch: [],
+                  semanticType: "refund",
+                  baseConfidence: 0.75,
+                  merchantHint: "from",
+              }),
 };

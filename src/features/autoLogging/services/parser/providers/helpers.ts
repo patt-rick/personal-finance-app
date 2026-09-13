@@ -17,10 +17,11 @@ export interface BaseDebitOpts {
     type?: ParseOutput["type"];
     baseConfidence?: number;
     merchantHint?: string;
+    allowReversal?: boolean;
 }
 
 export function buildDebit(input: ParseInput, opts: BaseDebitOpts): ParseOutput | null {
-    if (isReversalDebit(input.text)) return null;
+    if (!opts.allowReversal && isReversalDebit(input.text)) return null;
     if (hasConflict(input.text)) return null;
     if (STRONG_CREDIT_RE.test(input.text) && !STRONG_DEBIT_RE.test(input.text)) return null;
     return buildBase(input, {
@@ -47,6 +48,7 @@ function hasConflict(text: string): boolean {
 }
 
 export function buildTransfer(input: ParseInput, opts: BaseDebitOpts): ParseOutput | null {
+    if (isReversalDebit(input.text)) return null;
     return buildBase(input, {
         ...opts,
         type: opts.type ?? "transfer",

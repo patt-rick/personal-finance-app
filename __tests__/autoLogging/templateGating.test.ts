@@ -105,3 +105,31 @@ describe("template path gating — must KEEP real transactions", () => {
         expect(d!.amount).toBe(500);
     });
 });
+
+describe("reversal sign + transfer guard (CF5)", () => {
+    it("does not log a reversed transfer as a fresh expense/transfer outflow", () => {
+        const d = parseEvent(
+            ev("MTN", "Your transfer of GHS 50.00 to KOFI MENSAH has been reversed. Ref 123456"),
+            CATEGORIES,
+        );
+        expect(d === null || d.type === "income").toBe(true);
+        if (d) expect(d.type).not.toBe("transfer");
+    });
+
+    it("logs a clawback (deducted from your wallet and returned) as an expense outflow", () => {
+        const d = parseEvent(
+            ev("MTN", "Reversal successful. GHS 50.00 has been deducted from your wallet and returned to KOFI. Ref 12345"),
+            CATEGORIES,
+        );
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("expense");
+        expect(d!.amount).toBe(50);
+    });
+
+    it("keeps a genuine refund credit as income (50)", () => {
+        const d = parseEvent(ev("MTN", "Refund of GHS 50.00 has been credited to your account"), CATEGORIES);
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("income");
+        expect(d!.amount).toBe(50);
+    });
+});
