@@ -223,3 +223,62 @@ describe("end-to-end KEEP cases (parseEvent must parse)", () => {
         expect(d!.amount).toBe(45);
     });
 });
+
+describe("completion list gaps — payment-made & sent/paid-to (N2)", () => {
+    it("hasCompletionVerb recognizes 'payment made' and 'sent/paid/transferred … to'", () => {
+        expect(hasCompletionVerb("Payment made for GHS 50.00 to SHOP")).toBe(true);
+        expect(hasCompletionVerb("Sent GHS 50.00 to Ama")).toBe(true);
+        expect(hasCompletionVerb("Paid GHS 20 to KOFI")).toBe(true);
+        expect(hasCompletionVerb("Transferred GHS 30 to Ama")).toBe(true);
+    });
+
+    it("does not treat 'payment of … to' as a sent/paid completion", () => {
+        expect(hasCompletionVerb("payment of GHS 750 to KOFI")).toBe(false);
+    });
+
+    it("keeps a payment-made with a discount footer (expense 50)", () => {
+        const d = parseEvent(
+            ev("MTN", "Payment made for GHS 50.00 to SHOP. Get 10% discount on your next purchase"),
+            CATEGORIES,
+        );
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("expense");
+        expect(d!.amount).toBe(50);
+    });
+
+    it("keeps a 'Sent … to' outflow with an unlimited-data footer (50)", () => {
+        const d = parseEvent(
+            ev("MTN", "Sent GHS 50.00 to Ama. Enjoy unlimited data offers this weekend"),
+            CATEGORIES,
+        );
+        expect(d).not.toBeNull();
+        expect(["expense", "transfer"]).toContain(d!.type);
+        expect(d!.amount).toBe(50);
+    });
+
+    it("keeps a payment-made with a next-bill-due footer (expense 320)", () => {
+        const d = parseEvent(
+            ev("MTN", "Payment made for GHS 320.00 to ECG. Your next bill is due on 05 Nov"),
+            CATEGORIES,
+        );
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("expense");
+        expect(d!.amount).toBe(320);
+    });
+
+    it("still drops an OTP authorize prompt (payment-of-to must not match)", () => {
+        expect(
+            parseEvent(ev("MTN", "Use OTP 483920 to authorize payment of GHS 750 to KOFI. Do not share"), CATEGORIES),
+        ).toBeNull();
+    });
+
+    it("still drops an enter-PIN confirm prompt", () => {
+        expect(
+            parseEvent(ev("MTN", "Enter your PIN to confirm payment of GHS 100.00 to KOFI ELECTRONICS"), CATEGORIES),
+        ).toBeNull();
+    });
+
+    it("still drops a pure promo with no completion verb", () => {
+        expect(parseEvent(ev("MTN", "Recharge GHS 10 and get 500MB free! T&Cs apply"), CATEGORIES)).toBeNull();
+    });
+});

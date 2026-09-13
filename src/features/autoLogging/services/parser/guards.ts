@@ -49,6 +49,8 @@ const COMPLETION_RE = new RegExp(
         "(?:has|have|had|was|were|been)\\s+(?:been\\s+)?(?:debited|credited|paid|sent|charged|received|deducted|reversed|withdrawn|deposited|transferred)",
         "(?<!\\bbe\\s)\\b(?:debited|credited|withdrawn|deducted|deposited)\\b",
         "\\bpayment\\s+(?:received|confirmed|successful)\\b",
+        "\\bpayment\\s+made\\b",
+        "\\b(?:sent|paid|transferred)\\b(?:[^.!?]|\\.\\d){0,30}\\bto\\b",
         "\\b(?:successful(?:ly)?|completed)\\b",
         "\\bthank\\s+you\\s+for\\s+your\\s+payment\\b",
         "\\bcash[\\s-]?(?:out|in)\\s+made\\b",
