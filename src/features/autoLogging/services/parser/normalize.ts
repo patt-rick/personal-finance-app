@@ -140,17 +140,21 @@ function walkSuffix(text: string, out: AmountCandidate[]): void {
 }
 
 function looksLikeBalance(text: string, index: number, matchLength: number): boolean {
-    const backStart = Math.max(0, index - 40);
-    if (BALANCE_HINT_RE.test(text.slice(backStart, index))) return true;
+    const before = text.slice(0, index);
+    const prevBoundary = Math.max(
+        before.lastIndexOf("."),
+        before.lastIndexOf("!"),
+        before.lastIndexOf("?"),
+    );
+    const sentenceStart = prevBoundary === -1 ? 0 : prevBoundary + 1;
 
-    const forwardStart = index + matchLength;
-    const forward = text.slice(forwardStart, forwardStart + 70);
-    const hint = BALANCE_HINT_RE.exec(forward);
-    if (hint && hint.index < 30) {
-        const afterHint = forward.slice(hint.index + hint[0].length);
-        if (!/\d/.test(afterHint)) return true;
-    }
-    return false;
+    const afterStart = index + matchLength;
+    const after = text.slice(afterStart);
+    const nextRel = after.search(/[.!?]/);
+    const sentenceEnd = nextRel === -1 ? text.length : afterStart + nextRel;
+
+    const sentence = text.slice(sentenceStart, sentenceEnd);
+    return BALANCE_HINT_RE.test(sentence);
 }
 
 function looksLikeFee(text: string, index: number): boolean {

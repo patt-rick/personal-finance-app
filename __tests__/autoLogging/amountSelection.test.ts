@@ -30,4 +30,26 @@ describe("extractAmount — in-order, non-balance selection (P1.3)", () => {
         expect(extractAmount("Debit Alert: GHS 45.00 at Melcom. New Bal: GHS 200.00"))
             .toEqual({ amount: 45, currencyCode: "GHS" });
     });
+
+    it("treats a balance stated in its own sentence as balance-only (R3)", () => {
+        expect(
+            extractAmount(
+                "Your deposit was successful. GHS 1,250.00 is your available balance. Dial *170# for more",
+            ),
+        ).toEqual({ amount: null, currencyCode: null });
+    });
+
+    it("flags a balance even when the hint precedes the amount in the same sentence (R3)", () => {
+        expect(
+            extractAmount("Your wallet balance after this cash out transaction is GHS 900.00"),
+        ).toEqual({ amount: null, currencyCode: null });
+    });
+
+    it("keeps the real debit when a dated balance sentence follows (R3)", () => {
+        const result = extractAmount(
+            "Debit Alert: GHS 45.00 at Melcom on 2026-04-23. New Bal: GHS 200.00",
+        );
+        expect(result).toEqual({ amount: 45, currencyCode: "GHS" });
+        expect(result.amount).not.toBe(900);
+    });
 });
