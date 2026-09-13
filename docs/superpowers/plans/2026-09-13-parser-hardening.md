@@ -138,6 +138,52 @@ const mustReview = settings.askBeforeSaving || lowConfidence;
 
 ---
 
+# PHASE 1 REMEDIATION (from Fable review of Phase-1 diff, 2026-09-13)
+
+**Root principle:** a message containing a genuine **completion verb** is a real transaction and must NOT be dropped by the soft gates (promo/pre-auth/reminder). Only *strong* spam (won/lottery/click-here/crypto/etc.) drops unconditionally. Every task below is TDD with BOTH drop and keep cases; run full `npx jest` + `npx tsc -b` after each; one commit each.
+
+Define a shared `hasCompletionVerb(text)` in guards.ts. It must match at least:
+`has/have/was/were + debited|credited|paid|sent|charged|received|deducted|reversed|withdrawn|deposited|transferred`; `you have paid|sent|received`; bare `debited|credited|withdrawn|deducted|deposited`; `payment (received|confirmed|successful)`; `successful|successfully|completed`; `thank you for your payment`; `cash[\s-]?out|cash[\s-]?in` with made/successful; `debit alert|credit alert`; `receipt`.
+
+## Task R1: Completion-aware gating (CF1, CF2, CF3, CF4, CF11)
+**Files:** `guards.ts`, `keywordClassifier.ts`. Test: `__tests__/autoLogging/guardsRemediation.test.ts`.
+- Split spam into STRONG_SPAM (drop always) vs SOFT_PROMO (drop only when `!hasCompletionVerb`). Move `congratulations|congrats` and `offer|reward|discount` to SOFT. Remove bare `/\bfree\b/i` from promo entirely (keep `free\s+(gift|data|airtime|bundle|transfers?)`, `\d+\s?(mb|gb)\s+(free|bonus|data|bundle)`, `enjoy…bonus`, `unlimited`, `t&cs`, `promo|promotion`).
+- `isSpam(text) = STRONG_SPAM.some || (SOFT_PROMO.some && !hasCompletionVerb(text))`. `isPromo` = same soft rule.
+- `isPreAuthPrompt(text) = (FUTURE_DEBIT_RE.test(text) || PREAUTH_RE.test(text)) && !hasCompletionVerb(text)`. Fix the dead `authoriz|authoris` branch → `authoriz(?:e|ed|ing|ation)?\b|authoris(?:e|ed|ing|ation)?\b`; ADD `enter\s+your\s+(pin|otp|passcode|password)` and `\bto\s+(confirm|approve|authoriz)`. (Completion incl. `debit alert` prevents "did not authorize" footers from dropping.)
+- `isBillReminder(text) = REMINDER_RE.test(text) && !hasCompletionVerb(text)`.
+- `keywordClassifier.classifyEvent`: use `isImplausibleAmount(amount)` (rejects ≤0) instead of only `> MAX` (CF11).
+- **DROP tests:** `"Recharge GHS 10 and get 500MB free! T&Cs apply"`; `"Transfer money with MoMo and enjoy GHS 5 bonus"`; `"Use OTP 483920 to authorize payment of GHS 750 to KOFI. Do not share"`; `"Enter your PIN to confirm payment of GHS 100.00 to KOFI ELECTRONICS"`; `"Reminder: your ECG bill of GHS 320 is due on 05/05. Pay to avoid disconnection"`; `"You have been charged GHS 0.00 for this service"` (via fallback → not a save).
+- **KEEP tests (must still parse):** `"You have received GHS 200.00 from KOFI. Ref 99887766. Enjoy free transfers all weekend on MoMo"` (income 200); `"Your account has been debited with GHS 150.00 at SHOPRITE. For complaints call our toll free line 0800422422"` (expense 150); `"Congratulations! You have received GHS 5.00 cashback from MTN MoMo"` (income 5); `"Your DSTV subscription payment of GHS 300.00 was successful. GHS 300.00 will be debited automatically next month"` (expense 300); `"Thank you for your payment of GHS 320.00 for account 12345. Your next bill is due on 05 Oct"` (expense 320); `"Debit Alert: GHS 45.00 at MELCOM ACCRA. If you did not authorize this transaction, call…"` (expense 45). Commit `fix(parser): completion-verb aware spam/pre-auth/reminder gating`.
+
+## Task R2: Reversal sign + transfer guard (CF5)
+**Files:** `providers/helpers.ts` (`buildTransfer`), `providers/generic.ts` (`genericRefund`). Test: extend `templateGating.test.ts`.
+- Add `if (isReversalDebit(input.text)) return null;` to `buildTransfer` (a reversed transfer is not a fresh outflow).
+- In `genericRefund.parse`: if the body indicates an outflow direction (`deducted from your|debited from your|reversed from your`), build a DEBIT (expense) instead of credit; else credit as today.
+- DROP/RECLASSIFY tests: `"Your transfer of GHS 50.00 to KOFI MENSAH has been reversed. Ref 123456"` → not an expense (null or refund income, not `transfer→expense`); `"Reversal successful. GHS 50.00 has been deducted from your wallet and returned to KOFI. Ref 12345"` → expense/outflow 50. KEEP: `"Refund of GHS 50.00 has been credited to your account"` → income 50. Commit `fix(parser): guard transfer reversals and correct clawback direction`.
+
+## Task R3: Sentence-scoped balance detection (CF6, CF7)
+**Files:** `normalize.ts` (`looksLikeBalance`). Test: extend `amountSelection.test.ts`.
+- Replace the fixed 40-char backward / 70-char-with-digit-guard forward windows with **sentence-scoped** detection: for a candidate at `index`, take the enclosing sentence (from the previous `[.!?]` up to the next `[.!?]`) and flag as balance if `BALANCE_HINT_RE` appears in that sentence. Do not use a raw `\d` disqualifier.
+- KEEP-null tests: `"Your deposit was successful. GHS 1,250.00 is your available balance. Dial *170# for more"` → `extractAmount` null (balance-only); `"Your wallet balance after this cash out transaction is GHS 900.00"` → null (or, if part of a debit, the debit amount, never 900). KEEP real: `"Debit Alert: GHS 45.00 at Melcom on 2026-04-23. New Bal: GHS 200.00"` → 45. Commit `fix(parser): sentence-scoped balance detection`.
+
+## Task R4: Abbreviation-safe merchant boundary (CF8)
+**Files:** `normalize.ts` (`cleanCandidate`). Test: extend `merchant.test.ts`.
+- Only cut at a sentence boundary when the token before the `.` is ≥3 letters (so `ST.`, `K.O.` survive). KEEP: `"…to ST. JOHN PHARMACY. Thank you"` → `"ST. JOHN PHARMACY"`; `"…to K.O. VENTURES on…"` → `"K.O. VENTURES"`; still cut `"…to VANTHELMA VENTURES. Current Balance…"` → `"VANTHELMA VENTURES"`. Commit `fix(parser): abbreviation-safe merchant sentence stop`.
+
+## Task R5: Strong reference by source, not shape (CF9)
+**Files:** `normalize.ts` (add `extractStrongReference`), `dedupe/fingerprint.ts`. Test: extend `fingerprint.test.ts`.
+- Add `extractStrongReference(rawText)` running only the txn-id/ref/receipt/token REFERENCE_PATTERNS (EXCLUDING the narration/remark/memo/particulars/description pattern). `fingerprint` uses the time-independent `"r"` path only when `extractStrongReference(draft.rawText)` is non-null (keyed on that value), else time-bucket.
+- Tests: `"Narration: RENT2026"` two months apart → DIFFERENT fingerprints; `"Txn ID: 80855322501"` two months apart → SAME; existing `Ref: ABC123`/`TX9988` strong cases still time-independent. Commit `fix(dedupe): strong reference by extraction source, not shape`.
+
+## Task R6: Confidence gate on replace paths (CF10)
+**Files:** `ingestion/saveDraft.ts` (`planSaveDraft`). Test: extend `saveDraft.test.ts`.
+- Compute `lowConfidence`/`mustReview` and, in BOTH replace branches (rawHistory upgrade ~53-62 and dedupe `shouldReplace` ~87-97), when `mustReview` is true do NOT auto-replace — return `{outcome:"drop", fingerprint}` (keep the existing transaction; never auto-write a below-threshold entry).
+- Test: default settings; a 0.5-confidence draft that would replace a 0.4 stored fingerprint → `outcome:"drop"` (not "replace"); a 0.9-confidence draft still replaces. Commit `fix(autolog): do not auto-replace with below-threshold drafts`.
+
+### End of Remediation — orchestrator: full jest, tsc, Fable re-review of remediation diff before proceeding to Phase 2.
+
+---
+
 # PHASE 2 — Medium
 
 ## Task P2.1: Number & currency boundary fixes (F5, F6)
