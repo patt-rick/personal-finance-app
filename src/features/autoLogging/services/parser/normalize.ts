@@ -193,29 +193,56 @@ function toCode(raw: string): string | null {
     return SYMBOL_TO_CODE[raw.toLowerCase()] ?? null;
 }
 
+const TXN_ID_PATTERN = /\btxn\s*id[:#\s-]*(.+)/i;
+const TRANSACTION_ID_PATTERN = /\btransaction\s*id[:#\s-]*(.+)/i;
+const TRANS_ID_PATTERN = /\btrans\s*id[:#\s-]*(.+)/i;
+const REF_PATTERN = /\b(?:reference|ref(?:erence)?\.?|ref\s*no\.?|ref#|sender\s*reference|beneficiary\s*reference)[:#\s-]*(.+)/i;
+const NARRATION_PATTERN = /\b(?:narration|remark|memo|particulars|description)[:#\s-]*(.+)/i;
+const RECEIPT_PATTERN = /\breceipt\s*(?:no\.?|number|#)?[:#\s-]*(.+)/i;
+const TOKEN_PATTERN = /\btoken[:#\s-]*(.+)/i;
+const ID_PATTERN = /\bid[:#\s-]+([A-Z0-9]{6,}[A-Za-z0-9 .\-/_]*)/i;
+
+const STRONG_REFERENCE_PATTERNS: RegExp[] = [
+    TXN_ID_PATTERN,
+    TRANSACTION_ID_PATTERN,
+    TRANS_ID_PATTERN,
+    REF_PATTERN,
+    RECEIPT_PATTERN,
+    TOKEN_PATTERN,
+    ID_PATTERN,
+];
+
 const REFERENCE_PATTERNS: RegExp[] = [
-    /\btxn\s*id[:#\s-]*(.+)/i,
-    /\btransaction\s*id[:#\s-]*(.+)/i,
-    /\btrans\s*id[:#\s-]*(.+)/i,
-    /\b(?:reference|ref(?:erence)?\.?|ref\s*no\.?|ref#|sender\s*reference|beneficiary\s*reference)[:#\s-]*(.+)/i,
-    /\b(?:narration|remark|memo|particulars|description)[:#\s-]*(.+)/i,
-    /\breceipt\s*(?:no\.?|number|#)?[:#\s-]*(.+)/i,
-    /\btoken[:#\s-]*(.+)/i,
-    /\bid[:#\s-]+([A-Z0-9]{6,}[A-Za-z0-9 .\-/_]*)/i,
+    TXN_ID_PATTERN,
+    TRANSACTION_ID_PATTERN,
+    TRANS_ID_PATTERN,
+    REF_PATTERN,
+    NARRATION_PATTERN,
+    RECEIPT_PATTERN,
+    TOKEN_PATTERN,
+    ID_PATTERN,
 ];
 
 const REFERENCE_BOUNDARY_RE = /\b(?:from|to|for|via|balance|bal|avail(?:able)?|amount|fee|fees|commission|levy|surcharge|vat|new\s+bal|current\s+bal(?:ance)?)\b/i;
 
-export function extractReference(rawText: string): string | null {
+function matchReference(rawText: string, patterns: RegExp[]): string | null {
     const text = normalizeText(rawText);
     if (!text) return null;
-    for (const pattern of REFERENCE_PATTERNS) {
+    for (const pattern of patterns) {
         const match = pattern.exec(text);
         if (!match) continue;
         const cleaned = cleanReferenceValue(match[1]);
         if (cleaned) return cleaned;
     }
     return null;
+}
+
+export function extractReference(rawText: string): string | null {
+    return matchReference(rawText, REFERENCE_PATTERNS);
+}
+
+export function extractStrongReference(rawText: string): string | null {
+    return matchReference(rawText, STRONG_REFERENCE_PATTERNS);
 }
 
 function cleanReferenceValue(raw: string): string | null {
