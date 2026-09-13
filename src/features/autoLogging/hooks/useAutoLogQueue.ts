@@ -18,6 +18,7 @@ export interface ConfirmEdits {
     category: string;
     description: string;
     businessId: string;
+    fee?: number;
 }
 
 export function useAutoLogQueue(): UseAutoLogQueue {

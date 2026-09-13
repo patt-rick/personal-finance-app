@@ -16,6 +16,7 @@ export interface ParseOutput {
     semanticType: SemanticType;
     occurredAt: number;
     baseConfidence: number;
+    fee?: number;
 }
 
 export interface ProviderTemplate {

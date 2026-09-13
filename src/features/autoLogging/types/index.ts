@@ -34,6 +34,7 @@ export interface ParsedDraft {
     reference?: string;
     semanticType?: SemanticType;
     providerId?: string;
+    fee?: number;
 }
 
 export interface SenderMapping {

@@ -34,6 +34,7 @@ export interface Transaction {
     confidence?: number;
     reviewStatus?: "pending" | "confirmed" | "rejected";
     transferId?: string;
+    fee?: number; // fee/tax portion, same currency as amount; expense/transfer only
 }
 
 export interface Category {
