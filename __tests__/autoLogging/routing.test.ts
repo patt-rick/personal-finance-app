@@ -40,6 +40,12 @@ describe("normalizeSender", () => {
         expect(normalizeSender("sms", "0241234567")).toBe("p0241234567");
     });
 
+    it("normalizes a phone number regardless of spacing/punctuation (F18)", () => {
+        expect(normalizeSender("sms", "+233 24 123 4567")).toBe(normalizeSender("sms", "+233241234567"));
+        expect(normalizeSender("sms", "+233-24-123-4567")).toBe("p233241234567");
+        expect(normalizeSender("sms", "(024) 123 4567")).toBe("p0241234567");
+    });
+
     it("lowercases notification package names without other modification", () => {
         expect(normalizeSender("notification", "com.MTN.Momo")).toBe("com.mtn.momo");
     });

@@ -8,8 +8,9 @@ export function normalizeSender(source: "sms" | "notification", rawId: string): 
         return trimmed.toLowerCase();
     }
 
-    if (PHONE_NUMBER_RE.test(trimmed)) {
-        return "p" + trimmed.replace(/\D/g, "");
+    const phoneCandidate = trimmed.replace(/[\s\-().]/g, "");
+    if (PHONE_NUMBER_RE.test(phoneCandidate)) {
+        return "p" + phoneCandidate.replace(/\D/g, "");
     }
 
     return trimmed.toLowerCase().replace(/[^a-z0-9]/g, "");
