@@ -52,6 +52,10 @@ describe("template path gating — must DROP non-transactions", () => {
         expect(d!.semanticType).toBe("refund");
         expect(d!.providerId).toBe("generic-refund");
     });
+
+    it("drops a marketing 'transfer and enjoy bonus' promo via the fallback (isPromo)", () => {
+        expect(parseEvent(ev("MTN", "Transfer money with MoMo and enjoy GHS 5 bonus"), CATEGORIES)).toBeNull();
+    });
 });
 
 describe("template path gating — must KEEP real transactions", () => {
@@ -92,5 +96,12 @@ describe("template path gating — must KEEP real transactions", () => {
         expect(d!.type).toBe("expense");
         expect(d!.amount).toBe(1600);
         expect(d!.fee).toBe(16);
+    });
+
+    it("keeps a genuine salary bonus credit (isPromo must not over-block)", () => {
+        const d = parseEvent(ev("GCB", "Your salary bonus of GHS 500.00 has been credited to your account"), CATEGORIES);
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("income");
+        expect(d!.amount).toBe(500);
     });
 });

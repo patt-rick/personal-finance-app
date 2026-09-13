@@ -39,6 +39,7 @@ const PROMO_PATTERNS: RegExp[] = [
     /\bterms\s+(?:and|&)\s+conditions\b/i,
     /\bunlimited\b/i,
     /\b\d+\s?(?:mb|gb)\s+(?:free|bonus|data|bundle)\b/i,
+    /\benjoy\b[^.!?]{0,40}\bbonus\b/i,
 ];
 
 const COMPLETION_RE =
@@ -54,8 +55,12 @@ export function isImplausibleAmount(n: number): boolean {
     return !Number.isFinite(n) || n <= 0 || n > MAX_PLAUSIBLE_AMOUNT;
 }
 
+export function isPromo(text: string): boolean {
+    return PROMO_PATTERNS.some((pattern) => pattern.test(text));
+}
+
 export function isSpam(text: string): boolean {
-    return SPAM_PATTERNS.some((pattern) => pattern.test(text)) || PROMO_PATTERNS.some((pattern) => pattern.test(text));
+    return SPAM_PATTERNS.some((pattern) => pattern.test(text)) || isPromo(text);
 }
 
 export function isPreAuthPrompt(text: string): boolean {

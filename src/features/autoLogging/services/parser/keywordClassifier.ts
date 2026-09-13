@@ -6,7 +6,7 @@ import { normalizeSender } from "../routing/normalizeSender";
 import { deriveDisplayName } from "../routing/displayName";
 import { categorize } from "./categorize";
 import { scoreConfidence } from "./confidence";
-import { SPAM_PATTERNS, MAX_PLAUSIBLE_AMOUNT, isPreAuthPrompt, isBillReminder } from "./guards";
+import { SPAM_PATTERNS, MAX_PLAUSIBLE_AMOUNT, isPreAuthPrompt, isBillReminder, isPromo } from "./guards";
 
 const FINANCIAL_PATTERNS: RegExp[] = [
     /\bdebit(?:ed)?\b/i,
@@ -94,7 +94,7 @@ export function classifyEvent(event: RawEvent, categories: Category[]): ParsedDr
     const text = normalizeText(event.body ?? "");
     if (!text) return null;
 
-    if (isPreAuthPrompt(text) || isBillReminder(text)) return null;
+    if (isPreAuthPrompt(text) || isBillReminder(text) || isPromo(text)) return null;
 
     const financialHits = countMatches(text, FINANCIAL_PATTERNS);
     const spamHits = countMatches(text, SPAM_PATTERNS);
