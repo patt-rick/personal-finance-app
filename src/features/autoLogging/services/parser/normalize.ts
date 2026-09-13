@@ -76,28 +76,29 @@ export function extractAmount(rawText: string): AmountResult {
 
     if (candidates.length === 0) return NO_AMOUNT;
 
+    candidates.sort((a, b) => a.index - b.index);
+
     const filtered = candidates.filter((c) => !c.suspectedAccount);
     const pool = filtered.length > 0 ? filtered : candidates;
 
     const primary = pool.filter((c) => !c.suspectedBalance && !c.suspectedFee);
     if (primary.length > 0) {
-        const last = primary[primary.length - 1];
-        const feeCandidate = pool.find((c) => c.suspectedFee && c.currencyCode === last.currencyCode);
+        const first = primary[0];
+        const feeCandidate = pool.find((c) => c.suspectedFee && c.currencyCode === first.currencyCode);
         return {
-            amount: last.amount,
-            currencyCode: last.currencyCode,
+            amount: first.amount,
+            currencyCode: first.currencyCode,
             fee: feeCandidate?.amount,
         };
     }
 
     const nonBalance = pool.filter((c) => !c.suspectedBalance);
     if (nonBalance.length > 0) {
-        const last = nonBalance[nonBalance.length - 1];
-        return { amount: last.amount, currencyCode: last.currencyCode };
+        const first = nonBalance[0];
+        return { amount: first.amount, currencyCode: first.currencyCode };
     }
 
-    const last = pool[pool.length - 1];
-    return { amount: last.amount, currencyCode: last.currencyCode };
+    return NO_AMOUNT;
 }
 
 function walkPrefix(text: string, out: AmountCandidate[]): void {
@@ -112,7 +113,7 @@ function walkPrefix(text: string, out: AmountCandidate[]): void {
             currencyCode: toCode(currencyToken),
             index: match.index,
             matchLength: whole.length,
-            suspectedBalance: looksLikeBalance(text, match.index),
+            suspectedBalance: looksLikeBalance(text, match.index, whole.length),
             suspectedAccount: looksLikeAccountNumber(numberToken, magnitudeToken),
             suspectedFee: looksLikeFee(text, match.index),
         });
@@ -131,16 +132,25 @@ function walkSuffix(text: string, out: AmountCandidate[]): void {
             currencyCode: toCode(currencyToken),
             index: match.index,
             matchLength: whole.length,
-            suspectedBalance: looksLikeBalance(text, match.index),
+            suspectedBalance: looksLikeBalance(text, match.index, whole.length),
             suspectedAccount: looksLikeAccountNumber(numberToken, magnitudeToken),
             suspectedFee: looksLikeFee(text, match.index),
         });
     }
 }
 
-function looksLikeBalance(text: string, index: number): boolean {
-    const start = Math.max(0, index - 24);
-    return BALANCE_HINT_RE.test(text.slice(start, index));
+function looksLikeBalance(text: string, index: number, matchLength: number): boolean {
+    const backStart = Math.max(0, index - 40);
+    if (BALANCE_HINT_RE.test(text.slice(backStart, index))) return true;
+
+    const forwardStart = index + matchLength;
+    const forward = text.slice(forwardStart, forwardStart + 70);
+    const hint = BALANCE_HINT_RE.exec(forward);
+    if (hint && hint.index < 30) {
+        const afterHint = forward.slice(hint.index + hint[0].length);
+        if (!/\d/.test(afterHint)) return true;
+    }
+    return false;
 }
 
 function looksLikeFee(text: string, index: number): boolean {
