@@ -6,6 +6,7 @@ import { normalizeSender } from "../routing/normalizeSender";
 import { deriveDisplayName } from "../routing/displayName";
 import { categorize } from "./categorize";
 import { scoreConfidence } from "./confidence";
+import { SPAM_PATTERNS, MAX_PLAUSIBLE_AMOUNT } from "./guards";
 
 const FINANCIAL_PATTERNS: RegExp[] = [
     /\bdebit(?:ed)?\b/i,
@@ -28,39 +29,6 @@ const FINANCIAL_PATTERNS: RegExp[] = [
     /\bpayout\b/i,
     /\breversal\b/i,
     /\bcash[\s-]*(?:in|out)\b/i,
-];
-
-const SPAM_PATTERNS: RegExp[] = [
-    /\b(?:congratulations|congrats)\b/i,
-    /\b(?:you\s+won|winner)\b/i,
-    /\b(?:promo|promotion|promotional)\b/i,
-    /\boffer\b/i,
-    /\breward\b/i,
-    /\bdiscount\b/i,
-    /\blottery\b/i,
-    /\bclick\s+here\b/i,
-    /\bclaim\s+now\b/i,
-    /\bfree\s+gift\b/i,
-    /\b(?:get|getting|gets|got)\s+paid\b/i,
-    /\byou(?:'|')?ll?\s+get\s+paid\b/i,
-    /\bpaid\s+for\s+testing\b/i,
-    /\bdrop\s+your\b/i,
-    /\bbefore\s+(?:it(?:'|')?s\s+)?too\s+late\b/i,
-    /\bget\s+in\s+now\b/i,
-    /\b(?:dm|pm)\s+me\b/i,
-    /\b(?:airdrop|presale|whitelist|giveaway)\b/i,
-    /\b(?:sol|solana|btc|bitcoin|eth|ethereum|usdt|usdc)\s+(?:address|wallet)\b/i,
-    /\bwallet\s+address\b/i,
-    /\btest\s+the\s+app\b/i,
-    /\b(?:t\.me|bit\.ly|tinyurl|t\.co)\//i,
-    /\b(?:bullish|bearish)\b/i,
-    /\bmoney\s+printer\b/i,
-    /\bt-?bill(?:s|\s+purchases?)?\b/i,
-    /\b(?:fed|federal\s+reserve)\s+(?:will|is|injects?|injecting|continues?|continuing|prints?|printing|raises?|cuts?)\b/i,
-    /\bmarkets?\s+(?:open|close|crash|rall(?:y|ies)|tomorrow|today)\b/i,
-    /\b(?:stock|crypto)\s+market\b/i,
-    /\bwall\s+street\b/i,
-    /(?:^|[^A-Za-z0-9])(?:https?:\/\/)?(?:www\.)?(?:x|twitter)\.com\//i,
 ];
 
 const EXPENSE_PATTERNS: RegExp[] = [
@@ -95,7 +63,6 @@ const TRANSFER_PATTERNS: RegExp[] = [
 ];
 
 const MAX_FALLBACK_CONFIDENCE = 0.5;
-const MAX_PLAUSIBLE_AMOUNT = 1_000_000_000;
 
 interface ClassifyResult {
     type: ParsedDraft["type"];
