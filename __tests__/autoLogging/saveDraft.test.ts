@@ -243,6 +243,7 @@ describe("planSaveDraft — dedupe", () => {
             expect(plan.outcome).toBe("drop");
             expect(plan.transaction).toBeUndefined();
             expect(plan.replaceTransactionId).toBeUndefined();
+            expect(plan.fingerprint).toBeUndefined();
         });
 
         it("still replaces a lower-confidence dedupe candidate with a high-confidence draft", () => {
@@ -282,6 +283,7 @@ describe("planSaveDraft — dedupe", () => {
             expect(plan.outcome).toBe("drop");
             expect(plan.transaction).toBeUndefined();
             expect(plan.replaceTransactionId).toBeUndefined();
+            expect(plan.fingerprint).toBeUndefined();
         });
 
         it("still upgrades a lower-confidence rawHistory fingerprint with a high-confidence draft", () => {
