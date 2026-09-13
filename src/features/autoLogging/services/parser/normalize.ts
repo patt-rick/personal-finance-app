@@ -52,7 +52,8 @@ const SUFFIX_RE = new RegExp(
     "gi",
 );
 
-const BALANCE_HINT_RE = /\b(bal(?:ance)?|avail(?:able)?|new\s+bal|remaining)\b/i;
+const BALANCE_HINT_RE = /\b(bal(?:ance)?|avail(?:able)?|new\s+bal|remaining)\b/gi;
+const BALANCE_PROXIMITY = 40;
 const ACCOUNT_NUMBER_HINT_RE = /\b(acc(?:t|ount)?(?:\s*(?:no|number))?|a\/c)\b\s*[:#]?\s*$/i;
 const FEE_HINT_RE = /\b(fee|fees|commission|levy|surcharge|stamp\s*duty|vat|service\s*charge|transaction\s*charge|tax|withholding)\b/i;
 
@@ -77,6 +78,7 @@ export function extractAmount(rawText: string): AmountResult {
     if (candidates.length === 0) return NO_AMOUNT;
 
     candidates.sort((a, b) => a.index - b.index);
+    markBalanceCandidates(text, candidates);
 
     const filtered = candidates.filter((c) => !c.suspectedAccount);
     const pool = filtered.length > 0 ? filtered : candidates;
@@ -113,7 +115,7 @@ function walkPrefix(text: string, out: AmountCandidate[]): void {
             currencyCode: toCode(currencyToken),
             index: match.index,
             matchLength: whole.length,
-            suspectedBalance: looksLikeBalance(text, match.index, whole.length),
+            suspectedBalance: false,
             suspectedAccount: looksLikeAccountNumber(numberToken, magnitudeToken),
             suspectedFee: looksLikeFee(text, match.index),
         });
@@ -132,29 +134,56 @@ function walkSuffix(text: string, out: AmountCandidate[]): void {
             currencyCode: toCode(currencyToken),
             index: match.index,
             matchLength: whole.length,
-            suspectedBalance: looksLikeBalance(text, match.index, whole.length),
+            suspectedBalance: false,
             suspectedAccount: looksLikeAccountNumber(numberToken, magnitudeToken),
             suspectedFee: looksLikeFee(text, match.index),
         });
     }
 }
 
-function looksLikeBalance(text: string, index: number, matchLength: number): boolean {
-    const before = text.slice(0, index);
-    const prevBoundary = Math.max(
-        before.lastIndexOf("."),
-        before.lastIndexOf("!"),
-        before.lastIndexOf("?"),
-    );
-    const sentenceStart = prevBoundary === -1 ? 0 : prevBoundary + 1;
+function markBalanceCandidates(text: string, candidates: AmountCandidate[]): void {
+    BALANCE_HINT_RE.lastIndex = 0;
+    let hint: RegExpExecArray | null;
+    while ((hint = BALANCE_HINT_RE.exec(text)) !== null) {
+        const hintStart = hint.index;
+        const hintEnd = hint.index + hint[0].length;
+        const [sentenceStart, sentenceEnd] = sentenceBounds(text, hintStart, hintEnd);
+        let nearest: AmountCandidate | null = null;
+        let nearestGap = Infinity;
+        for (const c of candidates) {
+            if (c.index < sentenceStart || c.index >= sentenceEnd) continue;
+            const gap = candidateHintGap(c, hintStart, hintEnd);
+            if (gap < nearestGap) {
+                nearestGap = gap;
+                nearest = c;
+            }
+        }
+        if (nearest && nearestGap <= BALANCE_PROXIMITY) nearest.suspectedBalance = true;
+    }
+}
 
-    const afterStart = index + matchLength;
-    const after = text.slice(afterStart);
-    const nextRel = after.search(/[.!?]/);
-    const sentenceEnd = nextRel === -1 ? text.length : afterStart + nextRel;
+const SENTENCE_END_RE = /[.!?](?=\s|$)/g;
 
-    const sentence = text.slice(sentenceStart, sentenceEnd);
-    return BALANCE_HINT_RE.test(sentence);
+function sentenceBounds(text: string, from: number, to: number): [number, number] {
+    SENTENCE_END_RE.lastIndex = 0;
+    let start = 0;
+    let boundary: RegExpExecArray | null;
+    while ((boundary = SENTENCE_END_RE.exec(text)) !== null) {
+        if (boundary.index >= from) break;
+        start = boundary.index + 1;
+    }
+    SENTENCE_END_RE.lastIndex = to;
+    const next = SENTENCE_END_RE.exec(text);
+    const end = next ? next.index : text.length;
+    return [start, end];
+}
+
+function candidateHintGap(c: AmountCandidate, hintStart: number, hintEnd: number): number {
+    const candStart = c.index;
+    const candEnd = c.index + c.matchLength;
+    if (candStart >= hintEnd) return candStart - hintEnd;
+    if (hintStart >= candEnd) return hintStart - candEnd;
+    return 0;
 }
 
 function looksLikeFee(text: string, index: number): boolean {

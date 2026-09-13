@@ -53,3 +53,21 @@ describe("extractAmount — in-order, non-balance selection (P1.3)", () => {
         expect(result.amount).not.toBe(900);
     });
 });
+
+describe("extractAmount — nearest-only balance flagging (N1)", () => {
+    it("keeps the debit when a labelled balance shares the same sentence", () => {
+        expect(extractAmount("Debit GHS50.00 Acc:1234 Desc:POS PURCHASE Bal:GHS900.00"))
+            .toEqual({ amount: 50, currencyCode: "GHS" });
+    });
+
+    it("keeps the received amount when a new-balance clause shares the sentence", () => {
+        expect(
+            extractAmount("You have received GHS 200.00 from KOFI, your new balance is GHS 450.00"),
+        ).toEqual({ amount: 200, currencyCode: "GHS" });
+    });
+
+    it("keeps the debit when a trailing balance shares the same clause", () => {
+        expect(extractAmount("GHS 50.00 debited, balance GHS 900"))
+            .toEqual({ amount: 50, currencyCode: "GHS" });
+    });
+});
