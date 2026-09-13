@@ -148,6 +148,7 @@ function draftToTransaction(draft: ParsedDraft, businessId: string, id: string):
         id,
         description: draft.merchant ?? (draft.type === "income" ? "Auto income" : "Auto expense"),
         amount: draft.amount,
+        fee: draft.type === "income" ? undefined : draft.fee,
         date: draft.occurredAt,
         type: draft.type === "transfer" ? "expense" : draft.type,
         businessId,

@@ -41,6 +41,7 @@ export function useAutoLogQueue(): UseAutoLogQueue {
                 id: item.id,
                 description: edits?.description ?? item.draft.merchant ?? "Auto entry",
                 amount: edits?.amount ?? item.draft.amount,
+                fee: item.draft.type === "income" ? undefined : (edits?.fee ?? item.draft.fee),
                 date: item.draft.occurredAt,
                 type: item.draft.type === "transfer" ? "expense" : item.draft.type,
                 businessId: edits?.businessId ?? item.businessId,

@@ -1,5 +1,6 @@
 import { parseEvent } from "../../src/features/autoLogging/services/parser/engine";
-import { RawEvent } from "../../src/features/autoLogging/types";
+import { RawEvent, AutoLogSettings } from "../../src/features/autoLogging/types";
+import { planSaveDraft } from "../../src/features/autoLogging/services/ingestion/saveDraft";
 
 const ev = (body: string): RawEvent => ({
   id: "1", source: "sms", sender: "GCB", body,
@@ -26,5 +27,20 @@ describe("fee/tax split", () => {
   it("leaves fee undefined when no fee present", () => {
     const d = parseEvent(ev("Payment of GHS 100.00 to SHOPRITE"), []);
     expect(d!.fee).toBeUndefined();
+  });
+});
+
+const settings = {
+  enabled: true, captureSms: true, captureNotifications: true, defaultCurrency: "GHS",
+  allowedPackages: [], allowedSenders: [], reviewLowConfidenceOnly: false,
+  askBeforeSaving: false, minConfidenceForAutoSave: 0, defaultCurrencyMigrated: true,
+} as AutoLogSettings;
+
+describe("fee save paths", () => {
+  it("persists fee onto the auto-saved transaction", () => {
+    const draft = parseEvent(ev("Payment of GHS 100.00 to SHOPRITE. Fee GHS 2.50"), [])!;
+    const plan = planSaveDraft({ draft, settings, businesses: [], transactions: [], mappings: [] });
+    expect(plan.transaction?.amount).toBe(100);
+    expect(plan.transaction?.fee).toBe(2.5);
   });
 });
