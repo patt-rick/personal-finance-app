@@ -268,6 +268,14 @@ describe("extractReference", () => {
     it("returns null when no reference label present", () => {
         expect(extractReference("Debit Alert: GHS 45.00 at Melcom")).toBeNull();
     });
+
+    it("ignores a numeric-only OTP-style token code (F22)", () => {
+        expect(extractReference("Your token 483920123 expires soon")).toBeNull();
+    });
+
+    it("still captures an alphanumeric token reference (F22)", () => {
+        expect(extractReference("Token: ABC123XY")).toBe("ABC123XY");
+    });
 });
 
 describe("parse (reference-driven categorization)", () => {

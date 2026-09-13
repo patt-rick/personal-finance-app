@@ -268,7 +268,9 @@ function matchReference(rawText: string, patterns: RegExp[]): string | null {
         const match = pattern.exec(text);
         if (!match) continue;
         const cleaned = cleanReferenceValue(match[1]);
-        if (cleaned) return cleaned;
+        if (!cleaned) continue;
+        if (pattern === TOKEN_PATTERN && !/[A-Za-z]/.test(cleaned)) continue;
+        return cleaned;
     }
     return null;
 }
