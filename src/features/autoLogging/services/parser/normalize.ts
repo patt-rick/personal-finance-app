@@ -301,8 +301,15 @@ function orderPatternsByHint(patterns: RegExp[], hint: string | undefined): RegE
     return [...preferred, ...rest];
 }
 
+const SENTENCE_BOUNDARY_RE = /[.!?](?:\s|[A-Z])/;
+
 function cleanCandidate(raw: string): string | null {
-    const trimmed = raw.replace(MERCHANT_TAIL_RE, "").trim();
+    let bounded = raw;
+    const sentenceBoundary = SENTENCE_BOUNDARY_RE.exec(bounded);
+    if (sentenceBoundary && sentenceBoundary.index > 0) {
+        bounded = bounded.slice(0, sentenceBoundary.index);
+    }
+    const trimmed = bounded.replace(MERCHANT_TAIL_RE, "").trim();
     const words = trimmed.split(/\s+/);
     const keep: string[] = [];
     for (const word of words) {
