@@ -224,6 +224,33 @@ describe("end-to-end KEEP cases (parseEvent must parse)", () => {
     });
 });
 
+describe("reminder 'sent to your email' (C-3)", () => {
+    it("does not treat 'sent to your <channel>' as a completion verb", () => {
+        expect(hasCompletionVerb("Your ECG bill for GHS 120.00 has been sent to your email")).toBe(false);
+        expect(hasCompletionVerb("Your statement has been sent to your inbox")).toBe(false);
+    });
+
+    it("still treats a genuine transfer 'sent to <person>' as completion", () => {
+        expect(hasCompletionVerb("GHS 50.00 sent to Ama")).toBe(true);
+    });
+
+    it("still treats 'has been credited' as completion", () => {
+        expect(hasCompletionVerb("Your salary has been credited")).toBe(true);
+    });
+
+    it("drops an emailed bill reminder end-to-end (parseEvent → null)", () => {
+        expect(
+            parseEvent(
+                ev(
+                    "ECG",
+                    "Your ECG bill for GHS 120.00 has been sent to your email. Kindly pay before 30 Sept to avoid disconnection.",
+                ),
+                CATEGORIES,
+            ),
+        ).toBeNull();
+    });
+});
+
 describe("completion list gaps — payment-made & sent/paid-to (N2)", () => {
     it("hasCompletionVerb recognizes 'payment made' and 'sent/paid/transferred … to'", () => {
         expect(hasCompletionVerb("Payment made for GHS 50.00 to SHOP")).toBe(true);
