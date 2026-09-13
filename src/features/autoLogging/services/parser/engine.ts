@@ -22,7 +22,12 @@ export function _resetTemplateCacheForTests(): void {
 }
 
 export function parseEvent(event: RawEvent, categories: Category[]): ParsedDraft | null {
-    const text = normalizeText(event.body ?? "");
+    const body = event.body ?? "";
+    const parseText =
+        event.source === "notification" && event.title
+            ? `${event.title} ${body}`
+            : body;
+    const text = normalizeText(parseText);
     if (!text) return null;
     const lower = lowerKey(text);
 

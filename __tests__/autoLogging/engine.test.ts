@@ -124,4 +124,34 @@ describe("engine — notification source", () => {
         expect(draft!.providerId).toMatch(/mtn/);
         expect(draft!.source).toBe("notification");
     });
+
+    it("parses a notification whose amount lives only in the title (F21)", () => {
+        const draft = parseEvent(
+            makeEvent({
+                source: "notification",
+                sender: undefined,
+                packageName: "com.mtn.momo",
+                title: "You have received GHS 300.00 from Kofi",
+                body: "Tap to view your transaction history and rewa",
+            }),
+            CATEGORIES,
+        );
+        expect(draft).not.toBeNull();
+        expect(draft!.amount).toBe(300);
+        expect(draft!.type).toBe("income");
+    });
+
+    it("does not fold a title into SMS parsing (F21 — SMS unchanged)", () => {
+        const draft = parseEvent(
+            makeEvent({
+                source: "sms",
+                sender: "MTN",
+                title: "GHS 999.00",
+                body: "You have paid GHS 45.00 to Uber. TxnID: ABC123",
+            }),
+            CATEGORIES,
+        );
+        expect(draft).not.toBeNull();
+        expect(draft!.amount).toBe(45);
+    });
 });
