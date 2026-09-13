@@ -54,6 +54,18 @@ describe("extractAmount — in-order, non-balance selection (P1.3)", () => {
     });
 });
 
+describe("extractAmount — balance-label adjacency (C-1)", () => {
+    it("keeps a debit amount that immediately precedes a labelled balance", () => {
+        expect(extractAmount("Debit Amt: GHS500.00 Bal: GHS1,200.00 Ref: 123456"))
+            .toEqual({ amount: 500, currencyCode: "GHS" });
+    });
+
+    it("marks the balance after the hint, not the sent amount before it", () => {
+        expect(extractAmount("Sent GHS 50.00 Bal GHS 60.00"))
+            .toEqual({ amount: 50, currencyCode: "GHS" });
+    });
+});
+
 describe("extractAmount — nearest-only balance flagging (N1)", () => {
     it("keeps the debit when a labelled balance shares the same sentence", () => {
         expect(extractAmount("Debit GHS50.00 Acc:1234 Desc:POS PURCHASE Bal:GHS900.00"))

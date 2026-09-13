@@ -98,6 +98,16 @@ describe("template path gating — must KEEP real transactions", () => {
         expect(d!.fee).toBe(16);
     });
 
+    it("keeps a bank debit when a labelled available balance follows (C-1)", () => {
+        const d = parseEvent(
+            ev("GCB", "Acct XX1234 debited with GHS500.00 Avail Bal: GHS1,200.00 Ref: 4567890"),
+            CATEGORIES,
+        );
+        expect(d).not.toBeNull();
+        expect(d!.type).toBe("expense");
+        expect(d!.amount).toBe(500);
+    });
+
     it("keeps a genuine salary bonus credit (isPromo must not over-block)", () => {
         const d = parseEvent(ev("GCB", "Your salary bonus of GHS 500.00 has been credited to your account"), CATEGORIES);
         expect(d).not.toBeNull();

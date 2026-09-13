@@ -154,17 +154,28 @@ function markBalanceCandidates(text: string, candidates: AmountCandidate[]): voi
         const hintStart = hint.index;
         const hintEnd = hint.index + hint[0].length;
         const [sentenceStart, sentenceEnd] = sentenceBounds(text, hintStart, hintEnd);
-        let nearest: AmountCandidate | null = null;
-        let nearestGap = Infinity;
+        let after: AmountCandidate | null = null;
+        let afterGap = Infinity;
+        let before: AmountCandidate | null = null;
+        let beforeGap = Infinity;
         for (const c of candidates) {
             if (c.index < sentenceStart || c.index >= sentenceEnd) continue;
             const gap = candidateHintGap(c, hintStart, hintEnd);
-            if (gap < nearestGap) {
-                nearestGap = gap;
-                nearest = c;
+            if (c.index >= hintEnd) {
+                if (gap < afterGap) {
+                    afterGap = gap;
+                    after = c;
+                }
+            } else if (gap < beforeGap) {
+                beforeGap = gap;
+                before = c;
             }
         }
-        if (nearest && nearestGap <= BALANCE_PROXIMITY) nearest.suspectedBalance = true;
+        if (after && afterGap <= BALANCE_PROXIMITY) {
+            after.suspectedBalance = true;
+        } else if (before) {
+            before.suspectedBalance = true;
+        }
     }
 }
 
