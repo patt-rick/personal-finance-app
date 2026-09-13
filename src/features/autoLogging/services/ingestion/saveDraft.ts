@@ -69,6 +69,7 @@ export function planSaveDraft(input: PlanInput): Plan {
     const draftTimeMs = new Date(input.draft.occurredAt).getTime();
     const candidates: Array<{
         amount: number;
+        type: "income" | "expense";
         merchant: string | null;
         timestampMs: number;
         confidence?: number;
@@ -80,6 +81,7 @@ export function planSaveDraft(input: PlanInput): Plan {
         if (Math.abs(txTimeMs - draftTimeMs) > DEDUPE_WINDOW_MS) continue;
         candidates.push({
             amount: tx.amount,
+            type: tx.type,
             merchant: tx.description ?? null,
             timestampMs: txTimeMs,
             confidence: tx.confidence,

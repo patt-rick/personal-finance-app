@@ -3,6 +3,7 @@ import { normalizeMerchant } from "./hash";
 
 export interface DedupeCandidate {
     amount: number;
+    type: "income" | "expense";
     merchant?: string | null;
     timestampMs: number;
     confidence?: number;
@@ -20,9 +21,11 @@ export function findDuplicate(
 ): DedupeHit | null {
     const draftTimeMs = new Date(draft.occurredAt).getTime();
     const draftMerchant = normalizeMerchant(draft.merchant);
+    const draftType = draft.type === "transfer" ? "expense" : draft.type;
 
     for (let i = 0; i < recent.length; i++) {
         const c = recent[i];
+        if (c.type !== draftType) continue;
         if (c.amount !== draft.amount) continue;
         if (Math.abs(c.timestampMs - draftTimeMs) > windowMs) continue;
 

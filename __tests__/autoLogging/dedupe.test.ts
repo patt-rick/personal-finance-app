@@ -56,7 +56,7 @@ describe("findDuplicate", () => {
     it("finds a duplicate when amount, merchant and time all match within the window", () => {
         const draft = makeDraft({ occurredAt: new Date(baseTime).toISOString(), confidence: 0.9 });
         const hit = findDuplicate(draft, [
-            { amount: 45, merchant: "Melcom", timestampMs: baseTime + 30_000, confidence: 0.5 },
+            { amount: 45, type: "expense", merchant: "Melcom", timestampMs: baseTime + 30_000, confidence: 0.5 },
         ]);
         expect(hit).not.toBeNull();
         expect(hit!.index).toBe(0);
@@ -66,7 +66,7 @@ describe("findDuplicate", () => {
     it("returns null when amounts differ", () => {
         const draft = makeDraft();
         const hit = findDuplicate(draft, [
-            { amount: 46, merchant: "Melcom", timestampMs: baseTime, confidence: 0.9 },
+            { amount: 46, type: "expense", merchant: "Melcom", timestampMs: baseTime, confidence: 0.9 },
         ]);
         expect(hit).toBeNull();
     });
@@ -75,7 +75,7 @@ describe("findDuplicate", () => {
         const draft = makeDraft({ occurredAt: new Date(baseTime).toISOString() });
         const hit = findDuplicate(
             draft,
-            [{ amount: 45, merchant: "Melcom", timestampMs: baseTime + 10 * 60_000, confidence: 0.9 }],
+            [{ amount: 45, type: "expense", merchant: "Melcom", timestampMs: baseTime + 10 * 60_000, confidence: 0.9 }],
             2 * 60_000,
         );
         expect(hit).toBeNull();
@@ -84,7 +84,7 @@ describe("findDuplicate", () => {
     it("shouldReplace is false when the existing candidate has higher confidence", () => {
         const draft = makeDraft({ confidence: 0.4 });
         const hit = findDuplicate(draft, [
-            { amount: 45, merchant: "Melcom", timestampMs: baseTime, confidence: 0.9 },
+            { amount: 45, type: "expense", merchant: "Melcom", timestampMs: baseTime, confidence: 0.9 },
         ]);
         expect(hit).not.toBeNull();
         expect(hit!.shouldReplace).toBe(false);
@@ -93,7 +93,32 @@ describe("findDuplicate", () => {
     it("matches when one side has no merchant (SMS + notification about the same event)", () => {
         const draft = makeDraft({ merchant: null });
         const hit = findDuplicate(draft, [
-            { amount: 45, merchant: "Melcom", timestampMs: baseTime, confidence: 0.5 },
+            { amount: 45, type: "expense", merchant: "Melcom", timestampMs: baseTime, confidence: 0.5 },
+        ]);
+        expect(hit).not.toBeNull();
+    });
+
+    it("does not merge an income and an expense of the same amount within the window (F17)", () => {
+        const incomeDraft = makeDraft({ type: "income", merchant: null, amount: 100 });
+        const hit = findDuplicate(incomeDraft, [
+            { amount: 100, type: "expense", merchant: "Melcom", timestampMs: baseTime, confidence: 0.5 },
+        ]);
+        expect(hit).toBeNull();
+    });
+
+    it("still merges a genuine same-type duplicate", () => {
+        const incomeDraft = makeDraft({ type: "income", merchant: "Kofi", amount: 100, confidence: 0.9 });
+        const hit = findDuplicate(incomeDraft, [
+            { amount: 100, type: "income", merchant: "Kofi", timestampMs: baseTime, confidence: 0.5 },
+        ]);
+        expect(hit).not.toBeNull();
+        expect(hit!.shouldReplace).toBe(true);
+    });
+
+    it("treats a transfer draft as an expense for type comparison", () => {
+        const transferDraft = makeDraft({ type: "transfer", merchant: "Ama", amount: 100 });
+        const hit = findDuplicate(transferDraft, [
+            { amount: 100, type: "expense", merchant: "Ama", timestampMs: baseTime, confidence: 0.5 },
         ]);
         expect(hit).not.toBeNull();
     });
