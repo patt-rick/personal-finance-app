@@ -1,5 +1,6 @@
 import { ParsedDraft } from "../../src/features/autoLogging/types";
 import { fingerprint } from "../../src/features/autoLogging/services/dedupe/fingerprint";
+import { extractStrongReference } from "../../src/features/autoLogging/services/parser/normalize";
 import {
     indexRawHistory,
     RawHistoryEntry,
@@ -56,6 +57,18 @@ describe("fingerprint", () => {
         expect(march).not.toBe(april);
     });
 
+    it("does not dedupe a whitespace/no-digit strong-labelled ref across months (N3)", () => {
+        const march = fingerprint(makeDraft({ rawText: "Salary credited. Ref: SALARY PAYMENT", occurredAt: new Date("2026-03-25T09:00:00Z").toISOString() }));
+        const april = fingerprint(makeDraft({ rawText: "Salary credited. Ref: SALARY PAYMENT", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
+        expect(march).not.toBe(april);
+    });
+
+    it("treats a digit-bearing single-token txn id as strong across months (N3)", () => {
+        const march = fingerprint(makeDraft({ rawText: "Payment. Txn ID: 80855322501", occurredAt: new Date("2026-03-25T09:00:00Z").toISOString() }));
+        const april = fingerprint(makeDraft({ rawText: "Payment. Txn ID: 80855322501", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
+        expect(march).toBe(april);
+    });
+
     it("keeps the time-independent path for a genuine txn id across months (R5/CF9)", () => {
         const march = fingerprint(makeDraft({ rawText: "Payment. Txn ID: 80855322501", occurredAt: new Date("2026-03-25T09:00:00Z").toISOString() }));
         const april = fingerprint(makeDraft({ rawText: "Payment. Txn ID: 80855322501", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
@@ -66,6 +79,14 @@ describe("fingerprint", () => {
         const first = fingerprint(makeDraft({ rawText: "Salary. Narration: SALARY", occurredAt: new Date("2026-04-25T09:00:00Z").toISOString() }));
         const reparse = fingerprint(makeDraft({ rawText: "Salary. Narration: SALARY", occurredAt: new Date("2026-04-25T09:01:30Z").toISOString() }));
         expect(first).toBe(reparse);
+    });
+
+    it("extractStrongReference requires a digit and no internal whitespace (N3)", () => {
+        expect(extractStrongReference("Salary credited. Ref: SALARY PAYMENT")).toBeNull();
+        expect(extractStrongReference("Payment. Txn ID: 80855322501")).toBe("80855322501");
+        expect(extractStrongReference("Payment to Shop. Ref: ABC123")).toBe("ABC123");
+        expect(extractStrongReference("Payment. TxnID: TX9988")).toBe("TX9988");
+        expect(extractStrongReference("Ref: SALARYONLY")).toBeNull();
     });
 
     it("collapses SMS + notification of the same MoMo TxnID via reference match", () => {

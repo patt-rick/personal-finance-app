@@ -271,7 +271,11 @@ export function extractReference(rawText: string): string | null {
 }
 
 export function extractStrongReference(rawText: string): string | null {
-    return matchReference(rawText, STRONG_REFERENCE_PATTERNS);
+    const value = matchReference(rawText, STRONG_REFERENCE_PATTERNS);
+    if (!value) return null;
+    if (!/\d/.test(value)) return null;
+    if (/\s/.test(value)) return null;
+    return value;
 }
 
 function cleanReferenceValue(raw: string): string | null {
