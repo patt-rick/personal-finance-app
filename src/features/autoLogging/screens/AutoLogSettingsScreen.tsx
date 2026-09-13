@@ -14,7 +14,6 @@ import {
     ArrowLeft,
     Bell,
     ChevronRight,
-    Eye,
     FlaskConical,
     Inbox,
     Lock,
@@ -328,14 +327,6 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
 
                 <SectionLabel label="Review" styles={styles} />
                 <View style={styles.groupCard}>
-                    <AutoLogToggleRow
-                        icon={<Eye size={18} color={theme.colors.onPrimaryContainer} />}
-                        iconBg={theme.colors.primaryContainer}
-                        title="Review low-confidence only"
-                        subtitle="High-confidence entries save silently"
-                        value={settings.reviewLowConfidenceOnly}
-                        onValueChange={(v) => update({ reviewLowConfidenceOnly: v })}
-                    />
                     <AutoLogToggleRow
                         icon={<Sparkles size={18} color={theme.colors.onPrimaryContainer} />}
                         iconBg={theme.colors.primaryContainer}
