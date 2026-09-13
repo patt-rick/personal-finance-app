@@ -1,4 +1,5 @@
 import { Transaction } from "../types";
+import { grossAmount, FEES_CATEGORY_LABEL } from "./transactionAmount";
 
 const CATEGORY_COLORS = [
     "#0066FF",
@@ -39,7 +40,7 @@ export function getMonthlyTrends(
             const td = new Date(t.date);
             if (td >= monthStart && td < monthEnd) {
                 if (t.type === "income") inc += t.amount;
-                else exp += t.amount;
+                else exp += grossAmount(t);
             }
         }
         income.push(inc);
@@ -68,7 +69,12 @@ export function getCategoryBreakdown(
         map[cat] = (map[cat] || 0) + t.amount;
     }
 
-    const total = filtered.reduce((acc, t) => acc + t.amount, 0);
+    const feeTotal = filtered.reduce((s, t) => s + (t.fee ?? 0), 0);
+    if (feeTotal > 0 && type === "expense") {
+        map[FEES_CATEGORY_LABEL] = (map[FEES_CATEGORY_LABEL] || 0) + feeTotal;
+    }
+
+    const total = Object.values(map).reduce((acc, amount) => acc + amount, 0);
 
     return Object.entries(map)
         .map(([name, amount]) => ({
@@ -97,10 +103,10 @@ export function getMonthComparison(
         const td = new Date(t.date);
         if (td >= thisMonthStart) {
             if (t.type === "income") thisIncome += t.amount;
-            else thisExpense += t.amount;
+            else thisExpense += grossAmount(t);
         } else if (td >= lastMonthStart && td < lastMonthEnd) {
             if (t.type === "income") lastIncome += t.amount;
-            else lastExpense += t.amount;
+            else lastExpense += grossAmount(t);
         }
     }
 
@@ -134,6 +140,14 @@ export function getTopCategories(
         map[cat].count += 1;
     }
 
+    if (type === "expense") {
+        const feeTotal = filtered.reduce((s, t) => s + (t.fee ?? 0), 0);
+        if (feeTotal > 0) {
+            const feeCount = filtered.filter((t) => (t.fee ?? 0) > 0).length;
+            map[FEES_CATEGORY_LABEL] = { amount: feeTotal, count: feeCount };
+        }
+    }
+
     return Object.entries(map)
         .map(([name, data]) => ({ name, ...data }))
         .sort((a, b) => b.amount - a.amount)
@@ -152,6 +166,6 @@ export function getBiggestTransactions(
             const td = new Date(t.date);
             return t.type === type && td >= startDate && td <= endDate;
         })
-        .sort((a, b) => b.amount - a.amount)
+        .sort((a, b) => grossAmount(b) - grossAmount(a))
         .slice(0, limit);
 }

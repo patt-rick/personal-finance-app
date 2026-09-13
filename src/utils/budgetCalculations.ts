@@ -1,4 +1,5 @@
 import { Transaction, Budget, CategoryBudgetSpent, Category } from "../types";
+import { grossAmount } from "./transactionAmount";
 
 /**
  * Get the date range for a given budget period
@@ -51,7 +52,7 @@ export const calculateCategorySpent = (
                 txDate <= endDate
             );
         })
-        .reduce((sum, t) => sum + t.amount, 0);
+        .reduce((sum, t) => sum + grossAmount(t), 0);
 };
 
 /**

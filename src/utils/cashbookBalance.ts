@@ -1,4 +1,5 @@
 import { Transaction } from "../types";
+import { grossAmount } from "./transactionAmount";
 
 export const computeCashbookBalance = (
     transactions: Transaction[],
@@ -6,7 +7,7 @@ export const computeCashbookBalance = (
 ): number =>
     transactions
         .filter((t) => t.businessId === businessId)
-        .reduce((sum, t) => (t.type === "income" ? sum + t.amount : sum - t.amount), 0);
+        .reduce((sum, t) => (t.type === "income" ? sum + t.amount : sum - grossAmount(t)), 0);
 
 export const computeMonthFlows = (
     transactions: Transaction[],
@@ -23,7 +24,7 @@ export const computeMonthFlows = (
         if (Number.isNaN(d.getTime())) continue;
         if (d < start || d > now) continue;
         if (t.type === "income") income += t.amount;
-        else expense += t.amount;
+        else expense += grossAmount(t);
     }
     return { income, expense };
 };
