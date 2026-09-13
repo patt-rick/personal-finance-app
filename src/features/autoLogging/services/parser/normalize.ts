@@ -88,11 +88,16 @@ export function extractAmount(rawText: string): AmountResult {
     const primary = pool.filter((c) => !c.suspectedBalance && !c.suspectedFee);
     if (primary.length > 0) {
         const first = primary[0];
-        const feeCandidate = pool.find((c) => c.suspectedFee && c.currencyCode === first.currencyCode);
+        const feeCandidates = pool.filter(
+            (c) => c.suspectedFee && !c.suspectedBalance && c.currencyCode === first.currencyCode,
+        );
+        const fee = feeCandidates.length > 0
+            ? feeCandidates.reduce((sum, c) => sum + c.amount, 0)
+            : undefined;
         return {
             amount: first.amount,
             currencyCode: first.currencyCode,
-            fee: feeCandidate?.amount,
+            fee,
         };
     }
 

@@ -162,6 +162,11 @@ already cascades by `transferId`), `recurringTransactions.ts`, Debt / DebtPaymen
 
 - `looksLikeFee` only scans the 24 chars **before** the amount, so a fee keyword *after* its
   amount (e.g. `GHS1.00 E-levy`) is missed.
-- Only the **first** fee candidate is captured, so multiple charges in one message under-report.
 
-These pre-date this change; documenting because the fee is now a visible field.
+  This pre-dates this change; documenting because the fee is now a visible field.
+
+## Resolved (parser-hardening, 2026-09-13)
+
+- Multiple fee candidates in one message are now **summed** (all same-currency `suspectedFee`
+  amounts), so a message like `Fee: GHS 0.50. E-levy: GHS 1.00` reports `fee: 1.5` rather than
+  only the first `0.50`. (Was: "only the first fee candidate is captured".)

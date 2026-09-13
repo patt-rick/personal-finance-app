@@ -69,6 +69,11 @@ describe("extractAmount", () => {
         expect(extractAmount("Sent GHS 500 to Kwame. VAT GHS 10"))
             .toEqual({ amount: 500, currencyCode: "GHS", fee: 10 });
     });
+
+    it("sums all same-currency fee/tax candidates (F7)", () => {
+        expect(extractAmount("Sent GHS 100.00 to Kofi. Fee: GHS 0.50. E-levy: GHS 1.00"))
+            .toEqual({ amount: 100, currencyCode: "GHS", fee: 1.5 });
+    });
 });
 
 describe("extractAmount — number/currency token boundaries (P2.1)", () => {
