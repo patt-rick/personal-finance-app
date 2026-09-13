@@ -25,6 +25,7 @@ import AppModal from "./AppModal";
 import CashbookAppearancePicker from "./CashbookAppearancePicker";
 import CashbookIconBadge from "./CashbookIconBadge";
 import { resolveCashbookColor, resolveCashbookIconKey } from "../features/cashbooks/appearance/resolve";
+import { grossAmount, FEES_CATEGORY_LABEL } from "../utils/transactionAmount";
 
 const CURRENCIES = [
     { label: "US Dollar", value: "USD", symbol: "$" },
@@ -68,7 +69,7 @@ export default function CashbookDetailSheet({
         if (!business) return null;
         const bizTx = transactions.filter((t) => t.businessId === business.id);
         const income = bizTx.filter((t) => t.type === "income").reduce((a, t) => a + t.amount, 0);
-        const expense = bizTx.filter((t) => t.type === "expense").reduce((a, t) => a + t.amount, 0);
+        const expense = bizTx.filter((t) => t.type === "expense").reduce((a, t) => a + grossAmount(t), 0);
         const balance = income - expense;
         const count = bizTx.length;
         const avg = count > 0 ? (income + expense) / count : 0;
@@ -97,7 +98,7 @@ export default function CashbookDetailSheet({
                     const d = new Date(t.date);
                     return t.type === "expense" && d >= dayStart && d < dayEnd;
                 })
-                .reduce((a, t) => a + t.amount, 0);
+                .reduce((a, t) => a + grossAmount(t), 0);
 
             if (dayIn > 0 || dayOut > 0) hasActivity = true;
             chartLabels.push(date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 2));
@@ -106,12 +107,15 @@ export default function CashbookDetailSheet({
         }
 
         const catMap: Record<string, number> = {};
-        bizTx
-            .filter((t) => t.type === "expense")
-            .forEach((t) => {
-                const cat = t.category || "Other";
-                catMap[cat] = (catMap[cat] || 0) + t.amount;
-            });
+        const expenseTx = bizTx.filter((t) => t.type === "expense");
+        expenseTx.forEach((t) => {
+            const cat = t.category || "Other";
+            catMap[cat] = (catMap[cat] || 0) + t.amount;
+        });
+        const feeTotal = expenseTx.reduce((sum, t) => sum + (t.fee ?? 0), 0);
+        if (feeTotal > 0) {
+            catMap[FEES_CATEGORY_LABEL] = (catMap[FEES_CATEGORY_LABEL] || 0) + feeTotal;
+        }
         const topCategories = Object.entries(catMap)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 3);

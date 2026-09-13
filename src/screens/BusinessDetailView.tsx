@@ -51,6 +51,7 @@ import DateRangePickerModal from "../components/DateRangePickerModal";
 import CategoryIcon from "../components/CategoryIcon";
 import MoneyText from "../components/MoneyText";
 import { EmptyScene } from "../components/illustrations";
+import { grossAmount, FEES_CATEGORY_LABEL } from "../utils/transactionAmount";
 
 function getChartColors(theme: any): string[] {
     return theme.colors.chart;
@@ -134,7 +135,7 @@ export default function BusinessDetailView({
         .reduce((acc, t) => acc + t.amount, 0);
     const totalExpense = transactions
         .filter((t) => t.type === "expense")
-        .reduce((acc, t) => acc + t.amount, 0);
+        .reduce((acc, t) => acc + grossAmount(t), 0);
     const totalBalance = totalIncome - totalExpense;
     const symbol = getCurrencySymbol(business.currency);
 
@@ -162,7 +163,7 @@ export default function BusinessDetailView({
                     const td = new Date(t.date);
                     return t.type === "expense" && td >= dayStart && td < dayEnd;
                 })
-                .reduce((acc, t) => acc + t.amount, 0);
+                .reduce((acc, t) => acc + grossAmount(t), 0);
 
             labels.push(date.toLocaleDateString(undefined, { weekday: "short" }).slice(0, 3));
             incomeValues.push(dayIncome);
@@ -175,12 +176,15 @@ export default function BusinessDetailView({
 
     const categoryPieData = useMemo(() => {
         const catMap: Record<string, number> = {};
-        transactions
-            .filter((t) => t.type === "expense")
-            .forEach((t) => {
-                const cat = t.category || "Other";
-                catMap[cat] = (catMap[cat] || 0) + t.amount;
-            });
+        const expenseTx = transactions.filter((t) => t.type === "expense");
+        expenseTx.forEach((t) => {
+            const cat = t.category || "Other";
+            catMap[cat] = (catMap[cat] || 0) + t.amount;
+        });
+        const feeTotal = expenseTx.reduce((s, t) => s + (t.fee ?? 0), 0);
+        if (feeTotal > 0) {
+            catMap[FEES_CATEGORY_LABEL] = (catMap[FEES_CATEGORY_LABEL] || 0) + feeTotal;
+        }
         const entries = Object.entries(catMap)
             .sort((a, b) => b[1] - a[1])
             .slice(0, 6);

@@ -33,6 +33,7 @@ import { EmptyScene } from "../components/illustrations";
 import { maybeRequestReview } from "../utils/storeReview";
 import ListCard from "../components/ListCard";
 import MoneyText from "../components/MoneyText";
+import { grossAmount } from "../utils/transactionAmount";
 
 function getGreeting(): string {
     const hour = new Date().getHours();
@@ -82,7 +83,7 @@ function AnimatedCashbookItem({
         .reduce((acc, t) => acc + t.amount, 0);
     const expense = bizTx
         .filter((t) => t.type === "expense")
-        .reduce((acc, t) => acc + t.amount, 0);
+        .reduce((acc, t) => acc + grossAmount(t), 0);
     const balance = income - expense;
     const symbol = getCurrencySymbol(business.currency);
     const txCount = bizTx.length;
@@ -278,7 +279,7 @@ function DashboardHome({
             const c = bizCurrencyMap[t.businessId] || "USD";
             if (!map[c]) map[c] = { income: 0, expense: 0 };
             if (t.type === "income") map[c].income += t.amount;
-            else map[c].expense += t.amount;
+            else map[c].expense += grossAmount(t);
         }
         const keys = Object.keys(map);
         if (keys.length === 0) return [{ currency: "USD", income: 0, expense: 0, balance: 0 }];
@@ -331,7 +332,7 @@ function DashboardHome({
         weekAgo.setDate(weekAgo.getDate() - 7);
         return filteredTransactions
             .filter((t) => new Date(t.date) >= weekAgo)
-            .reduce((acc, t) => (t.type === "income" ? acc + t.amount : acc - t.amount), 0);
+            .reduce((acc, t) => (t.type === "income" ? acc + t.amount : acc - grossAmount(t)), 0);
     }, [filteredTransactions]);
 
     const [refreshing, setRefreshing] = useState(false);

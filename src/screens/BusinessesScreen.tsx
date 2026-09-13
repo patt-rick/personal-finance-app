@@ -23,6 +23,7 @@ import TransferCashbookModal from "../components/TransferCashbookModal";
 import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
 import MoneyText from "../components/MoneyText";
+import { grossAmount } from "../utils/transactionAmount";
 
 interface BusinessesScreenProps {
     businesses: Business[];
@@ -145,7 +146,7 @@ function SummaryStrip({
                 };
             }
             if (t.type === "income") byCurrency[cur].income += t.amount;
-            else byCurrency[cur].expense += t.amount;
+            else byCurrency[cur].expense += grossAmount(t);
         }
 
         const entries = Object.entries(byCurrency);
@@ -427,7 +428,7 @@ export default function BusinessesScreen({
                         .reduce((a, t) => a + t.amount, 0);
                     const expense = bizTx
                         .filter((t) => t.type === "expense")
-                        .reduce((a, t) => a + t.amount, 0);
+                        .reduce((a, t) => a + grossAmount(t), 0);
                     const balance = income - expense;
                     const symbol = getCurrencySymbol(biz.currency);
 
