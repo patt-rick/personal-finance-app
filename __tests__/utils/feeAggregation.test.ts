@@ -1,5 +1,5 @@
 import { computeCashbookBalance } from "../../src/utils/cashbookBalance";
-import { getCategoryBreakdown } from "../../src/utils/reportCalculations";
+import { getCategoryBreakdown, getTopCategories } from "../../src/utils/reportCalculations";
 import { FEES_CATEGORY_LABEL } from "../../src/utils/transactionAmount";
 import { Transaction } from "../../src/types";
 
@@ -25,4 +25,15 @@ it("category breakdown adds a Fees & Taxes slice summing to gross", () => {
   expect(food.amount).toBe(80);   // principal only
   expect(fees.amount).toBe(2);    // synthetic slice
   expect(food.amount + fees.amount).toBe(82); // == gross total
+});
+
+it("top categories merge synthetic fees with a real 'Fees & Taxes' category (no overwrite)", () => {
+  const list = [
+    tx({ category: FEES_CATEGORY_LABEL, amount: 500 }), // a real user category with this name
+    tx({ category: "Food", amount: 30, fee: 10 }),      // auto-detected fee
+  ];
+  const top = getTopCategories(list, 10, "expense", new Date("2026-09-01"), new Date("2026-09-30"));
+  const fees = top.find((c) => c.name === FEES_CATEGORY_LABEL)!;
+  expect(fees.amount).toBe(510); // 500 real principal + 10 synthetic fee, not clobbered
+  expect(fees.count).toBe(2);
 });

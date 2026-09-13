@@ -127,6 +127,7 @@ export default function BusinessDetailView({
         (t) =>
             t.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
             t.amount.toString().includes(searchQuery) ||
+            grossAmount(t).toString().includes(searchQuery) ||
             t.category?.toLowerCase().includes(searchQuery.toLowerCase()),
     );
 

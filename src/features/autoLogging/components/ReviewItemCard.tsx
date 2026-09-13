@@ -7,6 +7,7 @@ import MoneyText from "../../../components/MoneyText";
 import { ReviewItem } from "../types";
 import { getCurrencySymbol } from "../../../utils/_helpers";
 import { grossAmount } from "../../../utils/transactionAmount";
+import { appAlert } from "../../../components/dialog";
 import { ConfirmEdits } from "../hooks/useAutoLogQueue";
 
 interface Props {
@@ -33,11 +34,15 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
         if (Number.isFinite(parsedAmount) && parsedAmount !== item.draft.amount) edits.amount = parsedAmount;
         if (description.trim() && description.trim() !== item.draft.merchant) edits.description = description.trim();
         if (item.draft.type !== "income") {
-            const parsedFee = parseFloat(fee);
             if (fee.trim() === "") {
                 if (item.draft.fee != null) edits.fee = 0;
-            } else if (Number.isFinite(parsedFee) && parsedFee !== item.draft.fee) {
-                edits.fee = parsedFee;
+            } else {
+                const parsedFee = parseFloat(fee);
+                if (!Number.isFinite(parsedFee) || parsedFee < 0) {
+                    appAlert("Invalid fee", "Enter a fee of 0 or more, or leave it blank.");
+                    return;
+                }
+                if (parsedFee !== item.draft.fee) edits.fee = parsedFee;
             }
         }
         onConfirm(Object.keys(edits).length ? edits : undefined);

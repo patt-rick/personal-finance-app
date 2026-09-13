@@ -144,7 +144,11 @@ export function getTopCategories(
         const feeTotal = filtered.reduce((s, t) => s + (t.fee ?? 0), 0);
         if (feeTotal > 0) {
             const feeCount = filtered.filter((t) => (t.fee ?? 0) > 0).length;
-            map[FEES_CATEGORY_LABEL] = { amount: feeTotal, count: feeCount };
+            const existing = map[FEES_CATEGORY_LABEL] ?? { amount: 0, count: 0 };
+            map[FEES_CATEGORY_LABEL] = {
+                amount: existing.amount + feeTotal,
+                count: existing.count + feeCount,
+            };
         }
     }
 
