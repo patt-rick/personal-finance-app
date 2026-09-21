@@ -641,6 +641,18 @@ export default function BusinessDetailView({
                                                         : theme.colors.onSurface
                                                 }
                                             />
+                                            {t.fee && t.fee > 0 ? (
+                                                <>
+                                                    <Text style={ls.txFeeNote}>
+                                                        Amount: {symbol}
+                                                        {t.amount.toLocaleString()}
+                                                    </Text>
+                                                    <Text style={ls.txFeeNote}>
+                                                        Fees: {symbol}
+                                                        {t.fee.toLocaleString()}
+                                                    </Text>
+                                                </>
+                                            ) : null}
                                         </View>
                                     </TouchableOpacity>
                                 ))}
@@ -950,6 +962,12 @@ const createLocalStyles = (theme: any) =>
             color: theme.colors.onSurface,
         },
         txSubTitle: {
+            fontSize: 11,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurfaceVariant,
+            marginTop: 2,
+        },
+        txFeeNote: {
             fontSize: 11,
             fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
