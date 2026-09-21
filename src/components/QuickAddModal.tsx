@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Text, TouchableOpacity, StyleSheet } from "react-native";
 import * as Crypto from "expo-crypto";
 import { Business, Category, Transaction } from "../types";
-import { loadCategories } from "../utils/storage";
+import { loadCategories, persistNewCategory } from "../utils/storage";
 import { getCurrencySymbol } from "../utils/_helpers";
 import { useTheme } from "../theme/theme";
 import AppModal from "./AppModal";
@@ -126,6 +126,11 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate, 
             categories={categories}
             symbol={getCurrencySymbol(selected.currency)}
             onClose={onClose}
+            onCreateCategory={async (name, type) => {
+                const { category, list } = await persistNewCategory(name, type);
+                setCategories(list);
+                return category;
+            }}
             onSubmit={handleSubmit}
         />
     );

@@ -37,7 +37,7 @@ import {
 import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
-import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
+import { loadCategories, getBudgetByBusinessId, persistNewCategory } from "../utils/storage";
 import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
 import { maybeRequestReview } from "../utils/storeReview";
 import ChartCarousel from "../components/ChartCarousel";
@@ -723,6 +723,11 @@ export default function BusinessDetailView({
                     onClose={() => {
                         setActiveModal("none");
                         setEditingTx(null);
+                    }}
+                    onCreateCategory={async (name, type) => {
+                        const { category, list } = await persistNewCategory(name, type);
+                        setCategories(list);
+                        return category;
                     }}
                     onSubmit={handleEntrySubmit}
                 />

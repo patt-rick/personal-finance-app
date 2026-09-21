@@ -5,6 +5,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { Business, Transaction, UserProfile, Category, Budget, RecurringTransaction, Debt } from "../types";
 import { AutoLogSettings, SenderMapping, ReviewItem } from "../features/autoLogging/types";
 import { STORAGE_KEYS } from "./storageKeys";
+import { addCategory } from "./categories";
 
 export { STORAGE_KEYS };
 
@@ -107,6 +108,24 @@ export const saveCategories = async (categories: Category[]): Promise<boolean> =
         console.error("Error saving categories:", error);
         return false;
     }
+};
+
+/**
+ * Create-and-persist a category, reloading from storage first so a stale
+ * in-memory list can't clobber categories added elsewhere. Throws if the
+ * write fails so the caller can surface an error and keep the input open.
+ */
+export const persistNewCategory = async (
+    name: string,
+    type: "income" | "expense",
+): Promise<{ category: Category; list: Category[] }> => {
+    const existing = await loadCategories();
+    const { list, category } = addCategory(name, type, existing);
+    const ok = await saveCategories(list);
+    if (!ok) {
+        throw new Error("Failed to save category");
+    }
+    return { category, list };
 };
 
 // Budget Storage Functions

@@ -8,6 +8,7 @@ import {
     Keyboard,
     StyleSheet,
 } from "react-native";
+import { Plus, Check, X } from "lucide-react-native";
 import { appAlert } from "./dialog";
 import { Transaction, Category } from "../types";
 import { useTheme } from "../theme/theme";
@@ -23,6 +24,10 @@ interface TransactionEntryModalProps {
     showTypeToggle?: boolean;
     showFeeInput?: boolean;
     onClose: () => void;
+    onCreateCategory?: (
+        name: string,
+        type: "income" | "expense",
+    ) => Promise<Category>;
     onSubmit: (data: {
         amount: number;
         category: string;
@@ -42,6 +47,7 @@ export default function TransactionEntryModal({
     showTypeToggle,
     showFeeInput = true,
     onClose,
+    onCreateCategory,
     onSubmit,
 }: TransactionEntryModalProps) {
     const theme = useTheme();
@@ -57,6 +63,15 @@ export default function TransactionEntryModal({
         defaultCategoryForType(entryType),
     );
     const [currentType, setCurrentType] = useState<"income" | "expense">(entryType);
+    const [addingCategory, setAddingCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [savingCategory, setSavingCategory] = useState(false);
+
+    const closeCategoryInput = () => {
+        setAddingCategory(false);
+        setNewCategoryName("");
+        setSavingCategory(false);
+    };
 
     useEffect(() => {
         if (editingTx) {
@@ -74,10 +89,12 @@ export default function TransactionEntryModal({
             setSelectedCategory(defaultCategoryForType(entryType));
             setCurrentType(entryType);
         }
+        closeCategoryInput();
     }, [editingTx, visible, entryType]);
 
     const handleTypeChange = (next: "income" | "expense") => {
         if (next === currentType) return;
+        closeCategoryInput();
         setCurrentType(next);
         if (next === "income") setFee("");
         const stillValid = categories.some(
@@ -122,7 +139,28 @@ export default function TransactionEntryModal({
         setAmount("");
         setFee("");
         setRemark("");
+        closeCategoryInput();
         onClose();
+    };
+
+    const handleCreateCategory = async () => {
+        if (savingCategory) return;
+        const trimmed = newCategoryName.trim();
+        if (!trimmed || !onCreateCategory) {
+            closeCategoryInput();
+            return;
+        }
+        try {
+            setSavingCategory(true);
+            const created = await onCreateCategory(trimmed, currentType);
+            setSelectedCategory(created.name);
+            Keyboard.dismiss();
+            closeCategoryInput();
+        } catch {
+            appAlert("Error", "Could not save category. Please try again.");
+        } finally {
+            setSavingCategory(false);
+        }
     };
 
     const title = editingTx
@@ -206,35 +244,92 @@ export default function TransactionEntryModal({
             ) : null}
 
             <Text style={styles.inputLabelModern}>Category</Text>
-            <ScrollView
-                horizontal
-                showsHorizontalScrollIndicator={false}
-                style={styles.categoryPicker}
-                keyboardShouldPersistTaps="always"
-            >
-                {categories
-                    .filter((c) => c.type === currentType)
-                    .map((cat) => (
+            {addingCategory ? (
+                <View style={s.catInputRow}>
+                    <TextInput
+                        style={[
+                            s.catInput,
+                            {
+                                backgroundColor: theme.colors.surfaceContainerHigh,
+                                color: theme.colors.onSurface,
+                            },
+                        ]}
+                        placeholder="New category name"
+                        placeholderTextColor={theme.colors.placeholder}
+                        value={newCategoryName}
+                        onChangeText={setNewCategoryName}
+                        maxLength={30}
+                        autoFocus
+                        editable={!savingCategory}
+                        returnKeyType="done"
+                        onSubmitEditing={handleCreateCategory}
+                    />
+                    <TouchableOpacity
+                        style={[s.catIconBtn, { backgroundColor: theme.colors.primary }]}
+                        onPress={handleCreateCategory}
+                        disabled={savingCategory}
+                    >
+                        <Check size={18} color={theme.colors.onPrimary} />
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                        style={[
+                            s.catIconBtn,
+                            { backgroundColor: theme.colors.surfaceContainerHigh },
+                        ]}
+                        onPress={closeCategoryInput}
+                        disabled={savingCategory}
+                    >
+                        <X size={18} color={theme.colors.onSurfaceVariant} />
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <ScrollView
+                    horizontal
+                    showsHorizontalScrollIndicator={false}
+                    style={styles.categoryPicker}
+                    keyboardShouldPersistTaps="always"
+                >
+                    {categories
+                        .filter((c) => c.type === currentType)
+                        .map((cat) => (
+                            <TouchableOpacity
+                                key={cat.id}
+                                style={[
+                                    styles.categoryChip,
+                                    selectedCategory === cat.name &&
+                                        styles.categoryChipActive,
+                                ]}
+                                onPress={() => setSelectedCategory(cat.name)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.categoryChipText,
+                                        selectedCategory === cat.name &&
+                                            styles.categoryChipTextActive,
+                                    ]}
+                                >
+                                    {cat.name}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    {onCreateCategory ? (
                         <TouchableOpacity
-                            key={cat.id}
-                            style={[
-                                styles.categoryChip,
-                                selectedCategory === cat.name && styles.categoryChipActive,
-                            ]}
-                            onPress={() => setSelectedCategory(cat.name)}
+                            style={[styles.categoryChip, s.addChip]}
+                            onPress={() => setAddingCategory(true)}
                         >
+                            <Plus size={14} color={theme.colors.primary} />
                             <Text
                                 style={[
                                     styles.categoryChipText,
-                                    selectedCategory === cat.name &&
-                                        styles.categoryChipTextActive,
+                                    { color: theme.colors.primary },
                                 ]}
                             >
-                                {cat.name}
+                                New
                             </Text>
                         </TouchableOpacity>
-                    ))}
-            </ScrollView>
+                    ) : null}
+                </ScrollView>
+            )}
 
             <Text style={styles.inputLabelModern}>Remark</Text>
             <TextInput
@@ -276,5 +371,30 @@ const s = StyleSheet.create({
     typeToggleText: {
         fontSize: 14,
         letterSpacing: 0.1,
+    },
+    addChip: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 4,
+    },
+    catInputRow: {
+        flexDirection: "row",
+        alignItems: "center",
+        gap: 8,
+        marginBottom: 24,
+    },
+    catInput: {
+        flex: 1,
+        height: 44,
+        borderRadius: 12,
+        paddingHorizontal: 14,
+        fontSize: 14,
+    },
+    catIconBtn: {
+        width: 44,
+        height: 44,
+        borderRadius: 12,
+        alignItems: "center",
+        justifyContent: "center",
     },
 });
