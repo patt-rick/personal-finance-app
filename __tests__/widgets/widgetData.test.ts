@@ -33,14 +33,14 @@ describe("buildBalanceView", () => {
         const now = new Date("2026-08-15T00:00:00.000Z");
         const txns = [
             tx({ id: "1", type: "income", amount: 300, date: "2026-08-01T00:00:00.000Z" }),
-            tx({ id: "2", type: "expense", amount: 120, date: "2026-08-10T00:00:00.000Z" }),
+            tx({ id: "2", type: "expense", amount: 120, fee: 5, date: "2026-08-10T00:00:00.000Z" }),
         ];
         expect(buildBalanceView(business(), txns, now)).toEqual({
             cashbookName: "Personal",
             currencySymbol: "₵",
-            balance: 180,
+            balance: 175,
             monthIncome: 300,
-            monthExpense: 120,
+            monthExpense: 125,
             accent: resolveCashbookColor(business()),
             iconKey: resolveCashbookIconKey(business()),
         });

@@ -2,7 +2,7 @@ import { Business, Transaction } from "../types";
 
 export const TRANSFER_CATEGORY = "Transfer";
 
-export type TransferValidationError = "same_cashbook" | "currency_mismatch" | "invalid_amount";
+export type TransferValidationError = "same_cashbook" | "currency_mismatch" | "invalid_amount" | "invalid_fee";
 
 export function cashbookCurrency(business: Business): string {
     return business.currency || "USD";
@@ -18,10 +18,12 @@ export function validateTransfer(
     from: Business,
     to: Business,
     amount: number,
+    fee?: number,
 ): TransferValidationError | null {
     if (from.id === to.id) return "same_cashbook";
     if (cashbookCurrency(from) !== cashbookCurrency(to)) return "currency_mismatch";
     if (!Number.isFinite(amount) || amount <= 0) return "invalid_amount";
+    if (fee !== undefined && (!Number.isFinite(fee) || fee < 0)) return "invalid_fee";
     return null;
 }
 
@@ -29,6 +31,7 @@ export interface CreateTransferArgs {
     from: Business;
     to: Business;
     amount: number;
+    fee?: number;
     remark?: string;
     date: string;
     makeId: () => string;
@@ -38,8 +41,8 @@ export function createTransferPair(args: CreateTransferArgs): {
     outgoing: Transaction;
     incoming: Transaction;
 } {
-    const { from, to, amount, date, makeId } = args;
-    const error = validateTransfer(from, to, amount);
+    const { from, to, amount, fee, date, makeId } = args;
+    const error = validateTransfer(from, to, amount, fee);
     if (error) throw new Error(error);
 
     const transferId = makeId();
@@ -60,6 +63,7 @@ export function createTransferPair(args: CreateTransferArgs): {
             type: "expense",
             businessId: from.id,
             ...shared,
+            ...(fee ? { fee } : {}),
         },
         incoming: {
             id: makeId(),

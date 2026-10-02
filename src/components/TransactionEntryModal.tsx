@@ -22,7 +22,6 @@ interface TransactionEntryModalProps {
     categories: Category[];
     symbol: string;
     showTypeToggle?: boolean;
-    showFeeInput?: boolean;
     onClose: () => void;
     onCreateCategory?: (
         name: string,
@@ -45,7 +44,6 @@ export default function TransactionEntryModal({
     categories,
     symbol,
     showTypeToggle,
-    showFeeInput = true,
     onClose,
     onCreateCategory,
     onSubmit,
@@ -165,7 +163,7 @@ export default function TransactionEntryModal({
 
     const title = editingTx
         ? "Edit Transaction"
-        : entryType === "income"
+        : currentType === "income"
         ? "New Income"
         : "New Expense";
 
@@ -229,7 +227,7 @@ export default function TransactionEntryModal({
                 autoFocus
             />
 
-            {showFeeInput && currentType === "expense" ? (
+            {currentType === "expense" ? (
                 <>
                     <Text style={styles.inputLabelModern}>Fee / tax ({symbol})</Text>
                     <TextInput

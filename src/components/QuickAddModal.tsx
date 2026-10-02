@@ -59,6 +59,7 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate, 
             businessId: selected.id,
             category: data.category,
             remark: data.remark,
+            fee: data.entryType === "expense" ? data.fee : undefined,
             source: "manual",
         });
         onClose();
@@ -121,7 +122,6 @@ export default function QuickAddModal({ visible, businesses, onClose, onCreate, 
             visible
             entryType="expense"
             showTypeToggle
-            showFeeInput={false}
             editingTx={null}
             categories={categories}
             symbol={getCurrencySymbol(selected.currency)}

@@ -13,7 +13,7 @@ interface TransferModalProps {
     businesses: Business[];
     symbol: string;
     onClose: () => void;
-    onSubmit: (data: { to: Business; amount: number; remark: string }) => void;
+    onSubmit: (data: { to: Business; amount: number; fee?: number; remark: string }) => void;
 }
 
 export default function TransferModal({
@@ -31,12 +31,14 @@ export default function TransferModal({
 
     const [toId, setToId] = useState<string | null>(null);
     const [amountText, setAmountText] = useState("");
+    const [feeText, setFeeText] = useState("");
     const [remark, setRemark] = useState("");
 
     useEffect(() => {
         if (!visible) {
             setToId(null);
             setAmountText("");
+            setFeeText("");
             setRemark("");
         } else if (targets.length === 1) {
             setToId(targets[0].id);
@@ -45,21 +47,12 @@ export default function TransferModal({
 
     const to = targets.find((b) => b.id === toId) ?? null;
     const amount = parseFloat(amountText);
-    const canSubmit = !!to && validateTransfer(from, to, amount) === null;
-
-    const handleAmountChange = (text: string) => {
-        const cleaned = text.replace(/[^0-9.]/g, "");
-        const firstDot = cleaned.indexOf(".");
-        setAmountText(
-            firstDot === -1
-                ? cleaned
-                : cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, ""),
-        );
-    };
+    const fee = feeText === "" ? undefined : parseFloat(feeText);
+    const canSubmit = !!to && validateTransfer(from, to, amount, fee) === null;
 
     const handleSubmit = () => {
         if (!to || !canSubmit) return;
-        onSubmit({ to, amount, remark: remark.trim() });
+        onSubmit({ to, amount, fee, remark: remark.trim() });
     };
 
     return (
@@ -116,7 +109,20 @@ export default function TransferModal({
                         <TextInput
                             style={styles.amountInput}
                             value={amountText}
-                            onChangeText={handleAmountChange}
+                            onChangeText={(t) => setAmountText(sanitizeDecimal(t))}
+                            keyboardType="decimal-pad"
+                            placeholder="0.00"
+                            placeholderTextColor={theme.colors.placeholder}
+                        />
+                    </View>
+
+                    <Text style={styles.fieldLabel}>Fee / tax (optional)</Text>
+                    <View style={styles.amountRow}>
+                        <Text style={styles.feeSymbol}>{symbol}</Text>
+                        <TextInput
+                            style={styles.feeInput}
+                            value={feeText}
+                            onChangeText={(t) => setFeeText(sanitizeDecimal(t))}
                             keyboardType="decimal-pad"
                             placeholder="0.00"
                             placeholderTextColor={theme.colors.placeholder}
@@ -162,6 +168,14 @@ export default function TransferModal({
         </AppModal>
     );
 }
+
+const sanitizeDecimal = (text: string) => {
+    const cleaned = text.replace(/[^0-9.]/g, "");
+    const firstDot = cleaned.indexOf(".");
+    return firstDot === -1
+        ? cleaned
+        : cleaned.slice(0, firstDot + 1) + cleaned.slice(firstDot + 1).replace(/\./g, "");
+};
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
@@ -245,6 +259,19 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
             paddingVertical: 14,
+        },
+        feeSymbol: {
+            fontSize: 14,
+            fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurfaceVariant,
+            marginRight: 6,
+        },
+        feeInput: {
+            flex: 1,
+            fontSize: 14,
+            fontFamily: theme.fonts.regular,
+            color: theme.colors.onSurface,
+            paddingVertical: 12,
         },
         remarkInput: {
             backgroundColor: theme.colors.surfaceContainerHigh,

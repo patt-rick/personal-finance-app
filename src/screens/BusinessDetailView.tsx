@@ -359,11 +359,17 @@ export default function BusinessDetailView({
         );
     };
 
-    const handleTransferSubmit = (data: { to: Business; amount: number; remark: string }) => {
+    const handleTransferSubmit = (data: {
+        to: Business;
+        amount: number;
+        fee?: number;
+        remark: string;
+    }) => {
         const { outgoing, incoming } = createTransferPair({
             from: business,
             to: data.to,
             amount: data.amount,
+            fee: data.fee,
             remark: data.remark,
             date: new Date().toISOString(),
             makeId: () => Crypto.randomUUID(),

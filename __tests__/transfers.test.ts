@@ -6,6 +6,7 @@ import {
     removeTransactionWithPair,
     validateTransfer,
 } from "../src/utils/transfers";
+import { computeCashbookBalance } from "../src/utils/cashbookBalance";
 
 const biz = (id: string, name: string, currency?: string): Business => ({
     id,
@@ -57,6 +58,12 @@ describe("validateTransfer", () => {
         expect(validateTransfer(personal, savings, NaN)).toBe("invalid_amount");
         expect(validateTransfer(personal, savings, Infinity)).toBe("invalid_amount");
     });
+
+    it("rejects a negative or non-finite fee", () => {
+        expect(validateTransfer(personal, savings, 50, -1)).toBe("invalid_fee");
+        expect(validateTransfer(personal, savings, 50, NaN)).toBe("invalid_fee");
+        expect(validateTransfer(personal, savings, 50, 0)).toBeNull();
+    });
 });
 
 describe("createTransferPair", () => {
@@ -93,6 +100,47 @@ describe("createTransferPair", () => {
         expect(outgoing.transferId).toBe(incoming.transferId);
         expect([outgoing.transferId, incoming.transferId]).not.toContain(outgoing.id);
         expect([outgoing.transferId, incoming.transferId]).not.toContain(incoming.id);
+    });
+
+    it("charges the fee to the outgoing leg only", () => {
+        const { outgoing, incoming } = createTransferPair({
+            from: personal,
+            to: savings,
+            amount: 100,
+            fee: 1.5,
+            date,
+            makeId: sequentialIds(),
+        });
+        expect(outgoing.amount).toBe(100);
+        expect(outgoing.fee).toBe(1.5);
+        expect(incoming.amount).toBe(100);
+        expect(incoming.fee).toBeUndefined();
+    });
+
+    it("debits amount plus fee from the sender and credits only the amount", () => {
+        const { outgoing, incoming } = createTransferPair({
+            from: personal,
+            to: savings,
+            amount: 100,
+            fee: 1.5,
+            date,
+            makeId: sequentialIds(),
+        });
+        const all = [outgoing, incoming];
+        expect(computeCashbookBalance(all, personal.id)).toBe(-101.5);
+        expect(computeCashbookBalance(all, savings.id)).toBe(100);
+    });
+
+    it("omits a zero fee", () => {
+        const { outgoing } = createTransferPair({
+            from: personal,
+            to: savings,
+            amount: 100,
+            fee: 0,
+            date,
+            makeId: sequentialIds(),
+        });
+        expect(outgoing.fee).toBeUndefined();
     });
 
     it("omits remark when blank", () => {
