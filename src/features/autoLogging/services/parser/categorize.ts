@@ -7,11 +7,11 @@ interface Rule {
 }
 
 const EXPENSE_RULES: Rule[] = [
-    { category: "Transportation", keywords: ["uber", "bolt", "yango", "taxi", "shell", "goil", "total", "allied", "petrol", "fuel", "stc", "vip transport"] },
-    { category: "Food", keywords: ["kfc", "papaye", "chicken republic", "starbite", "pizza", "burger", "restaurant", "cafe", "chop bar"] },
-    { category: "Utilities", keywords: ["ecg", "ghana water", "gwc", "dstv", "gotv", "netflix", "spotify", "mtn postpaid", "vodafone postpaid", "airtime", "data bundle", "electricity", "water bill"] },
-    { category: "Healthcare", keywords: ["hospital", "pharmacy", "clinic", "medical", "drug", "korle bu", "37 military"] },
-    { category: "Housing", keywords: ["rent", "landlord", "airbnb"] },
+    { category: "Transportation", keywords: ["uber", "bolt", "yango", "taxi", "shell", "goil", "totalenergies", "allied", "petrol", "petroleum", "fuel", "stc", "vip transport"] },
+    { category: "Food", keywords: ["kfc", "papaye", "chicken republic", "starbite", "pizza", "pizzaman", "burger", "restaurant", "cafe", "chop bar"] },
+    { category: "Utilities", keywords: ["ecg", "ghana water", "gwc", "dstv", "gotv", "netflix", "spotify", "mtn postpaid", "vodafone postpaid", "airtime", "data bundle", "electricity", "water bill", "broadband", "wifi"] },
+    { category: "Healthcare", keywords: ["hospital", "pharmacy", "pharmacies", "clinic", "medical", "drug", "drugstore", "korle bu", "37 military"] },
+    { category: "Housing", keywords: ["rent", "rental", "landlord", "airbnb"] },
     { category: "Education", keywords: ["school fees", "university", "tuition", "college"] },
     { category: "Insurance", keywords: ["insurance", "sic", "enterprise insurance", "old mutual"] },
 ];
@@ -55,12 +55,12 @@ export function categorize(
     }
 
     if ((semanticType === "bill" || semanticType === "subscription") && availableNames.has("Utilities")) {
-        const matched = rules.find((r) => r.keywords.some((kw) => haystack.includes(kw)));
+        const matched = rules.find((r) => r.keywords.some((kw) => hasKeyword(haystack, kw)));
         if (!matched) return { category: "Utilities", confident: true };
     }
 
     for (const rule of rules) {
-        if (rule.keywords.some((kw) => haystack.includes(kw))) {
+        if (rule.keywords.some((kw) => hasKeyword(haystack, kw))) {
             if (availableNames.has(rule.category)) {
                 return { category: rule.category, confident: true };
             }
@@ -90,6 +90,19 @@ function matchReference(
         }
     }
     return null;
+}
+
+const keywordPatterns = new Map<string, RegExp>();
+
+// Whole-word match with an optional plural "s", so "rent" never fires inside "current".
+function hasKeyword(haystack: string, keyword: string): boolean {
+    let pattern = keywordPatterns.get(keyword);
+    if (!pattern) {
+        const escaped = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+        pattern = new RegExp(`(?<![a-z0-9])${escaped}s?(?![a-z0-9])`, "i");
+        keywordPatterns.set(keyword, pattern);
+    }
+    return pattern.test(haystack);
 }
 
 function matchesRefKeyword(reference: string, keyword: string): boolean {

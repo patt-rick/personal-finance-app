@@ -9,6 +9,7 @@ import { scoreConfidence } from "./confidence";
 import { getProviderTemplates, ProviderTemplate } from "./providers";
 import { ParseInput, ParseOutput } from "./providers/types";
 import { classifyEvent } from "./keywordClassifier";
+import { stripTelcoBoilerplate } from "./guards";
 
 let cachedTemplates: ProviderTemplate[] | null = null;
 
@@ -23,10 +24,13 @@ export function _resetTemplateCacheForTests(): void {
 
 export function parseEvent(event: RawEvent, categories: Category[]): ParsedDraft | null {
     const body = event.body ?? "";
-    const parseText =
-        event.source === "notification" && event.title
-            ? `${event.title} ${body}`
-            : body;
+    const parseText = stripTelcoBoilerplate(
+        normalizeText(
+            event.source === "notification" && event.title
+                ? `${event.title} ${body}`
+                : body,
+        ),
+    );
     const text = normalizeText(parseText);
     if (!text) return null;
     const lower = lowerKey(text);
@@ -43,7 +47,7 @@ export function parseEvent(event: RawEvent, categories: Category[]): ParsedDraft
         if (!matchesAllBody(lower, template.bodyMatch)) continue;
         const output = safeParse(template, input);
         if (!output) continue;
-        return buildDraft(event, output, template.id, senderKey, rawSenderId, categories);
+        return buildDraft(event, text, output, template.id, senderKey, rawSenderId, categories);
     }
 
     return classifyEvent(event, categories, parseText);
@@ -64,6 +68,7 @@ function safeParse(template: ProviderTemplate, input: ParseInput): ParseOutput |
 
 function buildDraft(
     event: RawEvent,
+    text: string,
     output: ParseOutput,
     providerId: string,
     senderKey: string,
@@ -72,7 +77,7 @@ function buildDraft(
 ): ParsedDraft {
     const senderDisplay = deriveDisplayName(event.source, rawSenderId);
     const persistedType = output.type;
-    const category = categorize(output.merchant, event.body ?? "", persistedType, categories, output.semanticType, output.reference);
+    const category = categorize(output.merchant, text, persistedType, categories, output.semanticType, output.reference);
 
     const confidence = scoreConfidence({
         hasAmount: true,

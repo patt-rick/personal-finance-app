@@ -2,6 +2,8 @@ import { ProviderTemplate } from "./types";
 import { buildCredit, buildDebit, buildTransfer } from "./helpers";
 
 const MTN_SENDER = /\b(mtn|momo|mtnmomo|mtnmobilemoney|mtngh)\b/i;
+// Matches "GHS852.00" as well as "GHS 852.00".
+const GHS_RE = /\b(?:ghs|ghc)(?=\s*\d|\b)|gh[¢₵]/i;
 const TELECEL_SENDER = /\b(telecel|telecelgh|telecelcash|vodafone|vodafonegh|vodafonecash|vodacash)\b/i;
 const AIRTELTIGO_SENDER = /\b(airtel|tigo|airteltigo|airteltigomoney)\b/i;
 
@@ -9,7 +11,7 @@ export const mtnMomoDebit: ProviderTemplate = {
     id: "mtn-momo-debit",
     priority: 100,
     senderMatch: MTN_SENDER,
-    bodyMatch: [/\b(paid|payment|debit|sent|transferred|withdrawn)\b/i, /\b(ghs|gh¢|gh₵|ghc)\b/i],
+    bodyMatch: [/\b(paid|payment|debit|sent|transferred|withdrawn)\b/i, GHS_RE],
     parse: (input) => buildDebit(input, { bodyMatch: [], baseConfidence: 0.9, merchantHint: "to" }),
 };
 
@@ -17,7 +19,7 @@ export const mtnMomoCredit: ProviderTemplate = {
     id: "mtn-momo-credit",
     priority: 100,
     senderMatch: MTN_SENDER,
-    bodyMatch: [/\b(received|credit|deposit|cash\s*in)\b/i, /\b(ghs|gh¢|gh₵|ghc)\b/i],
+    bodyMatch: [/\b(received|credit|deposit|cash\s*in)\b/i, GHS_RE],
     parse: (input) => buildCredit(input, { bodyMatch: [], baseConfidence: 0.9, merchantHint: "from" }),
 };
 

@@ -52,11 +52,20 @@ class SmsReceiver : BroadcastReceiver() {
     private fun isSenderAllowed(sender: String, allowed: List<String>): Boolean {
         if (allowed.isEmpty()) return true
         val normalized = sender.trim().lowercase()
+        val senderKey = canonicalSender(sender)
         return allowed.any { entry ->
             val e = entry.trim().lowercase()
             if (e.isEmpty()) false
-            else normalized == e || normalized.contains(e) || e.contains(normalized)
+            else normalized == e || normalized.contains(e) || e.contains(normalized) ||
+                (senderKey.isNotEmpty() && senderKey == canonicalSender(entry))
         }
+    }
+
+    // Mirrors normalizeSender + applyAliases on the JS side, so an allowlist entry
+    // of "MTN" also admits the "MobileMoney" sender ID.
+    private fun canonicalSender(value: String): String {
+        val key = value.trim().lowercase().replace(NON_ALPHANUMERIC, "")
+        return SENDER_ALIASES[key] ?: key
     }
 
     private fun hash(input: String): String {
@@ -70,5 +79,22 @@ class SmsReceiver : BroadcastReceiver() {
 
     companion object {
         private const val TAG = "AutoLogSmsReceiver"
+        private val NON_ALPHANUMERIC = Regex("[^a-z0-9]")
+        private val SENDER_ALIASES = mapOf(
+            "mtngh" to "mtn",
+            "mtnmomo" to "mtn",
+            "mtnmobilemoney" to "mtn",
+            "momo" to "mtn",
+            "mobilemoney" to "mtn",
+            "vodafonegh" to "vodafone",
+            "vodafonecash" to "vodafone",
+            "vodacash" to "vodafone",
+            "telecelgh" to "telecel",
+            "airtel" to "airteltigo",
+            "tigo" to "airteltigo",
+            "airteltigomoney" to "airteltigo",
+            "gcbbank" to "gcb",
+            "gcbmobile" to "gcb",
+        )
     }
 }

@@ -44,6 +44,22 @@ const SOFT_PROMO: RegExp[] = [
 
 export const SPAM_PATTERNS: RegExp[] = STRONG_SPAM;
 
+// MTN appends this app-download ad (with its own link) to genuine MoMo receipts.
+// Only the exact sentence, and an MTN-hosted link in a message that carries it, are
+// removed, so MTN's own promos and lookalike wording or hosts still hit the spam checks.
+const MTN_APP_AD_RE = /\bdownload\s+the\s+momo\s+app\s+for\s+a\s+faster\s+(?:&|and)\s+easier\s+experience\.?/gi;
+const MTN_LINK_HOST = String.raw`(?:mtnmymomo\.onelink\.me|(?:[a-z0-9-]+\.)*mtn\.com\.gh)`;
+const MTN_CLICK_HERE_RE = new RegExp(
+    String.raw`\bclick\s+here\s*(?::\s*)?https?:\/\/${MTN_LINK_HOST}(?:[\/?#][^\s@]*)?(?=\s|$)`,
+    "gi",
+);
+
+export function stripTelcoBoilerplate(text: string): string {
+    const withoutAd = text.replace(MTN_APP_AD_RE, " ");
+    if (withoutAd === text) return text;
+    return withoutAd.replace(MTN_CLICK_HERE_RE, " ").replace(/\s+/g, " ").trim();
+}
+
 const COMPLETION_RE = new RegExp(
     [
         "(?:has|have|had|was|were|been)\\s+(?:been\\s+)?(?:debited|credited|paid|charged|received|deducted|reversed|withdrawn|deposited|transferred)",

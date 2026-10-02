@@ -1,5 +1,6 @@
 import { Business } from "../../../../types";
 import { ParsedDraft, SenderMapping, AutoLogSettings } from "../../types";
+import { normalizeSender } from "./normalizeSender";
 
 export interface ResolveResult {
     businessId: string;
@@ -16,7 +17,9 @@ export function resolveBusiness(
     now: Date = new Date(),
     idGenerator: () => string = () => now.getTime().toString(),
 ): ResolveResult {
-    const mapping = mappings.find((m) => m.senderKey === draft.senderKey);
+    const mapping =
+        findPreAliasMapping(draft, businesses, mappings) ??
+        mappings.find((m) => m.senderKey === draft.senderKey);
 
     if (mapping) {
         // Explicit "unassigned" mapping (businessId === null): the user chose to
@@ -47,6 +50,25 @@ export function resolveBusiness(
         newBusiness: buildBusiness(businessId, draft, settings, createdAt),
         newMapping: buildMapping(businessId, draft, createdAt),
     };
+}
+
+// A mapping saved under an SMS sender's raw key before that sender gained an alias
+// (e.g. "mobilemoney" before it became "mtn") keeps routing it the way the user set
+// it up. One pointing at a deleted cashbook is skipped so the alias mapping takes
+// over instead of a new cashbook being recreated on every message.
+function findPreAliasMapping(
+    draft: ParsedDraft,
+    businesses: Business[],
+    mappings: SenderMapping[],
+): SenderMapping | undefined {
+    if (draft.source !== "sms") return undefined;
+    const rawKey = normalizeSender("sms", draft.senderDisplay);
+    if (!rawKey || rawKey === draft.senderKey) return undefined;
+    return mappings.find(
+        (m) =>
+            m.senderKey === rawKey &&
+            (m.businessId === null || businesses.some((b) => b.id === m.businessId)),
+    );
 }
 
 function buildBusiness(

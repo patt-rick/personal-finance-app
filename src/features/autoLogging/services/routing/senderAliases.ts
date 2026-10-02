@@ -3,6 +3,7 @@ export const SENDER_ALIASES: Record<string, string> = {
     mtnmomo: "mtn",
     mtnmobilemoney: "mtn",
     momo: "mtn",
+    mobilemoney: "mtn",
     "com.mtn.momo": "mtn",
     "com.mtn.selfcare": "mtn",
 

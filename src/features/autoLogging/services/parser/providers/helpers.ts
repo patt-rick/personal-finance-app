@@ -66,7 +66,7 @@ function buildBase(input: ParseInput, opts: Required<Pick<BaseDebitOpts, "type" 
     const isOutflow = opts.type === "expense" || opts.type === "transfer";
     return {
         amount: amount.amount,
-        fee: isOutflow ? amount.fee : undefined,
+        fee: isOutflow && amount.fee ? amount.fee : undefined,
         currencyCode: amount.currencyCode,
         merchant,
         reference,

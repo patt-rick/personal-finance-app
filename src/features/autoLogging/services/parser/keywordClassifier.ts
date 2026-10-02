@@ -126,7 +126,7 @@ export function classifyEvent(
 
     const isOutflow = cls.type === "expense" || cls.type === "transfer";
     const finalAmount = amountResult.amount;
-    const fee = isOutflow ? amountResult.fee : undefined;
+    const fee = isOutflow && amountResult.fee ? amountResult.fee : undefined;
 
     const category = categorize(merchant, text, cls.type, categories, undefined, reference);
 
