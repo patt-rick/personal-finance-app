@@ -11,6 +11,7 @@ import {
 import { Plus, Check, X } from "lucide-react-native";
 import { appAlert } from "./dialog";
 import { Transaction, Category } from "../types";
+import { userRemark } from "../utils/transactionTitle";
 import { useTheme } from "../theme/theme";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import AppModal from "./AppModal";
@@ -78,7 +79,7 @@ export default function TransactionEntryModal({
             setSelectedCategory(
                 editingTx.category || defaultCategoryForType(editingTx.type),
             );
-            setRemark(editingTx.remark || "");
+            setRemark(userRemark(editingTx) ?? "");
             setCurrentType(editingTx.type);
         } else {
             setAmount("");

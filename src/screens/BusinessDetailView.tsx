@@ -1,6 +1,7 @@
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, Category } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
+import { transactionTitle, userRemark } from "../utils/transactionTitle";
 import { hapticSuccess, hapticError, hapticWarning } from "../utils/haptics";
 import {
     ArrowLeftRight,
@@ -396,7 +397,7 @@ export default function BusinessDetailView({
             const rows = filteredTransactions
                 .map((t) => {
                     const date = new Date(t.date).toLocaleDateString();
-                    return `${date},${t.type},${t.amount},${t.fee ?? 0},${grossAmount(t)},"${(t.description || "").replace(/"/g, '""')}",${t.category || ""},"${(t.remark || "").replace(/"/g, '""')}"`;
+                    return `${date},${t.type},${t.amount},${t.fee ?? 0},${grossAmount(t)},"${(t.description || "").replace(/"/g, '""')}",${t.category || ""},"${(userRemark(t) || "").replace(/"/g, '""')}"`;
                 })
                 .join("\n");
 
@@ -625,7 +626,7 @@ export default function BusinessDetailView({
                                                 numberOfLines={1}
                                                 ellipsizeMode="tail"
                                             >
-                                                {t.remark || t.description}
+                                                {transactionTitle(t)}
                                             </Text>
                                             <Text style={ls.txSubTitle}>
                                                 {t.category || "General"} ·{" "}

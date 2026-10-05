@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { Transaction } from "../../../types";
+import { RAW_REMARK_LENGTH } from "../../../utils/transactionTitle";
 import { ReviewItem } from "../types";
 import { loadReviewQueue, removeReviewItem } from "../services/persistence/reviewQueue";
 import { loadTransactions, saveTransactions } from "../../../utils/storage";
@@ -46,7 +47,7 @@ export function useAutoLogQueue(): UseAutoLogQueue {
                 type: item.draft.type === "transfer" ? "expense" : item.draft.type,
                 businessId: edits?.businessId ?? item.businessId,
                 category: edits?.category ?? item.draft.category,
-                remark: item.draft.rawText.slice(0, 280),
+                remark: item.draft.rawText.slice(0, RAW_REMARK_LENGTH),
                 source: item.draft.source,
                 sourceApp: item.draft.sourceApp ?? item.draft.senderDisplay,
                 rawText: item.draft.rawText,

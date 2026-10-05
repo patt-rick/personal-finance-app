@@ -25,6 +25,7 @@ import { createDashboardStyles } from "../styles/dashboardStyles";
 import AppModal from "./AppModal";
 import CategoryIcon from "./CategoryIcon";
 import { grossAmount } from "../utils/transactionAmount";
+import { userRemark } from "../utils/transactionTitle";
 
 interface TransactionDetailModalProps {
     visible: boolean;
@@ -45,6 +46,7 @@ export default function TransactionDetailModal({
 }: TransactionDetailModalProps) {
     const theme = useTheme();
     const styles = React.useMemo(() => createDashboardStyles(theme), [theme]);
+    const remark = transaction ? userRemark(transaction) : undefined;
 
     return (
         <AppModal visible={visible} onClose={onClose} showHandle={false}>
@@ -148,7 +150,7 @@ export default function TransactionDetailModal({
                                 value={transaction.paymentMode || "Cash"}
                                 styles={styles}
                             />
-                            {transaction.remark ? (
+                            {remark ? (
                                 <View style={[styles.txDetailRow, { alignItems: "flex-start" }]}>
                                     <View style={s.iconLabel}>
                                         <MessageSquare size={18} color={theme.colors.onSurfaceVariant} />
@@ -160,7 +162,7 @@ export default function TransactionDetailModal({
                                             { flex: 1, textAlign: "right", marginLeft: 20 },
                                         ]}
                                     >
-                                        {transaction.remark}
+                                        {remark}
                                     </Text>
                                 </View>
                             ) : null}

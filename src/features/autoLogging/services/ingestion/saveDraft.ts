@@ -1,4 +1,5 @@
 import { Business, Transaction } from "../../../../types";
+import { RAW_REMARK_LENGTH } from "../../../../utils/transactionTitle";
 import { AutoLogSettings, ParsedDraft, ReviewItem, SenderMapping } from "../../types";
 import { resolveBusiness } from "../routing/resolveBusiness";
 import { findDuplicate } from "../dedupe/match";
@@ -162,7 +163,7 @@ function draftToTransaction(draft: ParsedDraft, businessId: string, id: string):
         type: draft.type === "transfer" ? "expense" : draft.type,
         businessId,
         category: draft.category,
-        remark: draft.rawText.slice(0, 280),
+        remark: draft.rawText.slice(0, RAW_REMARK_LENGTH),
         source: draft.source,
         sourceApp: draft.sourceApp ?? draft.senderDisplay,
         rawText: draft.rawText,
