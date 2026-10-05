@@ -1,14 +1,23 @@
-"""Builds docs/privacypolicy.html and docs/terms.html from their Markdown sources.
+"""Builds the privacy policy and terms pages from docs/privacypolicy.md and docs/terms.md.
 
-The GitHub Pages site serves docs/, so edit the .md files and re-run:
-    python scripts/build-legal-pages.py
+    python scripts/build-legal-pages.py                     # docs/privacypolicy.html, docs/terms.html
+    python scripts/build-legal-pages.py ../privacy-policy   # the hosted copies the app links to
+
+The app links to the hosted copies (github.com/patt-rick/privacy-policy, served from its
+main branch), so push that repo after rebuilding.
 """
 import html
 import pathlib
 import re
+import sys
 
 DOCS = pathlib.Path(__file__).resolve().parent.parent / "docs"
 STYLE = (pathlib.Path(__file__).resolve().parent / "legal-page-style.css").read_text(encoding="utf8")
+
+# docs/ keeps its historical names; the hosted repo serves several apps from one
+# GitHub Pages site, so its files are prefixed with the app name.
+DOCS_NAMES = {"privacypolicy": "privacypolicy.html", "terms": "terms.html"}
+HOSTED_NAMES = {"privacypolicy": "finance-tracker.html", "terms": "finance-tracker-terms.html"}
 
 PAGES = [
     ("privacypolicy", "Privacy Policy", "How Expense Tracker handles your information, including Automatic Logging."),
@@ -50,7 +59,7 @@ def render_blocks(lines, indent):
     return out
 
 
-def build(name, title, description):
+def build(name, title, description, out_dir, names):
     lines = [l.rstrip() for l in (DOCS / f"{name}.md").read_text(encoding="utf8").splitlines()]
     updated = next(l for l in lines if l.startswith("Last updated:")).split(":", 1)[1].strip()
 
@@ -120,17 +129,20 @@ def build(name, title, description):
         "    </article>",
         "",
         '    <footer class="page-footer">',
-        f'      <span class="footer-mark">Expense Tracker</span> &middot; {title} &middot; <a href="{other[0]}.html">{other[1]}</a>',
+        f'      <span class="footer-mark">Expense Tracker</span> &middot; {title} &middot; <a href="{names[other[0]]}">{other[1]}</a>',
         "    </footer>",
         "  </main>",
         "</body>",
         "</html>",
         "",
     ]
-    (DOCS / f"{name}.html").write_text("\n".join(out), encoding="utf8")
+    (out_dir / names[name]).write_text("\n".join(out), encoding="utf8")
 
 
 if __name__ == "__main__":
+    hosted = len(sys.argv) > 1
+    out_dir = pathlib.Path(sys.argv[1]).resolve() if hosted else DOCS
+    names = HOSTED_NAMES if hosted else DOCS_NAMES
     for page in PAGES:
-        build(*page)
-    print("Built", ", ".join(f"docs/{p[0]}.html" for p in PAGES))
+        build(*page, out_dir, names)
+    print("Built", ", ".join(str(out_dir / names[p[0]]) for p in PAGES))

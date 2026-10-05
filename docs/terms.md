@@ -20,7 +20,7 @@ If You downloaded the Application from the Apple App Store, Your use is also sub
 - You are responsible for keeping Your Device secure and for exporting backups if You want to keep a copy. Deleting the Application, or losing or resetting Your Device, can permanently delete Your data, and We cannot recover it.
 - Backup files You export contain Your financial records. Keep them somewhere safe.
 
-How We handle information is described in Our [Privacy Policy](https://patt-rick.github.io/personal-finance-app/privacypolicy.html).
+How We handle information is described in Our [Privacy Policy](https://patt-rick.github.io/privacy-policy/finance-tracker.html).
 
 ## Automatic Logging
 

@@ -60,8 +60,8 @@ import AutoLogSettingsScreen from "../features/autoLogging/screens/AutoLogSettin
 import TourOverlay from "../components/TourOverlay";
 
 const APP_VERSION = require("../../app.json").expo.version;
-const PRIVACY_POLICY_URL = "https://patt-rick.github.io/personal-finance-app/privacypolicy.html";
-const TERMS_URL = "https://patt-rick.github.io/personal-finance-app/terms.html";
+const PRIVACY_POLICY_URL = "https://patt-rick.github.io/privacy-policy/finance-tracker.html";
+const TERMS_URL = "https://patt-rick.github.io/privacy-policy/finance-tracker-terms.html";
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
