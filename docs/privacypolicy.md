@@ -1,272 +1,114 @@
 # Privacy Policy
 
-Last updated: August 7, 2026
+Last updated: October 5, 2026
 
-This Privacy Policy describes Our policies and procedures on the collection, use and disclosure of Your information when You use the Service and tells You about Your privacy rights and how the law protects You.
+This Privacy Policy explains what Expense Tracker (the "Application") accesses on Your Device, why, and how You stay in control. The Application is provided by Patrick Ackom, trading as Expense Tracker, in Ghana ("We", "Us" or "Our").
 
-We use Your Personal Data to provide and improve the Service. By using the Service, You agree to the collection and use of information in accordance with this Privacy Policy. This Privacy Policy has been created with the help of the [Privacy Policy Generator](https://www.termsfeed.com/privacy-policy-generator/).
+In short: Expense Tracker needs no account and no server. Everything You enter stays on Your Device, and We receive none of it.
 
 ## Interpretation and Definitions
 
-### Interpretation
+Words with capitalised initial letters have the meanings defined below, whether they appear in singular or plural.
 
-The words whose initial letters are capitalized have meanings defined under the following conditions. The following definitions shall have the same meaning regardless of whether they appear in singular or in plural.
+- __Application__ refers to Expense Tracker, the software program provided by Us.
+- __Device__ means any device that can run the Application, such as a phone or tablet.
+- __Personal Data__ means any information that relates to an identified or identifiable individual.
+- __You__ means the individual using the Application, or the company or other legal entity on whose behalf that individual uses it.
 
-### Definitions
+## The Data the Application Handles
 
-For the purposes of this Privacy Policy:
+### Information You Enter
 
-- __Account__ means a unique account created for You to access our Service or parts of our Service.
-- __Affiliate__ means an entity that controls, is controlled by, or is under common control with a party, where "control" means ownership of 50% or more of the shares, equity interest or other securities entitled to vote for election of directors or other managing authority.
+Anything You enter, such as an optional name and email in Your profile, Your cashbooks, transactions, budgets, debts and notes, is stored only on Your Device. We do not receive it and cannot access it.
 
-- __Application__ refers to Expense Tracker, the software program provided by the Company.
+### Usage Data
 
+The Application does not collect Usage Data. It contains no analytics, advertising or crash-reporting tools, and it does not send information about how You use it to Us. The app store You download the Application from (Google Play or the Apple App Store) may collect information under its own privacy policy.
 
+### Device Permissions and Features
 
-- __Company__ (referred to as either "the Company", "We", "Us" or "Our" in this Privacy Policy) refers to Expense Tracker.
+- __Notifications:__ Expense reminders are scheduled locally on Your Device. On Android, permission is requested when You first open the Application. On iPhone, it is requested after You log Your first entry.
+- __Face ID, Touch ID or fingerprint:__ Used only to unlock the Application if You turn on biometric lock. Biometric data is handled by Your Device's operating system and is never available to Us or to the Application.
+- __Clipboard:__ Read only when You tap Paste an SMS, to log the message You copied.
+- __Files:__ Accessed only when You choose to export or import a backup. Backup files are plain, unencrypted files containing Your financial data, including any captured SMS text, so store them safely.
+- __Home-screen widgets (Android):__ Show balances and budgets using data already on Your Device.
+- __App updates and ratings:__ When opened, the Application asks Google Play (Android) or Apple's App Store (iPhone) whether a newer version is available, and may occasionally show the store's own rating prompt. These requests go to Google or Apple under their privacy policies. We receive nothing from them.
 
+## Automatic Logging (Optional Feature)
 
+Expense Tracker includes an optional Automatic Logging feature that can suggest expense entries from incoming SMS messages and, on Android, posted notifications on Your Device. This feature is __off by default__ and must be enabled explicitly in __Settings → Automatic Logging__.
 
-- __Country__ refers to:  Ghana
+On iPhone, apps cannot read Your messages. Instead, You may create an automation in Apple's Shortcuts app that passes the text of matching SMS messages (and, if You choose, the sender) to Expense Tracker. Only messages Your automation passes on are received. You can also copy an SMS and paste it into Expense Tracker. To stop, turn off or delete the automation in the Shortcuts app.
 
-- __Device__ means any device that can access the Service such as a computer, a cell phone or a digital tablet.
+### What Is Captured
 
+When Automatic Logging is enabled, and only for the senders and apps that You place on the allowlist (on iPhone, for the messages Your Shortcuts automation passes on or that You paste), Expense Tracker reads:
 
+- __SMS:__ the sender identifier and the message body. On iPhone, the sender is included only if You connect it in Your automation.
+- __Notifications (Android):__ the source application's package name, the notification title, and the notification text.
 
-- __Personal Data__ (or "Personal Information") is any information that relates to an identified or identifiable individual.
+### How It Is Used
 
-
-
-    We use "Personal Data" and "Personal Information" interchangeably unless a law uses a specific term.
-
-- __Service__ refers to the Application.
-
-- __Service Provider__ means any natural or legal person who processes the data on behalf of the Company. It refers to third-party companies or individuals employed by the Company to facilitate the Service, to provide the Service on behalf of the Company, to perform services related to the Service or to assist the Company in analyzing how the Service is used.
-	
-
-- __Usage Data__ refers to data collected automatically, either generated by the use of the Service or from the Service infrastructure itself (for example, the duration of a page visit).
-
-
-- __You__ means the individual accessing or using the Service, or the company, or other legal entity on behalf of which such individual is accessing or using the Service, as applicable.
-
-
-
-## Collecting and Using Your Personal Data
-
-### Types of Data Collected
-
-#### Personal Data
-
-While using Our Service, We may ask You to provide Us with certain personally identifiable information that can be used to contact or identify You. Personally identifiable information may include, but is not limited to:
-
-
-
-
-
-
-
-
-
-
-#### Usage Data
-
-Usage Data is collected automatically when using the Service.
-
-Usage Data may include information such as Your Device's Internet Protocol address (e.g. IP address), browser type, browser version, the pages of our Service that You visit, the time and date of Your visit, the time spent on those pages, unique device identifiers and other diagnostic data.
-
-When You access the Service by or through a mobile device, We may collect certain information automatically, including, but not limited to, the type of mobile device You use, Your mobile device's unique ID, the IP address of Your mobile device, Your mobile operating system, the type of mobile Internet browser You use, unique device identifiers and other diagnostic data.
-
-We may also collect information that Your browser sends whenever You visit Our Service or when You access the Service by or through a mobile device.
-
-
-
-
-
-
-
-
-
-### Automatic Logging (Optional Feature)
-
-Expense Tracker includes an optional Automatic Logging feature that can suggest expense entries by reading incoming SMS messages and posted notifications on Your device. This feature is __off by default__ and must be enabled explicitly in __Settings → Automatic Logging__.
-
-#### What Is Captured
-
-When Automatic Logging is enabled, and only for the senders and apps that You place on the allowlist, Expense Tracker reads:
-
-- __SMS:__ the sender identifier and the message body.
-- __Notifications:__ the source application's package name, the notification title, and the notification text.
-
-#### How It Is Used
-
-- All processing happens on Your device.
+- All processing happens on Your Device.
 - The message text is parsed locally to extract the amount, merchant, and whether the transaction is income or expense.
-- Parsed suggestions are either saved directly into Your chosen cashbook or queued for Your review.
-- The original message text is stored locally alongside each auto-logged transaction so You can verify the parse. You can delete or reject any captured entry at any time.
+- Parsed suggestions are either saved directly into a cashbook or queued for Your review.
+- The original message text is stored locally alongside each auto-logged transaction so You can verify the result. You can delete or reject any captured entry at any time.
 
-#### What We Do Not Do
+### What We Do Not Do
 
 - __Nothing is uploaded.__ Expense Tracker does not send the contents of Your SMS or notifications to any server. We do not operate any server associated with this feature.
 - __No advertising or analytics.__ Captured text is never used for advertising, profiling, or training any model.
 - __No sharing.__ Captured text is never shared with third parties.
 
-#### Permissions Requested
+### Permissions Requested on Android
 
-- `READ_SMS` and `RECEIVE_SMS` — to read financial SMS from senders You allow.
-- `BIND_NOTIFICATION_LISTENER_SERVICE` — to read notifications from apps You allow. You grant this once in Android's Notification Access settings.
-- `POST_NOTIFICATIONS` (Android 13+) — only if You ask Expense Tracker to notify You when a new auto-logged entry appears.
+- `READ_SMS` and `RECEIVE_SMS`: to read financial SMS from senders You allow.
+- `BIND_NOTIFICATION_LISTENER_SERVICE`: to read notifications from apps You allow. You grant this once in Android's Notification Access settings.
 
-#### Your Controls
+### On iPhone
+
+No SMS permission is requested on iPhone, because iPhone does not offer one. Messages reach Expense Tracker only through a Shortcuts automation You create, and iPhone shows a short notification each time that automation runs.
+
+### Your Controls
 
 - Turn Automatic Logging off at any time from the Automatic Logging settings screen.
 - Remove individual senders or apps from the allowlist to stop capturing from them.
-- Revoke SMS or Notification Access from Android's app settings at any time. Expense Tracker will detect this and disable capture until You re-grant.
-- Clear Your auto-logged data by removing the affected transactions or by using the in-app __Clear All Data__ action.
+- Revoke SMS or Notification Access from Android's app settings at any time. Capture stops until You grant it again.
+- On iPhone, turn off or delete the automation in the Shortcuts app. Expense Tracker also ignores any message it receives while SMS logging is off.
+- Clear Your auto-logged data by deleting the affected transactions or cashbooks, or by uninstalling the Application.
 
-#### Retention of Automatic Logging Data
+## How We Use and Share Your Data
 
-- Auto-logged transactions and their original captured text are retained locally on Your device for as long as You keep them in Expense Tracker.
-- Uninstalling the app removes all captured data. If You back up the app via export/import, the backup contains the captured text; protect that file accordingly.
+Because Your data never leaves Your Device, We do not use it for any purpose. The Application processes it locally only to provide its features: balances, budgets, reports, reminders and Automatic Logging.
 
-### Use of Your Personal Data
+We do not share Personal Data with anyone, because We never receive it.
 
-The Company may use Personal Data for the following purposes:
+## Retention and Deletion
 
-- __To provide and maintain our Service__, including to monitor the usage of our Service.
-- __To manage Your Account:__ to manage Your registration as a user of the Service. The Personal Data You provide can give You access to different functionalities of the Service that are available to You as a registered user.
-- __For the performance of a contract:__ the development, compliance and undertaking of the purchase contract for the products, items or services You have purchased or of any other contract with Us through the Service.
-- __To contact You:__ To contact You by email, telephone calls, SMS, or other equivalent forms of electronic communication, such as a mobile application's push notifications regarding updates or informative communications related to the functionalities, products or contracted services, including the security updates, when necessary or reasonable for their implementation.
-- __To provide You__ with news, special offers, and general information about other goods, services and events which We offer that are similar to those that you have already purchased or inquired about unless You have opted not to receive such information.
-- __To manage Your requests:__ To attend and manage Your requests to Us.
+Your data stays on Your Device for as long as You keep it in the Application. We hold no copy, so We retain nothing.
 
-- __For business transfers:__ We may use Your Personal Data to evaluate or conduct a merger, divestiture, restructuring, reorganization, dissolution, or other sale or transfer of some or all of Our assets, whether as a going concern or as part of bankruptcy, liquidation, or similar proceeding, in which Personal Data held by Us about our Service users is among the assets transferred.
-- __For other purposes__: We may use Your information for other purposes, such as data analysis, identifying usage trends, determining the effectiveness of our promotional campaigns and to evaluate and improve our Service, products, services, marketing and your experience. 
+You can delete individual transactions, cashbooks, debts and budgets inside the Application, or uninstall it to remove everything. Because We hold no copy, there is nothing for Us to delete.
 
-We may share Your Personal Data in the following situations:
+## Transfer of Your Data
 
-- __With Service Providers:__ We may share Your Personal Data with Service Providers to monitor and analyze the use of our Service,  to contact You.
-- __For business transfers:__ We may share or transfer Your Personal Data in connection with, or during negotiations of, any merger, sale of Company assets, financing, or acquisition of all or a portion of Our business to another company.
-- __With Affiliates:__ We may share Your Personal Data with Our affiliates, in which case we will require those affiliates to honor this Privacy Policy. Affiliates include Our parent company and any other subsidiaries, joint venture partners or other companies that We control or that are under common control with Us.
-- __With business partners:__ We may share Your Personal Data with Our business partners to offer You certain products, services or promotions.
-- __With other users:__ If Our Service offers public areas, when You share Personal Data or otherwise interact in the public areas with other users, such information may be viewed by all users and may be publicly distributed outside. 
-- __With Your consent__: We may disclose Your Personal Data for any other purpose with Your consent.
+Your data is not transferred anywhere. It leaves Your Device only if You export a backup and move it Yourself.
 
-### Retention of Your Personal Data
+## Security of Your Data
 
-The Company will retain Your Personal Data only for as long as is necessary for the purposes set out in this Privacy Policy. We will retain and use Your Personal Data to the extent necessary to comply with our legal obligations (for example, if We are required to retain Your data to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies.
-
-Where possible, We apply shorter retention periods and/or reduce identifiability by deleting, aggregating, or anonymizing data. Unless otherwise stated, the retention periods below are maximum periods ("up to") and We may delete or anonymize data sooner when it is no longer needed for the relevant purpose. We apply different retention periods to different categories of Personal Data based on the purpose of processing and legal obligations:
-
-- Account Information
-    - User Accounts: retained for the duration of your account relationship plus up to 24 months after account closure to handle any post-termination issues or resolve disputes.
-
-- Usage Data
-
-
-    - Application usage statistics: up to 24 months to understand feature adoption and service improvements.
-
-    - Server logs (IP addresses, access times): up to 24 months for security monitoring and troubleshooting purposes.
-
-
-
-Usage Data is retained in accordance with the retention periods described above, and may be retained longer only where necessary for security, fraud prevention, or legal compliance.
-
-We may retain Personal Data beyond the periods stated above for different reasons:
-
-- Legal obligation: We are required by law to retain specific data (e.g., financial records for tax authorities).
-- Legal claims: Data is necessary to establish, exercise, or defend legal claims.
-- Your explicit request: You ask Us to retain specific information.
-- Technical limitations: Data exists in backup systems that are scheduled for routine deletion.
-
-You may request information about how long We will retain Your Personal Data by contacting Us.
-
-When retention periods expire, We securely delete or anonymize Personal Data according to the following procedures:
-
-- Deletion: Personal Data is removed from Our systems and no longer actively processed.
-- Backup retention: Residual copies may remain in encrypted backups for a limited period consistent with our backup retention schedule and are not restored except where necessary for security, disaster recovery, or legal compliance.
-- Anonymization: In some cases, We convert Personal Data into anonymous statistical data that cannot be linked back to You. This anonymized data may be retained indefinitely for research and analytics.
-
-### Transfer of Your Personal Data
-
-Your information, including Personal Data, is processed at the Company's operating offices and in any other places where the parties involved in the processing are located. It means that this information may be transferred to — and maintained on — computers located outside of Your state, province, country or other governmental jurisdiction where the data protection laws may differ from those from Your jurisdiction.
-
-Where required by applicable law, We will ensure that international transfers of Your Personal Data are subject to appropriate safeguards and supplementary measures where appropriate. The Company will take all steps reasonably necessary to ensure that Your data is treated securely and in accordance with this Privacy Policy and no transfer of Your Personal Data will take place to an organization or a country unless there are adequate controls in place including the security of Your data and other personal information.
-
-### Delete Your Personal Data
-
-You have the right to delete or request that We assist in deleting the Personal Data that We have collected about You.
-
-Our Service may give You the ability to delete certain information about You from within the Service.
-
-You may update, amend, or delete Your information at any time by signing in to Your Account, if you have one, and visiting the account settings section that allows you to manage Your personal information. You may also contact Us to request access to, correct, or delete any Personal Data that You have provided to Us.
-
-Please note, however, that We may need to retain certain information when we have a legal obligation or lawful basis to do so.
-
-### Disclosure of Your Personal Data
-
-#### Business Transactions
-
-If the Company is involved in a merger, acquisition or asset sale, Your Personal Data may be transferred. We will provide notice before Your Personal Data is transferred and becomes subject to a different Privacy Policy.
-
-#### Law enforcement
-
-Under certain circumstances, the Company may be required to disclose Your Personal Data if required to do so by law or in response to valid requests by public authorities (e.g. a court or a government agency).
-
-#### Other legal requirements
-
-The Company may disclose Your Personal Data in the good faith belief that such action is necessary to:
-
-- Comply with a legal obligation
-- Protect and defend the rights or property of the Company
-- Prevent or investigate possible wrongdoing in connection with the Service
-- Protect the personal safety of Users of the Service or the public
-- Protect against legal liability
-
-### Security of Your Personal Data
-
-The security of Your Personal Data is important to Us, but remember that no method of transmission over the Internet, or method of electronic storage is 100% secure. While We strive to use commercially reasonable means to protect Your Personal Data, We cannot guarantee its absolute security.
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+Your data is protected by Your Device's own security, including its encryption at rest. You can add a PIN or biometric lock to the Application in Settings. No method of electronic storage is 100% secure, so keep Your Device and any exported backups safe.
 
 ## Children's Privacy
 
-Our Service does not address anyone under the age of 16. We do not knowingly collect personally identifiable information from anyone under the age of 16. If You are a parent or guardian and You are aware that Your child has provided Us with Personal Data, please contact Us. If We become aware that We have collected Personal Data from anyone under the age of 16 without verification of parental consent, We take steps to remove that information from Our servers.
-
-If We need to rely on consent as a legal basis for processing Your information and Your country requires consent from a parent, We may require Your parent's consent before We collect and use that information.
-
+The Application is not directed at anyone under the age of 16, and We do not knowingly collect Personal Data from anyone. If You are a parent or guardian and have concerns, please contact Us.
 
 ## Links to Other Websites
 
-Our Service may contain links to other websites that are not operated by Us. If You click on a third party link, You will be directed to that third party's site. We strongly advise You to review the Privacy Policy of every site You visit.
-
-We have no control over and assume no responsibility for the content, privacy policies or practices of any third party sites or services.
+The Application may link to websites We do not operate. We have no control over and assume no responsibility for the content, privacy policies or practices of any third-party sites or services.
 
 ## Changes to this Privacy Policy
 
-We may update Our Privacy Policy from time to time. We will notify You of any changes by posting the new Privacy Policy on this page.
-
-We will let You know via email and/or a prominent notice on Our Service, prior to the change becoming effective and update the "Last updated" date at the top of this Privacy Policy.
-
-You are advised to review this Privacy Policy periodically for any changes. Changes to this Privacy Policy are effective when they are posted on this page.
+We may update this Privacy Policy from time to time. We will post the updated policy on this page and update the "Last updated" date. The Application links to this page from Settings.
 
 ## Contact Us
 
-If you have any questions about this Privacy Policy, You can contact us:
-
-
-- By email: patrickackom003@gmail.com
+If You have any questions about this Privacy Policy, contact us by email at patrickackom003@gmail.com.
