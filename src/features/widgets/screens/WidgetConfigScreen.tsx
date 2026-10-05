@@ -3,15 +3,11 @@ import { View, Text, TouchableOpacity, ScrollView, StyleSheet } from "react-nati
 import type { WidgetConfigurationScreenProps } from "react-native-android-widget";
 import { lightTheme, AppTheme } from "../../../theme/theme";
 import { getCurrencySymbol } from "../../../utils/_helpers";
-import { loadBusinesses, loadTransactions, loadBudgets, loadCategories } from "../../../utils/storage";
+import { loadBusinesses } from "../../../utils/storage";
 import { Business } from "../../../types";
 import { setWidgetBusinessId } from "../services/widgetConfig";
-import { WIDGET_NAMES, WIDGET_CLICK } from "../constants";
 import { resolveWidgetColors, resolveWidgetTheme } from "../theme/widgetTheme";
-import { buildBalanceView, buildBudgetView, budgetDataForCashbook, buildQuickAddView } from "../services/widgetData";
-import { BalanceWidget } from "../components/BalanceWidget";
-import { BudgetWidget } from "../components/BudgetWidget";
-import { QuickAddWidget } from "../components/QuickAddWidget";
+import { isWidgetName, loadWidgetInputs, renderCashbookWidget } from "../services/renderWidget";
 
 // The widget host expects the configuration screen to draw the widget's first
 // frame itself (via renderWidget) before finishing (via setResult). Skipping
@@ -22,39 +18,9 @@ async function renderInitialFrame(
     business: Business,
 ): Promise<void> {
     const widgetName = props.widgetInfo.widgetName;
-    const colors = await resolveWidgetColors();
-
-    if (widgetName === WIDGET_NAMES.QUICK_ADD) {
-        props.renderWidget(
-            <QuickAddWidget
-                view={buildQuickAddView(business)}
-                colors={colors}
-                clickAction={WIDGET_CLICK.OPEN_QUICK_ADD}
-            />,
-        );
-        return;
-    }
-
-    const transactions = await loadTransactions();
-
-    if (widgetName === WIDGET_NAMES.BALANCE) {
-        const view = buildBalanceView(business, transactions);
-        props.renderWidget(
-            <BalanceWidget view={view} colors={colors} clickAction={WIDGET_CLICK.OPEN_QUICK_ADD} />,
-        );
-        return;
-    }
-
-    if (widgetName === WIDGET_NAMES.BUDGET) {
-        const [budgets, categories] = await Promise.all([loadBudgets(), loadCategories()]);
-        const budget = budgets.find((b) => b.businessId === business.id) ?? null;
-        const budgetData = budgetDataForCashbook(budget, transactions, categories, business.id);
-        const view = buildBudgetView(business, budget, budgetData);
-        props.renderWidget(
-            <BudgetWidget view={view} colors={colors} clickAction={WIDGET_CLICK.OPEN_QUICK_ADD} />,
-        );
-        return;
-    }
+    if (!isWidgetName(widgetName)) return;
+    const [colors, inputs] = await Promise.all([resolveWidgetColors(), loadWidgetInputs(widgetName)]);
+    props.renderWidget(renderCashbookWidget(widgetName, business, colors, inputs));
 }
 
 export function WidgetConfigScreen(props: WidgetConfigurationScreenProps) {
