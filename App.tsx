@@ -36,7 +36,7 @@ import {
     saveDebts as apiSaveDebts,
 } from "./src/utils/storage";
 import { processRecurringTransactions } from "./src/utils/recurringTransactions";
-import { scheduleReminders } from "./src/utils/notifications";
+import { promptForRemindersOnce, scheduleReminders } from "./src/utils/notifications";
 import {
     isPinEnabled,
     isBiometricsEnabled,
@@ -165,7 +165,8 @@ function MainApp() {
             }, remainingTime);
         }
         loadData();
-        scheduleReminders();
+        // iOS shows the permission dialog only once, so ask after the first logged entry instead of at launch.
+        scheduleReminders({ prompt: Platform.OS !== "ios" });
     }, [loadSecuritySettings]);
 
     useEffect(() => {
@@ -292,13 +293,16 @@ function MainApp() {
         setDebts(loadedDebts);
     }, []);
 
-    const handleDataImported = refreshData;
+    const handleDataImported = useCallback(async () => {
+        await refreshData();
+        await refreshCashbookWidgets();
+    }, [refreshData]);
 
     const drainingRef = useRef(false);
     const drainPendingRef = useRef(false);
 
     const runDrain = useCallback(async () => {
-        if (Platform.OS !== "android" || !autoLogNative.isAvailable()) return;
+        if (!autoLogNative.isAvailable()) return;
         if (drainingRef.current) {
             drainPendingRef.current = true;
             return;
@@ -325,7 +329,7 @@ function MainApp() {
     }, [refreshData]);
 
     useEffect(() => {
-        if (isLoading || Platform.OS !== "android" || !autoLogNative.isAvailable()) return;
+        if (isLoading || !autoLogNative.isAvailable()) return;
         runDrain();
         const stateSub = AppState.addEventListener("change", (next) => {
             if (next === "active") runDrain();
@@ -477,7 +481,10 @@ function MainApp() {
                         setQuickAddVisible(false);
                         setQuickAddBusinessId(undefined);
                     }}
-                    onCreate={(tx) => handleSaveTransactions([...transactions, tx])}
+                    onCreate={(tx) => {
+                        handleSaveTransactions([...transactions, tx]);
+                        if (Platform.OS === "ios") setTimeout(promptForRemindersOnce, 800);
+                    }}
                 />
             </View>
         </SafeAreaProvider>

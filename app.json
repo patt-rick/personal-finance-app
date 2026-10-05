@@ -11,10 +11,16 @@
       "**/*"
     ],
     "ios": {
-      "supportsTablet": true,
+      "supportsTablet": false,
+      "icon": "./src/icon-ios.png",
       "bundleIdentifier": "com.patrickackom.financetracker",
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false
+      },
+      "entitlements": {
+        "com.apple.security.application-groups": [
+          "group.com.patrickackom.financetracker"
+        ]
       }
     },
     "android": {
@@ -39,7 +45,14 @@
       "expo-notifications",
       "expo-secure-store",
       "expo-font",
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Allow $(PRODUCT_NAME) to use Face ID to unlock your financial data."
+        }
+      ],
       "./plugins/withAutoLog",
+      "./plugins/withIosPortraitOnly",
       [
         "react-native-android-widget",
         {
@@ -82,7 +95,9 @@
             }
           ]
         }
-      ]
+      ],
+      "@bacons/apple-targets",
+      "./plugins/withIosAutoLogTargetVersion"
     ],
     "notification": {
       "icon": "./src/icon.png",

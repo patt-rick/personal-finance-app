@@ -1,5 +1,13 @@
 import { DeviceEventEmitter, EmitterSubscription, NativeModules, Platform } from "react-native";
 import { RawEvent } from "../../types";
+import {
+    clearInbox,
+    getLastCapture,
+    isInboxAvailable,
+    LastCapture,
+    readInbox,
+    setInboxCaptureEnabled,
+} from "./iosInbox/inboxStore";
 
 const RAW_EVENT = "AutoLog:RawEvent";
 
@@ -30,6 +38,8 @@ interface NativeRawEvent {
 }
 
 let cachedModule: NativeAutoLogModule | null = null;
+// The app group and iOS version can't change while the app runs.
+let iosInboxAvailable: boolean | null = null;
 
 function requireModule(): NativeAutoLogModule | null {
     if (Platform.OS !== "android") return null;
@@ -54,6 +64,10 @@ function toRawEvent(ev: NativeRawEvent): RawEvent {
 
 export const autoLogNative = {
     isAvailable(): boolean {
+        if (Platform.OS === "ios") {
+            if (iosInboxAvailable === null) iosInboxAvailable = isInboxAvailable();
+            return iosInboxAvailable;
+        }
         return requireModule() !== null;
     },
 
@@ -68,12 +82,17 @@ export const autoLogNative = {
     },
 
     async setEnabled(enabled: boolean): Promise<void> {
+        if (Platform.OS === "ios") {
+            if (!enabled) await setInboxCaptureEnabled(false);
+            return;
+        }
         const mod = requireModule();
         if (!mod) return;
         await mod.setEnabled(enabled);
     },
 
     async setCaptureSms(enabled: boolean): Promise<void> {
+        if (Platform.OS === "ios") return setInboxCaptureEnabled(enabled);
         const mod = requireModule();
         if (!mod) return;
         await mod.setCaptureSms(enabled);
@@ -98,6 +117,7 @@ export const autoLogNative = {
     },
 
     async drainQueue(): Promise<RawEvent[]> {
+        if (Platform.OS === "ios") return readInbox();
         const mod = requireModule();
         if (!mod) return [];
         try {
@@ -109,6 +129,7 @@ export const autoLogNative = {
     },
 
     async clearQueue(ids: string[]): Promise<void> {
+        if (Platform.OS === "ios") return clearInbox(ids);
         const mod = requireModule();
         if (!mod || ids.length === 0) return;
         await mod.clearQueue(ids);
@@ -144,6 +165,12 @@ export const autoLogNative = {
         } catch {
             return [];
         }
+    },
+
+    // iOS only: when the Shortcuts automation last delivered an SMS.
+    async getLastCapture(): Promise<LastCapture | null> {
+        if (Platform.OS !== "ios") return null;
+        return getLastCapture();
     },
 
     subscribe(listener: (event: RawEvent) => void): EmitterSubscription {

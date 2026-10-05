@@ -121,7 +121,7 @@ export default function DateRangePickerModal({
                     display={Platform.OS === "ios" ? "inline" : "default"}
                     onChange={handleDateChange}
                     maximumDate={new Date()}
-                    themeVariant="dark"
+                    themeVariant={theme.dark ? "dark" : "light"}
                 />
             )}
 

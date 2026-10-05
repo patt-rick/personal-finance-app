@@ -172,3 +172,20 @@ describe("engine — notification source", () => {
         expect(draft!.amount).toBe(45);
     });
 });
+
+describe("engine — sender-less iOS shortcut SMS", () => {
+    const body = "Debit Alert: GHS 45.00 at Melcom on 2026-04-23";
+
+    it("labels the draft with the generic SMS sender", () => {
+        const draft = parseEvent(makeEvent({ sender: undefined, via: "shortcut", body }), CATEGORIES);
+        expect(draft).not.toBeNull();
+        expect(draft!.amount).toBe(45);
+        expect(draft!.senderDisplay).toBe("SMS");
+        expect(draft!.senderKey).toBe("sms");
+    });
+
+    it("keeps Android sender-less events unchanged", () => {
+        const draft = parseEvent(makeEvent({ sender: undefined, body }), CATEGORIES);
+        expect(draft?.senderDisplay).toBe("Unknown");
+    });
+});

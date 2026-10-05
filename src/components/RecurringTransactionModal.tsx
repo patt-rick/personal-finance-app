@@ -481,6 +481,7 @@ export default function RecurringTransactionModal({
                             value={startDate || new Date()}
                             mode="date"
                             display={Platform.OS === "ios" ? "inline" : "default"}
+                            themeVariant={theme.dark ? "dark" : "light"}
                             onChange={handleStartDateChange}
                             minimumDate={new Date()}
                         />
@@ -535,6 +536,7 @@ export default function RecurringTransactionModal({
                         value={endDate || new Date()}
                         mode="date"
                         display={Platform.OS === "ios" ? "inline" : "default"}
+                        themeVariant={theme.dark ? "dark" : "light"}
                         onChange={handleDateChange}
                         minimumDate={new Date()}
                     />

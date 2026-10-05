@@ -111,10 +111,14 @@ export async function requestNotificationPermissions() {
 
 const SCHEDULE_DAYS = 14;
 
-export async function scheduleReminders() {
+// prompt=false only (re)schedules when permission was already granted, so the
+// OS permission dialog is never shown.
+export async function scheduleReminders({ prompt = true }: { prompt?: boolean } = {}) {
     await Notifications.cancelAllScheduledNotificationsAsync();
 
-    const isGranted = await requestNotificationPermissions();
+    const isGranted = prompt
+        ? await requestNotificationPermissions()
+        : (await Notifications.getPermissionsAsync()).status === "granted";
     if (!isGranted) {
         console.log("Notification permissions not granted");
         return;
@@ -153,6 +157,16 @@ export async function scheduleReminders() {
     }
 
     console.log("Notifications scheduled successfully");
+}
+
+export async function promptForRemindersOnce() {
+    try {
+        const { status } = await Notifications.getPermissionsAsync();
+        if (status !== "undetermined") return;
+        await scheduleReminders();
+    } catch {
+        // swallow — a failed prompt must not disrupt the save flow
+    }
 }
 
 export async function sendTestNotification() {

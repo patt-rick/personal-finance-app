@@ -5,6 +5,13 @@ import { useFocusEffect } from "@react-navigation/native";
 import { X, Zap } from "lucide-react-native";
 import { useTheme } from "../../theme/theme";
 import { loadAutoLogSettings } from "../../features/autoLogging/services/persistence/settings";
+import { autoLogNative } from "../../features/autoLogging/services/ingestion/nativeBridge";
+
+// iPhones below iOS 17 can't run the Shortcuts automation, so don't pitch it there.
+export function isAutoLogOffered(): boolean {
+    if (Platform.OS === "android") return true;
+    return Platform.OS === "ios" && autoLogNative.isAvailable();
+}
 
 const DISMISSED_KEY = "@autolog_promo_dismissed";
 
@@ -21,7 +28,7 @@ export default function AutoLogPromoCard({ onSetUp }: Props) {
 
     useFocusEffect(
         useCallback(() => {
-            if (Platform.OS !== "android") return;
+            if (!isAutoLogOffered()) return;
             let mounted = true;
             const check = async () => {
                 const [dismissed, settings] = await Promise.all([
@@ -64,8 +71,9 @@ export default function AutoLogPromoCard({ onSetUp }: Props) {
                 <View style={{ flex: 1 }}>
                     <Text style={styles.title}>Log expenses automatically</Text>
                     <Text style={styles.body}>
-                        Expense Tracker can read your bank and MoMo SMS on this phone and turn them
-                        into entries for you. Nothing leaves your device.
+                        {Platform.OS === "ios"
+                            ? "With a one-minute Shortcuts setup, Expense Tracker can turn your bank and MoMo SMS into entries for you. Nothing leaves your iPhone."
+                            : "Expense Tracker can read your bank and MoMo SMS on this phone and turn them into entries for you. Nothing leaves your device."}
                     </Text>
                 </View>
                 <TouchableOpacity onPress={dismiss} hitSlop={10} style={styles.dismissBtn}>

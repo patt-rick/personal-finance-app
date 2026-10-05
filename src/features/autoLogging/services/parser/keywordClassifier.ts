@@ -2,7 +2,7 @@ import { Category } from "../../../../types";
 import { ParsedDraft, RawEvent, SemanticType } from "../../types";
 import { extractAmount, extractMerchant, extractReference, normalizeText } from "./normalize";
 import { applyAliases } from "../routing/senderAliases";
-import { normalizeSender } from "../routing/normalizeSender";
+import { normalizeSender, rawSenderIdOf } from "../routing/normalizeSender";
 import { deriveDisplayName } from "../routing/displayName";
 import { categorize } from "./categorize";
 import { scoreConfidence } from "./confidence";
@@ -140,7 +140,7 @@ export function classifyEvent(
     });
     const confidence = Math.min(MAX_FALLBACK_CONFIDENCE, rawConfidence);
 
-    const rawSenderId = event.source === "sms" ? event.sender ?? "" : event.packageName ?? "";
+    const rawSenderId = rawSenderIdOf(event);
     const senderKey = applyAliases(normalizeSender(event.source, rawSenderId));
     const senderDisplay = deriveDisplayName(event.source, rawSenderId);
 

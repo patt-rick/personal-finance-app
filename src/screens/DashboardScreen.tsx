@@ -27,7 +27,7 @@ import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import PaymentCard, { CurrencyBalance } from "../components/dashboard/PaymentCard";
-import AutoLogPromoCard from "../components/dashboard/AutoLogPromoCard";
+import AutoLogPromoCard, { isAutoLogOffered } from "../components/dashboard/AutoLogPromoCard";
 import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
 import { maybeRequestReview } from "../utils/storeReview";
@@ -511,18 +511,23 @@ function DashboardHome({
                         description:
                             "All your cashbooks are listed here with their balances. Tap any cashbook to view its transactions in detail.",
                     },
-                    ...(Platform.OS === "android"
+                    ...(isAutoLogOffered()
                         ? [
                               {
                                   title: "Automatic Expense Logging",
                                   icon: <Zap size={24} color={theme.colors.primary} />,
                                   description:
-                                      "Expense Tracker can read your bank and MoMo SMS on this phone and log expenses for you. Turn it on in Settings → Automatic Logging.",
+                                      Platform.OS === "ios"
+                                          ? "Expense Tracker can log your bank and MoMo SMS for you through a quick Shortcuts setup. Turn it on in Settings → Automatic Logging."
+                                          : "Expense Tracker can read your bank and MoMo SMS on this phone and log expenses for you. Turn it on in Settings → Automatic Logging.",
                               },
                           ]
                         : []),
                 ]}
                 onComplete={() => {
+                    // iOS: a review prompt during onboarding would burn the 90-day throttle before
+                    // the transaction-based prompt and pre-empt the reminders permission ask.
+                    if (Platform.OS !== "android") return;
                     setTimeout(() => {
                         maybeRequestReview({ kind: "tour_completed" });
                     }, 600);

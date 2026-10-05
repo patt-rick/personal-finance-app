@@ -1,4 +1,17 @@
+import { RawEvent } from "../../types";
+import { inferSenderFromBody } from "./inferSender";
+
 const PHONE_NUMBER_RE = /^\+?\d{7,}$/;
+
+// Sender label for iOS Shortcuts/pasted SMS whose sender was not provided.
+export const UNKNOWN_SMS_SENDER = "SMS";
+
+export function rawSenderIdOf(event: RawEvent): string {
+    if (event.source !== "sms") return event.packageName ?? "";
+    const explicit = event.sender?.trim();
+    if (explicit || !event.via) return explicit ?? "";
+    return inferSenderFromBody(event.body) ?? UNKNOWN_SMS_SENDER;
+}
 
 export function normalizeSender(source: "sms" | "notification", rawId: string): string {
     const trimmed = rawId.trim();

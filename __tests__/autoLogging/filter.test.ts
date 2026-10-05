@@ -91,3 +91,25 @@ describe("isAllowedEvent — edge cases", () => {
         expect(isAllowedEvent({ ...notifEvent(""), packageName: "" }, settings)).toBe(false);
     });
 });
+
+describe("isAllowedEvent — iOS shortcut and pasted SMS", () => {
+    function viaEvent(via: "shortcut" | "paste", sender?: string): RawEvent {
+        return { ...smsEvent(sender ?? ""), sender, via };
+    }
+
+    it("lets a sender-less shortcut or pasted SMS past a non-empty sender allowlist", () => {
+        const settings = makeSettings({ allowedSenders: ["MTN"] });
+        expect(isAllowedEvent(viaEvent("shortcut"), settings)).toBe(true);
+        expect(isAllowedEvent(viaEvent("paste"), settings)).toBe(true);
+    });
+
+    it("still applies the allowlist when the shortcut supplied a sender", () => {
+        const settings = makeSettings({ allowedSenders: ["MTN"] });
+        expect(isAllowedEvent(viaEvent("shortcut", "GCB"), settings)).toBe(false);
+        expect(isAllowedEvent(viaEvent("shortcut", "MobileMoney"), settings)).toBe(true);
+    });
+
+    it("still requires SMS capture to be on", () => {
+        expect(isAllowedEvent(viaEvent("shortcut"), makeSettings({ captureSms: false }))).toBe(false);
+    });
+});

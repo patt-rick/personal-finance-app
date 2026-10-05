@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
+    AppState,
     BackHandler,
     Platform,
     ScrollView,
@@ -13,15 +14,14 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     ArrowLeft,
     Bell,
-    ChevronRight,
     FlaskConical,
     Inbox,
     Lock,
     MessageSquare,
     Radio,
     ShieldCheck,
+    Smartphone,
     Sparkles,
-    Wallet,
     Zap,
 } from "lucide-react-native";
 import { useTheme } from "../../../theme/theme";
@@ -29,6 +29,8 @@ import { Business } from "../../../types";
 import AutoLogToggleRow from "../components/AutoLogToggleRow";
 import AllowedAppsSelector from "../components/AllowedAppsSelector";
 import AutoLogStatsCard from "../components/AutoLogStatsCard";
+import { CurrencyRow, NavRow, SectionLabel } from "../components/AutoLogRows";
+import PasteSmsRow from "../components/PasteSmsRow";
 import PrivacyModal from "../components/PrivacyModal";
 import { useAutoLogSettings } from "../hooks/useAutoLogSettings";
 import { loadReviewQueue } from "../services/persistence/reviewQueue";
@@ -43,15 +45,10 @@ import { autoLogNative } from "../services/ingestion/nativeBridge";
 import { AutoLogStats } from "../types";
 import SenderMappingsScreen from "./SenderMappingsScreen";
 import ReviewQueueScreen from "./ReviewQueueScreen";
+import IosShortcutSetupScreen from "./IosShortcutSetupScreen";
+import { getTimeAgo } from "../../../utils/_helpers";
+import { LastCapture } from "../services/ingestion/iosInbox/inboxStore";
 import { FLOATING_TAB_HEIGHT } from "../../../components/FloatingTabBar";
-
-const CURRENCIES = [
-    { label: "US Dollar", value: "USD", symbol: "$" },
-    { label: "Ghana Cedi", value: "GHS", symbol: "₵" },
-    { label: "Euro", value: "EUR", symbol: "€" },
-    { label: "British Pound", value: "GBP", symbol: "£" },
-    { label: "Nigerian Naira", value: "NGN", symbol: "₦" },
-];
 
 interface Props {
     businesses: Business[];
@@ -59,11 +56,13 @@ interface Props {
     onDataChanged?: () => Promise<void> | void;
 }
 
+const IS_IOS = Platform.OS === "ios";
+
 function alertCaptureUnavailable(): boolean {
-    if (Platform.OS !== "android") {
+    if (IS_IOS && !autoLogNative.isAvailable()) {
         appAlert(
-            "Android only",
-            "Automatic logging is currently available on Android. iOS support is on the roadmap.",
+            "Needs the App Store version",
+            "SMS logging on iPhone needs iOS 17 or later and the Expense Tracker app from the App Store or TestFlight. You can still copy an SMS and use Paste an SMS.",
         );
         return true;
     }
@@ -88,6 +87,8 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     const [showPackages, setShowPackages] = useState(false);
     const [showSenders, setShowSenders] = useState(false);
     const [showPrivacy, setShowPrivacy] = useState(false);
+    const [showIosSetup, setShowIosSetup] = useState(false);
+    const [lastCapture, setLastCapture] = useState<LastCapture | null>(null);
     const [pendingCount, setPendingCount] = useState(0);
     const [stats, setStats] = useState<AutoLogStats | null>(null);
 
@@ -116,7 +117,23 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     }, [refreshPendingCount, refreshStats, showReview]);
 
     useEffect(() => {
+        if (!IS_IOS || showIosSetup) return;
+        const refresh = () => {
+            autoLogNative.getLastCapture().then(setLastCapture).catch(() => {});
+        };
+        refresh();
+        const sub = AppState.addEventListener("change", (state) => {
+            if (state === "active") refresh();
+        });
+        return () => sub.remove();
+    }, [showIosSetup]);
+
+    useEffect(() => {
         const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+            if (showIosSetup) {
+                setShowIosSetup(false);
+                return true;
+            }
             if (showPrivacy) {
                 setShowPrivacy(false);
                 return true;
@@ -138,7 +155,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
             return true;
         });
         return () => sub.remove();
-    }, [showMappings, showReview, showPackages, showSenders, showPrivacy, onBack]);
+    }, [showMappings, showReview, showPackages, showSenders, showPrivacy, showIosSetup, onBack]);
 
     useEffect(() => {
         if (loading || !captureActive || Platform.OS !== "android" || !autoLogNative.isAvailable()) {
@@ -149,7 +166,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
     }, [loading, captureActive, settings.allowedPackages, settings.allowedSenders]);
 
     useEffect(() => {
-        if (loading || Platform.OS !== "android" || !autoLogNative.isAvailable()) return;
+        if (loading || !autoLogNative.isAvailable()) return;
         const reconcile = async () => {
             try {
                 await autoLogNative.setEnabled(captureActive);
@@ -166,7 +183,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         async (next: boolean) => {
             if (next) {
                 if (alertCaptureUnavailable()) return;
-                const granted = await ensureSmsPermission();
+                const granted = IS_IOS || (await ensureSmsPermission());
                 if (!granted) return;
                 if (!captureActive) {
                     try {
@@ -178,6 +195,7 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
             }
             const enabled = next || settings.captureNotifications;
             await update({ captureSms: next, enabled });
+            if (next && IS_IOS) setShowIosSetup(true);
         },
         [update, captureActive, businesses, settings.captureNotifications],
     );
@@ -202,6 +220,12 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         [update, captureActive, businesses, settings.captureSms],
     );
 
+    const handleDataLogged = useCallback(() => {
+        refreshPendingCount();
+        refreshStats();
+        onDataChanged?.();
+    }, [refreshPendingCount, refreshStats, onDataChanged]);
+
     const handleResetStats = useCallback(async () => {
         await resetAutoLogStats();
         await refreshStats();
@@ -217,6 +241,10 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
             `Attempted ${result.attempted}. Saved ${result.saved}, queued ${result.queued}, filtered ${result.filtered}, dropped ${result.dropped}.`,
         );
     }, [settings, refreshPendingCount, refreshStats, onDataChanged]);
+
+    if (showIosSetup) {
+        return <IosShortcutSetupScreen onBack={() => setShowIosSetup(false)} />;
+    }
 
     if (showMappings) {
         return <SenderMappingsScreen businesses={businesses} onBack={() => setShowMappings(false)} />;
@@ -239,7 +267,9 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
         return <View style={styles.container} />;
     }
 
-    const mappingSubtitle = "Rename, reroute, merge";
+    const iosSetupSubtitle = lastCapture
+        ? `Last SMS ${getTimeAgo(new Date(lastCapture.at).toISOString())}`
+        : "Connect the Shortcuts automation";
 
     return (
         <View style={styles.container}>
@@ -258,74 +288,79 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                 }}
                 showsVerticalScrollIndicator={false}
             >
-                <SectionLabel label="Capture Sources" styles={styles} />
+                <SectionLabel label="Capture Sources" />
                 <View style={styles.groupCard}>
                     <AutoLogToggleRow
                         icon={<MessageSquare size={18} color={theme.colors.onPrimaryContainer} />}
                         iconBg={theme.colors.primaryContainer}
                         title="SMS"
-                        subtitle="Read financial SMS messages"
+                        subtitle={IS_IOS ? "Logged through a Shortcuts automation" : "Read financial SMS messages"}
                         value={settings.captureSms}
                         onValueChange={handleCaptureSms}
                     />
-                    <AutoLogToggleRow
-                        icon={<Bell size={18} color={theme.colors.onPrimaryContainer} />}
-                        iconBg={theme.colors.primaryContainer}
-                        title="Notifications"
-                        subtitle="Capture posted notifications"
-                        value={settings.captureNotifications}
-                        onValueChange={handleCaptureNotifications}
-                        last
-                    />
+                    {IS_IOS ? (
+                        <NavRow
+                            icon={<Smartphone size={18} color={theme.colors.onPrimaryContainer} />}
+                            iconBg={theme.colors.primaryContainer}
+                            title="iPhone setup"
+                            subtitle={iosSetupSubtitle}
+                            onPress={() => setShowIosSetup(true)}
+                        />
+                    ) : (
+                        <AutoLogToggleRow
+                            icon={<Bell size={18} color={theme.colors.onPrimaryContainer} />}
+                            iconBg={theme.colors.primaryContainer}
+                            title="Notifications"
+                            subtitle="Capture posted notifications"
+                            value={settings.captureNotifications}
+                            onValueChange={handleCaptureNotifications}
+                        />
+                    )}
+                    <PasteSmsRow onLogged={handleDataLogged} last />
                 </View>
 
-                <SectionLabel label="Routing" styles={styles} />
+                <SectionLabel label="Routing" />
                 <View style={styles.groupCard}>
                     <NavRow
                         icon={<Radio size={18} color={theme.colors.onSecondaryContainer} />}
                         iconBg={theme.colors.secondaryContainer}
                         title="Sender Mappings"
-                        subtitle={mappingSubtitle}
+                        subtitle="Rename, reroute, merge"
                         onPress={() => setShowMappings(true)}
-                        styles={styles}
-                        theme={theme}
                     />
                     <CurrencyRow
                         current={settings.defaultCurrency}
                         onChange={(value) => update({ defaultCurrency: value })}
-                        styles={styles}
-                        theme={theme}
                     />
-                    <NavRow
-                        icon={<Zap size={18} color={theme.colors.onSecondaryContainer} />}
-                        iconBg={theme.colors.secondaryContainer}
-                        title="Allowed Apps"
-                        subtitle={
-                            settings.allowedPackages.length === 0
-                                ? "Receiving from all apps"
-                                : `${settings.allowedPackages.length} app${settings.allowedPackages.length === 1 ? "" : "s"}`
-                        }
-                        onPress={() => setShowPackages(true)}
-                        styles={styles}
-                        theme={theme}
-                    />
+                    {IS_IOS ? null : (
+                        <NavRow
+                            icon={<Zap size={18} color={theme.colors.onSecondaryContainer} />}
+                            iconBg={theme.colors.secondaryContainer}
+                            title="Allowed Apps"
+                            subtitle={
+                                settings.allowedPackages.length === 0
+                                    ? "Receiving from all apps"
+                                    : `${settings.allowedPackages.length} app${settings.allowedPackages.length === 1 ? "" : "s"}`
+                            }
+                            onPress={() => setShowPackages(true)}
+                        />
+                    )}
                     <NavRow
                         icon={<ShieldCheck size={18} color={theme.colors.onSecondaryContainer} />}
                         iconBg={theme.colors.secondaryContainer}
                         title="Allowed SMS Senders"
                         subtitle={
-                            settings.allowedSenders.length === 0
+                            (settings.allowedSenders.length === 0
                                 ? "Receiving from all senders"
-                                : `${settings.allowedSenders.length} sender${settings.allowedSenders.length === 1 ? "" : "s"}`
+                                : `${settings.allowedSenders.length} sender${settings.allowedSenders.length === 1 ? "" : "s"}`) +
+                            (IS_IOS ? ". Applies when Sender is connected" : "")
                         }
                         onPress={() => setShowSenders(true)}
-                        styles={styles}
-                        theme={theme}
                         last
                     />
                 </View>
 
-                <SectionLabel label="Review" styles={styles} />
+                <SectionLabel label="Review" />
                 <View style={styles.groupCard}>
                     <AutoLogToggleRow
                         icon={<Sparkles size={18} color={theme.colors.onPrimaryContainer} />}
@@ -345,15 +380,13 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                                 : `${pendingCount} waiting`
                         }
                         onPress={() => setShowReview(true)}
-                        styles={styles}
-                        theme={theme}
                         last
                     />
                 </View>
 
                 {__DEV__ ? (
                     <>
-                        <SectionLabel label="Developer" styles={styles} />
+                        <SectionLabel label="Developer" />
                         <View style={styles.groupCard}>
                             <NavRow
                                 icon={<FlaskConical size={18} color={theme.colors.onTertiaryContainer} />}
@@ -361,18 +394,16 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                                 title="Seed sample events"
                                 subtitle="Runs 4 canned SMS/notification events through the pipeline"
                                 onPress={handleSeed}
-                                styles={styles}
-                                theme={theme}
                                 last
                             />
                         </View>
                     </>
                 ) : null}
 
-                <SectionLabel label="Insights" styles={styles} />
+                <SectionLabel label="Insights" />
                 <AutoLogStatsCard stats={stats} onReset={handleResetStats} />
 
-                <SectionLabel label="Privacy" styles={styles} />
+                <SectionLabel label="Privacy" />
                 <View style={styles.groupCard}>
                     <NavRow
                         icon={<Lock size={18} color={theme.colors.onSecondaryContainer} />}
@@ -380,8 +411,6 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         title="How your data stays private"
                         subtitle="What is captured, stored, and never uploaded"
                         onPress={() => setShowPrivacy(true)}
-                        styles={styles}
-                        theme={theme}
                         last
                     />
                 </View>
@@ -406,113 +435,6 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                 onClose={() => setShowSenders(false)}
                 onChange={(values) => update({ allowedSenders: values })}
             />
-        </View>
-    );
-}
-
-function SectionLabel({ label, styles }: { label: string; styles: ReturnType<typeof createStyles> }) {
-    return <Text style={styles.sectionLabel}>{label}</Text>;
-}
-
-function NavRow({
-    icon,
-    iconBg,
-    title,
-    subtitle,
-    onPress,
-    styles,
-    theme,
-    last,
-}: {
-    icon: React.ReactNode;
-    iconBg: string;
-    title: string;
-    subtitle: string;
-    onPress: () => void;
-    styles: ReturnType<typeof createStyles>;
-    theme: any;
-    last?: boolean;
-}) {
-    return (
-        <TouchableOpacity
-            style={[
-                styles.navRow,
-                { borderBottomColor: theme.colors.borderLight },
-                last && { borderBottomWidth: 0 },
-            ]}
-            onPress={onPress}
-        >
-            <View style={[styles.iconCircle, { backgroundColor: iconBg }]}>{icon}</View>
-            <View style={{ flex: 1 }}>
-                <Text style={[styles.navTitle, { color: theme.colors.onSurface }]}>{title}</Text>
-                <Text style={[styles.navSubtitle, { color: theme.colors.onSurfaceVariant }]}>{subtitle}</Text>
-            </View>
-            <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
-        </TouchableOpacity>
-    );
-}
-
-function CurrencyRow({
-    current,
-    onChange,
-    styles,
-    theme,
-}: {
-    current: string;
-    onChange: (value: string) => void;
-    styles: ReturnType<typeof createStyles>;
-    theme: any;
-}) {
-    return (
-        <View style={[styles.currencyRow, { borderBottomColor: theme.colors.borderLight }]}>
-            <View style={styles.currencyHeader}>
-                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
-                    <Wallet size={18} color={theme.colors.onSecondaryContainer} />
-                </View>
-                <View style={{ flex: 1 }}>
-                    <Text style={[styles.navTitle, { color: theme.colors.onSurface }]}>Default Currency</Text>
-                    <Text style={[styles.navSubtitle, { color: theme.colors.onSurfaceVariant }]}>
-                        For auto-created cashbooks
-                    </Text>
-                </View>
-            </View>
-            <View style={styles.currencyGrid}>
-                {CURRENCIES.map((c) => {
-                    const selected = current === c.value;
-                    return (
-                        <TouchableOpacity
-                            key={c.value}
-                            style={[
-                                styles.currencyCard,
-                                selected && {
-                                    backgroundColor: theme.colors.primary,
-                                    borderColor: theme.colors.primary,
-                                },
-                            ]}
-                            onPress={() => onChange(c.value)}
-                        >
-                            <Text
-                                style={[
-                                    styles.currencySymbol,
-                                    { color: theme.colors.onSurfaceVariant },
-                                    selected && { color: theme.colors.onPrimary },
-                                ]}
-                            >
-                                {c.symbol}
-                            </Text>
-                            <Text
-                                style={[
-                                    styles.currencyCode,
-                                    { color: theme.colors.onSurfaceVariant },
-                                    selected && { color: theme.colors.onPrimary },
-                                ]}
-                            >
-                                {c.value}
-                            </Text>
-                        </TouchableOpacity>
-                    );
-                })}
-            </View>
         </View>
     );
 }
@@ -542,79 +464,11 @@ const createStyles = (theme: any) =>
             fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
-        sectionLabel: {
-            fontSize: 11,
-            color: theme.colors.onSurfaceVariant,
-            textTransform: "uppercase",
-            marginTop: 24,
-            marginBottom: 10,
-            marginLeft: 4,
-            fontFamily: theme.fonts.semibold,
-            letterSpacing: 0.8,
-        },
         groupCard: {
             backgroundColor: theme.colors.card,
             borderColor: theme.colors.border,
             borderWidth: StyleSheet.hairlineWidth,
             borderRadius: 14,
             overflow: "hidden",
-        },
-        navRow: {
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 16,
-            paddingVertical: 14,
-            borderBottomWidth: StyleSheet.hairlineWidth,
-        },
-        iconCircle: {
-            width: 38,
-            height: 38,
-            borderRadius: theme.shape.full,
-            alignItems: "center",
-            justifyContent: "center",
-            marginRight: 14,
-        },
-        navTitle: {
-            fontSize: 15,
-            fontFamily: theme.fonts.semibold,
-        },
-        navSubtitle: {
-            fontSize: 12,
-            fontFamily: theme.fonts.regular,
-            marginTop: 1,
-        },
-        currencyRow: {
-            paddingHorizontal: 16,
-            paddingTop: 14,
-            paddingBottom: 16,
-            borderBottomWidth: StyleSheet.hairlineWidth,
-        },
-        currencyHeader: {
-            flexDirection: "row",
-            alignItems: "center",
-            marginBottom: 12,
-        },
-        currencyGrid: {
-            flexDirection: "row",
-            gap: 8,
-        },
-        currencyCard: {
-            flex: 1,
-            height: 56,
-            borderRadius: theme.shape.medium,
-            alignItems: "center",
-            justifyContent: "center",
-            borderWidth: 1,
-            borderColor: theme.colors.outlineVariant,
-        },
-        currencySymbol: {
-            fontSize: 18,
-            fontFamily: theme.fonts.semibold,
-            fontVariant: ["tabular-nums"],
-        },
-        currencyCode: {
-            fontSize: 10,
-            fontFamily: theme.fonts.semibold,
-            marginTop: 2,
         },
     });

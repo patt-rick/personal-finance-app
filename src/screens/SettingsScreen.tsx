@@ -11,6 +11,7 @@ import {
     ActivityIndicator,
     BackHandler,
     Animated,
+    Linking,
 } from "react-native";
 import { appAlert } from "../components/dialog";
 import { useFocusEffect, useRoute } from "@react-navigation/native";
@@ -40,6 +41,9 @@ import {
     Database,
     Sparkles,
     Zap,
+    FileText,
+    ExternalLink,
+    ScrollText,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { useThemeContext } from "../theme/ThemeContext";
@@ -56,6 +60,8 @@ import AutoLogSettingsScreen from "../features/autoLogging/screens/AutoLogSettin
 import TourOverlay from "../components/TourOverlay";
 
 const APP_VERSION = require("../../app.json").expo.version;
+const PRIVACY_POLICY_URL = "https://patt-rick.github.io/personal-finance-app/privacypolicy.html";
+const TERMS_URL = "https://patt-rick.github.io/personal-finance-app/terms.html";
 
 interface SettingsScreenProps {
     userProfile: UserProfile | null;
@@ -480,7 +486,11 @@ export default function SettingsScreen({
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Automatic Logging</Text>
-                                    <Text style={styles.rowSubText}>Capture from SMS & notifications</Text>
+                                    <Text style={styles.rowSubText}>
+                                        {Platform.OS === "ios"
+                                            ? "Log bank & MoMo SMS for you"
+                                            : "Capture from SMS & notifications"}
+                                    </Text>
                                 </View>
                                 <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
@@ -595,6 +605,34 @@ export default function SettingsScreen({
                                 <Text style={styles.rowText}>Encryption</Text>
                                 <Text style={styles.rowValueText}>AES-256</Text>
                             </View>
+                            <View style={styles.rowDivider} />
+                            <TouchableOpacity
+                                style={styles.row}
+                                onPress={() => Linking.openURL(PRIVACY_POLICY_URL).catch(() => {})}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.tertiaryContainer }]}>
+                                    <FileText size={18} color={theme.colors.onTertiaryContainer} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Privacy Policy</Text>
+                                    <Text style={styles.rowSubText}>How your data is handled</Text>
+                                </View>
+                                <ExternalLink size={18} color={theme.colors.onSurfaceVariant} />
+                            </TouchableOpacity>
+                            <View style={styles.rowDivider} />
+                            <TouchableOpacity
+                                style={styles.row}
+                                onPress={() => Linking.openURL(TERMS_URL).catch(() => {})}
+                            >
+                                <View style={[styles.iconCircle, { backgroundColor: theme.colors.secondaryContainer }]}>
+                                    <ScrollText size={18} color={theme.colors.onSecondaryContainer} />
+                                </View>
+                                <View style={{ flex: 1 }}>
+                                    <Text style={styles.rowText}>Terms of Use</Text>
+                                    <Text style={styles.rowSubText}>The rules for using the app</Text>
+                                </View>
+                                <ExternalLink size={18} color={theme.colors.onSurfaceVariant} />
+                            </TouchableOpacity>
                             <View style={styles.rowDivider} />
                             <TouchableOpacity
                                 style={[styles.row, { borderBottomWidth: 0 }]}

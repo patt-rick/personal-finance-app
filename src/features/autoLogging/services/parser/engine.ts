@@ -1,7 +1,7 @@
 import { Category } from "../../../../types";
 import { ParsedDraft, RawEvent } from "../../types";
 import { applyAliases } from "../routing/senderAliases";
-import { normalizeSender } from "../routing/normalizeSender";
+import { normalizeSender, rawSenderIdOf } from "../routing/normalizeSender";
 import { deriveDisplayName } from "../routing/displayName";
 import { lowerKey, normalizeText } from "./normalize";
 import { categorize } from "./categorize";
@@ -35,7 +35,7 @@ export function parseEvent(event: RawEvent, categories: Category[]): ParsedDraft
     if (!text) return null;
     const lower = lowerKey(text);
 
-    const rawSenderId = event.source === "sms" ? event.sender ?? "" : event.packageName ?? "";
+    const rawSenderId = rawSenderIdOf(event);
     const normalized = normalizeSender(event.source, rawSenderId);
     const senderKey = applyAliases(normalized);
     const senderHaystack = `${rawSenderId} ${normalized} ${senderKey} ${event.packageName ?? ""}`.toLowerCase();

@@ -41,6 +41,7 @@ import { createDashboardStyles } from "../styles/dashboardStyles";
 import { loadCategories, getBudgetByBusinessId, persistNewCategory } from "../utils/storage";
 import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
 import { maybeRequestReview } from "../utils/storeReview";
+import { promptForRemindersOnce } from "../utils/notifications";
 import ChartCarousel from "../components/ChartCarousel";
 import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
@@ -317,7 +318,8 @@ export default function BusinessDetailView({
             const manualCount = updatedTransactions.filter(
                 (t) => !t.autoLogged && t.source !== "recurring" && t.source !== "transfer",
             ).length;
-            setTimeout(() => {
+            setTimeout(async () => {
+                if (Platform.OS === "ios") await promptForRemindersOnce();
                 maybeRequestReview({ kind: "transaction", totalTransactions: manualCount });
             }, 800);
         }

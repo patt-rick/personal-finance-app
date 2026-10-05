@@ -7,6 +7,8 @@ export interface RawEvent {
     body: string;
     timestamp: number;
     rawHash: string;
+    // Set for iOS Shortcuts deliveries and manual pastes, where the sender may be unknown.
+    via?: "shortcut" | "paste";
 }
 
 export type SemanticType =

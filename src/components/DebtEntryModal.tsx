@@ -262,6 +262,7 @@ export default function DebtEntryModal({
                         value={dueDate || new Date()}
                         mode="date"
                         display={Platform.OS === "ios" ? "inline" : "default"}
+                        themeVariant={theme.dark ? "dark" : "light"}
                         onChange={handleDateChange}
                     />
                 )}

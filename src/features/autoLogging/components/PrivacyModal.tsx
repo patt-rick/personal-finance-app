@@ -1,8 +1,10 @@
 import React, { useMemo } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Platform, StyleSheet, Text, View } from "react-native";
 import { Bell, Lock, MessageSquare, ShieldCheck } from "lucide-react-native";
 import { useTheme } from "../../../theme/theme";
 import AppModal from "../../../components/AppModal";
+
+const IS_IOS = Platform.OS === "ios";
 
 interface Props {
     visible: boolean;
@@ -37,12 +39,20 @@ export default function PrivacyModal({ visible, onClose }: Props) {
             </Text>
 
             <Section title="What is captured" styles={styles} theme={theme}>
-                <Bullet icon={<MessageSquare size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
-                    SMS: the sender and message body, only from senders you place on the allowlist.
-                </Bullet>
-                <Bullet icon={<Bell size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
-                    Notifications: the package name, title, and text, only from apps you allow.
-                </Bullet>
+                {IS_IOS ? (
+                    <Bullet icon={<MessageSquare size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
+                        SMS: the message text, and the sender if you connect it, for messages your Shortcuts automation passes on, plus any SMS you paste.
+                    </Bullet>
+                ) : (
+                    <>
+                        <Bullet icon={<MessageSquare size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
+                            SMS: the sender and message body, only from senders you place on the allowlist.
+                        </Bullet>
+                        <Bullet icon={<Bell size={14} color={theme.colors.onPrimaryContainer} />} iconBg={theme.colors.primaryContainer} theme={theme} styles={styles}>
+                            Notifications: the package name, title, and text, only from apps you allow.
+                        </Bullet>
+                    </>
+                )}
             </Section>
 
             <Section title="How it is used" styles={styles} theme={theme}>
@@ -73,12 +83,20 @@ export default function PrivacyModal({ visible, onClose }: Props) {
                 <Bullet theme={theme} styles={styles}>
                     Turn Automatic Logging off at any time from the settings screen.
                 </Bullet>
-                <Bullet theme={theme} styles={styles}>
-                    Remove senders or apps from the allowlist to stop capturing from them.
-                </Bullet>
-                <Bullet theme={theme} styles={styles}>
-                    Revoke permissions from Android settings — we detect and disable capture on the next foreground.
-                </Bullet>
+                {IS_IOS ? (
+                    <Bullet theme={theme} styles={styles}>
+                        Turn off or delete the automation in the Shortcuts app to stop messages reaching Expense Tracker.
+                    </Bullet>
+                ) : (
+                    <>
+                        <Bullet theme={theme} styles={styles}>
+                            Remove senders or apps from the allowlist to stop capturing from them.
+                        </Bullet>
+                        <Bullet theme={theme} styles={styles}>
+                            Revoke permissions from Android settings — we detect and disable capture on the next foreground.
+                        </Bullet>
+                    </>
+                )}
             </Section>
         </AppModal>
     );

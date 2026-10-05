@@ -23,6 +23,8 @@ const BLOCKED_NOTIFICATION_PACKAGES = new Set([
 export function isAllowedEvent(event: RawEvent, settings: AutoLogSettings): boolean {
     if (event.source === "sms") {
         if (!settings.captureSms) return false;
+        // The Shortcuts automation's keyword (or the user's paste) already did the filtering.
+        if (event.via && !event.sender?.trim()) return true;
         if (settings.allowedSenders.length === 0) return true;
         const eventKey = canonicalKey("sms", event.sender ?? "");
         if (!eventKey) return false;
