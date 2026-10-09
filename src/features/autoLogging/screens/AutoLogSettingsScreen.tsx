@@ -27,6 +27,7 @@ import {
 import { useTheme } from "../../../theme/theme";
 import { Business } from "../../../types";
 import AutoLogToggleRow from "../components/AutoLogToggleRow";
+import AutoSaveThresholdRow from "../components/AutoSaveThresholdRow";
 import AllowedAppsSelector from "../components/AllowedAppsSelector";
 import AutoLogStatsCard from "../components/AutoLogStatsCard";
 import PrivacyModal from "../components/PrivacyModal";
@@ -334,6 +335,11 @@ export default function AutoLogSettingsScreen({ businesses, onBack, onDataChange
                         subtitle="Nothing is saved without your tap"
                         value={settings.askBeforeSaving}
                         onValueChange={(v) => update({ askBeforeSaving: v })}
+                    />
+                    <AutoSaveThresholdRow
+                        value={settings.minConfidenceForAutoSave}
+                        disabled={settings.askBeforeSaving}
+                        onChange={(next) => update({ minConfidenceForAutoSave: next })}
                     />
                     <NavRow
                         icon={<Inbox size={18} color={theme.colors.onSecondaryContainer} />}
