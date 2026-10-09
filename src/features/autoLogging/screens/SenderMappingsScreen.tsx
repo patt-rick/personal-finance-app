@@ -112,9 +112,9 @@ function EmptyState({
     theme: any;
 }) {
     return (
-        <View style={styles.emptyCard}>
+        <View style={styles.emptyState}>
             <View style={styles.emptyIconCircle}>
-                <Radio size={22} color={theme.colors.onPrimaryContainer} />
+                <Radio size={28} color={theme.colors.onPrimaryContainer} />
             </View>
             <Text style={styles.emptyTitle}>No senders yet</Text>
             <Text style={styles.emptyBody}>
@@ -179,35 +179,31 @@ const createStyles = (theme: any) =>
             color: theme.colors.onSurfaceVariant,
             letterSpacing: 0.4,
         },
-        emptyCard: {
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderRadius: 14,
-            padding: 24,
+        emptyState: {
+            padding: 40,
             alignItems: "center",
-            marginTop: 8,
         },
         emptyIconCircle: {
-            width: 56,
-            height: 56,
+            width: 72,
+            height: 72,
             borderRadius: theme.shape.full,
             backgroundColor: theme.colors.primaryContainer,
             alignItems: "center",
             justifyContent: "center",
-            marginBottom: 12,
+            marginBottom: 16,
         },
         emptyTitle: {
-            fontSize: 16,
+            fontSize: 18,
             fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            marginBottom: 4,
+            marginBottom: 8,
         },
         emptyBody: {
             fontSize: 13,
             fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             textAlign: "center",
-            lineHeight: 18,
+            lineHeight: 20,
+            paddingHorizontal: 12,
         },
     });

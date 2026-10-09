@@ -385,30 +385,23 @@ export default function BudgetDashboardScreen({
                     </View>
                 ) : !budget ? (
                     <View style={s.noBudgetContainer}>
-                        <View
-                            style={[
-                                s.noBudgetCard,
-                                { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
-                            ]}
+                        <EmptyScene variant="budget" size={224} />
+                        <Text style={[s.noBudgetTitle, { color: theme.colors.onSurface }]}>
+                            No Budget Set
+                        </Text>
+                        <Text style={[s.noBudgetText, { color: theme.colors.onSurfaceVariant }]}>
+                            Set up a budget to track your spending and stay on target
+                        </Text>
+                        <TouchableOpacity
+                            onPress={() => setShowSetup(true)}
+                            style={[s.setupButton, { backgroundColor: theme.colors.primary }]}
+                            activeOpacity={0.8}
                         >
-                            <EmptyScene variant="budget" size={224} />
-                            <Text style={[s.noBudgetTitle, { color: theme.colors.onSurface }]}>
-                                No Budget Set
+                            <Plus size={20} color={theme.colors.onPrimary} />
+                            <Text style={[s.setupButtonText, { color: theme.colors.onPrimary }]}>
+                                Set Budget
                             </Text>
-                            <Text style={[s.noBudgetText, { color: theme.colors.onSurfaceVariant }]}>
-                                Set up a budget to track your spending and stay on target
-                            </Text>
-                            <TouchableOpacity
-                                onPress={() => setShowSetup(true)}
-                                style={[s.setupButton, { backgroundColor: theme.colors.primary }]}
-                                activeOpacity={0.8}
-                            >
-                                <Plus size={20} color={theme.colors.onPrimary} />
-                                <Text style={[s.setupButtonText, { color: theme.colors.onPrimary }]}>
-                                    Set Budget
-                                </Text>
-                            </TouchableOpacity>
-                        </View>
+                        </TouchableOpacity>
                     </View>
                 ) : (
                     <>
@@ -472,14 +465,9 @@ export default function BudgetDashboardScreen({
                             </Text>
 
                             {budgetData.length === 0 ? (
-                                <View
-                                    style={[
-                                        s.emptyCard,
-                                        { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
-                                    ]}
-                                >
+                                <View style={s.emptyCategories}>
                                     <AlertCircle size={28} color={theme.colors.onSurfaceVariant} />
-                                    <Text style={[s.emptyCardText, { color: theme.colors.onSurfaceVariant }]}>
+                                    <Text style={[s.emptyCategoriesText, { color: theme.colors.onSurfaceVariant }]}>
                                         No category budgets set
                                     </Text>
                                 </View>
@@ -706,12 +694,7 @@ const createBudgetStyles = (theme: any) =>
         // No budget
         noBudgetContainer: {
             paddingVertical: 40,
-            paddingHorizontal: 20,
-        },
-        noBudgetCard: {
-            padding: 32,
-            borderRadius: 16,
-            borderWidth: StyleSheet.hairlineWidth,
+            paddingHorizontal: 60,
             alignItems: "center",
         },
         noBudgetTitle: {
@@ -720,9 +703,10 @@ const createBudgetStyles = (theme: any) =>
             marginBottom: 8,
         },
         noBudgetText: {
-            fontSize: 14,
+            fontSize: 13,
             fontFamily: theme.fonts.regular,
             textAlign: "center",
+            paddingHorizontal: 12,
             marginBottom: 24,
             lineHeight: 20,
         },
@@ -863,13 +847,11 @@ const createBudgetStyles = (theme: any) =>
             fontVariant: ["tabular-nums"],
             marginLeft: 8,
         },
-        emptyCard: {
-            padding: 32,
-            borderRadius: 16,
-            borderWidth: StyleSheet.hairlineWidth,
+        emptyCategories: {
+            paddingVertical: 32,
             alignItems: "center",
         },
-        emptyCardText: {
+        emptyCategoriesText: {
             fontSize: 14,
             fontFamily: theme.fonts.regular,
             marginTop: 8,

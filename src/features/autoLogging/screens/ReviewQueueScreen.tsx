@@ -53,7 +53,7 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
                 keyboardShouldPersistTaps="handled"
             >
                 {loading ? null : items.length === 0 ? (
-                    <View style={styles.emptyCard}>
+                    <View style={styles.emptyState}>
                         <EmptyScene variant="transactions" size={200} />
                         <Text style={styles.emptyTitle}>Nothing to review</Text>
                         <Text style={styles.emptyBody}>
@@ -110,26 +110,22 @@ const createStyles = (theme: any) =>
             color: theme.colors.onSurfaceVariant,
             marginTop: 2,
         },
-        emptyCard: {
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-            borderWidth: StyleSheet.hairlineWidth,
-            borderRadius: 14,
-            padding: 24,
+        emptyState: {
+            padding: 40,
             alignItems: "center",
-            marginTop: 8,
         },
         emptyTitle: {
-            fontSize: 16,
+            fontSize: 18,
             fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
-            marginBottom: 4,
+            marginBottom: 8,
         },
         emptyBody: {
             fontSize: 13,
             fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
             textAlign: "center",
-            lineHeight: 18,
+            lineHeight: 20,
+            paddingHorizontal: 12,
         },
     });
