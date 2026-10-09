@@ -50,6 +50,7 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
                     paddingHorizontal: 20,
                 }}
                 showsVerticalScrollIndicator={false}
+                keyboardShouldPersistTaps="handled"
             >
                 {loading ? null : items.length === 0 ? (
                     <View style={styles.emptyCard}>
@@ -64,7 +65,7 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
                         <ReviewItemCard
                             key={item.id}
                             item={item}
-                            business={businesses.find((b) => b.id === item.businessId)}
+                            businesses={businesses}
                             onConfirm={async (edits) => {
                                 await confirm(item, edits);
                                 onConfirmed?.();

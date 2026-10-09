@@ -9,26 +9,35 @@ import { getCurrencySymbol } from "../../../utils/_helpers";
 import { grossAmount } from "../../../utils/transactionAmount";
 import { appAlert } from "../../../components/dialog";
 import { ConfirmEdits } from "../hooks/useAutoLogQueue";
+import ReviewCashbookPicker from "./ReviewCashbookPicker";
 
 interface Props {
     item: ReviewItem;
-    business: Business | undefined;
+    businesses: Business[];
     onConfirm: (edits?: Partial<ConfirmEdits>) => void;
     onReject: () => void;
 }
 
-export default function ReviewItemCard({ item, business, onConfirm, onReject }: Props) {
+export default function ReviewItemCard({ item, businesses, onConfirm, onReject }: Props) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [expanded, setExpanded] = useState(false);
     const [amount, setAmount] = useState(item.draft.amount.toString());
     const [fee, setFee] = useState(item.draft.fee?.toString() ?? "");
     const [description, setDescription] = useState(item.draft.merchant ?? "");
+    const [businessId, setBusinessId] = useState<string | null>(
+        businesses.some((b) => b.id === item.businessId) ? item.businessId : null,
+    );
+    const business = businesses.find((b) => b.id === businessId);
 
     const symbol = getCurrencySymbol(business?.currency ?? item.draft.currencyCode ?? undefined);
     const SourceIcon = item.draft.source === "sms" ? MessageSquare : Bell;
 
     const handleConfirm = () => {
+        if (!business) {
+            appAlert("Choose a cashbook", "Pick the cashbook this entry should be saved to.");
+            return;
+        }
         const parsedAmount = parseFloat(amount);
         const edits: Partial<ConfirmEdits> = {};
         if (Number.isFinite(parsedAmount) && parsedAmount !== item.draft.amount) edits.amount = parsedAmount;
@@ -45,6 +54,7 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                 if (parsedFee !== item.draft.fee) edits.fee = parsedFee;
             }
         }
+        if (business.id !== item.businessId) edits.businessId = business.id;
         onConfirm(Object.keys(edits).length ? edits : undefined);
     };
 
@@ -76,7 +86,7 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                         {item.draft.merchant ?? "No merchant"}
                     </Text>
                     <Text style={styles.meta}>
-                        {item.draft.category} • {item.draft.type} • routes to {business?.name ?? "—"}
+                        {item.draft.category} • {item.draft.type}
                     </Text>
                 </View>
                 <MoneyText
@@ -86,6 +96,13 @@ export default function ReviewItemCard({ item, business, onConfirm, onReject }: 
                     color={item.draft.type === "income" ? theme.colors.income : theme.colors.onSurface}
                 />
             </View>
+
+            <ReviewCashbookPicker
+                businesses={businesses}
+                selectedId={businessId}
+                messageCurrency={item.draft.currencyCode}
+                onSelect={setBusinessId}
+            />
 
             {expanded ? (
                 <View style={styles.editArea}>
