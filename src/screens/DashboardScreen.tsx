@@ -21,13 +21,17 @@ import {
     StyleSheet,
     Animated,
 } from "react-native";
-import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import { ParamListBase, useFocusEffect, useNavigation } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction, UserProfile } from "../types";
 import BusinessDetailView from "./BusinessDetailView";
 import PaymentCard, { CurrencyBalance } from "../components/dashboard/PaymentCard";
 import AutoLogPromoCard from "../components/dashboard/AutoLogPromoCard";
+import PendingReviewBanner from "../components/dashboard/PendingReviewBanner";
+import ReviewQueueScreen from "../features/autoLogging/screens/ReviewQueueScreen";
+import { usePendingReviewCount } from "../features/autoLogging/hooks/usePendingReviewCount";
 import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
 import { maybeRequestReview } from "../utils/storeReview";
@@ -256,16 +260,19 @@ function DashboardHome({
     setCurrentBusiness,
     userProfile,
     onRefresh,
+    onOpenReview,
 }: {
     businesses: Business[];
     transactions: Transaction[];
     setCurrentBusiness: (b: Business) => void;
     userProfile: UserProfile | null;
     onRefresh: () => Promise<void>;
+    onOpenReview: () => void;
 }) {
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const navigation = useNavigation();
+    const pendingReviewCount = usePendingReviewCount();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const statsStyles = useMemo(() => createStatsStyles(theme), [theme]);
 
@@ -405,6 +412,8 @@ function DashboardHome({
                               : "No movement this week."}
                     </Text>
                 ) : null}
+
+                <PendingReviewBanner count={pendingReviewCount} onPress={onOpenReview} />
 
                 <AutoLogPromoCard
                     onSetUp={() =>
@@ -732,6 +741,15 @@ export default function DashboardScreen({
     userProfile,
     onRefresh,
 }: DashboardScreenProps) {
+    const navigation = useNavigation<BottomTabNavigationProp<ParamListBase>>();
+    const [showReview, setShowReview] = useState(false);
+
+    useFocusEffect(
+        useCallback(() => () => setShowReview(false), []),
+    );
+
+    useEffect(() => navigation.addListener("tabPress", () => setShowReview(false)), [navigation]);
+
     useFocusEffect(
         useCallback(() => {
             const onBackPress = () => {
@@ -745,6 +763,16 @@ export default function DashboardScreen({
             return () => subscription.remove();
         }, [currentBusiness, setCurrentBusiness]),
     );
+
+    if (showReview) {
+        return (
+            <ReviewQueueScreen
+                businesses={businesses}
+                onBack={() => setShowReview(false)}
+                onConfirmed={onRefresh}
+            />
+        );
+    }
 
     if (currentBusiness) {
         return (
@@ -766,6 +794,7 @@ export default function DashboardScreen({
             setCurrentBusiness={setCurrentBusiness}
             userProfile={userProfile}
             onRefresh={onRefresh}
+            onOpenReview={() => setShowReview(true)}
         />
     );
 }

@@ -7,6 +7,7 @@ import { useTheme } from "../../../theme/theme";
 import { Business } from "../../../types";
 import { useAutoLogQueue } from "../hooks/useAutoLogQueue";
 import ReviewItemCard from "../components/ReviewItemCard";
+import { FLOATING_TAB_HEIGHT } from "../../../components/FloatingTabBar";
 
 interface Props {
     businesses: Business[];
@@ -44,7 +45,10 @@ export default function ReviewQueueScreen({ businesses, onBack, onConfirmed }: P
             </View>
 
             <ScrollView
-                contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 40, paddingHorizontal: 20 }}
+                contentContainerStyle={{
+                    paddingBottom: Math.max(insets.bottom, 20) + FLOATING_TAB_HEIGHT + 24,
+                    paddingHorizontal: 20,
+                }}
                 showsVerticalScrollIndicator={false}
             >
                 {loading ? null : items.length === 0 ? (

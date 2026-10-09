@@ -2,6 +2,17 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../../../../utils/storageKeys";
 import { ReviewItem } from "../../types";
 
+type ReviewQueueListener = (count: number) => void;
+
+const listeners = new Set<ReviewQueueListener>();
+
+export function subscribeReviewQueue(listener: ReviewQueueListener): () => void {
+    listeners.add(listener);
+    return () => {
+        listeners.delete(listener);
+    };
+}
+
 export const loadReviewQueue = async (): Promise<ReviewItem[]> => {
     try {
         const raw = await AsyncStorage.getItem(STORAGE_KEYS.AUTO_LOG_REVIEW_QUEUE);
@@ -15,11 +26,12 @@ export const loadReviewQueue = async (): Promise<ReviewItem[]> => {
 export const saveReviewQueue = async (items: ReviewItem[]): Promise<boolean> => {
     try {
         await AsyncStorage.setItem(STORAGE_KEYS.AUTO_LOG_REVIEW_QUEUE, JSON.stringify(items));
-        return true;
     } catch (error) {
         console.error("Error saving review queue:", error);
         return false;
     }
+    listeners.forEach((listener) => listener(items.length));
+    return true;
 };
 
 export const appendReviewItem = async (item: ReviewItem): Promise<boolean> => {
