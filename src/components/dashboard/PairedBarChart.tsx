@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from "react";
-import { View, Text, StyleSheet, Dimensions } from "react-native";
-import Svg, { Rect, Line, G } from "react-native-svg";
+import React, { useEffect, useMemo, useState } from "react";
+import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
+import Svg, { G, Rect, Text as SvgText } from "react-native-svg";
 import { useTheme } from "../../theme/theme";
+import { compactMoney, niceCeil } from "../../utils/chartScale";
 
 interface PairedBarChartProps {
     labels: string[];
@@ -12,13 +13,21 @@ interface PairedBarChartProps {
     currencySymbol: string;
 }
 
-const SCREEN_WIDTH = Dimensions.get("window").width;
-const CHART_HEIGHT = 140;
-const BAR_WIDTH = 12;
+const PLOT_HEIGHT = 150;
+const VALUE_SPACE = 20;
+const AXIS_WIDTH = 44;
 const BAR_GAP = 4;
-const BAR_RADIUS = 6;
-const H_PADDING = 16;
+const MAX_BAR = 26;
+const RADIUS = 7;
+const MIN_LABEL_SLOT = 56;
+const LABEL_CLEARANCE = 16;
 
+const lastWithData = (a: number[], b: number[]) => {
+    for (let i = a.length - 1; i >= 0; i--) if (a[i] > 0 || b[i] > 0) return i;
+    return a.length - 1;
+};
+
+/** Income vs spending per period: tinted bars, with the selected period drawn solid and labelled. Tap a period to select it. */
 export default function PairedBarChart({
     labels,
     primaryData,
@@ -29,130 +38,117 @@ export default function PairedBarChart({
 }: PairedBarChartProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
-    const [tooltip, setTooltip] = useState<{ index: number; type: "primary" | "secondary" } | null>(null);
+    const [width, setWidth] = useState(0);
+    const [selected, setSelected] = useState(() => lastWithData(primaryData, secondaryData));
 
-    const allValues = [...primaryData, ...secondaryData];
-    const maxVal = Math.max(...allValues, 1);
+    useEffect(() => setSelected(lastWithData(primaryData, secondaryData)), [primaryData, secondaryData]);
 
-    const availableWidth = SCREEN_WIDTH - 40 - 32 - H_PADDING * 2;
-    const pairWidth = BAR_WIDTH * 2 + BAR_GAP;
-    const pairGap = labels.length > 1
-        ? (availableWidth - labels.length * pairWidth) / (labels.length - 1)
-        : 0;
-    const totalWidth = availableWidth;
+    const top = niceCeil(Math.max(...primaryData, ...secondaryData, 0));
+    const plotWidth = Math.max(width - AXIS_WIDTH, 0);
+    const slot = labels.length > 0 ? plotWidth / labels.length : 0;
+    const barWidth = Math.min(MAX_BAR, Math.max((slot * 0.72 - BAR_GAP) / 2, 4));
+    const y = (v: number) => VALUE_SPACE + (1 - v / top) * PLOT_HEIGHT;
+    const height = VALUE_SPACE + PLOT_HEIGHT;
+    const tint = (color: string) => `${color.slice(0, 7)}${theme.dark ? "73" : "40"}`;
+    const showValues = slot >= MIN_LABEL_SLOT;
 
-    const barHeight = (val: number) =>
-        Math.max((val / maxVal) * (CHART_HEIGHT - 20), val > 0 ? 6 : 0);
+    const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
 
-    const getPairX = (i: number) => i * (pairWidth + pairGap);
-
-    const tooltipValue = tooltip
-        ? tooltip.type === "primary"
-            ? primaryData[tooltip.index]
-            : secondaryData[tooltip.index]
-        : null;
-
-    const tooltipX = tooltip
-        ? getPairX(tooltip.index) +
-          (tooltip.type === "primary" ? BAR_WIDTH / 2 : BAR_WIDTH + BAR_GAP + BAR_WIDTH / 2)
-        : 0;
-
-    const dashY = CHART_HEIGHT * 0.35;
+    const bar = (value: number, x: number, color: string, solid: boolean, labelled: boolean, key: string) => {
+        const h = value > 0 ? Math.max(height - y(value), 4) : 0;
+        if (h === 0) return null;
+        return (
+            <G key={key}>
+                <Rect
+                    x={x}
+                    y={height - h}
+                    width={barWidth}
+                    height={h}
+                    rx={Math.min(RADIUS, barWidth / 2)}
+                    fill={solid ? color : tint(color)}
+                />
+                {solid && labelled && (
+                    <SvgText
+                        x={x + barWidth / 2}
+                        y={height - h - 6}
+                        fill={color}
+                        fontSize={11}
+                        fontFamily={theme.fonts.semibold}
+                        textAnchor="middle"
+                    >
+                        {compactMoney(value, currencySymbol)}
+                    </SvgText>
+                )}
+            </G>
+        );
+    };
 
     return (
         <View style={styles.wrapper}>
-            {tooltip !== null && tooltipValue !== null && (
-                <View
-                    style={[
-                        styles.tooltip,
-                        {
-                            backgroundColor: theme.colors.inverseSurface,
-                            left: tooltipX + H_PADDING - 40,
-                            top: -4,
-                        },
-                    ]}
-                >
-                    <Text style={[styles.tooltipText, { color: theme.colors.inverseOnSurface }]}>
-                        {currencySymbol}
-                        {tooltipValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+            {selected >= 0 && selected < labels.length && (
+                <Text style={styles.summary} numberOfLines={1}>
+                    {labels[selected]}:{" "}
+                    <Text style={[styles.summaryValue, { color: primaryColor }]}>
+                        {compactMoney(primaryData[selected] ?? 0, currencySymbol)} in
                     </Text>
-                    <View style={[styles.tooltipArrow, { borderTopColor: theme.colors.inverseSurface }]} />
-                </View>
+                    {"  ·  "}
+                    <Text style={[styles.summaryValue, { color: secondaryColor }]}>
+                        {compactMoney(secondaryData[selected] ?? 0, currencySymbol)} out
+                    </Text>
+                </Text>
             )}
 
-            <Svg width={totalWidth} height={CHART_HEIGHT} viewBox={`0 0 ${totalWidth} ${CHART_HEIGHT}`}>
-                <Line
-                    x1={0}
-                    y1={dashY}
-                    x2={totalWidth}
-                    y2={dashY}
-                    stroke={theme.colors.outlineVariant}
-                    strokeWidth={1}
-                    strokeDasharray="4,4"
-                />
-
-                {labels.map((_, i) => {
-                    const x = getPairX(i);
-                    const pH = barHeight(primaryData[i]);
-                    const sH = barHeight(secondaryData[i]);
-                    const pY = CHART_HEIGHT - pH;
-                    const sY = CHART_HEIGHT - sH;
-
-                    return (
-                        <G key={i}>
-                            <Rect
-                                x={x}
-                                y={pY}
-                                width={BAR_WIDTH}
-                                height={pH}
-                                rx={BAR_RADIUS}
-                                ry={BAR_RADIUS}
-                                fill={primaryColor}
-                                onPress={() =>
-                                    setTooltip((prev) =>
-                                        prev?.index === i && prev?.type === "primary"
-                                            ? null
-                                            : { index: i, type: "primary" },
-                                    )
-                                }
-                            />
-                            <Rect
-                                x={x + BAR_WIDTH + BAR_GAP}
-                                y={sY}
-                                width={BAR_WIDTH}
-                                height={sH}
-                                rx={BAR_RADIUS}
-                                ry={BAR_RADIUS}
-                                fill={secondaryColor}
-                                onPress={() =>
-                                    setTooltip((prev) =>
-                                        prev?.index === i && prev?.type === "secondary"
-                                            ? null
-                                            : { index: i, type: "secondary" },
-                                    )
-                                }
-                            />
-                        </G>
-                    );
-                })}
-            </Svg>
-
-            <View style={[styles.labelsRow, { width: totalWidth }]}>
-                {labels.map((label, i) => (
-                    <Text
-                        key={i}
-                        style={[
-                            styles.dayLabel,
-                            {
-                                color: theme.colors.onSurfaceVariant,
-                                left: getPairX(i) + pairWidth / 2 - 18,
-                            },
-                        ]}
-                        numberOfLines={1}
-                    >
-                        {label}
-                    </Text>
-                ))}
+            <View onLayout={onLayout}>
+                {width > 0 && (
+                    <Svg width={width} height={height}>
+                        {[top, top / 2, 0].map((tick) => (
+                            <SvgText
+                                key={tick}
+                                x={0}
+                                y={Math.min(y(tick) + 4, height - 1)}
+                                fill={theme.colors.onSurfaceVariant}
+                                fontSize={10}
+                                fontFamily={theme.fonts.regular}
+                            >
+                                {compactMoney(tick, currencySymbol)}
+                            </SvgText>
+                        ))}
+                        {labels.map((_, i) => {
+                            const center = AXIS_WIDTH + slot * i + slot / 2;
+                            const solid = i === selected;
+                            const p = primaryData[i] ?? 0;
+                            const s = secondaryData[i] ?? 0;
+                            // Neighbouring labels collide when the bar tops are close; then only the taller bar is labelled.
+                            const close = Math.abs(y(p) - y(s)) < LABEL_CLEARANCE;
+                            return (
+                                <G key={i}>
+                                    {bar(p, center - barWidth - BAR_GAP / 2, primaryColor, solid, showValues && (!close || p >= s), "p")}
+                                    {bar(s, center + BAR_GAP / 2, secondaryColor, solid, showValues && (!close || s > p), "s")}
+                                    <Rect
+                                        x={AXIS_WIDTH + slot * i}
+                                        y={0}
+                                        width={slot}
+                                        height={height}
+                                        fill="transparent"
+                                        onPress={() => setSelected(i)}
+                                    />
+                                </G>
+                            );
+                        })}
+                    </Svg>
+                )}
+                <View style={[styles.labels, { marginLeft: AXIS_WIDTH }]}>
+                    {labels.map((label, i) => (
+                        <Text
+                            key={i}
+                            style={[styles.label, i === selected && styles.labelSelected]}
+                            numberOfLines={1}
+                            onPress={() => setSelected(i)}
+                        >
+                            {label}
+                        </Text>
+                    ))}
+                </View>
             </View>
         </View>
     );
@@ -161,45 +157,30 @@ export default function PairedBarChart({
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
         wrapper: {
-            alignItems: "center",
-            position: "relative",
-            paddingTop: 32,
-            paddingHorizontal: H_PADDING,
+            paddingHorizontal: 4,
+            paddingTop: 4,
         },
-        tooltip: {
-            position: "absolute",
-            paddingHorizontal: 10,
-            paddingVertical: 5,
-            borderRadius: 8,
-            zIndex: 10,
-            alignItems: "center",
+        summary: {
+            ...theme.typescale.bodyMedium,
+            color: theme.colors.onSurfaceVariant,
+            marginBottom: 8,
         },
-        tooltipText: {
-            fontSize: 12,
-            fontFamily: theme.fonts.semibold,
-            fontVariant: ["tabular-nums"],
+        summaryValue: {
+            fontFamily: theme.fonts.bold,
         },
-        tooltipArrow: {
-            position: "absolute",
-            bottom: -5,
-            width: 0,
-            height: 0,
-            borderLeftWidth: 5,
-            borderRightWidth: 5,
-            borderTopWidth: 5,
-            borderLeftColor: "transparent",
-            borderRightColor: "transparent",
-        },
-        labelsRow: {
-            position: "relative",
-            height: 20,
+        labels: {
+            flexDirection: "row",
             marginTop: 6,
         },
-        dayLabel: {
-            position: "absolute",
-            fontSize: 9,
-            fontFamily: theme.fonts.regular,
-            width: 36,
+        label: {
+            flex: 1,
             textAlign: "center",
+            ...theme.typescale.labelSmall,
+            letterSpacing: 0,
+            color: theme.colors.onSurfaceVariant,
+        },
+        labelSelected: {
+            color: theme.colors.onSurface,
+            fontFamily: theme.fonts.bold,
         },
     });

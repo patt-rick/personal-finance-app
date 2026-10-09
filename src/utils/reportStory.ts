@@ -28,6 +28,25 @@ export function buildPeriodSummary(transactions: Transaction[], start: Date, end
     return { income: cents(income), expense: cents(expense), net: cents(income - expense), fees: cents(fees) };
 }
 
+/**
+ * Running income-minus-spending across the period, sampled at `steps + 1` evenly spaced moments from `start` to `end`.
+ * The last point equals the period's net.
+ */
+export function buildKeptCurve(transactions: Transaction[], start: Date, end: Date, steps = 32): number[] {
+    const from = start.getTime();
+    const to = end.getTime();
+    const span = Math.max(to - from, 0);
+    const deltas = new Array<number>(steps + 1).fill(0);
+    for (const t of transactions) {
+        const at = new Date(t.date).getTime();
+        if (at < from || at > to) continue;
+        const slot = span === 0 ? 0 : Math.ceil(((at - from) / span) * steps);
+        deltas[slot] += t.type === "income" ? t.amount : -grossAmount(t);
+    }
+    let running = 0;
+    return deltas.map((d) => (running = cents(running + d)));
+}
+
 export type ChangeMetric = "income" | "spending" | "net";
 
 export interface MetricPair {

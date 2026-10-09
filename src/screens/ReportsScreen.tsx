@@ -22,7 +22,7 @@ import {
     getBiggestTransactions,
 } from "../utils/reportCalculations";
 import { cashbookCurrency, excludeInternalTransfers } from "../utils/transfers";
-import { buildMonthOverMonth, buildPeriodSummary } from "../utils/reportStory";
+import { buildKeptCurve, buildMonthOverMonth, buildPeriodSummary } from "../utils/reportStory";
 import { EmptyScene } from "../components/illustrations";
 import { useReducedMotion } from "../components/reports/motion";
 import StoryHero from "../components/reports/StoryHero";
@@ -141,6 +141,8 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         [filteredTransactions, start, end],
     );
 
+    const keptCurve = useMemo(() => buildKeptCurve(filteredTransactions, start, end), [filteredTransactions, start, end]);
+
     const moved = useMemo(() => {
         if (!selectedBusinessId) return { in: 0, out: 0 };
         const transfers = filteredTransactions
@@ -160,45 +162,43 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         [spendingTransactions, start, end],
     );
 
-    const categories = useMemo<CategoryShare[]>(() => {
-        const breakdown = expenseBreakdown;
-        const counts = new Map(
-            getTopCategories(spendingTransactions, breakdown.length, "expense", start, end).map((c) => [
-                c.name,
-                c.count,
-            ]),
-        );
-        return breakdown.slice(0, 5).map((c) => ({
-            name: c.name,
-            amount: c.amount,
-            percentage: c.percentage,
-            count: counts.get(c.name) ?? 0,
-            color: c.color,
-        }));
-    }, [expenseBreakdown, spendingTransactions, start, end]);
+    const categoryCounts = useMemo(
+        () =>
+            new Map(
+                getTopCategories(spendingTransactions, expenseBreakdown.length, "expense", start, end).map((c) => [
+                    c.name,
+                    c.count,
+                ]),
+            ),
+        [expenseBreakdown, spendingTransactions, start, end],
+    );
+
+    const categories = useMemo<CategoryShare[]>(
+        () =>
+            expenseBreakdown.slice(0, 5).map((c) => ({
+                name: c.name,
+                amount: c.amount,
+                percentage: c.percentage,
+                count: categoryCounts.get(c.name) ?? 0,
+                color: c.color,
+            })),
+        [expenseBreakdown, categoryCounts],
+    );
+
+    const otherCategories = useMemo<CategoryShare[]>(
+        () =>
+            expenseBreakdown.slice(categories.length).map((c) => ({
+                name: c.name,
+                amount: c.amount,
+                percentage: c.percentage,
+                count: categoryCounts.get(c.name) ?? 0,
+                color: c.color,
+            })),
+        [expenseBreakdown, categories, categoryCounts],
+    );
 
     const chartPages = useMemo(() => {
         const pages: { title: string; legend?: { label: string; color: string }[]; content: React.ReactNode }[] = [];
-
-        if (trends.income.some((v) => v > 0) || trends.expense.some((v) => v > 0)) {
-            pages.push({
-                title: "Monthly Trends",
-                legend: [
-                    { label: "Income", color: theme.colors.income },
-                    { label: "Expense", color: theme.colors.chart[3] },
-                ],
-                content: (
-                    <PairedBarChart
-                        labels={trends.labels}
-                        primaryData={trends.income}
-                        secondaryData={trends.expense}
-                        primaryColor={theme.colors.income}
-                        secondaryColor={theme.colors.chart[3]}
-                        currencySymbol={currencySymbol}
-                    />
-                ),
-            });
-        }
 
         if (expenseBreakdown.length > 0) {
             const donutData = expenseBreakdown.map((c) => ({ value: c.amount, color: c.color, label: c.name }));
@@ -206,6 +206,26 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
             pages.push({
                 title: "Expense Breakdown",
                 content: <DonutChart data={donutData} total={total} currencySymbol={currencySymbol} />,
+            });
+        }
+
+        if (trends.income.some((v) => v > 0) || trends.expense.some((v) => v > 0)) {
+            pages.push({
+                title: "Monthly Trends",
+                legend: [
+                    { label: "Income", color: theme.colors.income },
+                    { label: "Expense", color: theme.colors.chartExpense },
+                ],
+                content: (
+                    <PairedBarChart
+                        labels={trends.labels}
+                        primaryData={trends.income}
+                        secondaryData={trends.expense}
+                        primaryColor={theme.colors.income}
+                        secondaryColor={theme.colors.chartExpense}
+                        currencySymbol={currencySymbol}
+                    />
+                ),
             });
         }
 
@@ -365,6 +385,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         <StoryHero
                             periodLabel={PERIOD_LABEL[selectedPeriod]}
                             summary={summary}
+                            curve={keptCurve}
                             symbol={currencySymbol}
                             movedIn={moved.in}
                             movedOut={moved.out}
@@ -379,6 +400,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                                 <Text style={styles.sectionTitle}>Where it went</Text>
                                 <CategoryStory
                                     categories={categories}
+                                    others={otherCategories}
                                     symbol={currencySymbol}
                                     active={isRevealed("categories")}
                                     reduced={reduced}

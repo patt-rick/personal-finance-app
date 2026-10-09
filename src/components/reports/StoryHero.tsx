@@ -3,12 +3,14 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme/theme";
 import MoneyText from "../MoneyText";
 import { PeriodSummary, heroCopy } from "../../utils/reportStory";
-import FlowBar from "./FlowBar";
+import HeroFigures from "./HeroFigures";
+import KeptCurve from "./KeptCurve";
 import { riseStyle, useCountUp, useReveal } from "./motion";
 
 interface StoryHeroProps {
     periodLabel: string;
     summary: PeriodSummary;
+    curve: number[];
     symbol: string;
     movedIn: number;
     movedOut: number;
@@ -21,6 +23,7 @@ const TIMELINE_MS = 1800;
 export default function StoryHero({
     periodLabel,
     summary,
+    curve,
     symbol,
     movedIn,
     movedOut,
@@ -47,12 +50,16 @@ export default function StoryHero({
         [progress],
     );
 
+    const curveColor = summary.net < 0 ? theme.colors.expense : theme.colors.income;
     const amountColor =
         copy.tone === "kept" ? theme.colors.income : copy.tone === "overspent" ? theme.colors.expense : theme.colors.onSurface;
 
     return (
         <View style={styles.wrap}>
             <View accessible accessibilityRole="header" accessibilityLabel={`${periodLabel}. ${copy.lead} ${format(copy.amount)} ${copy.tail}`}>
+                <View style={styles.curve}>
+                    <KeptCurve values={curve} color={curveColor} progress={progress} />
+                </View>
                 <Animated.Text style={[styles.period, motion.period]}>{periodLabel}</Animated.Text>
                 <Animated.Text style={[styles.lead, motion.lead]}>{copy.lead}</Animated.Text>
                 <Animated.View style={motion.amount}>
@@ -61,8 +68,8 @@ export default function StoryHero({
                 <Animated.Text style={[styles.tail, motion.tail]}>{copy.tail}</Animated.Text>
             </View>
 
-            <View style={styles.flow}>
-                <FlowBar summary={summary} symbol={symbol} progress={progress} format={format} />
+            <View style={styles.figures}>
+                <HeroFigures summary={summary} symbol={symbol} progress={progress} format={format} />
             </View>
 
             {(movedIn > 0 || movedOut > 0 || mixedCurrencies) && (
@@ -105,7 +112,7 @@ function CountUpAmount({
             amount={shown}
             symbol={symbol}
             size={44}
-            weight="light"
+            weight="bold"
             color={color}
             showDecimals={shown === target}
             numberOfLines={1}
@@ -137,8 +144,15 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             marginTop: 2,
             maxWidth: 320,
         },
-        flow: {
-            marginTop: 22,
+        curve: {
+            position: "absolute",
+            left: -20,
+            right: -20,
+            top: 118,
+            bottom: -56,
+        },
+        figures: {
+            marginTop: 68,
         },
         notes: {
             marginTop: 14,

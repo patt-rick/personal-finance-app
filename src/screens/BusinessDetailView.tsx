@@ -187,9 +187,11 @@ export default function BusinessDetailView({
         if (feeTotal > 0) {
             catMap[FEES_CATEGORY_LABEL] = (catMap[FEES_CATEGORY_LABEL] || 0) + feeTotal;
         }
-        const entries = Object.entries(catMap)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, 6);
+        const sorted = Object.entries(catMap).sort((a, b) => b[1] - a[1]);
+        const entries =
+            sorted.length > 6
+                ? [...sorted.slice(0, 5), ["Everything else", sorted.slice(5).reduce((sum, [, v]) => sum + v, 0)] as [string, number]]
+                : sorted;
         const total = entries.reduce((sum, [, v]) => sum + v, 0);
         return {
             items: entries.map(([name, value], i) => ({
@@ -465,7 +467,7 @@ export default function BusinessDetailView({
                                     title: "Daily Cash Flow",
                                     legend: [
                                         { label: "In", color: theme.colors.income },
-                                        { label: "Out", color: theme.colors.chart[3] },
+                                        { label: "Out", color: theme.colors.chartExpense },
                                     ],
                                     content: (
                                         <WeeklyBarChart
@@ -474,7 +476,7 @@ export default function BusinessDetailView({
                                             expenseData={dailyChartData.expenseValues}
                                             currencySymbol={symbol}
                                             incomeColor={theme.colors.income}
-                                            expenseColor={theme.colors.chart[3]}
+                                            expenseColor={theme.colors.chartExpense}
                                         />
                                     ),
                                 },

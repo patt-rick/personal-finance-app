@@ -3,6 +3,7 @@ import {
     buildMonthOverMonth,
     heroCopy,
     changeSentence,
+    buildKeptCurve,
 } from "../../src/utils/reportStory";
 import { Transaction } from "../../src/types";
 
@@ -187,5 +188,51 @@ describe("changeSentence", () => {
 
     it("calls out breaking even", () => {
         expect(changeSentence("net", pair(0, -100))).toMatchObject({ direction: "flat", good: true });
+    });
+});
+
+describe("buildKeptCurve", () => {
+    const start = new Date("2026-10-01T00:00:00.000Z");
+    const end = new Date("2026-10-11T00:00:00.000Z");
+
+    it("runs from zero to the period net, stepping when money moves", () => {
+        const curve = buildKeptCurve(
+            [
+                tx({ type: "income", amount: 1000, date: "2026-10-02T12:00:00.000Z" }),
+                tx({ type: "expense", amount: 300, fee: 5, date: "2026-10-06T12:00:00.000Z" }),
+            ],
+            start,
+            end,
+            10,
+        );
+        expect(curve).toHaveLength(11);
+        expect(curve[0]).toBe(0);
+        expect(curve[1]).toBe(0);
+        expect(curve[2]).toBe(1000);
+        expect(curve[5]).toBe(1000);
+        expect(curve[6]).toBe(695);
+        expect(curve[10]).toBe(695);
+    });
+
+    it("ignores transactions outside the period and can go below zero", () => {
+        const curve = buildKeptCurve(
+            [
+                tx({ type: "income", amount: 5000, date: "2026-09-30T23:00:00.000Z" }),
+                tx({ type: "expense", amount: 40, date: "2026-10-03T00:00:00.000Z" }),
+                tx({ type: "income", amount: 5000, date: "2026-10-12T00:00:00.000Z" }),
+            ],
+            start,
+            end,
+            10,
+        );
+        expect(curve[10]).toBe(-40);
+        expect(Math.max(...curve)).toBe(0);
+    });
+
+    it("returns a flat line for an empty or zero-length period", () => {
+        expect(buildKeptCurve([], start, end, 4)).toEqual([0, 0, 0, 0, 0]);
+        expect(buildKeptCurve([tx({ type: "income", amount: 10, date: start.toISOString() })], start, start, 4)).toEqual([
+            10, 10, 10, 10, 10,
+        ]);
     });
 });
