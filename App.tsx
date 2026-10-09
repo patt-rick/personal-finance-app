@@ -442,7 +442,6 @@ function MainApp() {
                                     businesses={businesses}
                                     transactions={transactions}
                                     currentBusiness={currentBusiness}
-                                    setCurrentBusiness={setCurrentBusiness}
                                 />
                             )}
                         </Tab.Screen>

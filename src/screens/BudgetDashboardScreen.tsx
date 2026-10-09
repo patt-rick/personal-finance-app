@@ -24,6 +24,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
 import { Business, Budget, CategoryBudgetSpent, Transaction } from "../types";
 import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
+import { resolveBudgetSelection } from "../utils/budgetSelection";
 import {
     calculateBudgetData,
     calculateTotalSpent,
@@ -41,7 +42,6 @@ interface BudgetDashboardScreenProps {
     businesses: Business[];
     transactions: Transaction[];
     currentBusiness: Business | null;
-    setCurrentBusiness: (business: Business | null) => void;
 }
 
 function getDaysLeft(period: "weekly" | "monthly" | "yearly"): number {
@@ -199,13 +199,14 @@ export default function BudgetDashboardScreen({
     businesses,
     transactions,
     currentBusiness,
-    setCurrentBusiness,
 }: BudgetDashboardScreenProps) {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
-    const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(currentBusiness);
+    const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(() =>
+        resolveBudgetSelection(null, currentBusiness, businesses),
+    );
     const [budget, setBudget] = useState<Budget | null>(null);
     const [budgetData, setBudgetData] = useState<CategoryBudgetSpent[]>([]);
     const [showSetup, setShowSetup] = useState(false);
@@ -228,12 +229,12 @@ export default function BudgetDashboardScreen({
     );
 
     useEffect(() => {
-        if (currentBusiness) {
-            setSelectedBusiness(currentBusiness);
-        } else if (businesses.length > 0) {
-            setSelectedBusiness(businesses[0]);
-        }
-    }, [currentBusiness, businesses]);
+        if (currentBusiness) setSelectedBusiness((prev) => resolveBudgetSelection(prev, currentBusiness, businesses));
+    }, [currentBusiness]);
+
+    useEffect(() => {
+        setSelectedBusiness((prev) => resolveBudgetSelection(prev, null, businesses));
+    }, [businesses]);
 
     useEffect(() => {
         if (selectedBusiness) {
@@ -270,7 +271,6 @@ export default function BudgetDashboardScreen({
 
     const handleBusinessSelect = (business: Business) => {
         setSelectedBusiness(business);
-        setCurrentBusiness(business);
     };
 
     const handleSetupComplete = () => {
