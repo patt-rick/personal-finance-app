@@ -49,6 +49,55 @@ describe("provider templates — mobile money", () => {
         expect(d?.type).toBe("income");
     });
 
+    it("MTN MoMo cash-out matches a template with the agent as merchant and fee split", () => {
+        const d = parseEvent(
+            ev(
+                "MobileMoney",
+                "Cash Out made for GHS1600.00 to VANTHELMA VENTURES. Current Balance: GHS256.82 " +
+                    "Financial Transaction ld: 80855322501. Cash-out fee is charged automatically from your MTN MoMo wallet. " +
+                    "Please do not pay any fees to the Agent. Thank you for using MTN MobileMoney. Fee charged: GHS16.00.",
+            ),
+            CATEGORIES,
+        );
+        expect(d?.providerId).toBe("mtn-momo-cashout");
+        expect(d?.type).toBe("expense");
+        expect(d?.amount).toBe(1600);
+        expect(d?.fee).toBe(16);
+        expect(d?.merchant).toBe("VANTHELMA VENTURES");
+        expect(d!.confidence).toBeGreaterThanOrEqual(0.75);
+    });
+
+    it("MTN MoMo cash-out with a 'request a reversal' footer still matches the cash-out template", () => {
+        const d = parseEvent(
+            ev(
+                "MTN",
+                "Cash Out Made for GHS 300.00 to AGT KOJO. Fee charged: GHS 3.00. If you did not initiate this, call 100 to request a reversal.",
+            ),
+            CATEGORIES,
+        );
+        expect(d?.providerId).toBe("mtn-momo-cashout");
+        expect(d?.type).toBe("expense");
+        expect(d?.amount).toBe(300);
+        expect(d?.fee).toBe(3);
+        expect(d!.confidence).toBeGreaterThanOrEqual(0.75);
+    });
+
+    it.each([
+        "Reversal of Cash Out made for GHS 50.00 to AGT KOJO. Current Balance: GHS 300.00.",
+        "Cash Out made for GHS 50.00 to AGT KOJO failed. Current Balance: GHS 300.00.",
+        "Cash Out made for GHS 50.00 to AGT KOJO was unsuccessful.",
+        "Cash Out made for GHS 50.00 to AGT KOJO is pending. Please approve by dialing *170#.",
+    ])("does not auto-save a reversed, failed or pending cash-out: %s", (body) => {
+        const d = parseEvent(ev("MTN", body), CATEGORIES);
+        expect(d?.providerId).not.toBe("mtn-momo-cashout");
+        if (d?.type === "expense") expect(d.confidence).toBeLessThan(0.75);
+    });
+
+    it("MTN cash-out wording from another sender does not use the MTN cash-out template", () => {
+        const d = parseEvent(ev("GCB", "Cash Out made for GHS 50.00 to AGT KOJO"), CATEGORIES);
+        expect(d?.providerId).not.toBe("mtn-momo-cashout");
+    });
+
     it("MoMo promo SMS does not match the debit template (no amount-shaped action)", () => {
         const d = parseEvent(ev("MTN", "MTN promo: dial *123# to win!"), CATEGORIES);
         expect(d).toBeNull();

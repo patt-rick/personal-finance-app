@@ -1,5 +1,6 @@
 import { ProviderTemplate } from "./types";
 import {
+    mtnMomoCashOut,
     mtnMomoDebit,
     mtnMomoCredit,
     mtnMomoTransfer,
@@ -48,6 +49,7 @@ const ALL: ProviderTemplate[] = [
     dstvSubscription,
     netflixSubscription,
     spotifySubscription,
+    mtnMomoCashOut,
     mtnMomoDebit,
     mtnMomoCredit,
     mtnMomoTransfer,

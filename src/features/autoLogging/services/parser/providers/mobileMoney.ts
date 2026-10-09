@@ -6,6 +6,19 @@ const MTN_SENDER = /\b(mtn|momo|mtnmomo|mtnmobilemoney|mtngh)\b/i;
 const GHS_RE = /\b(?:ghs|ghc)(?=\s*\d|\b)|gh[¢₵]/i;
 const TELECEL_SENDER = /\b(telecel|telecelgh|telecelcash|vodafone|vodafonegh|vodafonecash|vodacash)\b/i;
 const AIRTELTIGO_SENDER = /\b(airtel|tigo|airteltigo|airteltigomoney)\b/i;
+const CASH_OUT_NOT_COMPLETED_RE =
+    /\breversal\s+of\b|\b(failed|unsuccessful|declined|pending|not\s+successful)\b/i;
+
+export const mtnMomoCashOut: ProviderTemplate = {
+    id: "mtn-momo-cashout",
+    priority: 100,
+    senderMatch: MTN_SENDER,
+    bodyMatch: [/\bcash[\s-]?out\s+made\s+for\b/i, GHS_RE],
+    parse: (input) =>
+        CASH_OUT_NOT_COMPLETED_RE.test(input.text)
+            ? null
+            : buildDebit(input, { bodyMatch: [], baseConfidence: 0.9, merchantHint: "to" }),
+};
 
 export const mtnMomoDebit: ProviderTemplate = {
     id: "mtn-momo-debit",
