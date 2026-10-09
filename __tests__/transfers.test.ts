@@ -2,11 +2,13 @@ import { Business, Transaction } from "../src/types";
 import {
     TRANSFER_CATEGORY,
     createTransferPair,
+    excludeInternalTransfers,
     getTransferTargets,
     removeTransactionWithPair,
     validateTransfer,
 } from "../src/utils/transfers";
 import { computeCashbookBalance } from "../src/utils/cashbookBalance";
+import { grossAmount } from "../src/utils/transactionAmount";
 
 const biz = (id: string, name: string, currency?: string): Business => ({
     id,
@@ -198,5 +200,65 @@ describe("removeTransactionWithPair", () => {
 
     it("returns the list unchanged for an unknown id", () => {
         expect(removeTransactionWithPair(all, "nope")).toEqual(all);
+    });
+});
+
+describe("excludeInternalTransfers", () => {
+    const groceries: Transaction = {
+        id: "g",
+        description: "Groceries",
+        amount: 80,
+        date: "2026-09-10T00:00:00.000Z",
+        type: "expense",
+        businessId: "b1",
+        category: "Food",
+    };
+
+    function pair(fee?: number) {
+        return createTransferPair({
+            from: personal,
+            to: savings,
+            amount: 5000,
+            fee,
+            date: "2026-09-10T00:00:00.000Z",
+            makeId: sequentialIds(),
+        });
+    }
+
+    it("drops both halves of a transfer between cashbooks and keeps everything else", () => {
+        const { outgoing, incoming } = pair();
+        expect(excludeInternalTransfers([groceries, outgoing, incoming])).toEqual([groceries]);
+    });
+
+    it("keeps only the fee of a fee-bearing transfer, so all-cashbook balance is unchanged", () => {
+        const { outgoing, incoming } = pair(5);
+        const all = [groceries, outgoing, incoming];
+        const result = excludeInternalTransfers(all);
+
+        expect(result).toHaveLength(2);
+        const feeOnly = result.find((t) => t.id === outgoing.id)!;
+        expect(feeOnly.amount).toBe(0);
+        expect(feeOnly.fee).toBe(5);
+
+        const net = (list: Transaction[]) =>
+            list.reduce((s, t) => (t.type === "income" ? s + t.amount : s - grossAmount(t)), 0);
+        expect(net(result)).toBe(net(all));
+    });
+
+    it("keeps a half whose partner is gone (its cashbook was deleted)", () => {
+        const { incoming } = pair();
+        expect(excludeInternalTransfers([groceries, incoming])).toEqual([groceries, incoming]);
+    });
+
+    it("keeps both halves when they no longer share a group (cashbook currency changed later)", () => {
+        const { outgoing, incoming } = pair();
+        const currency: Record<string, string> = { b1: "USD", b2: "GHS" };
+        const result = excludeInternalTransfers([outgoing, incoming], (t) => currency[t.businessId]);
+        expect(result).toEqual([outgoing, incoming]);
+    });
+
+    it("leaves SMS-detected transfers to other people alone", () => {
+        const momoTransfer: Transaction = { ...groceries, id: "m", category: "Transfer", source: "sms" };
+        expect(excludeInternalTransfers([momoTransfer])).toEqual([momoTransfer]);
     });
 });

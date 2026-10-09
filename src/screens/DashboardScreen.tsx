@@ -38,6 +38,7 @@ import { maybeRequestReview } from "../utils/storeReview";
 import ListCard from "../components/ListCard";
 import MoneyText from "../components/MoneyText";
 import { grossAmount } from "../utils/transactionAmount";
+import { excludeInternalTransfers } from "../utils/transfers";
 
 function getGreeting(): string {
     const hour = new Date().getHours();
@@ -282,9 +283,13 @@ function DashboardHome({
         for (const biz of businesses) {
             bizCurrencyMap[biz.id] = biz.currency || "USD";
         }
+        const currencyOf = (t: Transaction) => bizCurrencyMap[t.businessId] || "USD";
         for (const t of transactions) {
-            const c = bizCurrencyMap[t.businessId] || "USD";
+            const c = currencyOf(t);
             if (!map[c]) map[c] = { income: 0, expense: 0 };
+        }
+        for (const t of excludeInternalTransfers(transactions, currencyOf)) {
+            const c = currencyOf(t);
             if (t.type === "income") map[c].income += t.amount;
             else map[c].expense += grossAmount(t);
         }

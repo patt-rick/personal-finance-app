@@ -75,6 +75,38 @@ export function createTransferPair(args: CreateTransferArgs): {
     };
 }
 
+/**
+ * Removes money moved between the user's own cashbooks, for views that span every cashbook.
+ * Only complete pairs are removed (a half whose cashbook was deleted still moved real money),
+ * and a transfer fee survives as a zero-principal row because that money really left.
+ * `groupOf` (e.g. cashbook currency) keeps a pair whose halves now fall into different groups.
+ */
+export function excludeInternalTransfers(
+    all: Transaction[],
+    groupOf: (t: Transaction) => string = () => "",
+): Transaction[] {
+    const sides = new Map<string, { income?: string; expense?: string }>();
+    for (const t of all) {
+        if (!t.transferId) continue;
+        const entry = sides.get(t.transferId) ?? {};
+        entry[t.type] = groupOf(t);
+        sides.set(t.transferId, entry);
+    }
+
+    const result: Transaction[] = [];
+    for (const t of all) {
+        const entry = t.transferId ? sides.get(t.transferId) : undefined;
+        const isInternalPair =
+            entry?.income !== undefined && entry.expense !== undefined && entry.income === entry.expense;
+        if (!isInternalPair) {
+            result.push(t);
+        } else if (t.type === "expense" && (t.fee ?? 0) > 0) {
+            result.push({ ...t, amount: 0 });
+        }
+    }
+    return result;
+}
+
 export function removeTransactionWithPair(all: Transaction[], id: string): Transaction[] {
     const target = all.find((t) => t.id === id);
     if (!target) return all;

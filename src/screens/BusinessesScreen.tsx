@@ -24,6 +24,7 @@ import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
 import MoneyText from "../components/MoneyText";
 import { grossAmount } from "../utils/transactionAmount";
+import { excludeInternalTransfers } from "../utils/transfers";
 
 interface BusinessesScreenProps {
     businesses: Business[];
@@ -136,8 +137,9 @@ function SummaryStrip({
             bizCurrencyMap[biz.id] = biz.currency || "USD";
         }
 
+        const currencyOf = (t: Transaction) => bizCurrencyMap[t.businessId] || "USD";
         for (const t of transactions) {
-            const cur = bizCurrencyMap[t.businessId] || "USD";
+            const cur = currencyOf(t);
             if (!byCurrency[cur]) {
                 byCurrency[cur] = {
                     income: 0,
@@ -145,6 +147,10 @@ function SummaryStrip({
                     symbol: getCurrencySymbol(cur),
                 };
             }
+        }
+
+        for (const t of excludeInternalTransfers(transactions, currencyOf)) {
+            const cur = currencyOf(t);
             if (t.type === "income") byCurrency[cur].income += t.amount;
             else byCurrency[cur].expense += grossAmount(t);
         }

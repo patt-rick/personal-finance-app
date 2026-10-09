@@ -1,5 +1,5 @@
 import { computeCashbookBalance } from "../../src/utils/cashbookBalance";
-import { getCategoryBreakdown, getTopCategories } from "../../src/utils/reportCalculations";
+import { getBiggestTransactions, getCategoryBreakdown, getTopCategories } from "../../src/utils/reportCalculations";
 import { FEES_CATEGORY_LABEL } from "../../src/utils/transactionAmount";
 import { Transaction } from "../../src/types";
 
@@ -36,4 +36,21 @@ it("top categories merge synthetic fees with a real 'Fees & Taxes' category (no 
   const fees = top.find((c) => c.name === FEES_CATEGORY_LABEL)!;
   expect(fees.amount).toBe(510); // 500 real principal + 10 synthetic fee, not clobbered
   expect(fees.count).toBe(2);
+});
+
+it("a fee-only row (transfer principal removed) adds to Fees & Taxes without an empty category", () => {
+  const list = [tx({ category: "Transfer", amount: 0, fee: 5 }), tx({ category: "Food", amount: 30 })];
+  const from = new Date("2026-09-01");
+  const to = new Date("2026-09-30");
+  const breakdown = getCategoryBreakdown(list, from, to, "expense");
+  const top = getTopCategories(list, 10, "expense", from, to);
+  expect(breakdown.map((c) => c.name).sort()).toEqual(["Fees & Taxes", "Food"]);
+  expect(top.map((c) => c.name).sort()).toEqual(["Fees & Taxes", "Food"]);
+  expect(top.find((c) => c.name === FEES_CATEGORY_LABEL)!.amount).toBe(5);
+});
+
+it("biggest expenses skip fee-only rows", () => {
+  const list = [tx({ id: "fee-only", category: "Transfer", amount: 0, fee: 50 }), tx({ id: "food", category: "Food", amount: 30 })];
+  const biggest = getBiggestTransactions(list, 5, "expense", new Date("2026-09-01"), new Date("2026-09-30"));
+  expect(biggest.map((t) => t.id)).toEqual(["food"]);
 });

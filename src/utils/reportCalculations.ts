@@ -65,6 +65,7 @@ export function getCategoryBreakdown(
 
     const map: Record<string, number> = {};
     for (const t of filtered) {
+        if (t.amount <= 0) continue;
         const cat = t.category || "Uncategorized";
         map[cat] = (map[cat] || 0) + t.amount;
     }
@@ -134,6 +135,7 @@ export function getTopCategories(
 
     const map: Record<string, { amount: number; count: number }> = {};
     for (const t of filtered) {
+        if (t.amount <= 0) continue;
         const cat = t.category || "Uncategorized";
         if (!map[cat]) map[cat] = { amount: 0, count: 0 };
         map[cat].amount += t.amount;
@@ -168,7 +170,7 @@ export function getBiggestTransactions(
     return transactions
         .filter((t) => {
             const td = new Date(t.date);
-            return t.type === type && td >= startDate && td <= endDate;
+            return t.type === type && t.amount > 0 && td >= startDate && td <= endDate;
         })
         .sort((a, b) => grossAmount(b) - grossAmount(a))
         .slice(0, limit);
