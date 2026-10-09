@@ -8,5 +8,19 @@ env
 .superpowers/
 .claude/settings.local.json
 
+# Local Android build output. android/.gitignore already covers these for git,
+# but eas-cli on Windows skips nested .gitignore files when packing the upload,
+# and a stale autolinking.json with Windows paths breaks the cloud Gradle build.
+/android/build/
+/android/app/build/
+/android/.gradle/
+/android/.kotlin/
+/android/.idea/
+/android/app/.cxx/
+/android/app/src/main/assets/
+/android/local.properties
+*.iml
+.env
+
 # TypeScript incremental build info
 tsconfig.tsbuildinfo
