@@ -29,6 +29,10 @@ export default function ReviewItemCard({ item, businesses, onConfirm, onReject }
         businesses.some((b) => b.id === item.businessId) ? item.businessId : null,
     );
     const business = businesses.find((b) => b.id === businessId);
+    const pickerBusinesses = useMemo(() => {
+        const routed = businesses.find((b) => b.id === item.businessId);
+        return routed ? [routed, ...businesses.filter((b) => b !== routed)] : businesses;
+    }, [businesses, item.businessId]);
 
     const symbol = getCurrencySymbol(business?.currency ?? item.draft.currencyCode ?? undefined);
     const SourceIcon = item.draft.source === "sms" ? MessageSquare : Bell;
@@ -98,7 +102,7 @@ export default function ReviewItemCard({ item, businesses, onConfirm, onReject }
             </View>
 
             <ReviewCashbookPicker
-                businesses={businesses}
+                businesses={pickerBusinesses}
                 selectedId={businessId}
                 messageCurrency={item.draft.currencyCode}
                 onSelect={setBusinessId}
