@@ -436,7 +436,7 @@ function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: an
                         <Text style={[s.legendLbl, { color: theme.colors.onSurfaceVariant }]}>In</Text>
                     </View>
                     <View style={s.legendItem}>
-                        <View style={[s.legendDot, { backgroundColor: theme.colors.chart[3] }]} />
+                        <View style={[s.legendDot, { backgroundColor: theme.colors.chartExpense }]} />
                         <Text style={[s.legendLbl, { color: theme.colors.onSurfaceVariant }]}>
                             Out
                         </Text>
@@ -450,7 +450,7 @@ function ActivityChart({ labels, incomeData, expenseData, symbol, theme, s }: an
                     expenseData={expenseData}
                     currencySymbol={symbol}
                     incomeColor={theme.colors.income}
-                    expenseColor={theme.colors.chart[3]}
+                    expenseColor={theme.colors.chartExpense}
                 />
             </View>
         </View>

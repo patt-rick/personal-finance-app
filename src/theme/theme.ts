@@ -72,6 +72,9 @@ const lightColors = {
     goldContainer: "#F2E2B3",
     onGoldContainer: "#2A1F00",
 
+    // Expense series when paired with `income` in income-vs-expense charts.
+    chartExpense: "#26231D",
+
     // --- Categorical chart palette ---
     chart: [
         "#0066FF",
@@ -163,6 +166,8 @@ const darkColors: typeof lightColors = {
     gold: "#E0BE6A",
     goldContainer: "#4A3B12",
     onGoldContainer: "#F2E2B3",
+
+    chartExpense: "#858077",
 
     chart: [
         "#7FA9FF",

@@ -30,7 +30,7 @@ export default function WeeklyBarChart({
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const resolvedIncomeColor = incomeColor ?? theme.colors.income;
-    const resolvedExpenseColor = expenseColor ?? theme.colors.chart[3];
+    const resolvedExpenseColor = expenseColor ?? theme.colors.chartExpense;
     const [tooltip, setTooltip] = useState<{ index: number; type: "income" | "expense" } | null>(
         null,
     );
