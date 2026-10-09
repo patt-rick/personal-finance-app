@@ -87,40 +87,6 @@ export function getCategoryBreakdown(
         .map((item, i) => ({ ...item, color: palette[i % palette.length] }));
 }
 
-export function getMonthComparison(
-    transactions: Transaction[],
-): { incomeChange: number; expenseChange: number; netChange: number } {
-    const now = new Date();
-    const thisMonthStart = new Date(now.getFullYear(), now.getMonth(), 1);
-    const lastMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1);
-    const lastMonthEnd = thisMonthStart;
-
-    let thisIncome = 0;
-    let thisExpense = 0;
-    let lastIncome = 0;
-    let lastExpense = 0;
-
-    for (const t of transactions) {
-        const td = new Date(t.date);
-        if (td >= thisMonthStart) {
-            if (t.type === "income") thisIncome += t.amount;
-            else thisExpense += grossAmount(t);
-        } else if (td >= lastMonthStart && td < lastMonthEnd) {
-            if (t.type === "income") lastIncome += t.amount;
-            else lastExpense += grossAmount(t);
-        }
-    }
-
-    const lastNet = lastIncome - lastExpense;
-    const thisNet = thisIncome - thisExpense;
-
-    return {
-        incomeChange: lastIncome === 0 ? 0 : ((thisIncome - lastIncome) / lastIncome) * 100,
-        expenseChange: lastExpense === 0 ? 0 : ((thisExpense - lastExpense) / lastExpense) * 100,
-        netChange: lastNet === 0 ? 0 : ((thisNet - lastNet) / Math.abs(lastNet)) * 100,
-    };
-}
-
 export function getTopCategories(
     transactions: Transaction[],
     limit: number,

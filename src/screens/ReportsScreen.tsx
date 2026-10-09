@@ -1,23 +1,37 @@
-import React, { useMemo, useState, useCallback, useEffect } from "react";
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View, BackHandler } from "react-native";
+import React, { useMemo, useState, useEffect, useCallback, useRef } from "react";
+import {
+    BackHandler,
+    LayoutChangeEvent,
+    NativeScrollEvent,
+    NativeSyntheticEvent,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { TrendingUp, TrendingDown, ArrowLeft } from "lucide-react-native";
+import { ArrowLeft } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { Business, Transaction } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import {
     getMonthlyTrends,
     getCategoryBreakdown,
-    getMonthComparison,
     getTopCategories,
     getBiggestTransactions,
 } from "../utils/reportCalculations";
-import { grossAmount } from "../utils/transactionAmount";
-import { excludeInternalTransfers } from "../utils/transfers";
+import { cashbookCurrency, excludeInternalTransfers } from "../utils/transfers";
+import { buildMonthOverMonth, buildPeriodSummary } from "../utils/reportStory";
+import { EmptyScene } from "../components/illustrations";
+import { useReducedMotion } from "../components/reports/motion";
+import StoryHero from "../components/reports/StoryHero";
 import PairedBarChart from "../components/dashboard/PairedBarChart";
 import DonutChart from "../components/dashboard/DonutChart";
 import ChartCarousel from "../components/ChartCarousel";
-import { EmptyScene } from "../components/illustrations";
+import CategoryStory, { CategoryShare } from "../components/reports/CategoryStory";
+import ComparisonStory from "../components/reports/ComparisonStory";
+import BiggestExpenses from "../components/reports/BiggestExpenses";
 
 interface ReportsScreenProps {
     businesses: Business[];
@@ -27,6 +41,18 @@ interface ReportsScreenProps {
 
 const PERIODS = ["This Month", "3 Months", "6 Months", "Year"] as const;
 type Period = (typeof PERIODS)[number];
+
+const PERIOD_LABEL: Record<Period, string> = {
+    "This Month": "This month",
+    "3 Months": "Last 3 months",
+    "6 Months": "Last 6 months",
+    Year: "Last 12 months",
+};
+
+/** A section starts its motion once its top is this far above the bottom of the viewport. */
+const REVEAL_INSET = 80;
+
+type SectionKey = "categories" | "comparison";
 
 function getDateRange(period: Period): { start: Date; end: Date; monthCount: number } {
     const now = new Date();
@@ -60,6 +86,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
     const insets = useSafeAreaInsets();
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
+    const reduced = useReducedMotion();
 
     useEffect(() => {
         if (!onBack) return;
@@ -73,6 +100,12 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
 
     const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>("3 Months");
+    const [viewportBottom, setViewportBottom] = useState(0);
+    const [storyY, setStoryY] = useState<number | null>(null);
+    const [sections, setSections] = useState<{ story: string; y: Partial<Record<SectionKey, number>> }>({
+        story: "",
+        y: {},
+    });
 
     const filteredTransactions = useMemo(
         () =>
@@ -80,6 +113,12 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                 ? transactions.filter((t) => t.businessId === selectedBusinessId)
                 : excludeInternalTransfers(transactions),
         [transactions, selectedBusinessId],
+    );
+
+    // In "All", internal transfers are already gone and the fee rows they leave behind are real spending.
+    const spendingTransactions = useMemo(
+        () => (selectedBusinessId ? filteredTransactions.filter((t) => !t.transferId) : filteredTransactions),
+        [filteredTransactions, selectedBusinessId],
     );
 
     const currencySymbol = useMemo(() => {
@@ -90,7 +129,26 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         return getCurrencySymbol(businesses[0]?.currency);
     }, [selectedBusinessId, businesses]);
 
+    const mixedCurrencies = useMemo(
+        () => !selectedBusinessId && new Set(businesses.map(cashbookCurrency)).size > 1,
+        [selectedBusinessId, businesses],
+    );
+
     const { start, end, monthCount } = useMemo(() => getDateRange(selectedPeriod), [selectedPeriod]);
+
+    const summary = useMemo(
+        () => buildPeriodSummary(filteredTransactions, start, end),
+        [filteredTransactions, start, end],
+    );
+
+    const moved = useMemo(() => {
+        if (!selectedBusinessId) return { in: 0, out: 0 };
+        const transfers = filteredTransactions
+            .filter((t) => t.transferId)
+            .map((t) => ({ ...t, fee: undefined }));
+        const s = buildPeriodSummary(transfers, start, end);
+        return { in: s.income, out: s.expense };
+    }, [selectedBusinessId, filteredTransactions, start, end]);
 
     const trends = useMemo(
         () => getMonthlyTrends(filteredTransactions, monthCount),
@@ -98,35 +156,26 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
     );
 
     const expenseBreakdown = useMemo(
-        () => getCategoryBreakdown(filteredTransactions, start, end, "expense"),
-        [filteredTransactions, start, end],
+        () => getCategoryBreakdown(spendingTransactions, start, end, "expense"),
+        [spendingTransactions, start, end],
     );
 
-    const comparison = useMemo(
-        () => getMonthComparison(filteredTransactions),
-        [filteredTransactions],
-    );
-
-    const topCategories = useMemo(
-        () => getTopCategories(filteredTransactions, 5, "expense", start, end),
-        [filteredTransactions, start, end],
-    );
-
-    const biggestExpenses = useMemo(
-        () => getBiggestTransactions(filteredTransactions, 5, "expense", start, end),
-        [filteredTransactions, start, end],
-    );
-
-    const feesTotal = useMemo(
-        () =>
-            filteredTransactions
-                .filter((t) => {
-                    const td = new Date(t.date);
-                    return t.type === "expense" && td >= start && td <= end;
-                })
-                .reduce((sum, t) => sum + (t.fee ?? 0), 0),
-        [filteredTransactions, start, end],
-    );
+    const categories = useMemo<CategoryShare[]>(() => {
+        const breakdown = expenseBreakdown;
+        const counts = new Map(
+            getTopCategories(spendingTransactions, breakdown.length, "expense", start, end).map((c) => [
+                c.name,
+                c.count,
+            ]),
+        );
+        return breakdown.slice(0, 5).map((c) => ({
+            name: c.name,
+            amount: c.amount,
+            percentage: c.percentage,
+            count: counts.get(c.name) ?? 0,
+            color: c.color,
+        }));
+    }, [expenseBreakdown, spendingTransactions, start, end]);
 
     const chartPages = useMemo(() => {
         const pages: { title: string; legend?: { label: string; color: string }[]; content: React.ReactNode }[] = [];
@@ -152,11 +201,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         }
 
         if (expenseBreakdown.length > 0) {
-            const donutData = expenseBreakdown.map((c) => ({
-                value: c.amount,
-                color: c.color,
-                label: c.name,
-            }));
+            const donutData = expenseBreakdown.map((c) => ({ value: c.amount, color: c.color, label: c.name }));
             const total = expenseBreakdown.reduce((acc, c) => acc + c.amount, 0);
             pages.push({
                 title: "Expense Breakdown",
@@ -167,12 +212,54 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         return pages;
     }, [trends, expenseBreakdown, theme, currencySymbol]);
 
-    const hasData = filteredTransactions.some((t) => {
-        const td = new Date(t.date);
-        return td >= start && td <= end;
-    });
+    const comparison = useMemo(() => buildMonthOverMonth(filteredTransactions), [filteredTransactions]);
 
-    const maxCategoryAmount = topCategories.length > 0 ? topCategories[0].amount : 0;
+    const biggestExpenses = useMemo(
+        () => getBiggestTransactions(spendingTransactions, 5, "expense", start, end),
+        [spendingTransactions, start, end],
+    );
+
+    const hasData = useMemo(
+        () =>
+            filteredTransactions.some((t) => {
+                const td = new Date(t.date);
+                return td >= start && td <= end;
+            }),
+        [filteredTransactions, start, end],
+    );
+
+    const storyKey = `${selectedPeriod}:${selectedBusinessId ?? "all"}`;
+
+    const currentBottom = useRef(0);
+
+    useEffect(() => {
+        setViewportBottom(currentBottom.current);
+    }, [storyKey]);
+
+    const onScrollViewLayout = useCallback((e: LayoutChangeEvent) => {
+        const h = e.nativeEvent.layout.height;
+        currentBottom.current = Math.max(currentBottom.current, h);
+        setViewportBottom((prev) => Math.max(prev, h));
+    }, []);
+
+    const onScroll = useCallback((e: NativeSyntheticEvent<NativeScrollEvent>) => {
+        const bottom = e.nativeEvent.contentOffset.y + e.nativeEvent.layoutMeasurement.height;
+        currentBottom.current = bottom;
+        setViewportBottom((prev) => (bottom > prev + 24 ? bottom : prev));
+    }, []);
+
+    const trackSection = (key: SectionKey) => (e: LayoutChangeEvent) => {
+        const y = e.nativeEvent.layout.y;
+        setSections((prev) => {
+            const base = prev.story === storyKey ? prev.y : {};
+            return base[key] === y && prev.story === storyKey ? prev : { story: storyKey, y: { ...base, [key]: y } };
+        });
+    };
+
+    const isRevealed = (key: SectionKey) => {
+        const y = sections.story === storyKey ? sections.y[key] : undefined;
+        return storyY !== null && y !== undefined && storyY + y + REVEAL_INSET < viewportBottom;
+    };
 
     return (
         <View style={styles.container}>
@@ -182,6 +269,8 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         onPress={onBack}
                         style={styles.backBtn}
                         hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+                        accessibilityRole="button"
+                        accessibilityLabel="Back"
                     >
                         <ArrowLeft size={20} color={theme.colors.onSurface} />
                     </TouchableOpacity>
@@ -189,7 +278,13 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                 <Text style={styles.title}>Reports</Text>
             </View>
 
-            <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: 40 }}>
+            <ScrollView
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingBottom: 120 }}
+                onLayout={onScrollViewLayout}
+                onScroll={onScroll}
+                scrollEventThrottle={100}
+            >
                 <ScrollView
                     horizontal
                     showsHorizontalScrollIndicator={false}
@@ -266,141 +361,52 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                         </Text>
                     </View>
                 ) : (
-                    <>
-                        {chartPages.length > 0 && <ChartCarousel pages={chartPages} />}
+                    <View key={storyKey} onLayout={(e) => setStoryY(e.nativeEvent.layout.y)}>
+                        <StoryHero
+                            periodLabel={PERIOD_LABEL[selectedPeriod]}
+                            summary={summary}
+                            symbol={currencySymbol}
+                            movedIn={moved.in}
+                            movedOut={moved.out}
+                            mixedCurrencies={mixedCurrencies}
+                            reduced={reduced}
+                        />
 
-                        <View style={styles.sectionHeader}>
-                            <Text style={styles.sectionTitle}>
-                                Month over Month
-                            </Text>
-                        </View>
-                        <View style={styles.comparisonRow}>
-                            <ComparisonCard
-                                label="Income"
-                                value={comparison.incomeChange}
-                                theme={theme}
-                                styles={styles}
-                            />
-                            <ComparisonCard
-                                label="Expense"
-                                value={comparison.expenseChange}
-                                theme={theme}
-                                styles={styles}
-                            />
-                            <ComparisonCard
-                                label="Net"
-                                value={comparison.netChange}
-                                theme={theme}
-                                styles={styles}
-                            />
-                        </View>
+                        {chartPages.length > 0 && <ChartCarousel pages={chartPages} bare />}
 
-                        {feesTotal > 0 && (
-                            <View style={[styles.comparisonRow, { marginTop: 10 }]}>
-                                <View style={styles.statCard}>
-                                    <Text style={styles.statLabel}>Fees & Taxes</Text>
-                                    <Text style={[styles.statValue, { color: theme.colors.onSurface }]}>
-                                        {currencySymbol}
-                                        {feesTotal.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                    </Text>
-                                </View>
+                        {categories.length > 0 && (
+                            <View onLayout={trackSection("categories")}>
+                                <Text style={styles.sectionTitle}>Where it went</Text>
+                                <CategoryStory
+                                    categories={categories}
+                                    symbol={currencySymbol}
+                                    active={isRevealed("categories")}
+                                    reduced={reduced}
+                                />
                             </View>
                         )}
 
-                        {topCategories.length > 0 && (
-                            <>
-                                <View style={styles.sectionHeader}>
-                                    <Text style={styles.sectionTitle}>
-                                        Top Spending Categories
-                                    </Text>
-                                </View>
-                                <View style={styles.card}>
-                                    {topCategories.map((cat, i) => (
-                                        <View key={cat.name} style={[styles.categoryRow, i > 0 && styles.categoryDivider]}>
-                                            <View style={styles.categoryInfo}>
-                                                <Text style={styles.categoryName}>
-                                                    {cat.name}
-                                                </Text>
-                                                <Text style={styles.categoryCount}>
-                                                    {cat.count} transaction{cat.count !== 1 ? "s" : ""}
-                                                </Text>
-                                            </View>
-                                            <Text style={styles.categoryAmount}>
-                                                {currencySymbol}{cat.amount.toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                            </Text>
-                                            <View style={styles.progressBarBg}>
-                                                <View
-                                                    style={[
-                                                        styles.progressBarFill,
-                                                        {
-                                                            width: `${maxCategoryAmount > 0 ? (cat.amount / maxCategoryAmount) * 100 : 0}%` as any,
-                                                        },
-                                                    ]}
-                                                />
-                                            </View>
-                                        </View>
-                                    ))}
-                                </View>
-                            </>
-                        )}
+                        <View onLayout={trackSection("comparison")}>
+                            <Text style={styles.sectionTitle}>Compared with last month</Text>
+                            <Text style={styles.sectionNote}>
+                                This month so far, against the same days last month.
+                            </Text>
+                            <ComparisonStory
+                                comparison={comparison}
+                                active={isRevealed("comparison")}
+                                reduced={reduced}
+                            />
+                        </View>
 
                         {biggestExpenses.length > 0 && (
-                            <>
-                                <View style={styles.sectionHeader}>
-                                    <Text style={styles.sectionTitle}>
-                                        Biggest Expenses
-                                    </Text>
-                                </View>
-                                <View style={styles.card}>
-                                    {biggestExpenses.map((tx, i) => (
-                                        <View key={tx.id} style={[styles.txRow, i > 0 && styles.categoryDivider]}>
-                                            <View style={styles.txInfo}>
-                                                <Text style={styles.txDesc} numberOfLines={1}>
-                                                    {tx.description}
-                                                </Text>
-                                                <Text style={styles.txMeta}>
-                                                    {tx.category || "Uncategorized"} · {new Date(tx.date).toLocaleDateString()}
-                                                </Text>
-                                            </View>
-                                            <Text style={styles.txAmount}>
-                                                -{currencySymbol}{grossAmount(tx).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                                            </Text>
-                                        </View>
-                                    ))}
-                                </View>
-                            </>
+                            <View>
+                                <Text style={styles.sectionTitle}>Biggest expenses</Text>
+                                <BiggestExpenses transactions={biggestExpenses} symbol={currencySymbol} />
+                            </View>
                         )}
-                    </>
+                    </View>
                 )}
             </ScrollView>
-        </View>
-    );
-}
-
-function ComparisonCard({
-    label,
-    value,
-    theme,
-    styles,
-}: {
-    label: string;
-    value: number;
-    theme: ReturnType<typeof useTheme>;
-    styles: ReturnType<typeof createStyles>;
-}) {
-    const isPositive = value >= 0;
-    const Arrow = isPositive ? TrendingUp : TrendingDown;
-    const color = label === "Expense"
-        ? (isPositive ? theme.colors.onSurfaceVariant : theme.colors.income)
-        : (isPositive ? theme.colors.income : theme.colors.onSurfaceVariant);
-
-    return (
-        <View style={styles.statCard}>
-            <Text style={styles.statLabel}>{label}</Text>
-            <Arrow size={16} color={color} />
-            <Text style={[styles.statValue, { color }]}>
-                {Math.abs(value).toFixed(1)}%
-            </Text>
         </View>
     );
 }
@@ -472,117 +478,19 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             fontFamily: theme.fonts.regular,
             color: theme.colors.onSurfaceVariant,
         },
-        sectionHeader: {
-            paddingHorizontal: 20,
-            marginTop: 24,
-            marginBottom: 12,
-        },
         sectionTitle: {
-            fontSize: 15,
-            fontFamily: theme.fonts.semibold,
+            ...theme.typescale.titleMedium,
             color: theme.colors.onSurface,
-        },
-        comparisonRow: {
-            flexDirection: "row" as const,
             paddingHorizontal: 20,
-            gap: 10,
+            marginTop: 32,
+            marginBottom: 10,
         },
-        statCard: {
-            flex: 1,
-            alignItems: "center" as const,
-            padding: 14,
-            borderRadius: 14,
-            gap: 6,
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-            borderWidth: StyleSheet.hairlineWidth,
-        },
-        statLabel: {
-            fontSize: 11,
-            fontFamily: theme.fonts.semibold,
-            textTransform: "uppercase" as const,
-            letterSpacing: 0.5,
+        sectionNote: {
+            ...theme.typescale.bodySmall,
             color: theme.colors.onSurfaceVariant,
-        },
-        statValue: {
-            fontSize: 16,
-            fontFamily: theme.fonts.semibold,
-            fontVariant: ["tabular-nums"],
-        },
-        card: {
-            marginHorizontal: 20,
-            borderRadius: 14,
-            padding: 14,
-            backgroundColor: theme.colors.card,
-            borderColor: theme.colors.border,
-            borderWidth: StyleSheet.hairlineWidth,
-        },
-        categoryRow: {
-            paddingVertical: 12,
-        },
-        categoryDivider: {
-            borderTopWidth: StyleSheet.hairlineWidth,
-            borderTopColor: theme.colors.outlineVariant,
-        },
-        categoryInfo: {
-            flexDirection: "row" as const,
-            justifyContent: "space-between" as const,
-            alignItems: "center" as const,
-            marginBottom: 6,
-        },
-        categoryName: {
-            fontSize: 14,
-            fontFamily: theme.fonts.semibold,
-            color: theme.colors.onSurface,
-        },
-        categoryCount: {
-            fontSize: 11,
-            fontFamily: theme.fonts.regular,
-            color: theme.colors.onSurfaceVariant,
-        },
-        categoryAmount: {
-            fontSize: 14,
-            fontFamily: theme.fonts.semibold,
-            fontVariant: ["tabular-nums"],
-            marginBottom: 6,
-            color: theme.colors.onSurface,
-        },
-        progressBarBg: {
-            height: 6,
-            borderRadius: 3,
-            backgroundColor: theme.colors.surfaceContainerHighest,
-            overflow: "hidden" as const,
-        },
-        progressBarFill: {
-            height: 6,
-            borderRadius: 3,
-            backgroundColor: theme.colors.primary,
-        },
-        txRow: {
-            flexDirection: "row" as const,
-            alignItems: "center" as const,
-            paddingVertical: 12,
-        },
-        txInfo: {
-            flex: 1,
-            marginRight: 12,
-        },
-        txDesc: {
-            fontSize: 14,
-            fontFamily: theme.fonts.semibold,
-            color: theme.colors.onSurface,
-        },
-        txMeta: {
-            fontSize: 11,
-            fontFamily: theme.fonts.regular,
-            marginTop: 2,
-            color: theme.colors.onSurfaceVariant,
-        },
-        txAmount: {
-            fontSize: 14,
-            fontFamily: theme.fonts.semibold,
-            fontVariant: ["tabular-nums"],
-            color: theme.colors.onSurface,
+            paddingHorizontal: 20,
+            marginTop: -6,
+            marginBottom: 12,
         },
     });
 }

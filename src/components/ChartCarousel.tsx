@@ -20,9 +20,11 @@ interface ChartPage {
 
 interface ChartCarouselProps {
     pages: ChartPage[];
+    /** Draw charts straight on the page background instead of inside cards. */
+    bare?: boolean;
 }
 
-export default function ChartCarousel({ pages }: ChartCarouselProps) {
+export default function ChartCarousel({ pages, bare }: ChartCarouselProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [activeIndex, setActiveIndex] = useState(0);
@@ -64,7 +66,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                         </View>
                     )}
                 </View>
-                <View style={styles.card}>{page.content}</View>
+                <View style={[styles.card, bare && styles.bare]}>{page.content}</View>
             </View>
         );
     }
@@ -101,7 +103,7 @@ export default function ChartCarousel({ pages }: ChartCarouselProps) {
                 contentContainerStyle={{ gap: cardGap }}
             >
                 {pages.map((page, index) => (
-                    <View key={index} style={[styles.card, { width: cardWidth }]}>
+                    <View key={index} style={[styles.card, bare && styles.bare, { width: cardWidth }]}>
                         {page.content}
                     </View>
                 ))}
@@ -174,6 +176,10 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             backgroundColor: theme.colors.card,
             borderColor: theme.colors.border,
             borderWidth: StyleSheet.hairlineWidth,
+        },
+        bare: {
+            backgroundColor: "transparent",
+            borderWidth: 0,
         },
         dotsRow: {
             flexDirection: "row",
