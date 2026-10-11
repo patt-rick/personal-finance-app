@@ -3,7 +3,7 @@ import { loadTransactions, loadBudgets, loadCategories } from "../../../utils/st
 import { Business, Transaction, Budget, Category } from "../../../types";
 import { WIDGET_NAMES, WIDGET_CLICK, WIDGET_MESSAGES, WidgetName } from "../constants";
 import type { WidgetColors } from "../theme/widgetTheme";
-import { buildBalanceView, buildBudgetView, budgetDataForCashbook, buildQuickAddView } from "./widgetData";
+import { buildBalanceView, buildBudgetView, buildQuickAddView } from "./widgetData";
 import { BalanceWidget } from "../components/BalanceWidget";
 import { BudgetWidget } from "../components/BudgetWidget";
 import { QuickAddWidget } from "../components/QuickAddWidget";
@@ -46,10 +46,10 @@ export const renderCashbookWidget = (
                 clickAction,
             });
         case WIDGET_NAMES.BUDGET: {
-            const budget = inputs.budgets.find((b) => b.businessId === business.id) ?? null;
-            const budgetData = budgetDataForCashbook(budget, inputs.transactions, inputs.categories, business.id);
+            const budget =
+                inputs.budgets.find((b) => b.scope.kind === "cashbook" && b.scope.businessId === business.id) ?? null;
             return React.createElement(BudgetWidget, {
-                view: buildBudgetView(business, budget, budgetData),
+                view: buildBudgetView(business, budget, inputs.transactions, inputs.categories),
                 colors,
                 clickAction,
             });

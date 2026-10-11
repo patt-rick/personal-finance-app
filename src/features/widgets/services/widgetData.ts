@@ -1,11 +1,8 @@
-import { Business, Budget, CategoryBudgetSpent, Category } from "../../../types";
-import { Transaction } from "../../../types";
+import { Business, Budget, Category, Transaction } from "../../../types";
 import { computeCashbookBalance, computeMonthFlows } from "../../../utils/cashbookBalance";
-import {
-    calculateTotalSpent,
-    getPeriodDisplayName,
-    calculateBudgetData,
-} from "../../../utils/budgetCalculations";
+import { periodRange } from "../../budget/periods";
+import { limitsForPeriod } from "../../budget/limits";
+import { computePeriodSpend, expenseCategoryIndex } from "../../budget/spend";
 import { getCurrencySymbol } from "../../../utils/_helpers";
 import type { HexColor } from "react-native-android-widget";
 import { resolveCashbookColor, resolveCashbookIconKey } from "../../cashbooks/appearance/resolve";
@@ -28,6 +25,7 @@ export type BudgetView =
           totalSpent: number;
           totalLimit: number;
           percentage: number;
+          warnAt: number;
           noBudget: false;
           accent: HexColor;
           iconKey: string;
@@ -69,41 +67,40 @@ export const buildBalanceView = (
     };
 };
 
-// Budget spend scoped to one cashbook. calculateBudgetData filters by category
-// name + date only, so transactions must be pre-filtered by businessId or the
-// widget would blend spend across cashbooks.
-export const budgetDataForCashbook = (
-    budget: Budget | null,
-    transactions: Transaction[],
-    categories: Category[],
-    businessId: string,
-): CategoryBudgetSpent[] => {
-    if (!budget) return [];
-    const cashbookTx = transactions.filter((t) => t.businessId === businessId);
-    return calculateBudgetData(budget, cashbookTx, categories);
-};
+const PERIOD_LABEL = { weekly: "This Week", monthly: "This Month", yearly: "This Year" } as const;
 
 export const buildBudgetView = (
     business: Business,
     budget: Budget | null,
-    budgetData: CategoryBudgetSpent[],
+    transactions: Transaction[],
+    categories: Category[],
+    now: Date = new Date(),
 ): BudgetView => {
     const currencySymbol = getCurrencySymbol(business.currency);
     const accent = resolveCashbookColor(business);
     const iconKey = resolveCashbookIconKey(business);
-    if (!budget) {
+    const range = budget ? periodRange(budget.period, now) : null;
+    const limits = budget && range ? limitsForPeriod(budget, range.key) : null;
+    if (!budget || !range || !limits) {
         return { cashbookName: business.name, currencySymbol, noBudget: true, accent, iconKey };
     }
-    const totalSpent = calculateTotalSpent(budgetData);
-    const totalLimit = budget.totalLimit;
-    const percentage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
+    const totalSpent = computePeriodSpend(
+        transactions,
+        [business],
+        budget.scope,
+        range,
+        expenseCategoryIndex(categories),
+        new Set(),
+    ).total;
+    const totalLimit = limits.totalLimit;
     return {
         cashbookName: business.name,
         currencySymbol,
-        periodLabel: getPeriodDisplayName(budget.period),
+        periodLabel: PERIOD_LABEL[budget.period],
         totalSpent,
         totalLimit,
-        percentage,
+        percentage: totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0,
+        warnAt: budget.alerts.warnAt,
         noBudget: false,
         accent,
         iconKey,

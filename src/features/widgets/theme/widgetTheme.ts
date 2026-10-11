@@ -19,6 +19,7 @@ export interface WidgetColors {
     onPrimary: HexColor;
     income: HexColor;
     expense: HexColor;
+    gold: HexColor;
     success: HexColor;
     secondary: HexColor;
     error: HexColor;
@@ -34,18 +35,12 @@ const pick = (theme: AppTheme): WidgetColors => ({
     onPrimary: theme.colors.onPrimary as HexColor,
     income: theme.colors.income as HexColor,
     expense: theme.colors.expense as HexColor,
+    gold: theme.colors.gold as HexColor,
     success: theme.colors.success as HexColor,
     secondary: theme.colors.secondary as HexColor,
     error: theme.colors.error as HexColor,
     outlineVariant: theme.colors.outlineVariant as HexColor,
 });
-
-// Budget bar color from usage percentage, matching getBudgetStatusColor thresholds.
-export const budgetBarColor = (percentage: number, c: WidgetColors): HexColor => {
-    if (percentage < 70) return c.success;
-    if (percentage < 90) return c.secondary;
-    return c.error;
-};
 
 export const resolveWidgetTheme = async (): Promise<AppTheme> => {
     let mode: string | null = null;

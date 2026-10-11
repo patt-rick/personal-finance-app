@@ -1,13 +1,13 @@
 import React from "react";
 import { FlexWidget, TextWidget, SvgWidget } from "react-native-android-widget";
+import type { HexColor } from "react-native-android-widget";
 import { BudgetView } from "../services/widgetData";
-import { WidgetColors, budgetBarColor } from "../theme/widgetTheme";
+import { WidgetColors } from "../theme/widgetTheme";
+import { budgetColour } from "../../budget/colour";
+import { exactMoney } from "../../../utils/chartScale";
 import { MessageWidget } from "./WidgetStates";
 import { cashbookIconSvg } from "../../cashbooks/appearance/iconSvg";
 import { withAlpha } from "../../cashbooks/appearance/resolve";
-
-const fmt = (symbol: string, n: number) =>
-    `${symbol}${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 export function BudgetWidget({
     view,
@@ -28,7 +28,7 @@ export function BudgetWidget({
         );
     }
     const pct = Math.min(100, Math.max(0, view.percentage));
-    const barColor = budgetBarColor(view.percentage, colors);
+    const barColor: HexColor = budgetColour(view.percentage, view.warnAt, colors);
     return (
         <FlexWidget
             style={{
@@ -89,7 +89,7 @@ export function BudgetWidget({
                 />
             </FlexWidget>
             <TextWidget
-                text={`${fmt(view.currencySymbol, view.totalSpent)} of ${fmt(view.currencySymbol, view.totalLimit)}`}
+                text={`${exactMoney(view.totalSpent, view.currencySymbol)} of ${exactMoney(view.totalLimit, view.currencySymbol)}`}
                 style={{ fontSize: 13, color: colors.onSurface, marginTop: 6 }}
             />
         </FlexWidget>
