@@ -250,7 +250,7 @@ Layout top to bottom (mockup `full-screen-v3.html`):
 
 **`PaceChip`:** a soft tonal pill (container tone of the state) with a lucide icon in the state colour:
 `CircleCheck` "On track · {x}% under pace" (or "On pace" when 0 < delta ≤ 2), `TrendingUp` "Ahead of pace · +{x}%",
-`CircleAlert` "Over by {amount}". Past periods show "Finished under / over by {amount}".
+`CircleAlert` "Over by {amount}". Past periods show "Finished {amount} under/over".
 
 ### Setup (`BudgetSetupScreen`, mockup `setup.html`)
 
@@ -282,7 +282,7 @@ Reuse `components/reports/motion.ts` (`useReveal`, `useCountUp`, `slice`, `riseS
 
 - The gauge arc and pointer sweep 0 → value; the glow fades in; the spent amount and % count up.
 - The allocation bar grows left to right; category rows rise in with a stagger; history bars grow from the baseline.
-- Changing period or scope replays the gauge sweep from the previous value.
+- Changing period or scope replays the gauge sweep from zero.
 - Reduced motion shows the final state immediately.
 - Only `react-native-svg` + `Animated`; no new dependencies.
 
