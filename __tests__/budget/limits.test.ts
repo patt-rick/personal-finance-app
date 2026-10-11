@@ -85,6 +85,31 @@ describe("migrateBudgets", () => {
         expect(migrateBudgets([legacy({ businessId: "ghost" })]).budgets).toHaveLength(1);
     });
 
+    it("repairs a current-shape budget with bad alerts, limits or ordering", () => {
+        const { budgets, changed } = migrateBudgets([
+            {
+                id: "n",
+                scope: { kind: "currency", currency: "GHS" },
+                period: "monthly",
+                limits: [
+                    { periodStart: "2026-09-01", totalLimit: 900, categoryLimits: { f: 100, z: -1 } },
+                    { periodStart: "2026-05-01", totalLimit: 500 },
+                    { periodStart: "bad", totalLimit: 1 },
+                    { periodStart: "2026-06-01" },
+                ],
+                alerts: {},
+                createdAt: "c",
+                updatedAt: "u",
+            },
+        ]);
+        expect(changed).toBe(true);
+        expect(budgets[0].alerts).toEqual({ enabled: true, warnAt: 80 });
+        expect(budgets[0].limits).toEqual([
+            { periodStart: "2026-05-01", totalLimit: 500, categoryLimits: {} },
+            { periodStart: "2026-09-01", totalLimit: 900, categoryLimits: { f: 100 } },
+        ]);
+    });
+
     it("tolerates non-arrays and junk entries", () => {
         expect(migrateBudgets(null).budgets).toEqual([]);
         expect(migrateBudgets([42, { nope: true }]).budgets).toEqual([]);

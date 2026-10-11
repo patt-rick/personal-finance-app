@@ -52,7 +52,7 @@ export default function AlertSettingsCard({ enabled, warnAt, notificationsDenied
                             onPress={() => onWarnAt(t)}
                             style={[styles.threshold, on && styles.thresholdOn]}
                             accessibilityRole="radio"
-                            accessibilityState={{ selected: on }}
+                            accessibilityState={{ checked: on }}
                         >
                             <Text style={[styles.thresholdText, on && styles.thresholdTextOn]}>{t}%</Text>
                         </Pressable>

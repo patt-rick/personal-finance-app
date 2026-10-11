@@ -6,6 +6,9 @@ import { parseTxDate } from "./dates";
 
 const norm = (s: string) => s.trim().toLowerCase();
 
+/** Sums run in whole cents so a total that lands exactly on a limit compares as equal. */
+const toCents = (v: number) => Math.round(v * 100);
+
 /** Expense category name → id; names compare trimmed and case-insensitively, the first in list order wins. */
 export function expenseCategoryIndex(categories: Category[]): Map<string, string> {
     const index = new Map<string, string>();
@@ -34,15 +37,24 @@ export function computePeriodSpend(
 ): PeriodSpend {
     const ids = businessIdsForScope(scope, businesses);
     const scoped = excludeInternalTransfers(transactions.filter((t) => ids.has(t.businessId)));
-    const spend: PeriodSpend = { total: 0, byCategory: new Map(), other: 0, fees: 0 };
+    let total = 0;
+    let fees = 0;
+    let other = 0;
+    const byCategory = new Map<string, number>();
     for (const t of scoped) {
         if (t.type !== "expense" || !inPeriod(parseTxDate(t.date), range)) continue;
-        const fee = t.fee ?? 0;
-        spend.total += t.amount + fee;
-        spend.fees += fee;
+        const amount = toCents(t.amount);
+        const fee = toCents(t.fee ?? 0);
+        total += amount + fee;
+        fees += fee;
         const id = t.category ? categoryIndex.get(norm(t.category)) : undefined;
-        if (id && limitedIds.has(id)) spend.byCategory.set(id, (spend.byCategory.get(id) ?? 0) + t.amount);
-        else spend.other += t.amount;
+        if (id && limitedIds.has(id)) byCategory.set(id, (byCategory.get(id) ?? 0) + amount);
+        else other += amount;
     }
-    return spend;
+    return {
+        total: total / 100,
+        fees: fees / 100,
+        other: other / 100,
+        byCategory: new Map([...byCategory].map(([id, cents]) => [id, cents / 100])),
+    };
 }

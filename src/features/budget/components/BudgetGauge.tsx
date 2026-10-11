@@ -106,11 +106,7 @@ export default function BudgetGauge(props: BudgetGaugeProps) {
     const half = POINTER_BOX / 2;
 
     return (
-        <View
-            style={styles.wrap}
-            accessible
-            accessibilityLabel={`${title}. ${spentText} of ${limitText}, ${formatPercent(share)} used. ${chip?.text ?? ""}`}
-        >
+        <View style={styles.wrap}>
             <View style={styles.header}>
                 <View style={styles.headerText}>
                     <Text style={styles.title}>{title}</Text>
@@ -127,7 +123,12 @@ export default function BudgetGauge(props: BudgetGaugeProps) {
                 </Pressable>
             </View>
 
-            <View style={styles.dialRow} onLayout={onLayout}>
+            <View
+                style={styles.dialRow}
+                onLayout={onLayout}
+                accessible
+                accessibilityLabel={`${title}. ${spentText} of ${limitText}, ${formatPercent(share)} used. ${chip?.text ?? ""}`}
+            >
                 {size > 0 && (
                     <View style={{ width: size, height: VB_H * scale }}>
                         <Animated.View style={[StyleSheet.absoluteFill, { opacity: glowOpacity }]}>

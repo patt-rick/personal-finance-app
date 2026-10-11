@@ -101,7 +101,7 @@ describe("buildPeriodView", () => {
         expect(paceChip(view, "₵")).toEqual({ tone: "warning", icon: "ahead", text: "Ahead of pace · +18.9%" });
         expect(summaryLines(view, "₵", "October")).toEqual({
             sentence: { before: "You have ", amount: "₵ 331.10", after: " left for 12 days, about ₵ 27.59 a day." },
-            forecast: "At this rate you'll reach ₵ 2,586.79 by 31 Oct.",
+            forecast: "At this rate you'll reach ₵ 2,586.80 by 31 Oct.",
         });
     });
 

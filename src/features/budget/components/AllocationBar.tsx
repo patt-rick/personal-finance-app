@@ -35,6 +35,7 @@ export default function AllocationBar({ rows, limit, colorFor, progress }: Alloc
                     ))}
                     {total < scale && <View style={{ flex: (scale - total) / scale }} />}
                 </Animated.View>
+                {total > limit && <View style={[styles.limitMark, { left: `${(limit / total) * 100}%` }]} />}
             </View>
             {spent.length > 0 && (
                 <View style={styles.legend}>
@@ -65,6 +66,14 @@ const createStyles = (theme: AppTheme) =>
         fill: {
             flexDirection: "row",
             height: "100%",
+        },
+        limitMark: {
+            position: "absolute",
+            top: 0,
+            bottom: 0,
+            width: 3,
+            marginLeft: -1.5,
+            backgroundColor: theme.colors.background,
         },
         legend: {
             flexDirection: "row",

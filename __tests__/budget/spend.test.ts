@@ -69,6 +69,20 @@ describe("computePeriodSpend", () => {
         expect(s.total).toBe([...s.byCategory.values()].reduce((a, b) => a + b, 0) + s.other + s.fees);
     });
 
+    it("adds money in cents, so spend that lands on a limit is not a hair over it", () => {
+        const s = computePeriodSpend(
+            [tx({ amount: 1.1, category: "Food" }), tx({ amount: 2.2, category: "Food" }), tx({ amount: 0.1 }), tx({ amount: 0.2 })],
+            businesses,
+            { kind: "cashbook", businessId: "a" },
+            oct,
+            index,
+            new Set(["f"]),
+        );
+        expect(s.byCategory.get("f")).toBe(3.3);
+        expect(s.other).toBe(0.3);
+        expect(s.total).toBe(3.6);
+    });
+
     it("places a bare recurring date on its local day", () => {
         const txs = [tx({ amount: 15, date: "2026-10-01" }), tx({ amount: 9, date: "2026-09-30" })];
         expect(computePeriodSpend(txs, businesses, { kind: "cashbook", businessId: "a" }, oct, index, new Set()).total).toBe(15);

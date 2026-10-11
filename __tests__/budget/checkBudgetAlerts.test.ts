@@ -18,6 +18,7 @@ jest.mock("../../src/features/budget/storage/budgetStore", () => ({
     ]),
 }));
 jest.mock("../../src/features/budget/alerts/ledger", () => ({
+    ALERT_LOCK: "budget-alerts",
     loadLedger: jest.fn(async () => [...ledgerStore.keys]),
     saveLedger: jest.fn(async (keys: string[]) => {
         ledgerStore.keys = keys;

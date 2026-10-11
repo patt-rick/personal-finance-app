@@ -152,12 +152,12 @@ export const renameCategory = async (
     ]);
     const result = renameCategoryEverywhere({ categories, transactions, recurring, reviewItems }, categoryId, nextName);
     if ("error" in result) return result;
-    const writes: Promise<boolean>[] = [saveCategories(result.categories)];
-    if (result.changed.transactions) writes.push(saveTransactions(result.transactions));
-    if (result.changed.recurring) writes.push(saveRecurringTransactions(result.recurring));
-    if (result.changed.reviewItems) writes.push(saveReviewQueue(result.reviewItems));
-    const ok = (await Promise.all(writes)).every(Boolean);
-    return ok ? { categories: result.categories } : { error: "save" };
+    const records: Promise<boolean>[] = [];
+    if (result.changed.transactions) records.push(saveTransactions(result.transactions));
+    if (result.changed.recurring) records.push(saveRecurringTransactions(result.recurring));
+    if (result.changed.reviewItems) records.push(saveReviewQueue(result.reviewItems));
+    if (!(await Promise.all(records)).every(Boolean)) return { error: "save" };
+    return (await saveCategories(result.categories)) ? { categories: result.categories } : { error: "save" };
 };
 
 // Recurring Transactions Storage

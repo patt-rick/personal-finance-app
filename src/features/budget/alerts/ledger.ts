@@ -1,5 +1,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { STORAGE_KEYS } from "../../../utils/storageKeys";
+import { withLock } from "../../autoLogging/services/ingestion/mutex";
+
+export const ALERT_LOCK = "budget-alerts";
 
 const KEY = STORAGE_KEYS.BUDGET_ALERTS_FIRED;
 
@@ -17,8 +20,10 @@ export async function saveLedger(keys: string[]): Promise<void> {
     await AsyncStorage.setItem(KEY, JSON.stringify(keys));
 }
 
-export async function removeLedgerEntriesForBudgets(budgetIds: string[]): Promise<void> {
-    const keys = await loadLedger();
-    const next = keys.filter((k) => !budgetIds.includes(k.split("|")[0]));
-    if (next.length !== keys.length) await saveLedger(next);
+export function removeLedgerEntriesForBudgets(budgetIds: string[]): Promise<void> {
+    return withLock(ALERT_LOCK, async () => {
+        const keys = await loadLedger();
+        const next = keys.filter((k) => !budgetIds.includes(k.split("|")[0]));
+        if (next.length !== keys.length) await saveLedger(next);
+    });
 }

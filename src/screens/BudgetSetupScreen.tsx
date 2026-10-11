@@ -178,7 +178,7 @@ export default function BudgetSetupScreen({ scope, budget, businesses, onBack, o
                                         onPress={() => setPeriod(p)}
                                         style={[styles.segmentItem, on && styles.segmentOn]}
                                         accessibilityRole="radio"
-                                        accessibilityState={{ selected: on }}
+                                        accessibilityState={{ checked: on }}
                                     >
                                         <Text style={[styles.segmentText, on && styles.segmentTextOn]}>{PERIOD_LABEL[p]}</Text>
                                     </Pressable>

@@ -1,4 +1,4 @@
-import { Budget, BudgetPeriod, LegacyBudget } from "../../types";
+import { Budget, BudgetLimits, BudgetPeriod, BudgetWarnAt, LegacyBudget } from "../../types";
 import { periodRange } from "./periods";
 import { scopeKey } from "./scope";
 
@@ -6,13 +6,50 @@ const PERIODS: BudgetPeriod[] = ["weekly", "monthly", "yearly"];
 
 const isObj = (x: unknown): x is Record<string, unknown> => typeof x === "object" && x !== null;
 
-function isBudget(x: unknown): x is Budget {
-    if (!isObj(x) || typeof x.id !== "string" || !isObj(x.scope) || !isObj(x.alerts)) return false;
+const WARN_AT: BudgetWarnAt[] = [70, 80, 90];
+
+const positive = (v: unknown): v is number => typeof v === "number" && Number.isFinite(v) && v > 0;
+
+function cleanCategoryLimits(raw: unknown): Record<string, number> {
+    const out: Record<string, number> = {};
+    if (!isObj(raw)) return out;
+    for (const [id, v] of Object.entries(raw)) if (positive(v)) out[id] = v;
+    return out;
+}
+
+/** Validates a stored budget in the current shape, repairing what it safely can; null means it isn't one. */
+function normaliseBudget(x: unknown): Budget | null {
+    if (!isObj(x) || typeof x.id !== "string" || !isObj(x.scope)) return null;
     const scope = x.scope;
     const scopeOk =
         (scope.kind === "cashbook" && typeof scope.businessId === "string") ||
         (scope.kind === "currency" && typeof scope.currency === "string");
-    return scopeOk && PERIODS.includes(x.period as BudgetPeriod) && Array.isArray(x.limits) && x.limits.length > 0;
+    if (!scopeOk || !PERIODS.includes(x.period as BudgetPeriod) || !Array.isArray(x.limits)) return null;
+    const limits: BudgetLimits[] = x.limits
+        .filter(
+            (l): l is Record<string, unknown> =>
+                isObj(l) && typeof l.periodStart === "string" && /^\d{4}-\d{2}-\d{2}$/.test(l.periodStart) && positive(l.totalLimit),
+        )
+        .map((l) => ({
+            periodStart: l.periodStart as string,
+            totalLimit: l.totalLimit as number,
+            categoryLimits: cleanCategoryLimits(l.categoryLimits),
+        }))
+        .sort((a, b) => a.periodStart.localeCompare(b.periodStart));
+    if (limits.length === 0) return null;
+    const alerts = isObj(x.alerts) ? x.alerts : {};
+    return {
+        id: x.id,
+        scope: scope.kind === "cashbook" ? { kind: "cashbook", businessId: scope.businessId as string } : { kind: "currency", currency: scope.currency as string },
+        period: x.period as BudgetPeriod,
+        limits,
+        alerts: {
+            enabled: typeof alerts.enabled === "boolean" ? alerts.enabled : true,
+            warnAt: WARN_AT.includes(alerts.warnAt as BudgetWarnAt) ? (alerts.warnAt as BudgetWarnAt) : 80,
+        },
+        createdAt: typeof x.createdAt === "string" ? x.createdAt : "",
+        updatedAt: typeof x.updatedAt === "string" ? x.updatedAt : "",
+    };
 }
 
 function isLegacy(x: unknown): x is LegacyBudget {
@@ -50,8 +87,11 @@ export function migrateBudgets(raw: unknown): { budgets: Budget[]; changed: bool
     let changed = false;
     const converted: Budget[] = [];
     for (const item of raw) {
-        if (isBudget(item)) converted.push(item);
-        else if (isLegacy(item)) {
+        const current = normaliseBudget(item);
+        if (current) {
+            converted.push(current);
+            if (JSON.stringify(current) !== JSON.stringify(item)) changed = true;
+        } else if (isLegacy(item)) {
             converted.push(fromLegacy(item));
             changed = true;
         } else changed = true;
