@@ -188,7 +188,7 @@ export default function BudgetGauge(props: BudgetGaugeProps) {
                             )}
                             <SvgText
                                 x={CX}
-                                y={CY + 46}
+                                y={CY + 82}
                                 textAnchor="middle"
                                 fontSize={11}
                                 fontFamily={theme.fonts.semibold}
