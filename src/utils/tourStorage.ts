@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const TOUR_KEY = "@tour_completed";
 
-export type TourPage = "dashboard" | "cashbooks" | "budget" | "settings";
+export type TourPage = "dashboard" | "cashbooks" | "budget" | "budget-v2" | "settings";
 
 export async function isTourCompleted(page: TourPage): Promise<boolean> {
     try {
