@@ -250,7 +250,7 @@ export default function SettingsScreen({
     }
 
     if (showCategories) {
-        return <CategoryManagementScreen onBack={() => setShowCategories(false)} />;
+        return <CategoryManagementScreen onBack={() => setShowCategories(false)} onDataChanged={onDataImported} />;
     }
 
     if (showSecurity) {

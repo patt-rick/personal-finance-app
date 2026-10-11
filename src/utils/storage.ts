@@ -7,6 +7,8 @@ import { AutoLogSettings, SenderMapping, ReviewItem } from "../features/autoLogg
 import { STORAGE_KEYS } from "./storageKeys";
 import { addCategory } from "./categories";
 import { emitTransactionsSaved } from "./transactionEvents";
+import { CategoryNameError, renameCategoryEverywhere } from "./categoryRename";
+import { loadReviewQueue, saveReviewQueue } from "../features/autoLogging/services/persistence/reviewQueue";
 import { loadBudgets, saveBudgets } from "../features/budget/storage/budgetStore";
 
 export { STORAGE_KEYS };
@@ -136,6 +138,27 @@ export const persistNewCategory = async (
 };
 
 export { loadBudgets, saveBudgets };
+
+/** Renames a category and carries the new name onto every transaction, recurring template and pending review item. */
+export const renameCategory = async (
+    categoryId: string,
+    nextName: string,
+): Promise<{ categories: Category[] } | { error: CategoryNameError | "save" }> => {
+    const [categories, transactions, recurring, reviewItems] = await Promise.all([
+        loadCategories(),
+        loadTransactions(),
+        loadRecurringTransactions(),
+        loadReviewQueue(),
+    ]);
+    const result = renameCategoryEverywhere({ categories, transactions, recurring, reviewItems }, categoryId, nextName);
+    if ("error" in result) return result;
+    const writes: Promise<boolean>[] = [saveCategories(result.categories)];
+    if (result.changed.transactions) writes.push(saveTransactions(result.transactions));
+    if (result.changed.recurring) writes.push(saveRecurringTransactions(result.recurring));
+    if (result.changed.reviewItems) writes.push(saveReviewQueue(result.reviewItems));
+    const ok = (await Promise.all(writes)).every(Boolean);
+    return ok ? { categories: result.categories } : { error: "save" };
+};
 
 // Recurring Transactions Storage
 export const loadRecurringTransactions = async (): Promise<RecurringTransaction[]> => {

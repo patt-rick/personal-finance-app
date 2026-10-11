@@ -13,12 +13,27 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft, Plus, Edit2, Trash2, Menu } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import { Category } from "../types";
-import { loadCategories, saveCategories } from "../utils/storage";
+import { loadCategories, persistNewCategory, renameCategory, saveCategories } from "../utils/storage";
+import { checkCategoryName } from "../utils/categoryRename";
+import { removeCategoryFromBudgets } from "../features/budget/storage/budgetStore";
 import { useNavigation, DrawerActions } from "@react-navigation/native";
 import AppModal from "../components/AppModal";
 import { EmptyScene } from "../components/illustrations";
 
-export default function CategoryManagementScreen({ onBack }: { onBack?: () => void }) {
+const NAME_ERRORS = {
+    empty: "Category name cannot be empty.",
+    duplicate: "A category with that name already exists.",
+    missing: "This category no longer exists.",
+    save: "Something went wrong saving your changes. Please try again.",
+};
+
+export default function CategoryManagementScreen({
+    onBack,
+    onDataChanged,
+}: {
+    onBack?: () => void;
+    onDataChanged?: () => Promise<void>;
+}) {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
     const navigation = useNavigation();
@@ -40,29 +55,28 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
     };
 
     const handleSave = async () => {
-        if (!categoryName.trim()) {
-            appAlert("Error", "Category name cannot be empty");
-            return;
-        }
-
-        let updatedCategories = [...categories];
-
         if (editingCategory) {
-            updatedCategories = updatedCategories.map((c) =>
-                c.id === editingCategory.id ? { ...c, name: categoryName } : c,
-            );
+            const result = await renameCategory(editingCategory.id, categoryName);
+            if ("error" in result) {
+                appAlert("Can't rename category", NAME_ERRORS[result.error]);
+                return;
+            }
+            setCategories(result.categories);
+            await onDataChanged?.();
         } else {
-            const newCategory: Category = {
-                id: Date.now().toString(),
-                name: categoryName,
-                type: selectedType,
-                isDefault: false,
-            };
-            updatedCategories.push(newCategory);
+            const problem = checkCategoryName(categories, selectedType, categoryName);
+            if (problem) {
+                appAlert("Can't add category", NAME_ERRORS[problem]);
+                return;
+            }
+            try {
+                const { list } = await persistNewCategory(categoryName, selectedType);
+                setCategories(list);
+            } catch {
+                appAlert("Error", NAME_ERRORS.save);
+                return;
+            }
         }
-
-        setCategories(updatedCategories);
-        await saveCategories(updatedCategories);
         hapticSuccess();
         setModalVisible(false);
         setCategoryName("");
@@ -79,6 +93,7 @@ export default function CategoryManagementScreen({ onBack }: { onBack?: () => vo
                     const updated = categories.filter((c) => c.id !== id);
                     setCategories(updated);
                     await saveCategories(updated);
+                    await removeCategoryFromBudgets(id);
                     hapticError();
                 },
             },
