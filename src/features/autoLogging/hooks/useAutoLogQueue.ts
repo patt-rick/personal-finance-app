@@ -56,7 +56,7 @@ export function useAutoLogQueue(): UseAutoLogQueue {
                 reviewStatus: "confirmed",
             };
             const existing = await loadTransactions();
-            await saveTransactions([...existing, tx]);
+            await saveTransactions([...existing, tx], { prev: existing });
             await removeReviewItem(item.id);
             void refreshCashbookWidgets();
             setItems((prev) => prev.filter((i) => i.id !== item.id));

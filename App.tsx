@@ -52,6 +52,9 @@ import { removeMappingsForBusiness } from "./src/features/widgets/services/widge
 import { parseQuickAddLink } from "./src/features/widgets/services/deepLink";
 import WidgetPreviewScreen from "./src/features/widgets/screens/WidgetPreviewScreen";
 import { AppDialogHost } from "./src/components/dialog";
+import { registerBudgetAlerts } from "./src/features/budget/alerts/registerBudgetAlerts";
+import { setBudgetAlertGate } from "./src/features/budget/alerts/deliverAlerts";
+import { deleteBudgetsForBusinesses, persistBudgetMigration } from "./src/features/budget/storage/budgetStore";
 
 // TEMP: flip to true (in a dev build) to preview the widgets, then revert.
 const PREVIEW_WIDGETS = false;
@@ -123,9 +126,16 @@ function MainApp() {
         return pinOn;
     }, []);
 
+    useEffect(() => registerBudgetAlerts(), []);
+
+    useEffect(() => {
+        setBudgetAlertGate(!isLoading && !isLocked);
+    }, [isLoading, isLocked]);
+
     useEffect(() => {
         async function loadData() {
             const startTime = Date.now();
+            await persistBudgetMigration();
 
             const [loadedBusinesses, loadedTransactions, loadedProfile, loadedRecurring, loadedDebts] = await Promise.all([
                 loadBusinesses(),
@@ -143,7 +153,7 @@ function MainApp() {
             if (newTransactions.length > 0) {
                 const mergedTransactions = [...loadedTransactions, ...newTransactions];
                 setTransactions(mergedTransactions);
-                await saveTransactions(mergedTransactions);
+                await saveTransactions(mergedTransactions, { prev: loadedTransactions });
             } else {
                 setTransactions(loadedTransactions);
             }
@@ -252,13 +262,14 @@ function MainApp() {
             .map((b) => b.id);
         setBusinesses(newBusinesses);
         await saveBusinesses(newBusinesses);
+        if (removedIds.length) await deleteBudgetsForBusinesses(removedIds);
         for (const id of removedIds) await removeMappingsForBusiness(id);
         await refreshCashbookWidgets();
     };
 
-    const handleSaveTransactions = async (newTransactions: Transaction[]) => {
+    const handleSaveTransactions = async (newTransactions: Transaction[], opts?: { silent?: boolean }) => {
         setTransactions(newTransactions);
-        await saveTransactions(newTransactions);
+        await saveTransactions(newTransactions, opts?.silent ? undefined : { prev: transactions });
         await refreshCashbookWidgets();
     };
 

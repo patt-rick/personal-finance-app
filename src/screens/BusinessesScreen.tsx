@@ -30,7 +30,7 @@ interface BusinessesScreenProps {
     businesses: Business[];
     transactions: Transaction[];
     saveBusinesses: (businesses: Business[]) => void;
-    saveTransactions: (transactions: Transaction[]) => void;
+    saveTransactions: (transactions: Transaction[], opts?: { silent?: boolean }) => void;
     currentBusiness: Business | null;
     setCurrentBusiness: (business: Business | null) => void;
 }
@@ -364,7 +364,7 @@ export default function BusinessesScreen({
             text: "Delete All",
             style: "destructive",
             onPress: () => {
-                saveTransactions(transactions.filter((t) => t.businessId !== businessId));
+                saveTransactions(transactions.filter((t) => t.businessId !== businessId), { silent: true });
                 removeBusiness(businessId);
             },
         });
@@ -381,7 +381,7 @@ export default function BusinessesScreen({
         const updated = transactions.map((t) =>
             t.businessId === transferModalBusinessId ? { ...t, businessId: targetBusinessId } : t,
         );
-        saveTransactions(updated);
+        saveTransactions(updated, { silent: true });
         removeBusiness(transferModalBusinessId);
         setTransferModalBusinessId(null);
     };

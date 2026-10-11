@@ -63,7 +63,7 @@ async function applyPlan(
     }
 
     if (plan.outcome === "save" && plan.transaction) {
-        await saveTransactions([...state.transactions, plan.transaction]);
+        await saveTransactions([...state.transactions, plan.transaction], { prev: state.transactions });
         return;
     }
 
@@ -71,7 +71,7 @@ async function applyPlan(
         const next = state.transactions.map((t) =>
             t.id === plan.replaceTransactionId ? plan.transaction! : t,
         );
-        await saveTransactions(next);
+        await saveTransactions(next, { prev: state.transactions });
         return;
     }
 

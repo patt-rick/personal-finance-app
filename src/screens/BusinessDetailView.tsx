@@ -2,7 +2,7 @@ import { useTheme } from "../theme/theme";
 import { Business, Transaction, Category } from "../types";
 import { getCurrencySymbol } from "../utils/_helpers";
 import { transactionTitle, userRemark } from "../utils/transactionTitle";
-import { hapticSuccess, hapticError, hapticWarning } from "../utils/haptics";
+import { hapticSuccess, hapticError } from "../utils/haptics";
 import {
     ArrowLeftRight,
     Calendar,
@@ -38,8 +38,7 @@ import {
 import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { createDashboardStyles } from "../styles/dashboardStyles";
-import { loadCategories, getBudgetByBusinessId, persistNewCategory } from "../utils/storage";
-import { calculateBudgetData, getBudgetWarningMessage } from "../utils/budgetCalculations";
+import { loadCategories, persistNewCategory } from "../utils/storage";
 import { maybeRequestReview } from "../utils/storeReview";
 import ChartCarousel from "../components/ChartCarousel";
 import WeeklyBarChart from "../components/dashboard/WeeklyBarChart";
@@ -233,38 +232,6 @@ export default function BusinessDetailView({
         return groups;
     }, [filteredTransactions]);
 
-    const checkBudgetWarning = async (categoryName: string, updatedTransactions: Transaction[]) => {
-        try {
-            const budget = await getBudgetByBusinessId(business.id);
-            if (!budget) return;
-
-            const budgetData = calculateBudgetData(budget, updatedTransactions, categories);
-            const categoryId = categories.find((c) => c.name === categoryName)?.id;
-            if (!categoryId) return;
-
-            const categoryBudget = budgetData.find((b) => b.categoryId === categoryId);
-            if (!categoryBudget) return;
-
-            const message = getBudgetWarningMessage(
-                categoryBudget.categoryName,
-                categoryBudget.remaining,
-                categoryBudget.percentage,
-                symbol,
-            );
-
-            if (message) {
-                hapticWarning();
-                if (Platform.OS === "android") {
-                    ToastAndroid.show(message, ToastAndroid.LONG);
-                } else {
-                    appAlert("Budget Update", message);
-                }
-            }
-        } catch (error) {
-            console.error("Error checking budget:", error);
-        }
-    };
-
     const handleEntrySubmit = async (data: {
         amount: number;
         category: string;
@@ -307,10 +274,6 @@ export default function BusinessDetailView({
 
         saveTransactions(updatedTransactions);
         hapticSuccess();
-
-        if (data.entryType === "expense") {
-            await checkBudgetWarning(data.category, updatedTransactions);
-        }
 
         setEditingTx(null);
         setActiveModal("none");

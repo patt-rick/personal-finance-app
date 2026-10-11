@@ -2,10 +2,12 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
 import * as DocumentPicker from "expo-document-picker";
-import { Business, Transaction, UserProfile, Category, Budget, RecurringTransaction, Debt } from "../types";
+import { Business, Transaction, UserProfile, Category, RecurringTransaction, Debt } from "../types";
 import { AutoLogSettings, SenderMapping, ReviewItem } from "../features/autoLogging/types";
 import { STORAGE_KEYS } from "./storageKeys";
 import { addCategory } from "./categories";
+import { emitTransactionsSaved } from "./transactionEvents";
+import { loadBudgets, saveBudgets } from "../features/budget/storage/budgetStore";
 
 export { STORAGE_KEYS };
 
@@ -57,14 +59,19 @@ export const loadTransactions = async (): Promise<Transaction[]> => {
     }
 };
 
-export const saveTransactions = async (transactions: Transaction[]): Promise<boolean> => {
+/** Passing `prev` opts the save into budget alerts; bulk rewrites (restore, renames, moves) leave it out. */
+export const saveTransactions = async (
+    transactions: Transaction[],
+    opts?: { prev?: Transaction[] },
+): Promise<boolean> => {
     try {
         await AsyncStorage.setItem(STORAGE_KEYS.TRANSACTIONS, JSON.stringify(transactions));
-        return true;
     } catch (error) {
         console.error("Error saving transactions:", error);
         return false;
     }
+    if (opts?.prev) emitTransactionsSaved(opts.prev, transactions);
+    return true;
 };
 
 export const loadUserProfile = async (): Promise<UserProfile | null> => {
@@ -128,65 +135,7 @@ export const persistNewCategory = async (
     return { category, list };
 };
 
-// Budget Storage Functions
-export const loadBudgets = async (): Promise<Budget[]> => {
-    try {
-        const data = await AsyncStorage.getItem(STORAGE_KEYS.BUDGETS);
-        return data ? JSON.parse(data) : [];
-    } catch (error) {
-        console.error("Error loading budgets:", error);
-        return [];
-    }
-};
-
-export const saveBudgets = async (budgets: Budget[]): Promise<boolean> => {
-    try {
-        await AsyncStorage.setItem(STORAGE_KEYS.BUDGETS, JSON.stringify(budgets));
-        return true;
-    } catch (error) {
-        console.error("Error saving budgets:", error);
-        return false;
-    }
-};
-
-export const getBudgetByBusinessId = async (businessId: string): Promise<Budget | null> => {
-    try {
-        const budgets = await loadBudgets();
-        return budgets.find((b) => b.businessId === businessId) || null;
-    } catch (error) {
-        console.error("Error getting budget:", error);
-        return null;
-    }
-};
-
-export const saveBudget = async (budget: Budget): Promise<boolean> => {
-    try {
-        const budgets = await loadBudgets();
-        const index = budgets.findIndex((b) => b.id === budget.id);
-
-        if (index >= 0) {
-            budgets[index] = budget;
-        } else {
-            budgets.push(budget);
-        }
-
-        return await saveBudgets(budgets);
-    } catch (error) {
-        console.error("Error saving budget:", error);
-        return false;
-    }
-};
-
-export const deleteBudget = async (budgetId: string): Promise<boolean> => {
-    try {
-        const budgets = await loadBudgets();
-        const filtered = budgets.filter((b) => b.id !== budgetId);
-        return await saveBudgets(filtered);
-    } catch (error) {
-        console.error("Error deleting budget:", error);
-        return false;
-    }
-};
+export { loadBudgets, saveBudgets };
 
 // Recurring Transactions Storage
 export const loadRecurringTransactions = async (): Promise<RecurringTransaction[]> => {
@@ -237,7 +186,7 @@ interface AppBackupV2Data {
     transactions: Transaction[];
     userProfile: UserProfile | null;
     categories: Category[];
-    budgets: Budget[];
+    budgets: unknown[];
     recurringTransactions: RecurringTransaction[];
     debts: Debt[];
 }
