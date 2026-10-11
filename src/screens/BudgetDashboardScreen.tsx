@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useState } from "react";
 import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Gauge, Globe, History, Plus } from "lucide-react-native";
+import { Gauge, History, Layers, Plus } from "lucide-react-native";
 import { AppTheme, useTheme } from "../theme/theme";
 import { Budget, BudgetScope, Business, Transaction } from "../types";
 import { exactMoney } from "../utils/chartScale";
@@ -65,16 +65,24 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
 
     const colorFor = useMemo(() => {
         const limits = d.budget && d.view ? limitsForPeriod(d.budget, d.view.range.key) : null;
-        const limitKeys = Object.keys(limits?.categoryLimits ?? {});
-        const otherKeys = (d.view?.rows ?? []).filter((r) => r.kind === "category").map((r) => r.key);
+        const expenseIds = d.categories.filter((c) => c.type === "expense").map((c) => c.id);
+        const limitKeys = expenseIds.filter((id) => id in (limits?.categoryLimits ?? {}));
+        const otherKeys = [
+            ...expenseIds.filter((id) => !limitKeys.includes(id)),
+            ...(d.view?.rows ?? [])
+                .filter((r) => r.key.startsWith("name:"))
+                .map((r) => r.key)
+                .sort(),
+        ];
         const palette = theme.colors.chart;
         return (row: BudgetRow) => {
             if (row.kind === "uncategorised") return theme.colors.outline;
             if (row.kind === "fees") return theme.colors.chartExpense;
-            if (row.kind === "limit") return palette[limitKeys.indexOf(row.key) % palette.length];
-            return palette[(limitKeys.length + otherKeys.indexOf(row.key)) % palette.length];
+            const slot =
+                row.kind === "limit" ? limitKeys.indexOf(row.key) : limitKeys.length + otherKeys.indexOf(row.key);
+            return slot >= 0 && slot < palette.length ? palette[slot] : theme.colors.outline;
         };
-    }, [d.budget, d.view, theme]);
+    }, [d.budget, d.view, d.categories, theme]);
 
     if (editing) {
         return (
@@ -103,6 +111,7 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                             onSelect={d.chooseCurrency}
                             title="Show budgets in"
                             hint="Choose which currency's cashbooks to budget"
+                            label="Budget currency"
                         />
                     )}
                     <Pressable
@@ -201,6 +210,7 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                 {view.rows.length > 0 && (
                     <View style={styles.section}>
                         <CategoryLimitsCard
+                            key={animKey}
                             rows={view.rows}
                             total={view.spent}
                             symbol={symbol}
@@ -288,9 +298,9 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                     },
                     {
                         title: "One cashbook or all of them",
-                        icon: <Globe size={24} color={theme.colors.primary} />,
+                        icon: <Layers size={24} color={theme.colors.primary} />,
                         description:
-                            "Budget a single cashbook, or every cashbook in a currency. Switch between them with the chips at the top.",
+                            "Budget a single cashbook, or all of them with \"All cashbooks\". The currency button at the top switches which cashbooks you see.",
                     },
                     {
                         title: "Look back",

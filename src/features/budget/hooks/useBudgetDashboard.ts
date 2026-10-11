@@ -49,7 +49,10 @@ export function useBudgetDashboard(businesses: Business[], transactions: Transac
         (scope: BudgetScope) => setSelection({ scope, currency: scopeCurrency(scope, businesses) }),
         [businesses],
     );
-    const chooseCurrency = useCallback((code: string) => setSelection(selectCurrency(code, businesses)), [businesses]);
+    const chooseCurrency = useCallback(
+        (code: string) => setSelection((prev) => (prev?.currency === code ? prev : selectCurrency(code, businesses))),
+        [businesses],
+    );
     const budget = useMemo(
         () => (selected ? budgets.find((b) => sameScope(b.scope, selected)) ?? null : null),
         [budgets, selected],
@@ -98,6 +101,7 @@ export function useBudgetDashboard(businesses: Business[], transactions: Transac
         selected,
         select,
         budgets,
+        categories,
         budget,
         view,
         history,

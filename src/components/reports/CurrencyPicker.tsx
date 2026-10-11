@@ -12,6 +12,7 @@ interface CurrencyPickerProps {
     onSelect: (code: string) => void;
     title?: string;
     hint?: string;
+    label?: string;
 }
 
 /** Header pill that switches which currency a screen covers; only worth showing when cashbooks use several. */
@@ -21,6 +22,7 @@ export default function CurrencyPicker({
     onSelect,
     title = "Show reports in",
     hint = "Choose which currency's cashbooks to report on",
+    label = "Report currency",
 }: CurrencyPickerProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
@@ -31,7 +33,7 @@ export default function CurrencyPicker({
             <Pressable
                 onPress={() => setOpen(true)}
                 accessibilityRole="button"
-                accessibilityLabel={`Currency: ${getCurrencyName(selected)}`}
+                accessibilityLabel={`${label}: ${getCurrencyName(selected)}`}
                 accessibilityHint={hint}
                 hitSlop={8}
                 style={({ pressed }) => [styles.pill, pressed && styles.pillPressed]}

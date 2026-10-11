@@ -70,7 +70,7 @@ export function buildPeriodView(
     const named = [...spend.byUnknownName.values()].reduce((sum, v) => sum + Math.round(v * 100), 0);
     const uncategorised = (Math.round(spend.other * 100) - named) / 100;
     if (uncategorised > 0) {
-        rows.push({ key: "__uncategorised", label: "Uncategorised", kind: "uncategorised", spent: uncategorised, limit: null });
+        rows.push({ key: "__uncategorised", label: "Uncategorized", kind: "uncategorised", spent: uncategorised, limit: null });
     }
     if (spend.fees > 0) rows.push({ key: "__fees", label: FEES_CATEGORY_LABEL, kind: "fees", spent: spend.fees, limit: null });
     const current = isCurrentPeriod(range, now);

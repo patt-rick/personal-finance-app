@@ -94,6 +94,14 @@ describe("selection", () => {
         ]);
     });
 
+    it("re-derives the currency when the selected cashbook's currency changes", () => {
+        const moved = [biz("a"), biz("b", "USD"), biz("c", "USD")];
+        expect(resolveBudgetSelection({ currency: "GHS", scope: { kind: "cashbook", businessId: "b" } }, null, moved, [])).toEqual({
+            currency: "USD",
+            scope: { kind: "cashbook", businessId: "b" },
+        });
+    });
+
     it("switching currency lands on that currency's first cashbook", () => {
         expect(selectCurrency("USD", books)).toEqual({ currency: "USD", scope: { kind: "cashbook", businessId: "c" } });
     });

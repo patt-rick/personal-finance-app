@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { BookOpen, ChevronLeft, ChevronRight, Layers } from "lucide-react-native";
 import AppModal from "../../../components/AppModal";
@@ -34,10 +34,9 @@ export default function NewBudgetSheet({ visible, onClose, businesses, transacti
     const currencies = useMemo(() => reportCurrencies(businesses, transactions), [businesses, transactions]);
     const existingFor = (scope: BudgetScope) => budgets.find((b) => sameScope(b.scope, scope)) ?? null;
 
-    const close = () => {
-        setStep("kind");
-        onClose();
-    };
+    useEffect(() => {
+        if (visible) setStep("kind");
+    }, [visible]);
     const pick = (scope: BudgetScope) => {
         setStep("kind");
         onPick(scope, existingFor(scope));
@@ -51,7 +50,7 @@ export default function NewBudgetSheet({ visible, onClose, businesses, transacti
         existingFor(scope) ? <Text style={styles.status}>Has a budget</Text> : null;
 
     return (
-        <AppModal visible={visible} onClose={close} title={TITLES[step]} variant="bottomSheet" scrollable>
+        <AppModal visible={visible} onClose={onClose} title={TITLES[step]} variant="bottomSheet" scrollable>
             {step === "kind" ? (
                 <View style={styles.kinds}>
                     <Text style={styles.lead}>What do you want to budget?</Text>
@@ -269,7 +268,7 @@ const createStyles = (theme: AppTheme) =>
         currencyBadge: {
             width: 40,
             height: 40,
-            borderRadius: 20,
+            borderRadius: theme.shape.full,
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: theme.colors.surfaceContainerHigh,

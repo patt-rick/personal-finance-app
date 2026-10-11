@@ -1,7 +1,7 @@
 import { Business, BudgetScope, Transaction } from "../../types";
 import { reportCurrencies } from "../../utils/reportCurrency";
 import { cashbookCurrency } from "../../utils/transfers";
-import { businessIdsForScope } from "./scope";
+import { businessIdsForScope, scopeCurrency } from "./scope";
 
 export interface BudgetSelection {
     currency: string;
@@ -31,7 +31,9 @@ export function resolveBudgetSelection(
 ): BudgetSelection | null {
     const open = openCashbook ? businesses.find((b) => b.id === openCashbook.id) : undefined;
     if (open) return { currency: cashbookCurrency(open), scope: { kind: "cashbook", businessId: open.id } };
-    if (previous && businessIdsForScope(previous.scope, businesses).size > 0) return previous;
+    if (previous && businessIdsForScope(previous.scope, businesses).size > 0) {
+        return { scope: previous.scope, currency: scopeCurrency(previous.scope, businesses) };
+    }
     const codes = reportCurrencies(businesses, transactions).map((c) => c.code);
     const currency = previous && codes.includes(previous.currency) ? previous.currency : codes[0];
     return currency ? selectCurrency(currency, businesses) : null;
