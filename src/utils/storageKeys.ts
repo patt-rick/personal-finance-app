@@ -4,6 +4,7 @@ export const STORAGE_KEYS = {
     USER_PROFILE: "@user_profile",
     CATEGORIES: "@categories",
     BUDGETS: "@budgets",
+    BUDGET_ALERTS_FIRED: "@budget_alerts_fired",
     RECURRING_TRANSACTIONS: "@recurring_transactions",
     DEBTS: "@debts",
     AUTO_LOG_SETTINGS: "@autolog_settings",
