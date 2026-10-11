@@ -24,3 +24,13 @@ export const getCurrencySymbol = (code: string | undefined) => {
         default: return '$';
     }
 }
+
+const CURRENCY_NAMES: Record<string, string> = {
+    USD: 'US Dollar',
+    GHS: 'Ghana Cedi',
+    EUR: 'Euro',
+    GBP: 'British Pound',
+    NGN: 'Nigerian Naira',
+};
+
+export const getCurrencyName = (code: string) => CURRENCY_NAMES[code] ?? code;

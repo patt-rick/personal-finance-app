@@ -2,6 +2,8 @@ import React, { useMemo } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Svg, { Circle, Defs, FeGaussianBlur, Filter, G, Path } from "react-native-svg";
 import { useTheme } from "../../theme/theme";
+import { formatPercent } from "../../utils/categoryTiles";
+import MoneyText from "../MoneyText";
 
 interface DonutSegment {
     value: number;
@@ -66,6 +68,7 @@ export default function DonutChart({
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     const visible = useMemo(() => data.filter((d) => d.value > 0), [data]);
+    const shares = useMemo(() => data.map((d) => (total > 0 ? (d.value / total) * 100 : 0)), [data, total]);
     const segments = useMemo(() => {
         if (total <= 0 || visible.length < 2) return [];
         let angle = 0;
@@ -116,10 +119,16 @@ export default function DonutChart({
                 <View style={styles.centerLabel}>
                     {centerOverride ?? (
                         <>
-                            <Text style={[styles.centerBig, { color: theme.colors.onSurface }]} numberOfLines={1} adjustsFontSizeToFit>
-                                {currencySymbol}
-                                {(midTotal || total).toLocaleString(undefined, { maximumFractionDigits: 0 })}
-                            </Text>
+                            <MoneyText
+                                amount={midTotal || total}
+                                symbol={currencySymbol}
+                                sign={(midTotal || total) <= -0.005 ? "-" : ""}
+                                size={24}
+                                weight="bold"
+                                style={styles.centerBig}
+                                numberOfLines={1}
+                                adjustsFontSizeToFit
+                            />
                             <Text style={[styles.centerSmall, { color: theme.colors.onSurfaceVariant }]}>
                                 {midTotal ? "balance" : "spent in total"}
                             </Text>
@@ -131,7 +140,7 @@ export default function DonutChart({
             {!hideLegend && (
                 <View style={styles.legendRow}>
                     {data.map((item, i) => {
-                        const pct = total > 0 ? ((item.value / total) * 100).toFixed(0) : "0";
+                        const pct = formatPercent(shares[i]);
                         return (
                             <View key={i} style={styles.legendItem}>
                                 <View style={[styles.legendDot, { backgroundColor: item.color }]} />
@@ -145,7 +154,7 @@ export default function DonutChart({
                                     {item.label}
                                 </Text>
                                 <Text style={[styles.legendPct, { color: theme.colors.onSurface }]}>
-                                    {pct}%
+                                    {pct}
                                 </Text>
                             </View>
                         );
@@ -180,9 +189,6 @@ const createStyles = (theme: ReturnType<typeof useTheme>) =>
             marginTop: 2,
         },
         centerBig: {
-            fontSize: 24,
-            fontFamily: theme.fonts.bold,
-            fontVariant: ["tabular-nums"],
             letterSpacing: -0.5,
         },
         legendRow: {

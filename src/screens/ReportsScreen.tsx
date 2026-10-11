@@ -23,6 +23,7 @@ import {
 } from "../utils/reportCalculations";
 import { cashbookCurrency, excludeInternalTransfers } from "../utils/transfers";
 import { buildKeptCurve, buildMonthOverMonth, buildPeriodSummary } from "../utils/reportStory";
+import { reportCurrencies } from "../utils/reportCurrency";
 import { EmptyScene } from "../components/illustrations";
 import { useReducedMotion } from "../components/reports/motion";
 import StoryHero from "../components/reports/StoryHero";
@@ -32,6 +33,7 @@ import ChartCarousel from "../components/ChartCarousel";
 import CategoryStory, { CategoryShare } from "../components/reports/CategoryStory";
 import ComparisonStory from "../components/reports/ComparisonStory";
 import BiggestExpenses from "../components/reports/BiggestExpenses";
+import CurrencyPicker from "../components/reports/CurrencyPicker";
 
 interface ReportsScreenProps {
     businesses: Business[];
@@ -98,7 +100,8 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         return () => subscription.remove();
     }, [onBack]);
 
-    const [selectedBusinessId, setSelectedBusinessId] = useState<string | null>(null);
+    const [chosenBusinessId, setChosenBusinessId] = useState<string | null>(null);
+    const [chosenCurrency, setChosenCurrency] = useState<string | null>(null);
     const [selectedPeriod, setSelectedPeriod] = useState<Period>("3 Months");
     const [viewportBottom, setViewportBottom] = useState(0);
     const [storyY, setStoryY] = useState<number | null>(null);
@@ -107,13 +110,27 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         y: {},
     });
 
-    const filteredTransactions = useMemo(
-        () =>
-            selectedBusinessId
-                ? transactions.filter((t) => t.businessId === selectedBusinessId)
-                : excludeInternalTransfers(transactions),
-        [transactions, selectedBusinessId],
+    const currencies = useMemo(() => reportCurrencies(businesses, transactions), [businesses, transactions]);
+    const activeCurrency = currencies.find((c) => c.code === chosenCurrency)?.code ?? currencies[0]?.code ?? "USD";
+
+    // Pin the default once, so a new transaction can't flip the report to another currency mid-visit.
+    useEffect(() => {
+        if (chosenCurrency === null && currencies.length > 0) setChosenCurrency(currencies[0].code);
+    }, [chosenCurrency, currencies]);
+
+    const currencyBusinesses = useMemo(
+        () => businesses.filter((b) => cashbookCurrency(b) === activeCurrency),
+        [businesses, activeCurrency],
     );
+
+    // A cashbook that was deleted or moved to another currency falls back to "All".
+    const selectedBusinessId = currencyBusinesses.some((b) => b.id === chosenBusinessId) ? chosenBusinessId : null;
+
+    const filteredTransactions = useMemo(() => {
+        if (selectedBusinessId) return transactions.filter((t) => t.businessId === selectedBusinessId);
+        const ids = new Set(currencyBusinesses.map((b) => b.id));
+        return excludeInternalTransfers(transactions.filter((t) => ids.has(t.businessId)));
+    }, [transactions, selectedBusinessId, currencyBusinesses]);
 
     // In "All", internal transfers are already gone and the fee rows they leave behind are real spending.
     const spendingTransactions = useMemo(
@@ -121,18 +138,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         [filteredTransactions, selectedBusinessId],
     );
 
-    const currencySymbol = useMemo(() => {
-        if (selectedBusinessId) {
-            const biz = businesses.find((b) => b.id === selectedBusinessId);
-            return getCurrencySymbol(biz?.currency);
-        }
-        return getCurrencySymbol(businesses[0]?.currency);
-    }, [selectedBusinessId, businesses]);
-
-    const mixedCurrencies = useMemo(
-        () => !selectedBusinessId && new Set(businesses.map(cashbookCurrency)).size > 1,
-        [selectedBusinessId, businesses],
-    );
+    const currencySymbol = getCurrencySymbol(activeCurrency);
 
     const { start, end, monthCount } = useMemo(() => getDateRange(selectedPeriod), [selectedPeriod]);
 
@@ -248,7 +254,7 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
         [filteredTransactions, start, end],
     );
 
-    const storyKey = `${selectedPeriod}:${selectedBusinessId ?? "all"}`;
+    const storyKey = `${selectedPeriod}:${activeCurrency}:${selectedBusinessId ?? "all"}`;
 
     const currentBottom = useRef(0);
 
@@ -296,6 +302,16 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                     </TouchableOpacity>
                 )}
                 <Text style={styles.title}>Reports</Text>
+                {currencies.length > 1 && (
+                    <CurrencyPicker
+                        currencies={currencies}
+                        selected={activeCurrency}
+                        onSelect={(code) => {
+                            setChosenCurrency(code);
+                            setChosenBusinessId(null);
+                        }}
+                    />
+                )}
             </View>
 
             <ScrollView
@@ -305,47 +321,49 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                 onScroll={onScroll}
                 scrollEventThrottle={100}
             >
-                <ScrollView
-                    horizontal
-                    showsHorizontalScrollIndicator={false}
-                    contentContainerStyle={styles.chipRow}
-                >
-                    <TouchableOpacity
-                        style={[
-                            styles.chip,
-                            !selectedBusinessId ? styles.chipActive : styles.chipInactive,
-                        ]}
-                        onPress={() => setSelectedBusinessId(null)}
+                {currencyBusinesses.length > 1 && (
+                    <ScrollView
+                        horizontal
+                        showsHorizontalScrollIndicator={false}
+                        contentContainerStyle={styles.chipRow}
                     >
-                        <Text
-                            style={[
-                                styles.chipText,
-                                !selectedBusinessId ? styles.chipTextActive : styles.chipTextInactive,
-                            ]}
-                        >
-                            All
-                        </Text>
-                    </TouchableOpacity>
-                    {businesses.map((biz) => (
                         <TouchableOpacity
-                            key={biz.id}
                             style={[
                                 styles.chip,
-                                selectedBusinessId === biz.id ? styles.chipActive : styles.chipInactive,
+                                !selectedBusinessId ? styles.chipActive : styles.chipInactive,
                             ]}
-                            onPress={() => setSelectedBusinessId(biz.id)}
+                            onPress={() => setChosenBusinessId(null)}
                         >
                             <Text
                                 style={[
                                     styles.chipText,
-                                    selectedBusinessId === biz.id ? styles.chipTextActive : styles.chipTextInactive,
+                                    !selectedBusinessId ? styles.chipTextActive : styles.chipTextInactive,
                                 ]}
                             >
-                                {biz.name}
+                                All
                             </Text>
                         </TouchableOpacity>
-                    ))}
-                </ScrollView>
+                        {currencyBusinesses.map((biz) => (
+                            <TouchableOpacity
+                                key={biz.id}
+                                style={[
+                                    styles.chip,
+                                    selectedBusinessId === biz.id ? styles.chipActive : styles.chipInactive,
+                                ]}
+                                onPress={() => setChosenBusinessId(biz.id)}
+                            >
+                                <Text
+                                    style={[
+                                        styles.chipText,
+                                        selectedBusinessId === biz.id ? styles.chipTextActive : styles.chipTextInactive,
+                                    ]}
+                                >
+                                    {biz.name}
+                                </Text>
+                            </TouchableOpacity>
+                        ))}
+                    </ScrollView>
+                )}
 
                 <ScrollView
                     horizontal
@@ -389,7 +407,6 @@ export default function ReportsScreen({ businesses, transactions, onBack }: Repo
                             symbol={currencySymbol}
                             movedIn={moved.in}
                             movedOut={moved.out}
-                            mixedCurrencies={mixedCurrencies}
                             reduced={reduced}
                         />
 
@@ -455,6 +472,7 @@ function createStyles(theme: ReturnType<typeof useTheme>) {
             justifyContent: "center" as const,
         },
         title: {
+            flex: 1,
             fontSize: 22,
             fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,

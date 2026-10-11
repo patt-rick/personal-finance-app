@@ -10,6 +10,13 @@ export function niceCeil(value: number): number {
 
 const trim = (n: number) => (Math.round(n * 10) / 10).toString();
 
+/** "₵ 15,929.77": rounded to the cent, never truncated. */
+export function exactMoney(value: number, symbol: string): string {
+    const cents = Math.round(Math.abs(value) * 100);
+    const body = `${Math.floor(cents / 100).toLocaleString()}.${String(cents % 100).padStart(2, "0")}`;
+    return `${value < 0 && cents > 0 ? "-" : ""}${symbol ? `${symbol} ` : ""}${body}`;
+}
+
 /** `₵12.4k` style amounts for tight chart labels. */
 export function compactMoney(value: number, symbol: string): string {
     const abs = Math.abs(value);

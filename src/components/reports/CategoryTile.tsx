@@ -1,10 +1,11 @@
 import React, { useMemo } from "react";
-import { Animated, Pressable, StyleSheet, Text, View } from "react-native";
-import { ChevronRight } from "lucide-react-native";
+import { Animated, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme/theme";
 import MoneyText from "../MoneyText";
 import CategoryIcon from "../CategoryIcon";
 import { TreemapRect } from "../../utils/treemap";
+import { exactMoney } from "../../utils/chartScale";
+import { formatPercent, MAX_TILE_FONT_SCALE, TILE_PADDING, tileContent } from "../../utils/categoryTiles";
 
 export interface CategoryShare {
     name: string;
@@ -16,121 +17,104 @@ export interface CategoryShare {
 
 export const TILE_GAP = 6;
 
-type Size = "large" | "medium" | "small";
+const AMOUNT_SIZE = { large: 15, medium: 13, small: 11 } as const;
 
-const tileSize = ({ width, height }: { width: number; height: number }): Size =>
-    width >= 120 && height >= 110 ? "large" : width >= 84 && height >= 64 ? "medium" : "small";
-
-/** Android wraps long words mid-word, so narrow tiles get one word per line (at most two lines) and shrink to fit instead. */
-function nameLines(name: string, size: Size): string[] {
-    const words = name.split(/\s+/);
-    if (size === "large" || words.length === 1) return [name];
+/** Android wraps long words mid-word, so a two-line name breaks after the first word and each line shrinks to fit. */
+function nameLines(name: string, lines: 1 | 2): string[] {
+    if (lines === 1) return [name];
+    const words = name.trim().split(/\s+/);
     return [words[0], words.slice(1).join(" ")];
+}
+
+export function categorySummary(tile: CategoryShare, symbol: string): string {
+    return `${tile.name}, ${exactMoney(tile.amount, symbol)}, ${formatPercent(tile.percentage)} of spending, ${
+        tile.count
+    } transaction${tile.count !== 1 ? "s" : ""}`;
 }
 
 interface CategoryTileProps {
     tile: CategoryShare;
     rect: TreemapRect;
     symbol: string;
+    fontScale: number;
     appear: Animated.AnimatedInterpolation<number>;
-    showIcon: boolean;
-    onPress?: () => void;
 }
 
-export default function CategoryTile({ tile, rect, symbol, appear, showIcon, onPress }: CategoryTileProps) {
+export default function CategoryTile({ tile, rect, symbol, fontScale, appear }: CategoryTileProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
-    if (rect.width <= TILE_GAP || rect.height <= TILE_GAP) return null;
-
     const inner = { width: rect.width - TILE_GAP, height: rect.height - TILE_GAP };
-    const size = tileSize(inner);
-    const pct = Math.round(tile.percentage);
-    const label = `${tile.name}, ${symbol} ${Math.floor(tile.amount).toLocaleString()}, ${pct}% of spending, ${tile.count} transaction${
-        tile.count !== 1 ? "s" : ""
-    }`;
+    const content = tileContent(inner, tile.name.trim().split(/\s+/).length, fontScale);
+    if (!content) return null;
+    const { size } = content;
 
     return (
-        <Pressable
-            disabled={!onPress}
-            onPress={onPress}
+        <Animated.View
             accessible
-            accessibilityRole={onPress ? "button" : undefined}
-            accessibilityLabel={label}
-            accessibilityHint={onPress ? "Shows these categories as tiles" : undefined}
-            style={[styles.slot, { left: rect.x, top: rect.y, ...inner }]}
+            accessibilityLabel={categorySummary(tile, symbol)}
+            style={[
+                styles.tile,
+                {
+                    left: rect.x,
+                    top: rect.y,
+                    ...inner,
+                    padding: TILE_PADDING[size],
+                    justifyContent: content.showIcon ? "space-between" : "flex-end",
+                    borderRadius: size === "small" ? theme.shape.medium : theme.shape.large,
+                    backgroundColor: `${tile.color.slice(0, 7)}24`,
+                    opacity: appear,
+                    transform: [{ scale: appear.interpolate({ inputRange: [0, 1], outputRange: [0.88, 1] }) }],
+                },
+            ]}
         >
-            {({ pressed }) => (
-                <Animated.View
+            {content.showIcon && <CategoryIcon category={tile.name} type="expense" size={30} />}
+            <View style={styles.body}>
+                <Text
                     style={[
-                        styles.tile,
-                        size === "small" && styles.tileSmall,
-                        {
-                            backgroundColor: `${tile.color.slice(0, 7)}${pressed ? "3D" : "24"}`,
-                            opacity: appear,
-                            transform: [{ scale: appear.interpolate({ inputRange: [0, 1], outputRange: [0.88, 1] }) }],
-                        },
+                        styles.pct,
+                        size === "large" && styles.pctLarge,
+                        size === "small" && styles.pctSmall,
+                        { color: tile.color },
                     ]}
+                    numberOfLines={1}
+                    adjustsFontSizeToFit
+                    maxFontSizeMultiplier={MAX_TILE_FONT_SCALE}
                 >
-                    {onPress && <ChevronRight size={16} color={theme.colors.onSurfaceVariant} style={styles.chevron} />}
-                    {size === "large" && showIcon && <CategoryIcon category={tile.name} type="expense" size={30} />}
-                    <View style={styles.body}>
-                        <Text
-                            style={[
-                                styles.pct,
-                                size === "large" && styles.pctLarge,
-                                size === "small" && styles.pctSmall,
-                                { color: tile.color },
-                            ]}
-                        >
-                            {pct}%
-                        </Text>
-                        {nameLines(tile.name, size).map((line, i) => (
-                            <Text
-                                key={i}
-                                style={[styles.name, size === "small" && styles.nameSmall]}
-                                numberOfLines={1}
-                                adjustsFontSizeToFit
-                                minimumFontScale={0.7}
-                            >
-                                {line}
-                            </Text>
-                        ))}
-                        <MoneyText
-                            amount={tile.amount}
-                            symbol={symbol}
-                            size={size === "large" ? 15 : size === "medium" ? 13 : 11}
-                            showDecimals={false}
-                            numberOfLines={1}
-                            adjustsFontSizeToFit
-                        />
-                    </View>
-                </Animated.View>
-            )}
-        </Pressable>
+                    {formatPercent(tile.percentage)}
+                </Text>
+                {nameLines(tile.name, content.nameLines).map((line, i) => (
+                    <Text
+                        key={i}
+                        style={[styles.name, size === "small" && styles.nameSmall]}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        minimumFontScale={0.7}
+                        maxFontSizeMultiplier={MAX_TILE_FONT_SCALE}
+                    >
+                        {line}
+                    </Text>
+                ))}
+                {content.showAmount && (
+                    <MoneyText
+                        amount={tile.amount}
+                        symbol={symbol}
+                        size={AMOUNT_SIZE[size]}
+                        style={{ lineHeight: Math.round(AMOUNT_SIZE[size] * 1.4) }}
+                        numberOfLines={1}
+                        adjustsFontSizeToFit
+                        maxFontSizeMultiplier={MAX_TILE_FONT_SCALE}
+                    />
+                )}
+            </View>
+        </Animated.View>
     );
 }
 
 const createStyles = (theme: ReturnType<typeof useTheme>) =>
     StyleSheet.create({
-        slot: {
-            position: "absolute",
-        },
         tile: {
-            flex: 1,
-            borderRadius: theme.shape.large,
-            padding: 12,
-            justifyContent: "space-between",
-            overflow: "hidden",
-        },
-        tileSmall: {
-            borderRadius: theme.shape.medium,
-            padding: 8,
-            justifyContent: "flex-end",
-        },
-        chevron: {
             position: "absolute",
-            top: 8,
-            right: 8,
+            overflow: "hidden",
         },
         body: {
             gap: 1,

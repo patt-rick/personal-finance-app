@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { LayoutChangeEvent, StyleSheet, Text, View } from "react-native";
 import Svg, { G, Rect, Text as SvgText } from "react-native-svg";
 import { useTheme } from "../../theme/theme";
-import { compactMoney, niceCeil } from "../../utils/chartScale";
+import { compactMoney, exactMoney, niceCeil } from "../../utils/chartScale";
 
 interface PairedBarChartProps {
     labels: string[];
@@ -86,14 +86,14 @@ export default function PairedBarChart({
     return (
         <View style={styles.wrapper}>
             {selected >= 0 && selected < labels.length && (
-                <Text style={styles.summary} numberOfLines={1}>
+                <Text style={styles.summary} numberOfLines={1} adjustsFontSizeToFit>
                     {labels[selected]}:{" "}
                     <Text style={[styles.summaryValue, { color: primaryColor }]}>
-                        {compactMoney(primaryData[selected] ?? 0, currencySymbol)} in
+                        {exactMoney(primaryData[selected] ?? 0, currencySymbol)} in
                     </Text>
                     {"  ·  "}
                     <Text style={[styles.summaryValue, { color: secondaryColor }]}>
-                        {compactMoney(secondaryData[selected] ?? 0, currencySymbol)} out
+                        {exactMoney(secondaryData[selected] ?? 0, currencySymbol)} out
                     </Text>
                 </Text>
             )}

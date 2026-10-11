@@ -3,6 +3,8 @@ import { grossAmount } from "./transactionAmount";
 
 // Float sums like 30.3 - (10.1 + 20.2) leave dust that would flip "kept" / "overspent" copy.
 const cents = (n: number) => Math.round(n * 100) / 100;
+const tenths = (n: number) => Math.round(n * 10) / 10;
+const percentText = (n: number) => `${n.toFixed(1)}%`;
 
 export interface PeriodSummary {
     income: number;
@@ -137,24 +139,24 @@ export function changeSentence(metric: ChangeMetric, { current, previous }: Metr
         return { text: "You've broken even so far this month.", direction: "flat", good: previous < 0 };
     }
     if (metric === "net" && previous < 0 && current < 0) {
-        const shift = Math.round(Math.abs((current - previous) / previous) * 100);
+        const shift = tenths(Math.abs((current - previous) / previous) * 100);
         if (shift === 0) return { text: "You're overspending about as much as last month.", direction: "flat", good: null };
         const less = current > previous;
         return {
-            text: `You're overspending ${shift.toLocaleString()}% ${less ? "less" : "more"} than last month.`,
-            direction: less ? "up" : "down",
+            text: `Your overspending is ${less ? "down" : "up"} ${percentText(shift)} from last month.`,
+            direction: less ? "down" : "up",
             good: less,
         };
     }
     const change = ((current - previous) / Math.abs(previous)) * 100;
     const label = METRIC_LABEL[metric];
-    const rounded = Math.round(Math.abs(change));
+    const rounded = tenths(Math.abs(change));
     if (rounded === 0) {
         return { text: `${label} is about the same as last month.`, direction: "flat", good: null };
     }
     const up = change > 0;
     return {
-        text: `${label} is ${rounded.toLocaleString()}% ${up ? "higher" : "lower"} than last month.`,
+        text: `${label} is ${percentText(rounded)} ${up ? "higher" : "lower"} than last month.`,
         direction: up ? "up" : "down",
         good: metric === "spending" ? !up : up,
     };

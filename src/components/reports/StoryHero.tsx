@@ -3,6 +3,7 @@ import { Animated, StyleSheet, Text, View } from "react-native";
 import { useTheme } from "../../theme/theme";
 import MoneyText from "../MoneyText";
 import { PeriodSummary, heroCopy } from "../../utils/reportStory";
+import { exactMoney } from "../../utils/chartScale";
 import HeroFigures from "./HeroFigures";
 import KeptCurve from "./KeptCurve";
 import { riseStyle, useCountUp, useReveal } from "./motion";
@@ -14,7 +15,6 @@ interface StoryHeroProps {
     symbol: string;
     movedIn: number;
     movedOut: number;
-    mixedCurrencies: boolean;
     reduced: boolean | null;
 }
 
@@ -27,14 +27,13 @@ export default function StoryHero({
     symbol,
     movedIn,
     movedOut,
-    mixedCurrencies,
     reduced,
 }: StoryHeroProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
 
     const format = useMemo(
-        () => (n: number) => `${symbol} ${Math.floor(n).toLocaleString()}`.trim(),
+        () => (n: number) => exactMoney(n, symbol),
         [symbol],
     );
     const copy = heroCopy(summary, format);
@@ -72,7 +71,7 @@ export default function StoryHero({
                 <HeroFigures summary={summary} symbol={symbol} progress={progress} format={format} />
             </View>
 
-            {(movedIn > 0 || movedOut > 0 || mixedCurrencies) && (
+            {(movedIn > 0 || movedOut > 0) && (
                 <Animated.View style={[styles.notes, motion.notes]}>
                     {movedIn > 0 && (
                         <Text style={styles.note}>
@@ -82,11 +81,6 @@ export default function StoryHero({
                     {movedOut > 0 && (
                         <Text style={styles.note}>
                             Went out includes {format(movedOut)} moved to your other cashbooks.
-                        </Text>
-                    )}
-                    {mixedCurrencies && (
-                        <Text style={styles.note}>
-                            These totals add up cashbooks in different currencies. Pick one cashbook for exact figures.
                         </Text>
                     )}
                 </Animated.View>

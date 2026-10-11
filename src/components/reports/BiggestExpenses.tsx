@@ -32,7 +32,7 @@ export default function BiggestExpenses({ transactions, symbol }: BiggestExpense
                                 {category}, {date}
                             </Text>
                         </View>
-                        <MoneyText amount={grossAmount(tx)} symbol={symbol} sign="-" size={14} showDecimals={false} />
+                        <MoneyText amount={grossAmount(tx)} symbol={symbol} sign="-" size={14} />
                     </View>
                 );
             })}

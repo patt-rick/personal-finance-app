@@ -14,6 +14,7 @@ interface MoneyTextProps {
     style?: StyleProp<TextStyle>;
     numberOfLines?: number;
     adjustsFontSizeToFit?: boolean;
+    maxFontSizeMultiplier?: number;
 }
 
 export default function MoneyText({
@@ -28,17 +29,21 @@ export default function MoneyText({
     style,
     numberOfLines,
     adjustsFontSizeToFit,
+    maxFontSizeMultiplier,
 }: MoneyTextProps) {
     const theme = useTheme();
     const ink = color ?? theme.colors.onSurface;
     const abs = Math.abs(amount);
-    const whole = Math.floor(abs).toLocaleString();
-    const decimals = (abs % 1).toFixed(2).slice(1); // ".00"
+    // Round to cents before splitting, so 15,929.999 reads 15,930.00 rather than 15,929.00.
+    const cents = showDecimals ? Math.round(abs * 100) : Math.floor(abs) * 100;
+    const whole = Math.floor(cents / 100).toLocaleString();
+    const decimals = `.${String(cents % 100).padStart(2, "0")}`;
 
     return (
         <Text
             numberOfLines={numberOfLines}
             adjustsFontSizeToFit={adjustsFontSizeToFit}
+            maxFontSizeMultiplier={maxFontSizeMultiplier}
             style={[
                 {
                     fontSize: size,

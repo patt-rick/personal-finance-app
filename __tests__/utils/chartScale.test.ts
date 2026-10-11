@@ -1,4 +1,4 @@
-import { compactMoney, niceCeil } from "../../src/utils/chartScale";
+import { compactMoney, exactMoney, niceCeil } from "../../src/utils/chartScale";
 
 describe("niceCeil", () => {
     it("rounds up to a readable axis maximum", () => {
@@ -26,5 +26,15 @@ describe("compactMoney", () => {
     it("rolls over to the next unit instead of showing 1000k", () => {
         expect(compactMoney(999.6, "₵")).toBe("₵1k");
         expect(compactMoney(999_960, "₵")).toBe("₵1m");
+    });
+});
+
+describe("exactMoney", () => {
+    it("rounds to the cent instead of truncating", () => {
+        expect(exactMoney(15929.77, "₵")).toBe("₵ 15,929.77");
+        expect(exactMoney(15929.999, "₵")).toBe("₵ 15,930.00");
+        expect(exactMoney(-2.5, "$")).toBe("-$ 2.50");
+        expect(exactMoney(7, "")).toBe("7.00");
+        expect(exactMoney(-0.001, "₵")).toBe("₵ 0.00");
     });
 });

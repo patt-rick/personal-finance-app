@@ -66,7 +66,7 @@ function Figure({
                 />
                 <Text style={styles.figureLabel}>{label}</Text>
             </View>
-            <MoneyText amount={amount} symbol={symbol} size={15} showDecimals={false} numberOfLines={1} adjustsFontSizeToFit />
+            <MoneyText amount={amount} symbol={symbol} size={15} numberOfLines={1} adjustsFontSizeToFit />
         </View>
     );
 }

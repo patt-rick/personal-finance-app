@@ -153,18 +153,19 @@ describe("changeSentence", () => {
         });
     });
 
-    it("treats tiny changes as no change", () => {
-        expect(changeSentence("income", pair(1003, 1000)).text).toBe("Income is about the same as last month.");
+    it("quotes changes to one decimal and only calls a change under 0.05% the same", () => {
+        expect(changeSentence("income", pair(1003, 1000)).text).toBe("Income is 0.3% higher than last month.");
+        expect(changeSentence("income", pair(1000.4, 1000)).text).toBe("Income is about the same as last month.");
     });
 
     it("judges lower spending as good and higher income as good", () => {
         expect(changeSentence("spending", pair(876, 1000))).toEqual({
-            text: "Spending is 12% lower than last month.",
+            text: "Spending is 12.4% lower than last month.",
             direction: "down",
             good: true,
         });
         expect(changeSentence("income", pair(108, 100))).toMatchObject({
-            text: "Income is 8% higher than last month.",
+            text: "Income is 8.0% higher than last month.",
             direction: "up",
             good: true,
         });
@@ -179,11 +180,15 @@ describe("changeSentence", () => {
 
     it("describes overspending in both months by the size of the overspend", () => {
         expect(changeSentence("net", pair(-50, -100))).toEqual({
-            text: "You're overspending 50% less than last month.",
-            direction: "up",
+            text: "Your overspending is down 50.0% from last month.",
+            direction: "down",
             good: true,
         });
-        expect(changeSentence("net", pair(-150, -100)).text).toBe("You're overspending 50% more than last month.");
+        expect(changeSentence("net", pair(-150, -100))).toMatchObject({
+            text: "Your overspending is up 50.0% from last month.",
+            direction: "up",
+            good: false,
+        });
     });
 
     it("calls out breaking even", () => {
