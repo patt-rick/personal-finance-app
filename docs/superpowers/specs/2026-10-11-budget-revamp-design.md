@@ -190,7 +190,7 @@ shows in-app the next time the app opens and drains. This is accepted; adding a 
 
 Message lines state the threshold, with the exact amounts:
 "Food in Main cashbook passed 80% · ₵ 486.20 of ₵ 600.00",
-"All ₵ cashbooks reached its limit · ₵ 2,013.40 of ₵ 2,000.00".
+"All ₵ cashbooks reached the limit · ₵ 2,013.40 of ₵ 2,000.00".
 
 ### Delivering (`deliverAlerts`)
 

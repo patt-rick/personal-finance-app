@@ -50,7 +50,7 @@ describe("evaluateAlerts", () => {
 
     it("shows only the limit message when one save crosses both, but records both", () => {
         const r = run([], [tx("1", 1000, { category: "Rent" })]);
-        expect(r.lines).toEqual(["Main reached its limit · ₵ 1,000.00 of ₵ 1,000.00"]);
+        expect(r.lines).toEqual(["Main reached the limit · ₵ 1,000.00 of ₵ 1,000.00"]);
         expect(r.recorded.sort()).toEqual(["B|2026-10-01|total|100", "B|2026-10-01|total|80"]);
     });
 

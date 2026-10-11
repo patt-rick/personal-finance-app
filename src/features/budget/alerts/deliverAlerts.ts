@@ -4,12 +4,16 @@ import { appAlert } from "../../../components/dialog";
 import { hapticWarning } from "../../../utils/haptics";
 
 const CHANNEL_ID = "budget-alerts";
+/** Lets a closing sheet (e.g. quick add) finish first; Android drops a modal opened during another's exit. */
+const SHOW_DELAY_MS = 450;
 let gateOpen = false;
 let queued: string[] = [];
 
 function showInApp(lines: string[]) {
-    hapticWarning();
-    appAlert("Budget alert", lines.join("\n\n"), undefined, { tone: "warning" });
+    setTimeout(() => {
+        hapticWarning();
+        appAlert("Budget alert", lines.join("\n\n"), undefined, { tone: "warning" });
+    }, SHOW_DELAY_MS);
 }
 
 export function flushQueuedAlerts(): void {

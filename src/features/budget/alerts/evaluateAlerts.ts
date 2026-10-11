@@ -84,7 +84,7 @@ export function evaluateAlerts(input: EvaluateInput): EvaluateResult {
             if (crossed.length === 0) continue;
             crossed.forEach((th) => result.recorded.push(ledgerKey(budget.id, range.key, target.key, th)));
             const top = Math.max(...crossed);
-            const verb = top >= 100 ? "reached its limit" : `passed ${top}%`;
+            const verb = top >= 100 ? "reached the limit" : `passed ${top}%`;
             result.lines.push(
                 `${target.label} ${verb} · ${exactMoney(target.to, symbol)} of ${exactMoney(target.limit, symbol)}`,
             );
