@@ -1,42 +1,28 @@
-import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
-import {
-    View,
-    Text,
-    StyleSheet,
-    ScrollView,
-    TouchableOpacity,
-    ActivityIndicator,
-    RefreshControl,
-    BackHandler,
-    Animated,
-} from "react-native";
+import React, { useCallback, useMemo, useState } from "react";
+import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
-import {
-    AlertCircle,
-    Plus,
-    PiggyBank,
-    Target,
-    BarChart3,
-} from "lucide-react-native";
-import Svg, { Circle } from "react-native-svg";
-import { useTheme } from "../theme/theme";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { createDashboardStyles } from "../styles/dashboardStyles";
-import { Business, Budget, CategoryBudgetSpent, Transaction } from "../types";
-import { loadCategories, getBudgetByBusinessId } from "../utils/storage";
-import { resolveBudgetSelection } from "../utils/budgetSelection";
-import {
-    calculateBudgetData,
-    calculateTotalSpent,
-    calculateTotalLimit,
-    calculateBudgetHealthScore,
-    getBudgetStatusColor,
-    getDateRangeForPeriod,
-} from "../utils/budgetCalculations";
-import { getCurrencySymbol } from "../utils/_helpers";
-import BudgetSetupScreen from "./BudgetSetupScreen";
+import { Gauge, Globe, History, Plus } from "lucide-react-native";
+import { AppTheme, useTheme } from "../theme/theme";
+import { Budget, BudgetScope, Business, Transaction } from "../types";
+import { exactMoney } from "../utils/chartScale";
 import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
+import { useReducedMotion } from "../components/reports/motion";
+import BudgetSetupScreen from "./BudgetSetupScreen";
+import { useBudgetDashboard } from "../features/budget/hooks/useBudgetDashboard";
+import { useSweep } from "../features/budget/components/useSweep";
+import BudgetGauge from "../features/budget/components/BudgetGauge";
+import BudgetSummary from "../features/budget/components/BudgetSummary";
+import CategoryLimitsCard from "../features/budget/components/CategoryLimitsCard";
+import BudgetHistoryChart from "../features/budget/components/BudgetHistoryChart";
+import PeriodSwitcher from "../features/budget/components/PeriodSwitcher";
+import ScopeChips from "../features/budget/components/ScopeChips";
+import NewBudgetSheet from "../features/budget/components/NewBudgetSheet";
+import { budgetColour } from "../features/budget/colour";
+import { BudgetRow, paceChip, summaryLines } from "../features/budget/dashboardModel";
+import { businessIdsForScope, scopeKey, scopeName, scopeSymbol } from "../features/budget/scope";
+import { formatPeriodLabel, monthName, periodAdjective, periodName } from "../features/budget/periods";
 
 interface BudgetDashboardScreenProps {
     businesses: Business[];
@@ -44,559 +30,253 @@ interface BudgetDashboardScreenProps {
     currentBusiness: Business | null;
 }
 
-function getDaysLeft(period: "weekly" | "monthly" | "yearly"): number {
-    const now = new Date();
-    let periodEnd: Date;
-
-    switch (period) {
-        case "weekly": {
-            const dayOfWeek = now.getDay();
-            periodEnd = new Date(now);
-            periodEnd.setDate(now.getDate() + (6 - dayOfWeek));
-            periodEnd.setHours(23, 59, 59, 999);
-            break;
-        }
-        case "monthly": {
-            periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-            periodEnd.setHours(23, 59, 59, 999);
-            break;
-        }
-        case "yearly": {
-            periodEnd = new Date(now.getFullYear(), 11, 31);
-            periodEnd.setHours(23, 59, 59, 999);
-            break;
-        }
-    }
-
-    const diffMs = periodEnd.getTime() - now.getTime();
-    return Math.max(0, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
-}
-
-function BudgetRing({
-    spent,
-    limit,
-    healthColor,
-    theme,
-    currencySymbol,
-    remaining,
-}: {
-    spent: number;
-    limit: number;
-    healthColor: string;
-    theme: any;
-    currencySymbol: string;
-    remaining: number;
-}) {
-    const size = 180;
-    const strokeWidth = 22;
-    const radius = (size - strokeWidth) / 2;
-    const circumference = 2 * Math.PI * radius;
-    const percentage = Math.min(1, spent / Math.max(limit, 1));
-    const strokeDashoffset = circumference * (1 - percentage);
-
-    return (
-        <View style={{ alignItems: "center", justifyContent: "center" }}>
-            <Svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-                <Circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    stroke={theme.colors.surfaceContainerHigh}
-                    strokeWidth={strokeWidth}
-                    fill="none"
-                />
-                <Circle
-                    cx={size / 2}
-                    cy={size / 2}
-                    r={radius}
-                    stroke={healthColor}
-                    strokeWidth={strokeWidth}
-                    fill="none"
-                    strokeLinecap="round"
-                    strokeDasharray={`${circumference}`}
-                    strokeDashoffset={strokeDashoffset}
-                    rotation={-90}
-                    origin={`${size / 2},${size / 2}`}
-                />
-            </Svg>
-            <View style={{ position: "absolute", alignItems: "center" }}>
-                <Text
-                    style={{
-                        fontSize: 10,
-                        fontFamily: theme.fonts.semibold,
-                        color: theme.colors.onSurfaceVariant,
-                        textTransform: "uppercase",
-                        letterSpacing: 0.8,
-                        marginBottom: 2,
-                    }}
-                >
-                    Remaining
-                </Text>
-                <Text
-                    style={{
-                        fontSize: 26,
-                        fontFamily: theme.fonts.semibold,
-                        fontVariant: ["tabular-nums"],
-                        color: theme.colors.onSurface,
-                    }}
-                    numberOfLines={1}
-                    adjustsFontSizeToFit
-                >
-                    {currencySymbol}{remaining.toFixed(0)}
-                </Text>
-                <Text
-                    style={{
-                        fontSize: 11,
-                        fontFamily: theme.fonts.regular,
-                        color: healthColor,
-                        marginTop: 2,
-                    }}
-                >
-                    {Math.round(percentage * 100)}% used
-                </Text>
-            </View>
-        </View>
-    );
-}
-
-function AnimatedCategoryRow({
-    children,
-    index,
-}: {
-    children: React.ReactNode;
-    index: number;
-}) {
-    const fadeAnim = useRef(new Animated.Value(0)).current;
-    const slideAnim = useRef(new Animated.Value(12)).current;
-
-    useEffect(() => {
-        Animated.parallel([
-            Animated.timing(fadeAnim, {
-                toValue: 1,
-                duration: 300,
-                delay: index * 50,
-                useNativeDriver: true,
-            }),
-            Animated.timing(slideAnim, {
-                toValue: 0,
-                duration: 300,
-                delay: index * 50,
-                useNativeDriver: true,
-            }),
-        ]).start();
-    }, []);
-
-    return (
-        <Animated.View
-            style={{ opacity: fadeAnim, transform: [{ translateY: slideAnim }] }}
-        >
-            {children}
-        </Animated.View>
-    );
-}
-
-export default function BudgetDashboardScreen({
-    businesses,
-    transactions,
-    currentBusiness,
-}: BudgetDashboardScreenProps) {
+export default function BudgetDashboardScreen({ businesses, transactions, currentBusiness }: BudgetDashboardScreenProps) {
     const theme = useTheme();
+    const styles = useMemo(() => createStyles(theme), [theme]);
     const insets = useSafeAreaInsets();
-    const [loading, setLoading] = useState(true);
+    const reduced = useReducedMotion();
+    const d = useBudgetDashboard(businesses, transactions, currentBusiness);
+    const [editing, setEditing] = useState<{ scope: BudgetScope; budget: Budget | null } | null>(null);
+    const [sheetOpen, setSheetOpen] = useState(false);
     const [refreshing, setRefreshing] = useState(false);
-    const [selectedBusiness, setSelectedBusiness] = useState<Business | null>(() =>
-        resolveBudgetSelection(null, currentBusiness, businesses),
-    );
-    const [budget, setBudget] = useState<Budget | null>(null);
-    const [budgetData, setBudgetData] = useState<CategoryBudgetSpent[]>([]);
-    const [showSetup, setShowSetup] = useState(false);
 
-    const styles = useMemo(() => createDashboardStyles(theme), [theme]);
-    const s = useMemo(() => createBudgetStyles(theme), [theme]);
+    const animKey = `${d.selected ? scopeKey(d.selected) : ""}|${d.view?.range.key ?? ""}|${d.budget?.updatedAt ?? ""}`;
+    const progress = useSweep(animKey, reduced, 1400);
 
     useFocusEffect(
         useCallback(() => {
-            const onBackPress = () => {
-                if (showSetup) {
-                    setShowSetup(false);
-                    return true;
-                }
-                return false;
-            };
-            const subscription = BackHandler.addEventListener("hardwareBackPress", onBackPress);
-            return () => subscription.remove();
-        }, [showSetup])
+            const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+                if (!editing) return false;
+                setEditing(null);
+                return true;
+            });
+            return () => sub.remove();
+        }, [editing]),
     );
 
-    useEffect(() => {
-        if (currentBusiness) setSelectedBusiness((prev) => resolveBudgetSelection(prev, currentBusiness, businesses));
-    }, [currentBusiness]);
-
-    useEffect(() => {
-        setSelectedBusiness((prev) => resolveBudgetSelection(prev, null, businesses));
-    }, [businesses]);
-
-    useEffect(() => {
-        if (selectedBusiness) {
-            loadBudgetData();
-        }
-    }, [selectedBusiness, transactions]);
-
-    const loadBudgetData = async () => {
-        if (!selectedBusiness) return;
-
-        setLoading(true);
-        const budgetData = await getBudgetByBusinessId(selectedBusiness.id);
-        setBudget(budgetData);
-
-        if (budgetData) {
-            const categories = await loadCategories();
-            const businessTransactions = transactions.filter(
-                (t) => t.businessId === selectedBusiness.id,
-            );
-            const data = calculateBudgetData(budgetData, businessTransactions, categories);
-            setBudgetData(data);
-        } else {
-            setBudgetData([]);
-        }
-
-        setLoading(false);
-    };
-
+    const { reload } = d;
     const onRefresh = useCallback(async () => {
         setRefreshing(true);
-        await loadBudgetData();
+        await reload();
         setRefreshing(false);
-    }, [selectedBusiness]);
+    }, [reload]);
 
-    const handleBusinessSelect = (business: Business) => {
-        setSelectedBusiness(business);
-    };
+    const colorFor = useMemo(() => {
+        const limitKeys = (d.view?.rows ?? []).filter((r) => r.kind === "limit").map((r) => r.key);
+        return (row: BudgetRow) => {
+            if (row.kind === "other") return theme.colors.outline;
+            if (row.kind === "fees") return theme.colors.chartExpense;
+            return theme.colors.chart[limitKeys.indexOf(row.key) % theme.colors.chart.length];
+        };
+    }, [d.view, theme]);
 
-    const handleSetupComplete = () => {
-        setShowSetup(false);
-        loadBudgetData();
-    };
-
-    if (showSetup && selectedBusiness) {
+    if (editing) {
         return (
             <BudgetSetupScreen
-                business={selectedBusiness}
-                onBack={() => setShowSetup(false)}
-                onSave={handleSetupComplete}
+                scope={editing.scope}
+                budget={editing.budget}
+                businesses={businesses}
+                onBack={() => setEditing(null)}
+                onSaved={async () => {
+                    setEditing(null);
+                    await d.reload();
+                }}
             />
         );
     }
 
+    const header = (
+        <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
+            <Text style={styles.headerTitle}>Budget</Text>
+            {businesses.length > 0 && (
+                <Pressable
+                    onPress={() => setSheetOpen(true)}
+                    style={({ pressed }) => [styles.newButton, pressed && styles.pressed]}
+                    accessibilityRole="button"
+                >
+                    <Plus size={16} color={theme.colors.onSecondaryContainer} />
+                    <Text style={styles.newButtonText}>New budget</Text>
+                </Pressable>
+            )}
+        </View>
+    );
+
     if (businesses.length === 0) {
         return (
             <View style={styles.container}>
-                <View style={[s.header, { paddingTop: Math.max(insets.top, 40) }]}>
-                    <Text style={[s.headerTitle, { color: theme.colors.onSurface }]}>Budget</Text>
-                    <Text style={[s.headerSub, { color: theme.colors.onSurfaceVariant }]}>
-                        Spending limits per cashbook
-                    </Text>
-                </View>
-                <View style={s.emptyCenter}>
+                {header}
+                <View style={styles.empty}>
                     <EmptyScene variant="budget" size={224} />
-                    <Text style={[s.emptyTitle, { color: theme.colors.onSurface }]}>
-                        No cashbooks yet
-                    </Text>
-                    <Text style={[s.emptyText, { color: theme.colors.onSurfaceVariant }]}>
-                        Create a cashbook first to set up budgets
-                    </Text>
+                    <Text style={styles.emptyTitle}>No cashbooks yet</Text>
+                    <Text style={styles.emptyText}>Create a cashbook first, then set a budget for it.</Text>
                 </View>
             </View>
         );
     }
 
-    const totalSpent = calculateTotalSpent(budgetData);
-    const totalLimit = budget?.totalLimit || calculateTotalLimit(budgetData);
-    const remaining = Math.max(0, totalLimit - totalSpent);
-    const healthScore = calculateBudgetHealthScore(totalSpent, totalLimit);
-    const currencySymbol = getCurrencySymbol(selectedBusiness?.currency);
-    const daysLeft = budget ? getDaysLeft(budget.period) : 0;
+    const { budget, view, selected } = d;
+    const symbol = selected ? scopeSymbol(selected, businesses) : "";
+    const money = (v: number) => exactMoney(v, symbol);
 
-    const spentPercentage = totalLimit > 0 ? (totalSpent / totalLimit) * 100 : 0;
-    const healthColor = spentPercentage < 70
-        ? theme.colors.income
-        : spentPercentage < 90
-            ? theme.colors.gold
-            : theme.colors.error;
+    const renderBudget = () => {
+        if (!budget || !view || !selected) return null;
+        const share = view.limit ? (view.spent / view.limit) * 100 : 0;
+        const warnAt = budget.alerts.warnAt;
+        const name = periodName(budget.period, view.range);
+        const title =
+            budget.period === "monthly"
+                ? `${monthName(view.range.start)} budget`
+                : budget.period === "weekly" && view.current
+                  ? "This week's budget"
+                  : `${formatPeriodLabel(budget.period, view.range)} budget`;
+        const books = businessIdsForScope(selected, businesses).size;
+        const subtitle =
+            selected.kind === "currency"
+                ? `${scopeName(selected, businesses)}, ${books} book${books === 1 ? "" : "s"}`
+                : `${periodAdjective(budget.period)} limit`;
+        const lines = summaryLines(view, symbol, name);
+        const amountColor =
+            view.limit === null
+                ? theme.colors.onSurface
+                : view.current
+                  ? budgetColour(share, warnAt, theme.colors)
+                  : view.spent > view.limit
+                    ? theme.colors.expense
+                    : theme.colors.income;
+        const pacePct = view.pace ? view.pace.elapsedPct : null;
+
+        return (
+            <>
+                <PeriodSwitcher
+                    label={formatPeriodLabel(budget.period, view.range)}
+                    onBack={d.goBack}
+                    onForward={d.goForward}
+                    canGoForward={d.canGoForward}
+                />
+                {view.limit !== null ? (
+                    <BudgetGauge
+                        share={share}
+                        pacePct={pacePct}
+                        warnAt={warnAt}
+                        title={title}
+                        subtitle={subtitle}
+                        spentText={money(view.spent)}
+                        limitText={money(view.limit)}
+                        caption={view.pace ? `${view.pace.daysLeft} day${view.pace.daysLeft === 1 ? "" : "s"} left` : "Final"}
+                        chip={paceChip(view, symbol)}
+                        onEdit={() => setEditing({ scope: selected, budget })}
+                        animKey={animKey}
+                        reduced={reduced}
+                    />
+                ) : (
+                    <Text style={styles.noLimit}>{title}</Text>
+                )}
+                <View style={styles.divider} />
+                <BudgetSummary
+                    lines={lines}
+                    amountColor={amountColor}
+                    rows={view.rows}
+                    limit={view.limit}
+                    colorFor={colorFor}
+                    progress={progress}
+                />
+                {view.rows.length > 0 && (
+                    <View style={styles.section}>
+                        <CategoryLimitsCard
+                            rows={view.rows}
+                            symbol={symbol}
+                            warnAt={warnAt}
+                            pacePct={pacePct}
+                            colorFor={colorFor}
+                            progress={progress}
+                        />
+                    </View>
+                )}
+                <View style={styles.section}>
+                    <BudgetHistoryChart
+                        points={d.history}
+                        period={budget.period}
+                        symbol={symbol}
+                        warnAt={warnAt}
+                        selectedKey={view.range.key}
+                        onSelect={d.selectPeriod}
+                        progress={progress}
+                    />
+                </View>
+            </>
+        );
+    };
 
     return (
         <View style={styles.container}>
-            <View style={[s.header, { paddingTop: Math.max(insets.top, 40) }]}>
-                <Text style={[s.headerTitle, { color: theme.colors.onSurface }]}>Budget</Text>
-                <Text style={[s.headerSub, { color: theme.colors.onSurfaceVariant }]}>
-                    {selectedBusiness ? selectedBusiness.name : "Spending limits per cashbook"}
-                </Text>
-            </View>
-
+            {header}
             <ScrollView
-                style={s.content}
                 showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingBottom: 100 }}
+                contentContainerStyle={styles.scroll}
                 refreshControl={
-                    <RefreshControl
-                        refreshing={refreshing}
-                        onRefresh={onRefresh}
-                        tintColor={theme.colors.primary}
-                    />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                 }
             >
-                {businesses.length > 1 && (
-                    <View style={s.section}>
-                        <ScrollView
-                            horizontal
-                            showsHorizontalScrollIndicator={false}
-                            contentContainerStyle={{ paddingBottom: 10 }}
-                        >
-                            {businesses.map((business) => (
-                                <TouchableOpacity
-                                    key={business.id}
-                                    onPress={() => handleBusinessSelect(business)}
-                                    style={[
-                                        s.businessChip,
-                                        selectedBusiness?.id === business.id
-                                            ? s.businessChipSelected
-                                            : s.businessChipUnselected,
-                                    ]}
+                <ScopeChips scopes={d.scopes} selected={selected} businesses={businesses} onSelect={d.select} />
+                <View style={styles.body}>
+                    {d.loading ? (
+                        <ActivityIndicator style={styles.loading} size="large" color={theme.colors.primary} />
+                    ) : budget ? (
+                        renderBudget()
+                    ) : (
+                        selected && (
+                            <View style={styles.empty}>
+                                <EmptyScene variant="budget" size={200} />
+                                <Text style={styles.emptyTitle}>No budget for {scopeName(selected, businesses)}</Text>
+                                <Text style={styles.emptyText}>
+                                    Set a limit and see how fast it goes, with a heads-up before you run out.
+                                </Text>
+                                <Pressable
+                                    onPress={() => setEditing({ scope: selected, budget: null })}
+                                    style={({ pressed }) => [styles.setButton, pressed && styles.pressed]}
+                                    accessibilityRole="button"
                                 >
-                                    <Text
-                                        style={[
-                                            s.businessChipText,
-                                            selectedBusiness?.id === business.id
-                                                ? s.businessChipTextSelected
-                                                : s.businessChipTextUnselected,
-                                        ]}
-                                    >
-                                        {business.name}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </ScrollView>
-                    </View>
-                )}
-
-                {loading ? (
-                    <View style={s.loadingContainer}>
-                        <ActivityIndicator size="large" color={theme.colors.primary} />
-                    </View>
-                ) : !budget ? (
-                    <View style={s.noBudgetContainer}>
-                        <EmptyScene variant="budget" size={224} />
-                        <Text style={[s.noBudgetTitle, { color: theme.colors.onSurface }]}>
-                            No Budget Set
-                        </Text>
-                        <Text style={[s.noBudgetText, { color: theme.colors.onSurfaceVariant }]}>
-                            Set up a budget to track your spending and stay on target
-                        </Text>
-                        <TouchableOpacity
-                            onPress={() => setShowSetup(true)}
-                            style={[s.setupButton, { backgroundColor: theme.colors.primary }]}
-                            activeOpacity={0.8}
-                        >
-                            <Plus size={20} color={theme.colors.onPrimary} />
-                            <Text style={[s.setupButtonText, { color: theme.colors.onPrimary }]}>
-                                Set Budget
-                            </Text>
-                        </TouchableOpacity>
-                    </View>
-                ) : (
-                    <>
-                        <View
-                            style={[
-                                s.summaryCard,
-                                { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
-                            ]}
-                        >
-                            <View style={s.summaryTop}>
-                                <View>
-                                    <Text style={[s.summaryLabel, { color: theme.colors.onSurfaceVariant }]}>
-                                        {daysLeft} day{daysLeft !== 1 ? "s" : ""} left
-                                    </Text>
-                                    <Text style={[s.periodLabel, { color: theme.colors.onSurface }]}>
-                                        {budget.period === "weekly"
-                                            ? "This week"
-                                            : budget.period === "monthly"
-                                              ? "This month"
-                                              : "This year"}
-                                    </Text>
-                                </View>
-                                <TouchableOpacity
-                                    onPress={() => setShowSetup(true)}
-                                    style={s.editBudgetBtn}
-                                >
-                                    <Text style={[s.editBudgetText, { color: theme.colors.primary }]}>
-                                        Edit
-                                    </Text>
-                                </TouchableOpacity>
+                                    <Plus size={18} color={theme.colors.inverseOnSurface} />
+                                    <Text style={styles.setButtonText}>Set a budget</Text>
+                                </Pressable>
                             </View>
-
-                            <BudgetRing
-                                spent={totalSpent}
-                                limit={totalLimit}
-                                healthColor={healthColor}
-                                theme={theme}
-                                currencySymbol={currencySymbol}
-                                remaining={remaining}
-                            />
-
-                            <View style={s.summaryFooter}>
-                                <View style={s.summaryFooterItem}>
-                                    <View style={[s.summaryFooterDot, { backgroundColor: healthColor }]} />
-                                    <Text style={[s.summaryFooterText, { color: theme.colors.onSurfaceVariant }]}>
-                                        {currencySymbol}{totalSpent.toFixed(2)} spent
-                                    </Text>
-                                </View>
-                                <View style={s.summaryFooterItem}>
-                                    <View style={[s.summaryFooterDot, { backgroundColor: theme.colors.surfaceContainerHigh }]} />
-                                    <Text style={[s.summaryFooterText, { color: theme.colors.onSurfaceVariant }]}>
-                                        {currencySymbol}{totalLimit.toFixed(2)} budget
-                                    </Text>
-                                </View>
-                            </View>
-                        </View>
-
-                        <View style={s.categorySection}>
-                            <Text style={[s.categorySectionTitle, { color: theme.colors.onSurface }]}>
-                                By category
-                            </Text>
-
-                            {budgetData.length === 0 ? (
-                                <View style={s.emptyCategories}>
-                                    <AlertCircle size={28} color={theme.colors.onSurfaceVariant} />
-                                    <Text style={[s.emptyCategoriesText, { color: theme.colors.onSurfaceVariant }]}>
-                                        No category budgets set
-                                    </Text>
-                                </View>
-                            ) : (
-                                <View
-                                    style={[
-                                        s.categoryList,
-                                        { backgroundColor: theme.colors.card, borderColor: theme.colors.border },
-                                    ]}
-                                >
-                                    {budgetData.map((item, index) => {
-                                        const isOver = item.spent > item.limit;
-                                        const statusColor = getBudgetStatusColor(item.percentage, theme);
-                                        const initial = item.categoryName.charAt(0).toUpperCase();
-                                        const leftOrOver = isOver
-                                            ? item.spent - item.limit
-                                            : item.limit - item.spent;
-
-                                        return (
-                                            <AnimatedCategoryRow key={item.categoryId} index={index}>
-                                                <View
-                                                    style={[
-                                                        s.categoryRow,
-                                                        index < budgetData.length - 1 && {
-                                                            borderBottomWidth: StyleSheet.hairlineWidth,
-                                                            borderBottomColor: theme.colors.outlineVariant,
-                                                        },
-                                                    ]}
-                                                >
-                                                    <View style={s.categoryIcon}>
-                                                        <Svg width={40} height={40} viewBox="0 0 40 40">
-                                                            <Circle
-                                                                cx={20}
-                                                                cy={20}
-                                                                r={16}
-                                                                stroke={theme.colors.surfaceContainerHigh}
-                                                                strokeWidth={4}
-                                                                fill="none"
-                                                            />
-                                                            <Circle
-                                                                cx={20}
-                                                                cy={20}
-                                                                r={16}
-                                                                stroke={statusColor}
-                                                                strokeWidth={4}
-                                                                fill="none"
-                                                                strokeLinecap="round"
-                                                                strokeDasharray={`${Math.min(item.percentage, 100) / 100 * 100.5} 100.5`}
-                                                                rotation={-90}
-                                                                origin="20,20"
-                                                            />
-                                                        </Svg>
-                                                        <Text style={[s.categoryInitial, { color: statusColor }]}>
-                                                            {initial}
-                                                        </Text>
-                                                    </View>
-
-                                                    <View style={s.categoryInfo}>
-                                                        <Text
-                                                            style={[s.categoryName, { color: theme.colors.onSurface }]}
-                                                            numberOfLines={1}
-                                                        >
-                                                            {item.categoryName}
-                                                        </Text>
-                                                        <View style={s.categoryProgressRow}>
-                                                            <View
-                                                                style={[
-                                                                    s.categoryProgressBg,
-                                                                    { backgroundColor: theme.colors.surfaceContainerHigh },
-                                                                ]}
-                                                            >
-                                                                <View
-                                                                    style={[
-                                                                        s.categoryProgressFill,
-                                                                        {
-                                                                            backgroundColor: statusColor,
-                                                                            width: `${Math.min(100, item.percentage)}%`,
-                                                                        },
-                                                                    ]}
-                                                                />
-                                                            </View>
-                                                            <Text
-                                                                style={[
-                                                                    s.categorySpentLabel,
-                                                                    { color: theme.colors.onSurfaceVariant },
-                                                                ]}
-                                                            >
-                                                                {currencySymbol}{item.spent.toFixed(0)} / {currencySymbol}{item.limit.toFixed(0)}
-                                                            </Text>
-                                                        </View>
-                                                    </View>
-
-                                                    <Text style={[s.categoryStatus, { color: statusColor }]}>
-                                                        {isOver ? "-" : ""}
-                                                        {currencySymbol}{leftOrOver.toFixed(0)}
-                                                    </Text>
-                                                </View>
-                                            </AnimatedCategoryRow>
-                                        );
-                                    })}
-                                </View>
-                            )}
-                        </View>
-                    </>
-                )}
-
-                <View style={{ height: 40 }} />
+                        )
+                    )}
+                </View>
             </ScrollView>
 
+            <NewBudgetSheet
+                visible={sheetOpen}
+                onClose={() => setSheetOpen(false)}
+                businesses={businesses}
+                transactions={transactions}
+                budgets={d.budgets}
+                onPick={(scope, existing) => {
+                    setSheetOpen(false);
+                    d.select(scope);
+                    setEditing({ scope, budget: existing });
+                }}
+            />
+
             <TourOverlay
-                page="budget"
+                page="budget-v2"
                 steps={[
                     {
-                        title: "Budget Tracking",
-                        icon: <PiggyBank size={24} color={theme.colors.primary} />,
+                        title: "Your budget at a glance",
+                        icon: <Gauge size={24} color={theme.colors.primary} />,
                         description:
-                            "Set spending limits for each cashbook to stay on top of your finances. Budgets can be weekly, monthly, or yearly.",
+                            "The speedometer shows how much of your limit is gone. The small tick marks where even spending would put you today.",
                     },
                     {
-                        title: "Remaining Budget",
-                        icon: <Target size={24} color={theme.colors.primary} />,
+                        title: "One cashbook or all of them",
+                        icon: <Globe size={24} color={theme.colors.primary} />,
                         description:
-                            "See how much you have left at a glance. The progress bar and color tell you if you're on track or overspending.",
+                            "Budget a single cashbook, or every cashbook in a currency. Switch between them with the chips at the top.",
                     },
                     {
-                        title: "Category Breakdown",
-                        icon: <BarChart3 size={24} color={theme.colors.primary} />,
-                        description:
-                            "Track spending per category. Each row shows how much you've spent vs your limit, and how much is left.",
+                        title: "Look back",
+                        icon: <History size={24} color={theme.colors.primary} />,
+                        description: "Use the arrows, or tap a bar in the history chart, to see how earlier periods went.",
                     },
                 ]}
             />
@@ -604,256 +284,93 @@ export default function BudgetDashboardScreen({
     );
 }
 
-const createBudgetStyles = (theme: any) =>
+const createStyles = (theme: AppTheme) =>
     StyleSheet.create({
-        content: {
+        container: {
             flex: 1,
+            backgroundColor: theme.colors.background,
         },
         header: {
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "space-between",
             paddingHorizontal: 20,
-            paddingBottom: 16,
+            paddingBottom: 14,
         },
         headerTitle: {
             fontSize: 22,
             fontFamily: theme.fonts.semibold,
+            color: theme.colors.onSurface,
         },
-        headerSub: {
-            fontSize: 12,
-            fontFamily: theme.fonts.regular,
-            marginTop: 2,
-        },
-        section: {
-            marginBottom: 16,
-            paddingHorizontal: 20,
-        },
-        businessChip: {
-            paddingHorizontal: 16,
-            paddingVertical: 10,
-            borderRadius: theme.shape.full,
-            marginRight: 8,
-            borderWidth: 1,
-        },
-        businessChipSelected: {
-            backgroundColor: theme.colors.inverseSurface,
-            borderColor: theme.colors.inverseSurface,
-        },
-        businessChipUnselected: {
-            backgroundColor: "transparent",
-            borderColor: theme.colors.outlineVariant,
-        },
-        businessChipText: {
-            fontSize: 13,
-            fontFamily: theme.fonts.regular,
-        },
-        businessChipTextSelected: {
-            color: theme.colors.inverseOnSurface,
-            fontFamily: theme.fonts.semibold,
-        },
-        businessChipTextUnselected: {
-            color: theme.colors.onSurfaceVariant,
-        },
-        loadingContainer: {
-            paddingVertical: 60,
-            alignItems: "center",
-        },
-
-        // Empty states
-        emptyCenter: {
-            flex: 1,
-            alignItems: "center",
-            justifyContent: "center",
-            paddingBottom: 80,
-        },
-        emptyIconOuter: {
-            width: 96,
-            height: 96,
-            borderRadius: theme.shape.extraLarge,
-            alignItems: "center",
-            justifyContent: "center",
-            marginBottom: 20,
-        },
-        emptyIconInner: {
-            width: 64,
-            height: 64,
-            borderRadius: theme.shape.large,
-            alignItems: "center",
-            justifyContent: "center",
-        },
-        emptyTitle: {
-            fontSize: 18,
-            fontFamily: theme.fonts.semibold,
-            marginBottom: 8,
-        },
-        emptyText: {
-            fontSize: 14,
-            fontFamily: theme.fonts.regular,
-            textAlign: "center",
-            paddingHorizontal: 40,
-        },
-
-        // No budget
-        noBudgetContainer: {
-            paddingVertical: 40,
-            paddingHorizontal: 60,
-            alignItems: "center",
-        },
-        noBudgetTitle: {
-            fontSize: 18,
-            fontFamily: theme.fonts.semibold,
-            marginBottom: 8,
-        },
-        noBudgetText: {
-            fontSize: 13,
-            fontFamily: theme.fonts.regular,
-            textAlign: "center",
-            paddingHorizontal: 12,
-            marginBottom: 24,
-            lineHeight: 20,
-        },
-        setupButton: {
-            flexDirection: "row",
-            alignItems: "center",
-            paddingHorizontal: 28,
-            paddingVertical: 14,
-            borderRadius: theme.shape.full,
-            gap: 8,
-            minHeight: 52,
-        },
-        setupButtonText: {
-            fontSize: 15,
-            fontFamily: theme.fonts.semibold,
-        },
-
-        // Summary Card
-        summaryCard: {
-            marginHorizontal: 20,
-            marginBottom: 28,
-            padding: 20,
-            borderRadius: 16,
-            borderWidth: StyleSheet.hairlineWidth,
-            alignItems: "center",
-        },
-        summaryTop: {
-            flexDirection: "row",
-            justifyContent: "space-between",
-            alignItems: "flex-start",
-            width: "100%",
-            marginBottom: 16,
-        },
-        summaryLabel: {
-            fontSize: 12,
-            fontFamily: theme.fonts.regular,
-        },
-        periodLabel: {
-            fontSize: 16,
-            fontFamily: theme.fonts.semibold,
-            marginTop: 2,
-        },
-        editBudgetBtn: {
-            paddingHorizontal: 16,
-            paddingVertical: 6,
-            borderRadius: theme.shape.full,
-            borderWidth: 1,
-            borderColor: theme.colors.outlineVariant,
-        },
-        editBudgetText: {
-            fontSize: 12,
-            fontFamily: theme.fonts.semibold,
-        },
-        summaryFooter: {
-            flexDirection: "row",
-            justifyContent: "center",
-            gap: 24,
-            marginTop: 16,
-            width: "100%",
-        },
-        summaryFooterItem: {
+        newButton: {
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-        },
-        summaryFooterDot: {
-            width: 8,
-            height: 8,
+            paddingVertical: 8,
+            paddingHorizontal: 14,
             borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.secondaryContainer,
         },
-        summaryFooterText: {
-            fontSize: 12,
-            fontFamily: theme.fonts.regular,
-            fontVariant: ["tabular-nums"],
+        newButtonText: {
+            ...theme.typescale.labelLarge,
+            color: theme.colors.onSecondaryContainer,
         },
-
-        // Category Section
-        categorySection: {
+        pressed: {
+            opacity: 0.75,
+        },
+        scroll: {
+            paddingBottom: 120,
+        },
+        body: {
             paddingHorizontal: 20,
         },
-        categorySectionTitle: {
-            fontSize: 15,
-            fontFamily: theme.fonts.semibold,
-            marginBottom: 12,
+        loading: {
+            marginTop: 80,
         },
-        categoryList: {
-            borderRadius: 14,
-            borderWidth: StyleSheet.hairlineWidth,
-            overflow: "hidden",
+        noLimit: {
+            ...theme.typescale.titleMedium,
+            color: theme.colors.onSurface,
+            marginTop: 8,
         },
-        categoryRow: {
+        divider: {
+            height: StyleSheet.hairlineWidth,
+            backgroundColor: theme.colors.outlineVariant,
+            marginTop: 20,
+            marginBottom: 18,
+        },
+        section: {
+            marginTop: 24,
+        },
+        empty: {
+            alignItems: "center",
+            paddingTop: 32,
+            paddingHorizontal: 12,
+        },
+        emptyTitle: {
+            ...theme.typescale.titleMedium,
+            color: theme.colors.onSurface,
+            marginTop: 12,
+            textAlign: "center",
+        },
+        emptyText: {
+            ...theme.typescale.bodyMedium,
+            color: theme.colors.onSurfaceVariant,
+            textAlign: "center",
+            marginTop: 6,
+            maxWidth: 300,
+        },
+        setButton: {
             flexDirection: "row",
             alignItems: "center",
-            paddingHorizontal: 14,
+            gap: 8,
+            marginTop: 20,
             paddingVertical: 13,
+            paddingHorizontal: 22,
+            borderRadius: theme.shape.full,
+            backgroundColor: theme.colors.inverseSurface,
         },
-        categoryIcon: {
-            width: 40,
-            height: 40,
-            alignItems: "center",
-            justifyContent: "center",
-        },
-        categoryInitial: {
-            position: "absolute",
-            fontSize: 13,
-            fontFamily: theme.fonts.semibold,
-        },
-        categoryInfo: {
-            flex: 1,
-            marginLeft: 12,
-        },
-        categoryName: {
-            fontSize: 14,
-            fontFamily: theme.fonts.semibold,
-            marginBottom: 6,
-        },
-        categoryProgressRow: {
-            gap: 4,
-        },
-        categoryProgressBg: {
-            height: 6,
-            borderRadius: 3,
-            overflow: "hidden",
-        },
-        categoryProgressFill: {
-            height: "100%",
-            borderRadius: 3,
-        },
-        categorySpentLabel: {
-            fontSize: 11,
-            fontFamily: theme.fonts.regular,
-            fontVariant: ["tabular-nums"],
-            marginTop: 2,
-        },
-        categoryStatus: {
-            fontSize: 13,
-            fontFamily: theme.fonts.semibold,
-            fontVariant: ["tabular-nums"],
-            marginLeft: 8,
-        },
-        emptyCategories: {
-            paddingVertical: 32,
-            alignItems: "center",
-        },
-        emptyCategoriesText: {
-            fontSize: 14,
-            fontFamily: theme.fonts.regular,
-            marginTop: 8,
+        setButtonText: {
+            ...theme.typescale.labelLarge,
+            color: theme.colors.inverseOnSurface,
         },
     });
