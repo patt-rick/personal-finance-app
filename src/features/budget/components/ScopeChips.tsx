@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text } from "react-native";
-import { Globe } from "lucide-react-native";
+import { Layers } from "lucide-react-native";
 import { AppTheme, useTheme } from "../../../theme/theme";
 import { BudgetScope, Business } from "../../../types";
 import { currencyLabel, sameScope, scopeKey } from "../scope";
@@ -22,7 +22,7 @@ export default function ScopeChips({ scopes, selected, businesses, onSelect }: S
                 const on = !!selected && sameScope(scope, selected);
                 const label =
                     scope.kind === "currency"
-                        ? `All ${currencyLabel(scope.currency)}`
+                        ? "All cashbooks"
                         : businesses.find((b) => b.id === scope.businessId)?.name ?? "Cashbook";
                 const fg = on ? theme.colors.inverseOnSurface : theme.colors.onSurface;
                 return (
@@ -32,9 +32,9 @@ export default function ScopeChips({ scopes, selected, businesses, onSelect }: S
                         style={[styles.chip, on && styles.chipOn]}
                         accessibilityRole="tab"
                         accessibilityState={{ selected: on }}
-                        accessibilityLabel={scope.kind === "currency" ? `All ${scope.currency} cashbooks` : label}
+                        accessibilityLabel={scope.kind === "currency" ? `All ${currencyLabel(scope.currency)} cashbooks` : label}
                     >
-                        {scope.kind === "currency" && <Globe size={13} color={fg} />}
+                        {scope.kind === "currency" && <Layers size={13} color={fg} />}
                         <Text style={[styles.text, { color: fg }]} numberOfLines={1}>
                             {label}
                         </Text>

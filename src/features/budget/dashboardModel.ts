@@ -11,7 +11,7 @@ import { computePeriodSpend, expenseCategoryIndex } from "./spend";
 export interface BudgetRow {
     key: string;
     label: string;
-    kind: "limit" | "other" | "fees";
+    kind: "limit" | "category" | "uncategorised" | "fees";
     spent: number;
     limit: number | null;
 }
@@ -36,13 +36,14 @@ export function buildPeriodView(
     const limits = limitsForPeriod(budget, range.key);
     const byId = new Map(categories.filter((c) => c.type === "expense").map((c) => [c.id, c]));
     const limited = Object.entries(limits?.categoryLimits ?? {}).filter(([id]) => byId.has(id));
+    const limitedIds = new Set(limited.map(([id]) => id));
     const spend = computePeriodSpend(
         transactions,
         businesses,
         budget.scope,
         range,
         expenseCategoryIndex(categories),
-        new Set(limited.map(([id]) => id)),
+        new Set(byId.keys()),
     );
     const rows: BudgetRow[] = limited
         .map(([id, limit]) => ({
@@ -53,7 +54,24 @@ export function buildPeriodView(
             limit,
         }))
         .sort((a, b) => b.spent / b.limit - a.spent / a.limit);
-    if (spend.other > 0) rows.push({ key: "__other", label: "Everything else", kind: "other", spent: spend.other, limit: null });
+    const unlimited: BudgetRow[] = [
+        ...[...spend.byCategory]
+            .filter(([id, spent]) => !limitedIds.has(id) && spent > 0)
+            .map(([id, spent]) => ({ key: id, label: byId.get(id)!.name, kind: "category" as const, spent, limit: null })),
+        ...[...spend.byUnknownName].map(([name, spent]) => ({
+            key: `name:${name}`,
+            label: name,
+            kind: "category" as const,
+            spent,
+            limit: null,
+        })),
+    ].sort((a, b) => b.spent - a.spent);
+    rows.push(...unlimited);
+    const named = [...spend.byUnknownName.values()].reduce((sum, v) => sum + Math.round(v * 100), 0);
+    const uncategorised = (Math.round(spend.other * 100) - named) / 100;
+    if (uncategorised > 0) {
+        rows.push({ key: "__uncategorised", label: "Uncategorised", kind: "uncategorised", spent: uncategorised, limit: null });
+    }
     if (spend.fees > 0) rows.push({ key: "__fees", label: FEES_CATEGORY_LABEL, kind: "fees", spent: spend.fees, limit: null });
     const current = isCurrentPeriod(range, now);
     const limit = limits?.totalLimit ?? null;

@@ -27,7 +27,7 @@ import {
     upsertBudget,
 } from "../../src/features/budget/storage/budgetStore";
 import { loadLedger, saveLedger } from "../../src/features/budget/alerts/ledger";
-import { availableScopes, resolveScopeSelection } from "../../src/features/budget/selection";
+import { resolveBudgetSelection, scopesForCurrency, selectCurrency } from "../../src/features/budget/selection";
 
 const KEY = "@budgets";
 const budget = (id: string, businessId: string, categoryLimits: Record<string, number> = { f: 10 }): Budget => ({
@@ -86,30 +86,30 @@ const biz = (id: string, currency = "GHS"): Business => ({ id, name: id, currenc
 const books = [biz("a"), biz("b"), biz("c", "USD")];
 
 describe("selection", () => {
-    it("lists currency scopes first, then cashbooks", () => {
-        expect(availableScopes(books, [])).toEqual([
+    it("lists a currency's global scope first, then only that currency's cashbooks", () => {
+        expect(scopesForCurrency("GHS", books)).toEqual([
             { kind: "currency", currency: "GHS" },
-            { kind: "currency", currency: "USD" },
             { kind: "cashbook", businessId: "a" },
             { kind: "cashbook", businessId: "b" },
-            { kind: "cashbook", businessId: "c" },
         ]);
     });
 
-    it("follows the open cashbook, then keeps a valid pick, then falls back to the first cashbook", () => {
-        expect(resolveScopeSelection(null, biz("b"), books)).toEqual({ kind: "cashbook", businessId: "b" });
-        expect(resolveScopeSelection({ kind: "currency", currency: "USD" }, null, books)).toEqual({
-            kind: "currency",
+    it("switching currency lands on that currency's first cashbook", () => {
+        expect(selectCurrency("USD", books)).toEqual({ currency: "USD", scope: { kind: "cashbook", businessId: "c" } });
+    });
+
+    it("follows the open cashbook, keeps a valid pick, and otherwise falls back within the busiest currency", () => {
+        expect(resolveBudgetSelection(null, biz("c", "USD"), books, [])).toEqual({
             currency: "USD",
+            scope: { kind: "cashbook", businessId: "c" },
         });
-        expect(resolveScopeSelection({ kind: "currency", currency: "EUR" }, null, books)).toEqual({
-            kind: "cashbook",
-            businessId: "a",
+        const global = { currency: "USD", scope: { kind: "currency" as const, currency: "USD" } };
+        expect(resolveBudgetSelection(global, null, books, [])).toEqual(global);
+        expect(resolveBudgetSelection({ currency: "USD", scope: { kind: "cashbook", businessId: "gone" } }, null, books, [])).toEqual({
+            currency: "USD",
+            scope: { kind: "cashbook", businessId: "c" },
         });
-        expect(resolveScopeSelection({ kind: "cashbook", businessId: "gone" }, null, books)).toEqual({
-            kind: "cashbook",
-            businessId: "a",
-        });
-        expect(resolveScopeSelection(null, null, [])).toBeNull();
+        expect(resolveBudgetSelection(null, null, books, [])).toEqual({ currency: "GHS", scope: { kind: "cashbook", businessId: "a" } });
+        expect(resolveBudgetSelection(null, null, [], [])).toBeNull();
     });
 });

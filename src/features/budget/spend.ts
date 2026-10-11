@@ -23,6 +23,8 @@ export function expenseCategoryIndex(categories: Category[]): Map<string, string
 export interface PeriodSpend {
     total: number;
     byCategory: Map<string, number>;
+    /** Spend whose category name matches no expense category (e.g. "Transfer"), keyed by that name. */
+    byUnknownName: Map<string, number>;
     other: number;
     fees: number;
 }
@@ -41,6 +43,8 @@ export function computePeriodSpend(
     let fees = 0;
     let other = 0;
     const byCategory = new Map<string, number>();
+    const byUnknownName = new Map<string, number>();
+    const labels = new Map<string, string>();
     for (const t of scoped) {
         if (t.type !== "expense" || !inPeriod(parseTxDate(t.date), range)) continue;
         const amount = toCents(t.amount);
@@ -49,12 +53,21 @@ export function computePeriodSpend(
         fees += fee;
         const id = t.category ? categoryIndex.get(norm(t.category)) : undefined;
         if (id && limitedIds.has(id)) byCategory.set(id, (byCategory.get(id) ?? 0) + amount);
-        else other += amount;
+        else {
+            other += amount;
+            const name = t.category?.trim();
+            if (!id && name) {
+                const label = labels.get(norm(name)) ?? name;
+                labels.set(norm(name), label);
+                byUnknownName.set(label, (byUnknownName.get(label) ?? 0) + amount);
+            }
+        }
     }
     return {
         total: total / 100,
         fees: fees / 100,
         other: other / 100,
         byCategory: new Map([...byCategory].map(([id, cents]) => [id, cents / 100])),
+        byUnknownName: new Map([...byUnknownName].map(([name, cents]) => [name, cents / 100])),
     };
 }

@@ -1,23 +1,38 @@
 import { Business, BudgetScope, Transaction } from "../../types";
 import { reportCurrencies } from "../../utils/reportCurrency";
+import { cashbookCurrency } from "../../utils/transfers";
 import { businessIdsForScope } from "./scope";
 
-/** Currency scopes (busiest first) come before the individual cashbooks. */
-export function availableScopes(businesses: Business[], transactions: Transaction[]): BudgetScope[] {
+export interface BudgetSelection {
+    currency: string;
+    scope: BudgetScope;
+}
+
+/** The chips for one currency: its global budget first, then each of its cashbooks. */
+export function scopesForCurrency(currency: string, businesses: Business[]): BudgetScope[] {
     return [
-        ...reportCurrencies(businesses, transactions).map((c): BudgetScope => ({ kind: "currency", currency: c.code })),
-        ...businesses.map((b): BudgetScope => ({ kind: "cashbook", businessId: b.id })),
+        { kind: "currency", currency },
+        ...businesses
+            .filter((b) => cashbookCurrency(b) === currency)
+            .map((b): BudgetScope => ({ kind: "cashbook", businessId: b.id })),
     ];
 }
 
-export function resolveScopeSelection(
-    previous: BudgetScope | null,
+export function selectCurrency(currency: string, businesses: Business[]): BudgetSelection {
+    const first = businesses.find((b) => cashbookCurrency(b) === currency);
+    return { currency, scope: first ? { kind: "cashbook", businessId: first.id } : { kind: "currency", currency } };
+}
+
+export function resolveBudgetSelection(
+    previous: BudgetSelection | null,
     openCashbook: Business | null,
     businesses: Business[],
-): BudgetScope | null {
-    if (openCashbook && businesses.some((b) => b.id === openCashbook.id)) {
-        return { kind: "cashbook", businessId: openCashbook.id };
-    }
-    if (previous && businessIdsForScope(previous, businesses).size > 0) return previous;
-    return businesses[0] ? { kind: "cashbook", businessId: businesses[0].id } : null;
+    transactions: Transaction[],
+): BudgetSelection | null {
+    const open = openCashbook ? businesses.find((b) => b.id === openCashbook.id) : undefined;
+    if (open) return { currency: cashbookCurrency(open), scope: { kind: "cashbook", businessId: open.id } };
+    if (previous && businessIdsForScope(previous.scope, businesses).size > 0) return previous;
+    const codes = reportCurrencies(businesses, transactions).map((c) => c.code);
+    const currency = previous && codes.includes(previous.currency) ? previous.currency : codes[0];
+    return currency ? selectCurrency(currency, businesses) : null;
 }

@@ -10,10 +10,18 @@ interface CurrencyPickerProps {
     currencies: ReportCurrency[];
     selected: string;
     onSelect: (code: string) => void;
+    title?: string;
+    hint?: string;
 }
 
-/** Header pill that switches which currency the report covers; only worth showing when cashbooks use several. */
-export default function CurrencyPicker({ currencies, selected, onSelect }: CurrencyPickerProps) {
+/** Header pill that switches which currency a screen covers; only worth showing when cashbooks use several. */
+export default function CurrencyPicker({
+    currencies,
+    selected,
+    onSelect,
+    title = "Show reports in",
+    hint = "Choose which currency's cashbooks to report on",
+}: CurrencyPickerProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [open, setOpen] = useState(false);
@@ -23,8 +31,8 @@ export default function CurrencyPicker({ currencies, selected, onSelect }: Curre
             <Pressable
                 onPress={() => setOpen(true)}
                 accessibilityRole="button"
-                accessibilityLabel={`Report currency: ${getCurrencyName(selected)}`}
-                accessibilityHint="Choose which currency's cashbooks to report on"
+                accessibilityLabel={`Currency: ${getCurrencyName(selected)}`}
+                accessibilityHint={hint}
                 hitSlop={8}
                 style={({ pressed }) => [styles.pill, pressed && styles.pillPressed]}
             >
@@ -34,7 +42,7 @@ export default function CurrencyPicker({ currencies, selected, onSelect }: Curre
                 <ChevronDown size={16} color={theme.colors.onSurfaceVariant} />
             </Pressable>
 
-            <AppModal visible={open} onClose={() => setOpen(false)} title="Show reports in">
+            <AppModal visible={open} onClose={() => setOpen(false)} title={title}>
                 <View style={styles.list}>
                     {currencies.map((c) => {
                         const isSelected = c.code === selected;

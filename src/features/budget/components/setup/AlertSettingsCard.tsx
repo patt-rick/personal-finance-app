@@ -64,7 +64,11 @@ export default function AlertSettingsCard({ enabled, warnAt, notificationsDenied
                 category limit.
             </Text>
 
+            <View style={[styles.markerRow, { width: `${warnAt}%` }]}>
+                <Text style={styles.markerLabel}>Warn at {warnAt}%</Text>
+            </View>
             <View style={styles.strip}>
+                <View style={[styles.markerTick, { left: `${warnAt}%` }]} />
                 <Svg width="100%" height={8}>
                     <Defs>
                         <LinearGradient id="warnStrip" x1="0" y1="0" x2="1" y2="0">
@@ -78,9 +82,6 @@ export default function AlertSettingsCard({ enabled, warnAt, notificationsDenied
             </View>
             <View style={styles.stripLabels}>
                 <Text style={styles.stripLabel}>0%</Text>
-                <Text style={[styles.stripLabel, { position: "absolute", left: `${warnAt}%`, transform: [{ translateX: -12 }] }]}>
-                    {warnAt}%
-                </Text>
                 <Text style={styles.stripLabel}>100%</Text>
             </View>
             <Text style={styles.help}>The speedometer colours follow this threshold.</Text>
@@ -152,8 +153,29 @@ const createStyles = (theme: AppTheme) =>
         thresholdTextOn: {
             color: theme.colors.onGoldContainer,
         },
-        strip: {
+        markerRow: {
+            alignItems: "flex-end",
             marginTop: 16,
+            marginBottom: 6,
+        },
+        markerLabel: {
+            ...theme.typescale.labelMedium,
+            color: theme.colors.onSurface,
+            fontVariant: ["tabular-nums"],
+            marginRight: -8,
+        },
+        strip: {
+            justifyContent: "center",
+        },
+        markerTick: {
+            position: "absolute",
+            top: -4,
+            width: 2,
+            height: 16,
+            marginLeft: -1,
+            borderRadius: 1,
+            backgroundColor: theme.colors.onSurface,
+            zIndex: 1,
         },
         stripLabels: {
             flexDirection: "row",

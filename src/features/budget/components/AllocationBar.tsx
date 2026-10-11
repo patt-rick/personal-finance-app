@@ -13,6 +13,8 @@ interface AllocationBarProps {
     progress: Animated.Value;
 }
 
+const LEGEND_COUNT = 6;
+
 /** Spend as a share of the limit; when spend runs past the limit the segments are scaled to fit. */
 export default function AllocationBar({ rows, limit, colorFor, progress }: AllocationBarProps) {
     const theme = useTheme();
@@ -39,7 +41,7 @@ export default function AllocationBar({ rows, limit, colorFor, progress }: Alloc
             </View>
             {spent.length > 0 && (
                 <View style={styles.legend}>
-                    {spent.map((row) => (
+                    {spent.slice(0, LEGEND_COUNT).map((row) => (
                         <View key={row.key} style={styles.legendItem}>
                             <View style={[styles.swatch, { backgroundColor: colorFor(row) }]} />
                             <Text style={styles.legendText}>
@@ -47,6 +49,9 @@ export default function AllocationBar({ rows, limit, colorFor, progress }: Alloc
                             </Text>
                         </View>
                     ))}
+                    {spent.length > LEGEND_COUNT && (
+                        <Text style={styles.legendText}>+{spent.length - LEGEND_COUNT} more below</Text>
+                    )}
                 </View>
             )}
         </View>

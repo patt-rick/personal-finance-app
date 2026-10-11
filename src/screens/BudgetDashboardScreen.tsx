@@ -19,6 +19,7 @@ import BudgetHistoryChart from "../features/budget/components/BudgetHistoryChart
 import PeriodSwitcher from "../features/budget/components/PeriodSwitcher";
 import ScopeChips from "../features/budget/components/ScopeChips";
 import NewBudgetSheet from "../features/budget/components/NewBudgetSheet";
+import CurrencyPicker from "../components/reports/CurrencyPicker";
 import { budgetColour } from "../features/budget/colour";
 import { limitsForPeriod } from "../features/budget/limits";
 import { BudgetRow, paceChip, summaryLines } from "../features/budget/dashboardModel";
@@ -65,10 +66,13 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
     const colorFor = useMemo(() => {
         const limits = d.budget && d.view ? limitsForPeriod(d.budget, d.view.range.key) : null;
         const limitKeys = Object.keys(limits?.categoryLimits ?? {});
+        const otherKeys = (d.view?.rows ?? []).filter((r) => r.kind === "category").map((r) => r.key);
+        const palette = theme.colors.chart;
         return (row: BudgetRow) => {
-            if (row.kind === "other") return theme.colors.outline;
+            if (row.kind === "uncategorised") return theme.colors.outline;
             if (row.kind === "fees") return theme.colors.chartExpense;
-            return theme.colors.chart[limitKeys.indexOf(row.key) % theme.colors.chart.length];
+            if (row.kind === "limit") return palette[limitKeys.indexOf(row.key) % palette.length];
+            return palette[(limitKeys.length + otherKeys.indexOf(row.key)) % palette.length];
         };
     }, [d.budget, d.view, theme]);
 
@@ -91,14 +95,26 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
         <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
             <Text style={styles.headerTitle}>Budget</Text>
             {businesses.length > 0 && (
-                <Pressable
-                    onPress={() => setSheetOpen(true)}
-                    style={({ pressed }) => [styles.newButton, pressed && styles.pressed]}
-                    accessibilityRole="button"
-                >
-                    <Plus size={16} color={theme.colors.onSecondaryContainer} />
-                    <Text style={styles.newButtonText}>New budget</Text>
-                </Pressable>
+                <View style={styles.headerActions}>
+                    {d.currencies.length > 1 && d.currency && (
+                        <CurrencyPicker
+                            currencies={d.currencies}
+                            selected={d.currency}
+                            onSelect={d.chooseCurrency}
+                            title="Show budgets in"
+                            hint="Choose which currency's cashbooks to budget"
+                        />
+                    )}
+                    <Pressable
+                        onPress={() => setSheetOpen(true)}
+                        style={({ pressed }) => [styles.newButton, pressed && styles.pressed]}
+                        accessibilityRole="button"
+                        accessibilityLabel="New budget"
+                    >
+                        <Plus size={16} color={theme.colors.onSecondaryContainer} />
+                        <Text style={styles.newButtonText}>New</Text>
+                    </Pressable>
+                </View>
             )}
         </View>
     );
@@ -186,6 +202,7 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                     <View style={styles.section}>
                         <CategoryLimitsCard
                             rows={view.rows}
+                            total={view.spent}
                             symbol={symbol}
                             warnAt={warnAt}
                             pacePct={pacePct}
@@ -304,11 +321,16 @@ const createStyles = (theme: AppTheme) =>
             fontFamily: theme.fonts.semibold,
             color: theme.colors.onSurface,
         },
+        headerActions: {
+            flexDirection: "row",
+            alignItems: "center",
+            gap: 8,
+        },
         newButton: {
             flexDirection: "row",
             alignItems: "center",
             gap: 6,
-            paddingVertical: 8,
+            minHeight: 40,
             paddingHorizontal: 14,
             borderRadius: theme.shape.full,
             backgroundColor: theme.colors.secondaryContainer,

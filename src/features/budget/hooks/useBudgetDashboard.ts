@@ -3,8 +3,9 @@ import { useFocusEffect } from "@react-navigation/native";
 import { Budget, BudgetScope, Business, Category, Transaction } from "../../../types";
 import { loadCategories } from "../../../utils/storage";
 import { loadBudgets } from "../storage/budgetStore";
-import { availableScopes, resolveScopeSelection } from "../selection";
-import { sameScope, scopeKey } from "../scope";
+import { reportCurrencies } from "../../../utils/reportCurrency";
+import { BudgetSelection, resolveBudgetSelection, scopesForCurrency, selectCurrency } from "../selection";
+import { sameScope, scopeCurrency, scopeKey } from "../scope";
 import { nextPeriod, periodRange, previousPeriod } from "../periods";
 import { parseLocalISODate, toLocalISODate } from "../dates";
 import { buildPeriodView } from "../dashboardModel";
@@ -14,8 +15,8 @@ export function useBudgetDashboard(businesses: Business[], transactions: Transac
     const [budgets, setBudgets] = useState<Budget[]>([]);
     const [categories, setCategories] = useState<Category[]>([]);
     const [loading, setLoading] = useState(true);
-    const [selected, setSelected] = useState<BudgetScope | null>(() =>
-        resolveScopeSelection(null, currentBusiness, businesses),
+    const [selection, setSelection] = useState<BudgetSelection | null>(() =>
+        resolveBudgetSelection(null, currentBusiness, businesses, transactions),
     );
     const [viewedKey, setViewedKey] = useState<string | null>(null);
 
@@ -33,14 +34,22 @@ export function useBudgetDashboard(businesses: Business[], transactions: Transac
     );
 
     useEffect(() => {
-        if (currentBusiness) setSelected((prev) => resolveScopeSelection(prev, currentBusiness, businesses));
+        if (currentBusiness) setSelection((prev) => resolveBudgetSelection(prev, currentBusiness, businesses, transactions));
     }, [currentBusiness]);
 
     useEffect(() => {
-        setSelected((prev) => resolveScopeSelection(prev, null, businesses));
+        setSelection((prev) => resolveBudgetSelection(prev, null, businesses, transactions));
     }, [businesses]);
 
-    const scopes = useMemo(() => availableScopes(businesses, transactions), [businesses, transactions]);
+    const selected = selection?.scope ?? null;
+    const currency = selection?.currency ?? null;
+    const currencies = useMemo(() => reportCurrencies(businesses, transactions), [businesses, transactions]);
+    const scopes = useMemo(() => (currency ? scopesForCurrency(currency, businesses) : []), [currency, businesses]);
+    const select = useCallback(
+        (scope: BudgetScope) => setSelection({ scope, currency: scopeCurrency(scope, businesses) }),
+        [businesses],
+    );
+    const chooseCurrency = useCallback((code: string) => setSelection(selectCurrency(code, businesses)), [businesses]);
     const budget = useMemo(
         () => (selected ? budgets.find((b) => sameScope(b.scope, selected)) ?? null : null),
         [budgets, selected],
@@ -82,9 +91,12 @@ export function useBudgetDashboard(businesses: Business[], transactions: Transac
     return {
         loading,
         reload,
+        currencies,
+        currency,
+        chooseCurrency,
         scopes,
         selected,
-        select: setSelected,
+        select,
         budgets,
         budget,
         view,

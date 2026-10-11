@@ -9,6 +9,8 @@ const businesses: Business[] = [{ id: "a", name: "Main", currency: "GHS", create
 const categories: Category[] = [
     { id: "f", name: "Food", type: "expense" },
     { id: "t", name: "Transport", type: "expense" },
+    { id: "r", name: "Rent", type: "expense" },
+    { id: "a", name: "Airtime", type: "expense" },
 ];
 const tx = (amount: number, category?: string, day = 5, fee?: number, month = 9): Transaction => ({
     id: `${amount}-${category}-${day}-${month}`,
@@ -86,13 +88,29 @@ describe("budgetColour", () => {
 });
 
 describe("buildPeriodView", () => {
-    const txs = [tx(760, "Food"), tx(340.1, "Transport"), tx(540, "Rent"), tx(20, "Food", 6, 8.8)];
+    const txs = [
+        tx(760, "Food"),
+        tx(340.1, "Transport"),
+        tx(470, "Rent"),
+        tx(30, "Transfer"),
+        tx(28, "Airtime"),
+        tx(12, undefined),
+        tx(20, "Food", 6, 8.8),
+    ];
     const view = buildPeriodView(budget, txs, businesses, categories, oct, now);
 
-    it("rows sum to the total and deleted categories are ignored", () => {
+    it("breaks spend down by every category, limits first, and rows sum to the total", () => {
         expect(view.limit).toBe(2000);
         expect(view.spent).toBeCloseTo(1668.9, 6);
-        expect(view.rows.map((r) => r.key)).toEqual(["f", "t", "__other", "__fees"]);
+        expect(view.rows.map((r) => [r.key, r.kind])).toEqual([
+            ["f", "limit"],
+            ["t", "limit"],
+            ["r", "category"],
+            ["name:Transfer", "category"],
+            ["a", "category"],
+            ["__uncategorised", "uncategorised"],
+            ["__fees", "fees"],
+        ]);
         expect(view.rows.reduce((s, r) => s + r.spent, 0)).toBeCloseTo(view.spent, 6);
         expect(view.pace?.verdict).toBe("ahead");
     });
