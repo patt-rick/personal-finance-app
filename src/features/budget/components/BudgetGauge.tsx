@@ -76,8 +76,9 @@ export default function BudgetGauge(props: BudgetGaugeProps) {
         });
     }, [p, warnAt, palette]);
 
-    const progress = useSweep(animKey, reduced, SWEEP_MS);
-    const pointerProgress = useSweep(animKey, reduced, SWEEP_MS, true);
+    const sweepKey = `${animKey}|${size > 0 ? "laid-out" : "pending"}`;
+    const progress = useSweep(sweepKey, reduced, SWEEP_MS);
+    const pointerProgress = useSweep(sweepKey, reduced, SWEEP_MS, true);
     const eased = useMemo(() => slice(progress, 0, 1), [progress]);
     const coverLen = p * ARC_LEN;
     const coverOffset = useMemo(
