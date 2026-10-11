@@ -93,11 +93,6 @@ export default function BudgetHistoryChart(props: BudgetHistoryChartProps) {
                                 <Path d={limitPath} stroke={theme.colors.outline} strokeWidth={1.5} strokeDasharray="4 3" fill="none" />
                             )}
                         </Svg>
-                        {latestLimit !== null && (
-                            <Text style={[styles.limitLabel, { top: Math.max(0, y(latestLimit) - 16) }]}>
-                                limit {exactMoney(latestLimit, symbol)}
-                            </Text>
-                        )}
                         <View style={[StyleSheet.absoluteFill, styles.hitRow]}>
                             {points.map((p) => (
                                 <Pressable
@@ -131,10 +126,12 @@ export default function BudgetHistoryChart(props: BudgetHistoryChartProps) {
                     );
                 })}
             </View>
-            {closed.length > 0 && (
+            {latestLimit !== null && (
                 <Text style={styles.summary}>
-                    Under budget {under} of the last {closed.length} {noun}
-                    {closed.length === 1 ? "" : "s"}.
+                    The dashed line is the limit that applied, now {exactMoney(latestLimit, symbol)}.
+                    {closed.length > 0
+                        ? ` Under budget ${under} of the last ${closed.length} ${noun}${closed.length === 1 ? "" : "s"}.`
+                        : ""}
                 </Text>
             )}
         </View>
@@ -165,13 +162,6 @@ const createStyles = (theme: AppTheme) =>
             borderTopRightRadius: 7,
             borderBottomLeftRadius: 2,
             borderBottomRightRadius: 2,
-        },
-        limitLabel: {
-            position: "absolute",
-            right: 0,
-            ...theme.typescale.labelSmall,
-            color: theme.colors.onSurfaceVariant,
-            fontVariant: ["tabular-nums"],
         },
         labels: {
             flexDirection: "row",

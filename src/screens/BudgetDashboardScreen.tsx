@@ -20,6 +20,7 @@ import PeriodSwitcher from "../features/budget/components/PeriodSwitcher";
 import ScopeChips from "../features/budget/components/ScopeChips";
 import NewBudgetSheet from "../features/budget/components/NewBudgetSheet";
 import { budgetColour } from "../features/budget/colour";
+import { limitsForPeriod } from "../features/budget/limits";
 import { BudgetRow, paceChip, summaryLines } from "../features/budget/dashboardModel";
 import { businessIdsForScope, scopeKey, scopeName, scopeSymbol } from "../features/budget/scope";
 import { formatPeriodLabel, monthName, periodAdjective, periodName } from "../features/budget/periods";
@@ -62,13 +63,14 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
     }, [reload]);
 
     const colorFor = useMemo(() => {
-        const limitKeys = (d.view?.rows ?? []).filter((r) => r.kind === "limit").map((r) => r.key);
+        const limits = d.budget && d.view ? limitsForPeriod(d.budget, d.view.range.key) : null;
+        const limitKeys = Object.keys(limits?.categoryLimits ?? {});
         return (row: BudgetRow) => {
             if (row.kind === "other") return theme.colors.outline;
             if (row.kind === "fees") return theme.colors.chartExpense;
             return theme.colors.chart[limitKeys.indexOf(row.key) % theme.colors.chart.length];
         };
-    }, [d.view, theme]);
+    }, [d.budget, d.view, theme]);
 
     if (editing) {
         return (

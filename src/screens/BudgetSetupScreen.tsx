@@ -10,7 +10,7 @@ import {
     TextInput,
     View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ArrowLeft } from "lucide-react-native";
 import * as Notifications from "expo-notifications";
 import { appAlert } from "../components/dialog";
@@ -49,6 +49,7 @@ function initialLimits(budget: Budget | null) {
 export default function BudgetSetupScreen({ scope, budget, businesses, onBack, onSaved }: BudgetSetupScreenProps) {
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
+    const insets = useSafeAreaInsets();
     const start = useMemo(() => initialLimits(budget), [budget]);
     const [categories, setCategories] = useState<Category[] | null>(null);
     const [period, setPeriod] = useState<BudgetPeriod>(budget?.period ?? "monthly");
@@ -150,8 +151,8 @@ export default function BudgetSetupScreen({ scope, budget, businesses, onBack, o
                 : null;
 
     return (
-        <SafeAreaView style={styles.container}>
-            <View style={styles.header}>
+        <View style={styles.container}>
+            <View style={[styles.header, { paddingTop: Math.max(insets.top, 40) }]}>
                 <Pressable onPress={onBack} hitSlop={10} accessibilityRole="button" accessibilityLabel="Back">
                     <ArrowLeft size={24} color={theme.colors.onSurface} />
                 </Pressable>
@@ -203,7 +204,9 @@ export default function BudgetSetupScreen({ scope, budget, businesses, onBack, o
                             />
                         </View>
                         <Text style={styles.note}>
-                            Includes everything you spend in {name} each {periodNoun(period)}.
+                            Includes everything you spend in{" "}
+                            {scope.kind === "currency" ? `every ${currencyLabel(scope.currency)} cashbook` : name} each{" "}
+                            {periodNoun(period)}.
                         </Text>
 
                         <CategoryLimitsEditor
@@ -251,7 +254,7 @@ export default function BudgetSetupScreen({ scope, budget, businesses, onBack, o
                     </ScrollView>
                 </KeyboardAvoidingView>
             )}
-        </SafeAreaView>
+        </View>
     );
 }
 
@@ -269,7 +272,7 @@ const createStyles = (theme: AppTheme) =>
             alignItems: "center",
             gap: 14,
             paddingHorizontal: 16,
-            paddingVertical: 12,
+            paddingBottom: 12,
         },
         headerText: {
             flex: 1,
@@ -288,7 +291,7 @@ const createStyles = (theme: AppTheme) =>
         scroll: {
             paddingHorizontal: 20,
             paddingTop: 8,
-            paddingBottom: 60,
+            paddingBottom: 140,
         },
         label: {
             ...theme.typescale.titleSmall,
