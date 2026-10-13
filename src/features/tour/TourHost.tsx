@@ -153,6 +153,7 @@ function TourLayer({ view }: { view: TourView }) {
             style={StyleSheet.absoluteFill}
             pointerEvents="box-none"
             collapsable={false}
+            accessibilityViewIsModal
             onLayout={(e) => {
                 const { width: w, height: h } = e.nativeEvent.layout;
                 setSize((prev) => (prev && prev.width === w && prev.height === h ? prev : { width: w, height: h }));

@@ -42,6 +42,7 @@ function Blocker({ style }: { style: object }) {
     return (
         <Pressable
             onPress={noop}
+            android_disableSound
             style={[styles.blocker, style]}
             accessible={false}
             importantForAccessibility="no"

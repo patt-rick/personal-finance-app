@@ -42,7 +42,7 @@ beforeEach(() => {
     (AsyncStorage as unknown as { __reset: () => void }).__reset();
     resetTourStoreForTest();
     resetTargetsForTest();
-    mount("tab-home", "tab-books", "tab-add", "cashbooks-new", "home-balance", "home-cashbook-row");
+    mount("tab-home", "tab-books", "tab-add", "cashbooks-new", "home-balance");
 });
 
 describe("storage", () => {
@@ -67,7 +67,7 @@ describe("auto-start", () => {
         requestTour("journey");
         expect(getTourView()).toBeNull();
         await whenTourStoreSettled();
-        expect(getTourView()).toMatchObject({ title: "Welcome", counter: { index: 1, total: 5 } });
+        expect(getTourView()).toMatchObject({ title: "Welcome", counter: { index: 1, total: 4 } });
     });
 
     it("waits for real counts before deciding", async () => {
@@ -135,16 +135,21 @@ describe("running the journey", () => {
         setSheetOpen("createCashbook", true);
         expect(getTourView()).toBeNull();
         setTourContext({ cashbookCount: 1 });
+        mount("home-cashbook-row");
         setSheetOpen("createCashbook", false);
-        expect(getTourView()).toMatchObject({ target: "tab-add", kind: "action" });
+        expect(getTourView()).toMatchObject({ target: "tab-add", kind: "action", counter: { index: 3, total: 5 } });
 
         setTourContext({ transactionCount: 1 });
         expect(getTourView()).toMatchObject({ redirectTo: "Dashboard", target: "tab-home" });
 
         setTourContext({ activeTab: "Dashboard" });
-        expect(getTourView()).toMatchObject({ target: "home-balance", isLast: false });
+        expect(getTourView()).toMatchObject({ target: "home-balance", isLast: false, counter: { index: 4, total: 5 } });
         nextStep();
-        expect(getTourView()).toMatchObject({ target: "home-cashbook-row", isLast: true });
+        expect(getTourView()).toMatchObject({
+            target: "home-cashbook-row",
+            isLast: true,
+            counter: { index: 5, total: 5 },
+        });
         nextStep();
 
         expect(getTourView()).toBeNull();

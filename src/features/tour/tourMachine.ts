@@ -30,10 +30,6 @@ export function nextIndex(steps: TourStep[], from: number, isRegistered: IsRegis
     return -1;
 }
 
-export function countedSteps(steps: TourStep[], isRegistered: IsRegistered): string[] {
-    return steps.filter((s) => !isDropped(s, isRegistered)).map((s) => s.id);
-}
-
 export function shouldAdvance(step: TourStep, ctx: TourContext, atStepStart: TourContext): boolean {
     return step.kind === "action" && !isSatisfied(step, atStepStart) && !!step.doneWhen?.(ctx, atStepStart);
 }
@@ -62,7 +58,9 @@ export function currentView(
     }
 
     const satisfied = isSatisfied(step, active.atStepStart);
-    const position = active.counted.indexOf(step.id);
+    // Optional steps can appear mid-tour (the first cashbook row exists only once a cashbook does), so the total is worked out
+    // from what is on screen now rather than fixed when the tour starts.
+    const remaining = steps.slice(active.stepIndex + 1).filter((s) => !isDropped(s, isRegistered)).length;
     return {
         key: `${active.tourId}:${step.id}`,
         target: step.target,
@@ -70,8 +68,8 @@ export function currentView(
         title: step.title,
         body: satisfied ? step.infoBody ?? step.body : step.body,
         kind: satisfied ? "info" : step.kind,
-        counter: position === -1 ? null : { index: position + 1, total: active.counted.length },
-        isLast: nextIndex(steps, active.stepIndex, isRegistered) === -1,
+        counter: { index: active.shown + 1, total: active.shown + 1 + remaining },
+        isLast: remaining === 0,
         redirectTo: null,
     };
 }

@@ -114,9 +114,10 @@ show:
 registry. It is evaluated when the previous step ends, so the host knows at once whether the
 step on screen is the last and labels its button **Got it**.
 
-`counter(tour, stepIndex, registeredAtStart)` gives "2 of 6". The total is the number of
-steps minus optional steps whose target was not registered when the tour started. Tab
-redirects show no counter.
+The counter ("2 of 5") is the number of steps already shown plus one, out of that plus the
+later steps that are not currently dropped. The total can grow by one mid-tour when an
+optional target appears (the first cashbook row exists only once the journey has created a
+cashbook). Tab redirects show no counter.
 
 The store snapshots the context when a step starts, so "cashbook created" is
 `ctx.cashbookCount > atStepStart.cashbookCount`. Screens never call "advance".

@@ -1,5 +1,5 @@
 import { isRegistered, subscribeTargets } from "./targetRegistry";
-import { countedSteps, currentView, nextIndex, shouldAdvance } from "./tourMachine";
+import { currentView, nextIndex, shouldAdvance } from "./tourMachine";
 import { Completed, journeyDisposition, loadCompleted, saveCompleted } from "./tourStorage";
 import { TOURS } from "./tours";
 import { ActiveTour, TabName, TourContext, TourId, TourView } from "./types";
@@ -59,7 +59,7 @@ function start(id: TourId): void {
     const steps = TOURS[id];
     const stepIndex = nextIndex(steps, -1, isRegistered);
     if (stepIndex === -1) return;
-    active = { tourId: id, stepIndex, atStepStart: ctx, counted: countedSteps(steps, isRegistered) };
+    active = { tourId: id, stepIndex, atStepStart: ctx, shown: 0 };
 }
 
 function startPending(): void {
@@ -92,7 +92,7 @@ function goToNext(): void {
     if (!active) return;
     const stepIndex = nextIndex(TOURS[active.tourId], active.stepIndex, isRegistered);
     if (stepIndex === -1) end("finished");
-    else active = { ...active, stepIndex, atStepStart: ctx };
+    else active = { ...active, stepIndex, atStepStart: ctx, shown: active.shown + 1 };
 }
 
 function ensureLoaded(): void {

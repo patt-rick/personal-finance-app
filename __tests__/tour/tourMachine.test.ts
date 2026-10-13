@@ -1,4 +1,4 @@
-import { countedSteps, currentView, nextIndex, shouldAdvance } from "../../src/features/tour/tourMachine";
+import { currentView, nextIndex, shouldAdvance } from "../../src/features/tour/tourMachine";
 import { TOURS } from "../../src/features/tour/tours";
 import { ActiveTour, TargetId, TourContext, TourStep } from "../../src/features/tour/types";
 
@@ -30,11 +30,11 @@ const steps: TourStep[] = [
     { id: "e", tab: "Dashboard", target: "home-cashbook-row", kind: "info", title: "E", body: "e", optional: true },
 ];
 
-const at = (stepIndex: number, start = ctx(), counted = steps.map((s) => s.id)): ActiveTour => ({
+const at = (stepIndex: number, start = ctx(), shown = stepIndex): ActiveTour => ({
     tourId: "journey",
     stepIndex,
     atStepStart: start,
-    counted,
+    shown,
 });
 
 describe("currentView", () => {
@@ -72,11 +72,17 @@ describe("currentView", () => {
         expect(currentView(steps, at(3), onHome, without("home-cashbook-row")).isLast).toBe(true);
     });
 
-    it("has no counter for a step that was not counted when the tour started", () => {
-        const counted = countedSteps(steps, without("home-autolog"));
-        expect(counted).toEqual(["a", "b", "d", "e"]);
-        expect(currentView(steps, at(2, ctx(), counted), ctx(), all).counter).toBeNull();
-        expect(currentView(steps, at(3, ctx(), counted), ctx(), all).counter).toEqual({ index: 3, total: 4 });
+    it("counts only the steps that will be shown, and grows the total when an optional target appears", () => {
+        const noRow = without("home-autolog", "home-cashbook-row");
+        expect(currentView(steps, at(0), ctx(), noRow).counter).toEqual({ index: 1, total: 3 });
+        expect(currentView(steps, at(3, ctx(), 2), ctx(), noRow)).toMatchObject({
+            counter: { index: 3, total: 3 },
+            isLast: true,
+        });
+        expect(currentView(steps, at(3, ctx(), 2), ctx(), without("home-autolog"))).toMatchObject({
+            counter: { index: 3, total: 4 },
+            isLast: false,
+        });
     });
 });
 

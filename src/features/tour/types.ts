@@ -60,5 +60,6 @@ export interface ActiveTour {
     tourId: TourId;
     stepIndex: number;
     atStepStart: TourContext;
-    counted: string[];
+    /** Steps the user has already been through, for the "n of m" counter. */
+    shown: number;
 }
