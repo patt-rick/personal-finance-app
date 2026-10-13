@@ -1,18 +1,8 @@
 import { getCurrencySymbol } from "../utils/_helpers";
-import {
-    Users,
-    Wallet,
-    LayoutGrid,
-    Plus,
-    TrendingUp,
-    Hash,
-    Star,
-    Zap,
-} from "lucide-react-native";
+import { Wallet, Plus, TrendingUp, Hash, Star } from "lucide-react-native";
 import React, { useCallback, useMemo, useRef, useState, useEffect } from "react";
 import {
     BackHandler,
-    Platform,
     RefreshControl,
     ScrollView,
     Text,
@@ -32,9 +22,8 @@ import AutoLogPromoCard from "../components/dashboard/AutoLogPromoCard";
 import PendingReviewBanner from "../components/dashboard/PendingReviewBanner";
 import ReviewQueueScreen from "../features/autoLogging/screens/ReviewQueueScreen";
 import { usePendingReviewCount } from "../features/autoLogging/hooks/usePendingReviewCount";
-import TourOverlay from "../components/TourOverlay";
 import { EmptyScene } from "../components/illustrations";
-import { maybeRequestReview } from "../utils/storeReview";
+import { TourTargetProps, useTourRequest, useTourTarget } from "../features/tour/hooks";
 import ListCard from "../components/ListCard";
 import MoneyText from "../components/MoneyText";
 import { grossAmount } from "../utils/transactionAmount";
@@ -54,6 +43,7 @@ function AnimatedCashbookItem({
     onPress,
     index,
     styles,
+    tourTarget,
 }: {
     business: Business;
     transactions: Transaction[];
@@ -61,6 +51,7 @@ function AnimatedCashbookItem({
     onPress: () => void;
     index: number;
     styles: ReturnType<typeof createStyles>;
+    tourTarget?: TourTargetProps;
 }) {
     const fadeAnim = useRef(new Animated.Value(0)).current;
     const slideAnim = useRef(new Animated.Value(20)).current;
@@ -107,7 +98,12 @@ function AnimatedCashbookItem({
                 transform: [{ translateY: slideAnim }],
             }}
         >
-            <TouchableOpacity style={styles.cashbookItem} onPress={onPress} activeOpacity={0.7}>
+            <TouchableOpacity
+                {...tourTarget}
+                style={styles.cashbookItem}
+                onPress={onPress}
+                activeOpacity={0.7}
+            >
                 <View
                     style={[
                         styles.cashbookIcon,
@@ -276,6 +272,9 @@ function DashboardHome({
     const pendingReviewCount = usePendingReviewCount();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const statsStyles = useMemo(() => createStatsStyles(theme), [theme]);
+    const scrollRef = useRef<ScrollView>(null);
+    const rowTarget = useTourTarget("home-cashbook-row", scrollRef);
+    useTourRequest("journey", true);
 
     const currencyBalances = useMemo<CurrencyBalance[]>(() => {
         const map: Record<string, { income: number; expense: number }> = {};
@@ -382,6 +381,7 @@ function DashboardHome({
             </View>
 
             <ScrollView
+                ref={scrollRef}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={{ paddingBottom: 100 }}
                 refreshControl={
@@ -396,6 +396,7 @@ function DashboardHome({
                 <PaymentCard
                     currencies={currencyBalances}
                     onPageChange={setActiveCurrencyIndex}
+                    tourScrollRef={scrollRef}
                 />
 
                 {filteredTransactions.length > 0 ? (
@@ -421,6 +422,7 @@ function DashboardHome({
                 <PendingReviewBanner count={pendingReviewCount} onPress={onOpenReview} />
 
                 <AutoLogPromoCard
+                    tourScrollRef={scrollRef}
                     onSetUp={() =>
                         (navigation as any).navigate("Settings", { openAutoLog: Date.now() })
                     }
@@ -466,6 +468,7 @@ function DashboardHome({
                                     onPress={() => setCurrentBusiness(business)}
                                     index={index}
                                     styles={styles}
+                                    tourTarget={index === 0 ? rowTarget : undefined}
                                 />
                             ))}
                         </ListCard>
@@ -501,47 +504,6 @@ function DashboardHome({
                 </View>
             </ScrollView>
 
-            <TourOverlay
-                page="dashboard"
-                steps={[
-                    {
-                        title: "Your Financial Overview",
-                        icon: <LayoutGrid size={24} color={theme.colors.primary} />,
-                        illustration: "reports",
-                        description:
-                            "This is your dashboard — a snapshot of all your finances across every cashbook, grouped by currency.",
-                    },
-                    {
-                        title: "Balance & Growth",
-                        icon: <Wallet size={24} color={theme.colors.primary} />,
-                        illustration: "cashbooks",
-                        description:
-                            "The balance card shows your total income, expenses, and net balance. Swipe to see balances in different currencies.",
-                    },
-                    {
-                        title: "Your Cashbooks",
-                        icon: <Users size={24} color={theme.colors.primary} />,
-                        illustration: "transactions",
-                        description:
-                            "All your cashbooks are listed here with their balances. Tap any cashbook to view its transactions in detail.",
-                    },
-                    ...(Platform.OS === "android"
-                        ? [
-                              {
-                                  title: "Automatic Expense Logging",
-                                  icon: <Zap size={24} color={theme.colors.primary} />,
-                                  description:
-                                      "Expense Tracker can read your bank and MoMo SMS on this phone and log expenses for you. Turn it on in Settings → Automatic Logging.",
-                              },
-                          ]
-                        : []),
-                ]}
-                onComplete={() => {
-                    setTimeout(() => {
-                        maybeRequestReview({ kind: "tour_completed" });
-                    }, 600);
-                }}
-            />
         </View>
     );
 }

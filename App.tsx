@@ -11,7 +11,12 @@ import {
     Manrope_700Bold,
 } from "@expo-google-fonts/manrope";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
-import { NavigationContainer, DefaultTheme, DarkTheme } from "@react-navigation/native";
+import {
+    NavigationContainer,
+    DefaultTheme,
+    DarkTheme,
+    createNavigationContainerRef,
+} from "@react-navigation/native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import FloatingTabBar from "./src/components/FloatingTabBar";
 import DashboardScreen from "./src/screens/DashboardScreen";
@@ -55,11 +60,22 @@ import { AppDialogHost } from "./src/components/dialog";
 import { registerBudgetAlerts } from "./src/features/budget/alerts/registerBudgetAlerts";
 import { setBudgetAlertGate } from "./src/features/budget/alerts/deliverAlerts";
 import { deleteBudgetsForBusinesses, persistBudgetMigration } from "./src/features/budget/storage/budgetStore";
+import TourHost, { TourShield } from "./src/features/tour/TourHost";
+import { useTourSheet } from "./src/features/tour/hooks";
+import { onTourEnd, setTourContext, setTourNavigator } from "./src/features/tour/tourStore";
+import { TabName } from "./src/features/tour/types";
+import { maybeRequestReview } from "./src/utils/storeReview";
 
 // TEMP: flip to true (in a dev build) to preview the widgets, then revert.
 const PREVIEW_WIDGETS = false;
 
 const Tab = createBottomTabNavigator();
+const navigationRef = createNavigationContainerRef<Record<TabName, undefined>>();
+
+const syncTourTab = () => {
+    const name = navigationRef.getCurrentRoute()?.name;
+    if (name) setTourContext({ activeTab: name as TabName });
+};
 
 export default function App() {
     const scheme = useColorScheme();
@@ -225,6 +241,27 @@ function MainApp() {
     useEffect(() => {
         quickAddVisibleRef.current = quickAddVisible;
     }, [quickAddVisible]);
+
+    useTourSheet("quickAdd", quickAddVisible);
+
+    useEffect(() => {
+        if (isLoading) return;
+        setTourContext({ cashbookCount: businesses.length, transactionCount: transactions.length });
+    }, [isLoading, businesses.length, transactions.length]);
+
+    useEffect(() => {
+        setTourNavigator((tab) => {
+            if (navigationRef.isReady()) navigationRef.navigate(tab);
+        });
+        const unsubscribe = onTourEnd((id, outcome) => {
+            if (id !== "journey" || outcome !== "finished") return;
+            setTimeout(() => maybeRequestReview({ kind: "tour_completed" }), 600);
+        });
+        return () => {
+            setTourNavigator(null);
+            unsubscribe();
+        };
+    }, []);
 
     useEffect(() => {
         const openFromUrl = (url: string | null) => {
@@ -395,90 +432,97 @@ function MainApp() {
                     backgroundColor={theme.colors.background}
                     translucent={false}
                 />
-                <NavigationContainer theme={isDark ? MyDarkTheme : MyDefaultTheme}>
-                    <Tab.Navigator
-                        tabBar={(props) =>
-                            currentBusiness ? null : (
-                                <FloatingTabBar {...props} onQuickAdd={() => setQuickAddVisible(true)} />
-                            )
-                        }
-                        screenOptions={{
-                            headerShown: false,
-                            tabBarShowLabel: false,
-                        }}
+                <TourShield>
+                    <NavigationContainer
+                        ref={navigationRef}
+                        theme={isDark ? MyDarkTheme : MyDefaultTheme}
+                        onReady={syncTourTab}
+                        onStateChange={syncTourTab}
                     >
-                        <Tab.Screen
-                            name="Dashboard"
-                            listeners={{
-                                tabPress: () => setCurrentBusiness(null),
+                        <Tab.Navigator
+                            tabBar={(props) =>
+                                currentBusiness ? null : (
+                                    <FloatingTabBar {...props} onQuickAdd={() => setQuickAddVisible(true)} />
+                                )
+                            }
+                            screenOptions={{
+                                headerShown: false,
+                                tabBarShowLabel: false,
                             }}
                         >
-                            {() => (
-                                <DashboardScreen
-                                    businesses={businesses}
-                                    transactions={transactions}
-                                    currentBusiness={currentBusiness}
-                                    setCurrentBusiness={setCurrentBusiness}
-                                    saveTransactions={handleSaveTransactions}
-                                    userProfile={userProfile}
-                                    onRefresh={refreshData}
-                                />
-                            )}
-                        </Tab.Screen>
-                        <Tab.Screen
-                            name="Cashbooks"
-                            listeners={{
-                                tabPress: () => setCurrentBusiness(null),
-                            }}
-                        >
-                            {() => (
-                                <BusinessesScreen
-                                    businesses={businesses}
-                                    transactions={transactions}
-                                    saveBusinesses={handleSaveBusinesses}
-                                    saveTransactions={handleSaveTransactions}
-                                    currentBusiness={currentBusiness}
-                                    setCurrentBusiness={setCurrentBusiness}
-                                />
-                            )}
-                        </Tab.Screen>
-                        <Tab.Screen
-                            name="Budget"
-                            listeners={{
-                                tabPress: () => setCurrentBusiness(null),
-                            }}
-                        >
-                            {() => (
-                                <BudgetDashboardScreen
-                                    businesses={businesses}
-                                    transactions={transactions}
-                                    currentBusiness={currentBusiness}
-                                />
-                            )}
-                        </Tab.Screen>
-                        <Tab.Screen
-                            name="Settings"
-                            listeners={{
-                                tabPress: () => setCurrentBusiness(null),
-                            }}
-                        >
-                            {() => (
-                                <SettingsScreen
-                                    userProfile={userProfile}
-                                    saveUserProfile={handleSaveUserProfile}
-                                    onDataImported={handleDataImported}
-                                    onPinChanged={handlePinChanged}
-                                    recurringTransactions={recurringTransactions}
-                                    saveRecurringTransactions={handleSaveRecurringTransactions}
-                                    businesses={businesses}
-                                    transactions={transactions}
-                                    debts={debts}
-                                    saveDebts={handleSaveDebts}
-                                />
-                            )}
-                        </Tab.Screen>
-                    </Tab.Navigator>
-                </NavigationContainer>
+                            <Tab.Screen
+                                name="Dashboard"
+                                listeners={{
+                                    tabPress: () => setCurrentBusiness(null),
+                                }}
+                            >
+                                {() => (
+                                    <DashboardScreen
+                                        businesses={businesses}
+                                        transactions={transactions}
+                                        currentBusiness={currentBusiness}
+                                        setCurrentBusiness={setCurrentBusiness}
+                                        saveTransactions={handleSaveTransactions}
+                                        userProfile={userProfile}
+                                        onRefresh={refreshData}
+                                    />
+                                )}
+                            </Tab.Screen>
+                            <Tab.Screen
+                                name="Cashbooks"
+                                listeners={{
+                                    tabPress: () => setCurrentBusiness(null),
+                                }}
+                            >
+                                {() => (
+                                    <BusinessesScreen
+                                        businesses={businesses}
+                                        transactions={transactions}
+                                        saveBusinesses={handleSaveBusinesses}
+                                        saveTransactions={handleSaveTransactions}
+                                        currentBusiness={currentBusiness}
+                                        setCurrentBusiness={setCurrentBusiness}
+                                    />
+                                )}
+                            </Tab.Screen>
+                            <Tab.Screen
+                                name="Budget"
+                                listeners={{
+                                    tabPress: () => setCurrentBusiness(null),
+                                }}
+                            >
+                                {() => (
+                                    <BudgetDashboardScreen
+                                        businesses={businesses}
+                                        transactions={transactions}
+                                        currentBusiness={currentBusiness}
+                                    />
+                                )}
+                            </Tab.Screen>
+                            <Tab.Screen
+                                name="Settings"
+                                listeners={{
+                                    tabPress: () => setCurrentBusiness(null),
+                                }}
+                            >
+                                {() => (
+                                    <SettingsScreen
+                                        userProfile={userProfile}
+                                        saveUserProfile={handleSaveUserProfile}
+                                        onDataImported={handleDataImported}
+                                        onPinChanged={handlePinChanged}
+                                        recurringTransactions={recurringTransactions}
+                                        saveRecurringTransactions={handleSaveRecurringTransactions}
+                                        businesses={businesses}
+                                        transactions={transactions}
+                                        debts={debts}
+                                        saveDebts={handleSaveDebts}
+                                    />
+                                )}
+                            </Tab.Screen>
+                        </Tab.Navigator>
+                    </NavigationContainer>
+                </TourShield>
                 <QuickAddModal
                     visible={quickAddVisible}
                     businesses={businesses}
@@ -489,6 +533,7 @@ function MainApp() {
                     }}
                     onCreate={(tx) => handleSaveTransactions([...transactions, tx])}
                 />
+                <TourHost />
             </View>
         </SafeAreaProvider>
     );

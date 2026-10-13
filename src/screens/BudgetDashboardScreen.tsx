@@ -1,12 +1,12 @@
-import React, { useCallback, useMemo, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import { ActivityIndicator, BackHandler, Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Gauge, History, Layers, Plus } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import { AppTheme, useTheme } from "../theme/theme";
 import { Budget, BudgetScope, Business, Transaction } from "../types";
 import { exactMoney } from "../utils/chartScale";
-import TourOverlay from "../components/TourOverlay";
+import { useTourRequest, useTourTarget } from "../features/tour/hooks";
 import { EmptyScene } from "../components/illustrations";
 import { useReducedMotion } from "../components/reports/motion";
 import BudgetSetupScreen from "./BudgetSetupScreen";
@@ -44,6 +44,11 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
 
     const animKey = `${d.selected ? scopeKey(d.selected) : ""}|${d.view?.range.key ?? ""}|${d.budget?.updatedAt ?? ""}`;
     const progress = useSweep(animKey, reduced, 1400);
+
+    const scrollRef = useRef<ScrollView>(null);
+    const gaugeTarget = useTourTarget("budget-gauge", scrollRef);
+    const historyTarget = useTourTarget("budget-history", scrollRef);
+    useTourRequest("budget-v2", !editing && !sheetOpen && !d.loading && !!d.budget && d.view?.limit != null);
 
     useFocusEffect(
         useCallback(() => {
@@ -181,20 +186,22 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                     canGoForward={d.canGoForward}
                 />
                 {view.limit !== null ? (
-                    <BudgetGauge
-                        share={share}
-                        pacePct={pacePct}
-                        warnAt={warnAt}
-                        title={title}
-                        subtitle={subtitle}
-                        spentText={money(view.spent)}
-                        limitText={money(view.limit)}
-                        caption={view.pace ? `${view.pace.daysLeft} day${view.pace.daysLeft === 1 ? "" : "s"} left` : "Final"}
-                        chip={paceChip(view, symbol)}
-                        onEdit={() => setEditing({ scope: selected, budget })}
-                        animKey={animKey}
-                        reduced={reduced}
-                    />
+                    <View {...gaugeTarget}>
+                        <BudgetGauge
+                            share={share}
+                            pacePct={pacePct}
+                            warnAt={warnAt}
+                            title={title}
+                            subtitle={subtitle}
+                            spentText={money(view.spent)}
+                            limitText={money(view.limit)}
+                            caption={view.pace ? `${view.pace.daysLeft} day${view.pace.daysLeft === 1 ? "" : "s"} left` : "Final"}
+                            chip={paceChip(view, symbol)}
+                            onEdit={() => setEditing({ scope: selected, budget })}
+                            animKey={animKey}
+                            reduced={reduced}
+                        />
+                    </View>
                 ) : (
                     <Text style={styles.noLimit}>{title}</Text>
                 )}
@@ -221,7 +228,7 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                         />
                     </View>
                 )}
-                <View style={styles.section}>
+                <View {...historyTarget} style={styles.section}>
                     <BudgetHistoryChart
                         points={d.history}
                         period={budget.period}
@@ -240,13 +247,20 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
         <View style={styles.container}>
             {header}
             <ScrollView
+                ref={scrollRef}
                 showsVerticalScrollIndicator={false}
                 contentContainerStyle={styles.scroll}
                 refreshControl={
                     <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={theme.colors.primary} />
                 }
             >
-                <ScopeChips scopes={d.scopes} selected={selected} businesses={businesses} onSelect={d.select} />
+                <ScopeChips
+                    scopes={d.scopes}
+                    selected={selected}
+                    businesses={businesses}
+                    onSelect={d.select}
+                    tourScrollRef={scrollRef}
+                />
                 <View style={styles.body}>
                     {d.loading ? (
                         <ActivityIndicator style={styles.loading} size="large" color={theme.colors.primary} />
@@ -287,28 +301,6 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                 }}
             />
 
-            <TourOverlay
-                page="budget-v2"
-                steps={[
-                    {
-                        title: "Your budget at a glance",
-                        icon: <Gauge size={24} color={theme.colors.primary} />,
-                        description:
-                            "The speedometer shows how much of your limit is gone. The small tick marks where even spending would put you today.",
-                    },
-                    {
-                        title: "One cashbook or all of them",
-                        icon: <Layers size={24} color={theme.colors.primary} />,
-                        description:
-                            "Budget a single cashbook, or all of them with \"All cashbooks\". The currency button at the top switches which cashbooks you see.",
-                    },
-                    {
-                        title: "Look back",
-                        icon: <History size={24} color={theme.colors.primary} />,
-                        description: "Use the arrows, or tap a bar in the history chart, to see how earlier periods went.",
-                    },
-                ]}
-            />
         </View>
     );
 }

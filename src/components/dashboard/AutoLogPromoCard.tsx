@@ -1,19 +1,22 @@
-import React, { useCallback, useMemo, useRef, useState } from "react";
-import { Animated, Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { RefObject, useCallback, useMemo, useRef, useState } from "react";
+import { Animated, Platform, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useFocusEffect } from "@react-navigation/native";
 import { X, Zap } from "lucide-react-native";
 import { useTheme } from "../../theme/theme";
 import { loadAutoLogSettings } from "../../features/autoLogging/services/persistence/settings";
+import { useTourTarget } from "../../features/tour/hooks";
 
 const DISMISSED_KEY = "@autolog_promo_dismissed";
 
 interface Props {
     onSetUp: () => void;
+    tourScrollRef?: RefObject<ScrollView | null>;
 }
 
-export default function AutoLogPromoCard({ onSetUp }: Props) {
+export default function AutoLogPromoCard({ onSetUp, tourScrollRef }: Props) {
     const theme = useTheme();
+    const tourTarget = useTourTarget("home-autolog", tourScrollRef);
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [visible, setVisible] = useState(false);
     const fadeAnim = useRef(new Animated.Value(0)).current;
@@ -55,6 +58,7 @@ export default function AutoLogPromoCard({ onSetUp }: Props) {
 
     return (
         <Animated.View
+            {...tourTarget}
             style={[styles.card, { opacity: fadeAnim, transform: [{ translateY: slideAnim }] }]}
         >
             <View style={styles.topRow}>

@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { appAlert } from "../components/dialog";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Plus, Landmark, ArrowRightLeft } from "lucide-react-native";
+import { Plus } from "lucide-react-native";
 import { useNavigation } from "@react-navigation/native";
 import { Business, Transaction } from "../types";
 import { useTheme } from "../theme/theme";
@@ -20,7 +20,7 @@ import CashbookDetailSheet from "../components/CashbookDetailSheet";
 import CashbookIconBadge from "../components/CashbookIconBadge";
 import CreateCashbookModal from "../components/CreateCashbookModal";
 import TransferCashbookModal from "../components/TransferCashbookModal";
-import TourOverlay from "../components/TourOverlay";
+import { useTourSheet, useTourTarget } from "../features/tour/hooks";
 import { EmptyScene } from "../components/illustrations";
 import MoneyText from "../components/MoneyText";
 import { grossAmount } from "../utils/transactionAmount";
@@ -309,6 +309,8 @@ export default function BusinessesScreen({
     const summaryStl = useMemo(() => createSummaryStyles(theme), [theme]);
 
     const [createModalVisible, setCreateModalVisible] = useState(false);
+    const newCashbookTarget = useTourTarget("cashbooks-new");
+    useTourSheet("createCashbook", createModalVisible);
     const [sheetBusiness, setSheetBusiness] = useState<Business | null>(null);
     const [transferModalBusinessId, setTransferModalBusinessId] = useState<string | null>(null);
 
@@ -507,6 +509,7 @@ export default function BusinessesScreen({
             </ScrollView>
 
             <TouchableOpacity
+                {...newCashbookTarget}
                 style={s.fab}
                 onPress={() => setCreateModalVisible(true)}
                 activeOpacity={0.85}
@@ -543,29 +546,6 @@ export default function BusinessesScreen({
                 onClose={() => setTransferModalBusinessId(null)}
             />
 
-            <TourOverlay
-                page="cashbooks"
-                steps={[
-                    {
-                        title: "Your Cashbooks",
-                        icon: <Landmark size={24} color={theme.colors.primary} />,
-                        description:
-                            "Cashbooks let you track finances for different businesses or accounts separately. Each one has its own transactions and currency.",
-                    },
-                    {
-                        title: "Create & Manage",
-                        icon: <Plus size={24} color={theme.colors.primary} />,
-                        description:
-                            "Tap the + button to create a new cashbook. Tap any existing cashbook to view details, rename it, or delete it.",
-                    },
-                    {
-                        title: "Transfer Between Cashbooks",
-                        icon: <ArrowRightLeft size={24} color={theme.colors.primary} />,
-                        description:
-                            "When deleting a cashbook, you can transfer its transactions to another cashbook instead of losing them.",
-                    },
-                ]}
-            />
         </View>
     );
 }

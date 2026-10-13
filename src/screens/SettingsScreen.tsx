@@ -13,7 +13,8 @@ import {
     Animated,
 } from "react-native";
 import { appAlert } from "../components/dialog";
-import { useFocusEffect, useRoute } from "@react-navigation/native";
+import { ParamListBase, useFocusEffect, useNavigation, useRoute } from "@react-navigation/native";
+import { BottomTabNavigationProp } from "@react-navigation/bottom-tabs";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
     User,
@@ -36,9 +37,6 @@ import {
     Repeat,
     Handshake,
     BarChart3,
-    Settings as SettingsIcon,
-    Database,
-    Sparkles,
     Zap,
 } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
@@ -46,14 +44,14 @@ import { useThemeContext } from "../theme/ThemeContext";
 import { UserProfile, RecurringTransaction, Debt, Business, Transaction } from "../types";
 import { exportAllData, importAllData, loadUserProfile } from "../utils/storage";
 import { isPinEnabled, verifyPin } from "../utils/security";
-import { resetAllTours } from "../utils/tourStorage";
+import { useTourRequest, useTourTarget } from "../features/tour/hooks";
+import { replayTours } from "../features/tour/tourStore";
 import CategoryManagementScreen from "./CategoryManagementScreen";
 import SecuritySettingsScreen from "./SecuritySettingsScreen";
 import RecurringTransactionsScreen from "./RecurringTransactionsScreen";
 import DebtTrackerScreen from "./DebtTrackerScreen";
 import ReportsScreen from "./ReportsScreen";
 import AutoLogSettingsScreen from "../features/autoLogging/screens/AutoLogSettingsScreen";
-import TourOverlay from "../components/TourOverlay";
 
 const APP_VERSION = require("../../app.json").expo.version;
 
@@ -99,6 +97,25 @@ export default function SettingsScreen({
     const [isExporting, setIsExporting] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [showExportVerify, setShowExportVerify] = useState(false);
+
+    const navigation = useNavigation<BottomTabNavigationProp<ParamListBase>>();
+    const scrollRef = useRef<ScrollView>(null);
+    const profileTarget = useTourTarget("settings-profile", scrollRef);
+    const generalTarget = useTourTarget("settings-general", scrollRef);
+    const featuresTarget = useTourTarget("settings-features", scrollRef);
+    const dataTarget = useTourTarget("settings-data", scrollRef);
+    useTourRequest(
+        "settings",
+        !(
+            showCategories ||
+            showSecurity ||
+            showRecurring ||
+            showDebts ||
+            showReports ||
+            showAutoLog ||
+            showExportVerify
+        ),
+    );
 
     const route = useRoute();
     const openAutoLogParam = (route.params as { openAutoLog?: number } | undefined)?.openAutoLog;
@@ -315,11 +332,12 @@ export default function SettingsScreen({
                 style={{ flex: 1 }}
             >
                 <ScrollView
+                    ref={scrollRef}
                     contentContainerStyle={{ paddingBottom: Math.max(insets.bottom, 20) + 100 }}
                     showsVerticalScrollIndicator={false}
                 >
                     {/* Profile Card */}
-                    <View style={styles.profileCard}>
+                    <View {...profileTarget} style={styles.profileCard}>
                         <View style={styles.profileTop}>
                             <View style={styles.avatar}>
                                 <Text style={styles.avatarText}>{initials}</Text>
@@ -397,7 +415,7 @@ export default function SettingsScreen({
                     {/* General Section */}
                     <View style={styles.section}>
                         <Text style={styles.sectionLabel}>General</Text>
-                        <View style={styles.groupCard}>
+                        <View {...generalTarget} style={styles.groupCard}>
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => setShowCategories(true)}
@@ -428,7 +446,7 @@ export default function SettingsScreen({
                     {/* Features Section */}
                     <View style={styles.section}>
                         <Text style={styles.sectionLabel}>Features</Text>
-                        <View style={styles.groupCard}>
+                        <View {...featuresTarget} style={styles.groupCard}>
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={() => setShowReports(true)}
@@ -532,7 +550,7 @@ export default function SettingsScreen({
                     {/* Data Management Section */}
                     <View style={styles.section}>
                         <Text style={styles.sectionLabel}>Data</Text>
-                        <View style={styles.groupCard}>
+                        <View {...dataTarget} style={styles.groupCard}>
                             <TouchableOpacity
                                 style={styles.row}
                                 onPress={handleExport}
@@ -599,8 +617,8 @@ export default function SettingsScreen({
                             <TouchableOpacity
                                 style={[styles.row, { borderBottomWidth: 0 }]}
                                 onPress={() => {
-                                    resetAllTours();
-                                    appAlert("Tours Reset", "The guided tours will show again on each page.");
+                                    replayTours();
+                                    navigation.navigate("Dashboard");
                                 }}
                             >
                                 <View style={[styles.iconCircle, { backgroundColor: theme.colors.primaryContainer }]}>
@@ -608,7 +626,7 @@ export default function SettingsScreen({
                                 </View>
                                 <View style={{ flex: 1 }}>
                                     <Text style={styles.rowText}>Replay Tours</Text>
-                                    <Text style={styles.rowSubText}>Show feature guides again</Text>
+                                    <Text style={styles.rowSubText}>Take the guided tour again</Text>
                                 </View>
                                 <ChevronRight size={18} color={theme.colors.onSurfaceVariant} />
                             </TouchableOpacity>
@@ -617,35 +635,6 @@ export default function SettingsScreen({
                 </ScrollView>
             </KeyboardAvoidingView>
 
-            <TourOverlay
-                page="settings"
-                steps={[
-                    {
-                        title: "Your Profile",
-                        icon: <User size={24} color={theme.colors.primary} />,
-                        description:
-                            "Set your name and email at the top. Tap the pencil icon to edit your profile details.",
-                    },
-                    {
-                        title: "Categories & Security",
-                        icon: <SettingsIcon size={24} color={theme.colors.primary} />,
-                        description:
-                            "Customize transaction categories for income and expenses. Enable PIN lock or biometric authentication to protect your data.",
-                    },
-                    {
-                        title: "Advanced Features",
-                        icon: <Sparkles size={24} color={theme.colors.primary} />,
-                        description:
-                            "Access reports for financial insights, set up recurring transactions that auto-log, and track debts owed to or from others.",
-                    },
-                    {
-                        title: "Backup & Restore",
-                        icon: <Database size={24} color={theme.colors.primary} />,
-                        description:
-                            "Export all your data as a backup file, or import a previous backup to restore your information.",
-                    },
-                ]}
-            />
         </View>
     );
 }

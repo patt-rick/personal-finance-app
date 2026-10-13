@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Home, BookOpen, PieChart, SlidersHorizontal, Plus } from "lucide-react-native";
 import { useTheme } from "../theme/theme";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
+import { TourTargetProps, useTourTarget } from "../features/tour/hooks";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 
@@ -40,6 +41,13 @@ export default function FloatingTabBar({
 }: BottomTabBarProps & FloatingTabBarExtraProps) {
     const theme = useTheme();
     const insets = useSafeAreaInsets();
+    const tabTargets: Record<string, TourTargetProps> = {
+        Dashboard: useTourTarget("tab-home"),
+        Cashbooks: useTourTarget("tab-books"),
+        Budget: useTourTarget("tab-budget"),
+        Settings: useTourTarget("tab-settings"),
+    };
+    const addTarget = useTourTarget("tab-add");
     const dotX = useRef(new Animated.Value(state.index * TAB_WIDTH + DOT_OFFSET)).current;
     const focusAnims = useRef(
         state.routes.map((_, i) => new Animated.Value(i === state.index ? 1 : 0)),
@@ -103,6 +111,7 @@ export default function FloatingTabBar({
 
                         return (
                             <TouchableOpacity
+                                {...tabTargets[route.name]}
                                 key={route.key}
                                 accessibilityRole="button"
                                 accessibilityState={isFocused ? { selected: true } : {}}
@@ -138,6 +147,7 @@ export default function FloatingTabBar({
                 </View>
 
                 <TouchableOpacity
+                    {...addTarget}
                     accessibilityRole="button"
                     accessibilityLabel="Add transaction"
                     onPress={onQuickAdd}

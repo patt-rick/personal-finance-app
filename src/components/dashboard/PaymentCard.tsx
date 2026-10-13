@@ -1,4 +1,4 @@
-import React, { useCallback, useState } from "react";
+import React, { RefObject, useCallback, useState } from "react";
 import {
     View,
     Text,
@@ -13,6 +13,7 @@ import Svg, { Path, Circle } from "react-native-svg";
 import { getCurrencySymbol } from "../../utils/_helpers";
 import { useTheme, getCardGradient } from "../../theme/theme";
 import MoneyText from "../MoneyText";
+import { useTourTarget } from "../../features/tour/hooks";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_H_PADDING = 20;
@@ -80,10 +81,12 @@ function CardArt() {
 interface PaymentCardProps {
     currencies: CurrencyBalance[];
     onPageChange?: (index: number) => void;
+    tourScrollRef?: RefObject<ScrollView | null>;
 }
 
-export default function PaymentCard({ currencies, onPageChange }: PaymentCardProps) {
+export default function PaymentCard({ currencies, onPageChange, tourScrollRef }: PaymentCardProps) {
     const theme = useTheme();
+    const balanceTarget = useTourTarget("home-balance", tourScrollRef);
     const [activeIndex, setActiveIndex] = useState(0);
 
     const onScroll = useCallback(
@@ -101,7 +104,7 @@ export default function PaymentCard({ currencies, onPageChange }: PaymentCardPro
         const symbol = getCurrencySymbol(item.currency);
         const [from, to] = getCardGradient(item.currency, index);
         return (
-            <View style={{ width: cardWidth }} key={item.currency}>
+            <View {...(index === 0 ? balanceTarget : null)} style={{ width: cardWidth }} key={item.currency}>
                 <LinearGradient
                     colors={[from, to]}
                     start={{ x: 0, y: 0 }}
