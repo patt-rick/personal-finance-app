@@ -16,6 +16,9 @@ const REMEASURE_MS = 500;
 const GIVE_UP_MS = 1500;
 const MAX_TOOLTIP_WIDTH = 340;
 const EDGE = 12;
+const GAP = 12;
+// Typical card height, used to make room for the card before it has been measured.
+const TOOLTIP_ESTIMATE = 200;
 
 const sameRect = (a: Rect | null, b: Rect) =>
     !!a && a.x === b.x && a.y === b.y && a.width === b.width && a.height === b.height;
@@ -74,6 +77,8 @@ function TourLayer({ view }: { view: TourView }) {
 
     const tabBarTop = size ? size.height - FLOATING_TAB_HEIGHT - Math.max(insets.bottom, 8) : 0;
     const width = size?.width ?? 0;
+    const pad = view.shape === "pill" ? 4 : 8;
+    const room = (tooltipHeight || TOOLTIP_ESTIMATE) + pad + GAP + EDGE;
 
     useEffect(() => {
         const target = view.target;
@@ -83,7 +88,7 @@ function TourLayer({ view }: { view: TourView }) {
             cancel();
             const entry = getTarget(target);
             if (!entry || !rootRef.current) return;
-            cancel = locateTarget(entry, rootRef.current, { top: insets.top, bottom: tabBarTop }, (next) => {
+            cancel = locateTarget(entry, rootRef.current, { top: insets.top, bottom: tabBarTop }, room, (next) => {
                 if (!next || next.x + next.width <= 0 || next.x >= width) return;
                 setRect((prev) => (sameRect(prev, next) ? prev : next));
             });
@@ -98,7 +103,7 @@ function TourLayer({ view }: { view: TourView }) {
             clearTimeout(remeasure);
             clearTimeout(giveUp);
         };
-    }, [view.target, size, width, insets.top, tabBarTop]);
+    }, [view.target, size, width, insets.top, tabBarTop, room]);
 
     useEffect(() => {
         if (reduced === null) return;
@@ -125,7 +130,6 @@ function TourLayer({ view }: { view: TourView }) {
     const lost = !!view.target && !rect && gaveUp;
     const waiting = !!view.target && !rect && !gaveUp;
     const target = lost ? null : rect;
-    const pad = view.shape === "pill" ? 4 : 8;
     const hole = target && {
         x: target.x - pad,
         y: target.y - pad,
@@ -140,6 +144,7 @@ function TourLayer({ view }: { view: TourView }) {
                   target: hole,
                   tooltip: { width: tooltipWidth, height: tooltipHeight },
                   screen: size,
+                  gap: GAP,
                   bounds: {
                       top: insets.top + EDGE,
                       bottom: inTabBar ? size.height - Math.max(insets.bottom, 8) - EDGE : tabBarTop - EDGE,

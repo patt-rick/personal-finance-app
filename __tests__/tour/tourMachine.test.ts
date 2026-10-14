@@ -21,6 +21,7 @@ const steps: TourStep[] = [
         kind: "action",
         title: "B",
         body: "do it",
+        infoTitle: "B done",
         infoBody: "already done",
         satisfiedWhen: (start) => start.cashbookCount > 0,
         doneWhen: (now, start) => now.cashbookCount > start.cashbookCount,
@@ -63,7 +64,15 @@ describe("currentView", () => {
 
     it("shows an action step as info when its goal was already met at step start", () => {
         const start = ctx({ activeTab: "Cashbooks", cashbookCount: 2 });
-        expect(currentView(steps, at(1, start), start, all)).toMatchObject({ kind: "info", body: "already done" });
+        expect(currentView(steps, at(1, start), start, all)).toMatchObject({
+            kind: "info",
+            title: "B done",
+            body: "already done",
+        });
+    });
+
+    it("keeps the action title while the goal is still open", () => {
+        expect(currentView(steps, at(1), ctx({ activeTab: "Cashbooks" }), all).title).toBe("B");
     });
 
     it("marks the step before a missing trailing optional step as last", () => {

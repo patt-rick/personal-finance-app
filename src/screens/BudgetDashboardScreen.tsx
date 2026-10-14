@@ -46,7 +46,6 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
     const progress = useSweep(animKey, reduced, 1400);
 
     const scrollRef = useRef<ScrollView>(null);
-    const gaugeTarget = useTourTarget("budget-gauge", scrollRef);
     const historyTarget = useTourTarget("budget-history", scrollRef);
     useTourRequest("budget-v2", !editing && !sheetOpen && !d.loading && !!d.budget && d.view?.limit != null);
 
@@ -186,22 +185,21 @@ export default function BudgetDashboardScreen({ businesses, transactions, curren
                     canGoForward={d.canGoForward}
                 />
                 {view.limit !== null ? (
-                    <View {...gaugeTarget}>
-                        <BudgetGauge
-                            share={share}
-                            pacePct={pacePct}
-                            warnAt={warnAt}
-                            title={title}
-                            subtitle={subtitle}
-                            spentText={money(view.spent)}
-                            limitText={money(view.limit)}
-                            caption={view.pace ? `${view.pace.daysLeft} day${view.pace.daysLeft === 1 ? "" : "s"} left` : "Final"}
-                            chip={paceChip(view, symbol)}
-                            onEdit={() => setEditing({ scope: selected, budget })}
-                            animKey={animKey}
-                            reduced={reduced}
-                        />
-                    </View>
+                    <BudgetGauge
+                        share={share}
+                        pacePct={pacePct}
+                        warnAt={warnAt}
+                        title={title}
+                        subtitle={subtitle}
+                        spentText={money(view.spent)}
+                        limitText={money(view.limit)}
+                        caption={view.pace ? `${view.pace.daysLeft} day${view.pace.daysLeft === 1 ? "" : "s"} left` : "Final"}
+                        chip={paceChip(view, symbol)}
+                        onEdit={() => setEditing({ scope: selected, budget })}
+                        animKey={animKey}
+                        reduced={reduced}
+                        tourScrollRef={scrollRef}
+                    />
                 ) : (
                     <Text style={styles.noLimit}>{title}</Text>
                 )}

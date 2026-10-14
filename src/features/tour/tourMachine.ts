@@ -65,7 +65,7 @@ export function currentView(
         key: `${active.tourId}:${step.id}`,
         target: step.target,
         shape: step.shape ?? "rect",
-        title: step.title,
+        title: satisfied ? step.infoTitle ?? step.title : step.title,
         body: satisfied ? step.infoBody ?? step.body : step.body,
         kind: satisfied ? "info" : step.kind,
         counter: { index: active.shown + 1, total: active.shown + 1 + remaining },

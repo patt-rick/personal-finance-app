@@ -17,6 +17,7 @@ const journey: TourStep[] = [
         kind: "action",
         title: "Create your first cashbook",
         body: "Each cashbook tracks one business or account. Tap + and give yours a name.",
+        infoTitle: "Add a cashbook",
         infoBody: "Each cashbook tracks one business or account. Tap + here to add another.",
         satisfiedWhen: (start) => start.cashbookCount > 0,
         doneWhen: (ctx, start) => ctx.cashbookCount > start.cashbookCount,

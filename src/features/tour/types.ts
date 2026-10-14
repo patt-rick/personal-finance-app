@@ -36,8 +36,9 @@ export interface TourStep {
     body: string;
     kind: "info" | "action";
     doneWhen?: (ctx: TourContext, atStepStart: TourContext) => boolean;
-    /** An action step whose goal is already met when it starts is shown as info. */
+    /** An action step whose goal is already met when it starts is shown as info, with these in place of the title and body. */
     satisfiedWhen?: (atStepStart: TourContext) => boolean;
+    infoTitle?: string;
     infoBody?: string;
     /** Dropped when its target is not on screen. */
     optional?: boolean;

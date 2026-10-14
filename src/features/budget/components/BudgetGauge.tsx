@@ -1,5 +1,5 @@
-import React, { useMemo, useState } from "react";
-import { Animated, LayoutChangeEvent, Pressable, StyleSheet, Text, View } from "react-native";
+import React, { RefObject, useMemo, useState } from "react";
+import { Animated, LayoutChangeEvent, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, G, Line, Path, Polygon, RadialGradient, Stop, Text as SvgText } from "react-native-svg";
 import { SlidersHorizontal } from "lucide-react-native";
 import { AppTheme, useTheme } from "../../../theme/theme";
@@ -10,6 +10,7 @@ import { ChipContent } from "../dashboardModel";
 import { HatchPattern } from "./HatchPattern";
 import PaceChip from "./PaceChip";
 import { useSweep } from "./useSweep";
+import { useTourTarget } from "../../tour/hooks";
 
 const VB_W = 254;
 const VB_H = 214;
@@ -51,14 +52,17 @@ interface BudgetGaugeProps {
     onEdit: () => void;
     animKey: string;
     reduced: boolean | null;
+    tourScrollRef?: RefObject<ScrollView | null>;
 }
 
 export default function BudgetGauge(props: BudgetGaugeProps) {
-    const { share, pacePct, warnAt, title, subtitle, spentText, limitText, caption, chip, onEdit, animKey, reduced } = props;
+    const { share, pacePct, warnAt, title, subtitle, spentText, limitText, caption, chip, onEdit, animKey, reduced, tourScrollRef } =
+        props;
     const theme = useTheme();
     const styles = useMemo(() => createStyles(theme), [theme]);
     const [width, setWidth] = useState(0);
     const onLayout = (e: LayoutChangeEvent) => setWidth(Math.round(e.nativeEvent.layout.width));
+    const dialTarget = useTourTarget("budget-gauge", tourScrollRef);
 
     const p = Math.min(Math.max(share, 0), 100) / 100;
     const palette = theme.colors;
@@ -130,7 +134,7 @@ export default function BudgetGauge(props: BudgetGaugeProps) {
                 accessibilityLabel={`${title}. ${spentText} of ${limitText}, ${formatPercent(share)} used. ${chip?.text ?? ""}`}
             >
                 {size > 0 && (
-                    <View style={{ width: size, height: VB_H * scale }}>
+                    <View {...dialTarget} style={{ width: size, height: VB_H * scale }}>
                         <Animated.View style={[StyleSheet.absoluteFill, { opacity: glowOpacity }]}>
                             <Svg width={size} height={VB_H * scale} viewBox={`0 0 ${VB_W} ${VB_H}`}>
                                 <Defs>

@@ -44,11 +44,24 @@ async function measureAfterScroll(node: Measurable, before: Rect): Promise<Rect>
     return last;
 }
 
-async function scrollIntoBand(node: Measurable, scroll: Scrollable, rect: Rect, band: { top: number; bottom: number }) {
+type Band = { top: number; bottom: number };
+
+/**
+ * A target needs scrolling when it is not fully inside the band, or when it is but leaves less than `room` (the tooltip card plus
+ * its gaps) on both sides, provided scrolling it to the top would make that room.
+ */
+export function needsScroll(rect: Rect, band: Band, room: number): boolean {
+    const bottom = rect.y + rect.height;
+    if (rect.y < band.top || bottom > band.bottom) return true;
+    const hasRoom = rect.y - band.top >= room || band.bottom - bottom >= room;
+    return !hasRoom && SCROLL_TOP_GAP + rect.height + room <= band.bottom - band.top;
+}
+
+async function scrollIntoBand(node: Measurable, scroll: Scrollable, rect: Rect, band: Band, room: number) {
     const viewport = await inWindow(scroll);
     const top = Math.max(band.top, viewport.y);
     const bottom = Math.min(band.bottom, viewport.y + viewport.height);
-    if (rect.y >= top && rect.y + rect.height <= bottom) return rect;
+    if (!needsScroll(rect, { top, bottom }, room)) return rect;
 
     const content = scroll.getInnerViewRef?.();
     if (!content) return rect;
@@ -57,18 +70,21 @@ async function scrollIntoBand(node: Measurable, scroll: Scrollable, rect: Rect, 
 
     const maxOffset = Math.max(0, contentRect.height - viewport.height);
     const offset = Math.min(maxOffset, Math.max(0, position.y - (top - viewport.y) - SCROLL_TOP_GAP));
+    // Content near the end may already be scrolled as far as it can go.
+    if (Math.abs(offset - (viewport.y - contentRect.y)) < 1) return rect;
     scroll.scrollTo({ y: offset, animated: false });
     return measureAfterScroll(node, rect);
 }
 
 /**
- * Finds a target's rectangle relative to `root`, scrolling it into the visible band first when it sits in a ScrollView. Reports
- * null when the element has no size yet. Returns a cancel function.
+ * Finds a target's rectangle relative to `root`, scrolling it into the visible band first when it sits in a ScrollView, with
+ * `room` px left beside it for the tooltip. Reports null when the element has no size yet. Returns a cancel function.
  */
 export function locateTarget(
     entry: TargetEntry,
     root: unknown,
-    band: { top: number; bottom: number },
+    band: Band,
+    room: number,
     onRect: (rect: Rect | null) => void,
 ): () => void {
     let cancelled = false;
@@ -80,7 +96,7 @@ export function locateTarget(
         let rect = await inWindow(node);
         const scroll = entry.scrollRef?.current as Scrollable | null | undefined;
         if (scroll && rect.width > 0 && rect.height > 0 && !cancelled) {
-            rect = await scrollIntoBand(node, scroll, rect, band);
+            rect = await scrollIntoBand(node, scroll, rect, band, room);
         }
         const origin = await inWindow(root as Measurable);
         if (cancelled) return;
